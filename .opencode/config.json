@@ -1,0 +1,13 @@
+{
+  "model": "claude-sonnet-4-5",
+  "agents": {
+    "planner": {
+      "model": "claude-sonnet-4-5",
+      "system": ".opencode/agents/planner.md"
+    },
+    "developer": {
+      "model": "claude-sonnet-4-5",
+      "system": ".opencode/agents/developer.md"
+    }
+  }
+}
