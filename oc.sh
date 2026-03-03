@@ -1,45 +1,28 @@
 #!/bin/bash
 
-# opencode-hub launcher
+set -euo pipefail
+
 HUB_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECTS_FILE="$HUB_DIR/projects/projects.md"
-PATHS_FILE="$HUB_DIR/projects/paths.local.md"
+SCRIPTS_DIR="$HUB_DIR/scripts"
 
-# Aide
-usage() {
-  echo "Usage: oc.sh <PROJECT_ID> [prompt]"
-  echo ""
-  echo "Projets disponibles :"
-  grep "^## " "$PROJECTS_FILE" | sed 's/^## /  - /'
-  exit 1
-}
+# Source des variables communes
+source "$SCRIPTS_DIR/common.sh"
 
-[ -z "$1" ] && usage
+COMMAND="${1:-}"
 
-PROJECT_ID="$1"
-PROMPT="${2:-}"
-
-# Lire le chemin local
-PROJECT_PATH=$(grep "^$PROJECT_ID=" "$PATHS_FILE" 2>/dev/null | cut -d'=' -f2)
-
-if [ -z "$PROJECT_PATH" ]; then
-  echo "❌ Projet '$PROJECT_ID' non trouvé dans paths.local.md"
-  exit 1
-fi
-
-# Vérifier que le dossier existe
-PROJECT_PATH="${PROJECT_PATH/#\~/$HOME}"
-if [ ! -d "$PROJECT_PATH" ]; then
-  echo "❌ Dossier introuvable : $PROJECT_PATH"
-  exit 1
-fi
-
-# Vérifier / créer le board Beads
-bd board "$PROJECT_ID" > /dev/null 2>&1 || {
-  echo "📋 Création du board Beads : $PROJECT_ID"
-  bd board --create "$PROJECT_ID"
-}
-
-# Lancer OpenCode depuis le projet avec la config du hub
-echo "🚀 Lancement OpenCode pour $PROJECT_ID"
-cd "$PROJECT_PATH" && opencode --config "$HUB_DIR/.opencode" ${PROMPT:+--message "$PROMPT"}
+case "$COMMAND" in
+  install)        bash "$SCRIPTS_DIR/cmd-install.sh" ;;
+  init)           bash "$SCRIPTS_DIR/cmd-init.sh" "${2:-}" "${3:-}" ;;
+  list)           bash "$SCRIPTS_DIR/cmd-list.sh" ;;
+  remove)         bash "$SCRIPTS_DIR/cmd-remove.sh" "${2:-}" ;;
+  start)          bash "$SCRIPTS_DIR/cmd-start.sh" "${2:-}" ;;
+  sync)           bash "$SCRIPTS_DIR/cmd-sync.sh" ;;
+  update)         bash "$SCRIPTS_DIR/cmd-update.sh" ;;
+  help|--help|-h) bash "$SCRIPTS_DIR/cmd-help.sh" ;;
+  "")             bash "$SCRIPTS_DIR/cmd-help.sh" ;;
+  *)
+    log_error "Commande inconnue : $COMMAND"
+    bash "$SCRIPTS_DIR/cmd-help.sh"
+    exit 1
+    ;;
+esac
