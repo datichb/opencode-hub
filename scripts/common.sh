@@ -10,6 +10,12 @@ SKILLS_DIR="$HUB_DIR/skills"
 AGENTS_DIR="$HUB_DIR/.opencode/agents"
 SCRIPTS_DIR="$HUB_DIR/scripts"
 
+# Phase 2+ : sources canoniques (agents/ et config/)
+CANONICAL_AGENTS_DIR="$HUB_DIR/agents"
+HUB_CONFIG="$HUB_DIR/config/hub.json"
+LIB_DIR="$HUB_DIR/scripts/lib"
+ADAPTERS_DIR="$HUB_DIR/scripts/adapters"
+
 # ─────────────────────────────────────────
 # COLORS
 # ─────────────────────────────────────────
