@@ -43,7 +43,7 @@ for agent_file in "$AGENTS_DIR"/*.md; do
   fi
 
   log_success "[$agent_name] Skills injectés : ${skills[*]}"
-  ((synced++))
+  synced=$((synced + 1))
 done
 
 echo ""

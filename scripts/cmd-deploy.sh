@@ -10,7 +10,8 @@ log_title "Déploiement des agents"
 
 # Résoudre les cibles
 if [ -z "$TARGET" ] || [ "$TARGET" = "all" ]; then
-  mapfile -t targets < <(get_active_targets)
+  targets=()
+  while IFS= read -r t; do targets+=("$t"); done < <(get_active_targets)
 else
   targets=("$TARGET")
 fi

@@ -5,7 +5,7 @@
 
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 
-EXTERNAL_SKILLS_DIR="$HUB_DIR/skills/external"
+# EXTERNAL_SKILLS_DIR est défini dans common.sh
 
 # ── HELPERS ──────────────────────────────────────────────────────────────────
 
@@ -158,10 +158,8 @@ _pick_targets() {
 _update_frontmatter() {
   local file="$1" skills_csv="$2" targets_csv="$3" label="$4" description="$5"
 
-  # Convertir CSV "a, b, c" en format YAML inline [a, b, c]
+  # Convertir CSV en format YAML inline ["a", "b", "c"]
   local skills_yaml
-  skills_yaml=$(echo "$skills_csv" | sed 's/,\s*/", "/g' | sed 's/^/"/' | sed 's/$/"/' | sed 's/^/[/' | sed 's/$/]/')
-  # Nettoyage : [" " "a"] → ["a"]
   skills_yaml=$(printf '%s\n' "$skills_csv" | tr ',' '\n' | sed 's/^ *//' | sed 's/ *$//' | grep -v '^$' | sed 's/.*/"&"/' | tr '\n' ',' | sed 's/,$//' | sed 's/^/[/' | sed 's/$/]/')
 
   local targets_yaml

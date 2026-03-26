@@ -9,7 +9,8 @@ if [ ! -f "$PROJECTS_FILE" ]; then
 fi
 
 # Extraire les PROJECT_IDs
-mapfile -t ids < <(grep "^## " "$PROJECTS_FILE" | sed 's/^## //')
+ids=()
+while IFS= read -r line; do ids+=("$line"); done < <(grep "^## " "$PROJECTS_FILE" | sed 's/^## //')
 
 if [ ${#ids[@]} -eq 0 ]; then
   log_warn "Aucun projet enregistré"

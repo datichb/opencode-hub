@@ -37,7 +37,7 @@ adapter_deploy() {
       build_agent_content "$agent_file" "claude-code"
     } > "$out_dir/${agent_id}.md"
     log_success "[claude-code] $agent_id"
-    ((deployed++))
+    deployed=$((deployed + 1))
   done
 
   log_success "[claude-code] $deployed agent(s) → ${deploy_dir}/.claude/agents/"

@@ -33,7 +33,7 @@ adapter_deploy() {
       \"model\": \"${OPENCODE_MODEL}\",
       \"system\": \".opencode/agents/${agent_id}.md\"
     }"
-    ((deployed++))
+    deployed=$((deployed + 1))
   done
 
   mkdir -p "$deploy_dir/.opencode"

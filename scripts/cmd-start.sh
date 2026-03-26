@@ -6,7 +6,8 @@ PROMPT="${2:-}"
 
 # ── Sélection interactive si pas d'ID ─────
 if [ -z "$PROJECT_ID" ]; then
-  mapfile -t ids < <(grep "^## " "$PROJECTS_FILE" | sed 's/^## //')
+  ids=()
+  while IFS= read -r line; do ids+=("$line"); done < <(grep "^## " "$PROJECTS_FILE" | sed 's/^## //')
 
   if [ ${#ids[@]} -eq 0 ]; then
     log_error "Aucun projet enregistré → ./oc.sh init"
@@ -48,7 +49,7 @@ fi
 log_info "Projet   : $PROJECT_ID"
 log_info "Dossier  : $PROJECT_PATH"
 
-source "$SCRIPTS_DIR/lib/adapter-manager.sh"
+source "$LIB_DIR/adapter-manager.sh"
 default_target=$(get_default_target)
 log_info "Cible    : $default_target"
 echo ""

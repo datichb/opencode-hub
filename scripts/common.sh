@@ -15,6 +15,7 @@ CANONICAL_AGENTS_DIR="$HUB_DIR/agents"
 HUB_CONFIG="$HUB_DIR/config/hub.json"
 LIB_DIR="$HUB_DIR/scripts/lib"
 ADAPTERS_DIR="$HUB_DIR/scripts/adapters"
+EXTERNAL_SKILLS_DIR="$HUB_DIR/skills/external"
 
 # ─────────────────────────────────────────
 # COLORS

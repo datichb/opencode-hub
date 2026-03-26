@@ -51,7 +51,7 @@ adapter_deploy() {
       build_agent_content "$agent_file" "vscode"
     } > "$prompts_dir/${agent_id}.prompt.md"
     log_success "[vscode] ${agent_id}.prompt.md"
-    ((deployed++))
+    deployed=$((deployed + 1))
   done
 
   echo ""

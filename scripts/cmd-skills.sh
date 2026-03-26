@@ -5,7 +5,7 @@
 
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 
-EXTERNAL_SKILLS_DIR="$HUB_DIR/skills/external"
+# SOURCES_FILE : provenance des skills externes
 SOURCES_FILE="$EXTERNAL_SKILLS_DIR/.sources.json"
 # Dossier d'installation universelle ctx7 — utilisé comme relais avant copie locale
 UNIVERSAL_SKILLS_DIR="$HOME/.agents/skills"
