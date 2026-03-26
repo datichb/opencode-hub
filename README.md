@@ -1,19 +1,22 @@
 # opencode-hub 🧠
 
-Un hub central pour piloter [OpenCode](https://opencode.ai) sur plusieurs projets,
-avec des agents IA partagés, des skills injectables et un workflow Beads intégré.
+Un hub central pour piloter des assistants IA sur plusieurs projets,
+avec des agents partagés, des skills injectables et un workflow Beads intégré.
+
+Supporte **OpenCode**, **Claude Code** et **VS Code / Copilot**.
 
 ---
 
 ## Pourquoi opencode-hub ?
 
-OpenCode se lance dans un dossier projet et ne partage rien entre projets.
-**opencode-hub** résout ça :
+Les outils IA (OpenCode, Claude Code, VS Code Copilot) fonctionnent en silo.
+**opencode-hub** centralise tout :
 
-- ✅ Agents et règles définis **une seule fois**, utilisés partout
+- ✅ Agents et rôles définis **une seule fois**, déployés partout
 - ✅ Skills (bonnes pratiques, conventions) **injectés automatiquement**
 - ✅ Projets enregistrés et lancés via **une commande unique**
 - ✅ Workflow Beads intégré pour la **gestion des tâches**
+- ✅ Cible configurable : **OpenCode**, **Claude Code**, **VS Code**
 
 ---
 
@@ -21,10 +24,30 @@ OpenCode se lance dans un dossier projet et ne partage rien entre projets.
 
 ```
 opencode-hub/
-├── oc.sh                        ← Point d'entrée principal
-├── scripts/                     ← Une commande = un fichier
-│   ├── common.sh                ← Variables et helpers partagés
-│   ├── cmd-help.sh
+├── oc.sh                              ← Point d'entrée principal
+├── agents/                            ← Sources canoniques des rôles (éditer ici)
+│   ├── planner.md
+│   └── developer.md
+├── skills/                            ← Blocs de bonnes pratiques réutilisables
+│   ├── planner.md
+│   └── developer/
+│       ├── dev-standards-universal.md
+│       ├── dev-standards-backend.md
+│       ├── dev-standards-frontend.md
+│       ├── dev-standards-frontend-a11y.md
+│       └── dev-standards-vuejs.md
+├── config/
+│   └── hub.json                       ← Cible par défaut et cibles actives
+├── scripts/
+│   ├── common.sh                      ← Variables et helpers partagés
+│   ├── lib/
+│   │   ├── prompt-builder.sh          ← Assemblage agent + skills
+│   │   └── adapter-manager.sh         ← Chargement des adaptateurs
+│   ├── adapters/
+│   │   ├── opencode.adapter.sh        ← Génère .opencode/agents/ + config.json
+│   │   ├── claude-code.adapter.sh     ← Génère .claude/agents/
+│   │   └── vscode.adapter.sh          ← Génère copilot-instructions.md + prompts
+│   ├── cmd-deploy.sh                  ← oc deploy
 │   ├── cmd-install.sh
 │   ├── cmd-init.sh
 │   ├── cmd-list.sh
@@ -32,20 +55,14 @@ opencode-hub/
 │   ├── cmd-start.sh
 │   ├── cmd-sync.sh
 │   └── cmd-update.sh
-├── .opencode/
-│   ├── config.json              ← Config globale OpenCode
-│   └── agents/                  ← Agents IA partagés
-│       ├── dev.md
-│       ├── reviewer.md
-│       └── ...
-├── skills/                      ← Blocs de bonnes pratiques
-│   ├── git-flow.md
-│   ├── vue3.md
-│   └── ...
 └── projects/
-    ├── projects.md              ← Registre des projets (versionné)
-    └── paths.local.md           ← Chemins locaux (ignoré par git)
+    ├── projects.md                    ← Registre des projets (versionné)
+    └── paths.local.md                 ← Chemins locaux (ignoré par git)
 ```
+
+> Les dossiers `.opencode/agents/`, `.claude/`, `.vscode/prompts/` et
+> `.github/copilot-instructions.md` sont des **sorties générées** — ne jamais
+> les éditer à la main.
 
 ---
 
@@ -56,7 +73,7 @@ opencode-hub/
 ```bash
 git clone https://github.com/toi/opencode-hub.git ~/opencode-hub
 cd ~/opencode-hub
-chmod +x oc.sh scripts/*.sh
+chmod +x oc.sh scripts/*.sh scripts/adapters/*.sh scripts/lib/*.sh
 ```
 
 ### 2. Installer les dépendances
@@ -65,34 +82,80 @@ chmod +x oc.sh scripts/*.sh
 ./oc.sh install
 ```
 
-Installe automatiquement :
-- [OpenCode](https://opencode.ai) via npm
-- [Beads](https://beads.so) via npm
-- Crée les fichiers initiaux si absents
+Interactif : choisir la ou les cibles à configurer.
+
+| Choix | Cibles installées |
+|-------|-------------------|
+| 1 (défaut) | OpenCode |
+| 2 | Claude Code |
+| 3 | VS Code / Copilot |
+| 4 | Tout |
 
 ### 3. Alias recommandé
 
-Ajouter dans ton `.bashrc` / `.zshrc` :
-
 ```bash
+# Dans ~/.zshrc ou ~/.bashrc
 alias oc="~/opencode-hub/oc.sh"
+source ~/.zshrc
 ```
 
-Puis :
+---
+
+## Workflow typique
 
 ```bash
-source ~/.zshrc
+# 1. Installer le hub et choisir les cibles
+oc install
+
+# 2. Enregistrer un projet
+oc init MON-APP ~/workspace/mon-app
+
+# 3. Déployer les agents dans le projet
+oc deploy opencode MON-APP
+oc deploy claude-code MON-APP   # si activé
+oc deploy vscode MON-APP        # si activé
+
+# 4. Lancer l'outil par défaut dans le projet
+oc start MON-APP
 ```
 
 ---
 
 ## Commandes
 
-### `oc install`
-Installe OpenCode, Beads et prépare la structure du hub.
+### `oc install [target]`
+Installe les outils, crée la structure et configure les cibles actives.
 
 ```bash
-./oc.sh install
+oc install
+```
+
+---
+
+### `oc deploy <target> [PROJECT_ID]`
+Génère les fichiers agents pour la cible spécifiée.
+
+```bash
+oc deploy opencode              # déploie au niveau du hub
+oc deploy claude-code MON-APP   # déploie dans un projet
+oc deploy vscode MON-APP
+oc deploy all                   # toutes les cibles actives
+```
+
+| Cible | Sorties générées |
+|-------|-----------------|
+| `opencode` | `.opencode/agents/*.md` + `.opencode/config.json` |
+| `claude-code` | `.claude/agents/*.md` |
+| `vscode` | `.github/copilot-instructions.md` + `.vscode/prompts/*.prompt.md` |
+
+---
+
+### `oc start [PROJECT_ID]`
+Lance l'outil par défaut (défini dans `config/hub.json`) dans le projet.
+
+```bash
+oc start             # sélection interactive
+oc start MON-APP
 ```
 
 ---
@@ -101,38 +164,17 @@ Installe OpenCode, Beads et prépare la structure du hub.
 Enregistre un projet dans le hub.
 
 ```bash
-./oc.sh init              # mode interactif
-./oc.sh init MON-APP ~/workspace/mon-app
+oc init              # mode interactif
+oc init MON-APP ~/workspace/mon-app
 ```
-
-- Ajoute le projet dans `projects/projects.md`
-- Enregistre le chemin local dans `projects/paths.local.md`
-- Accepte les projets existants (adoption) ou nouveaux
 
 ---
 
 ### `oc list`
-Liste tous les projets enregistrés avec leur statut.
+Liste les projets enregistrés avec leur statut d'accessibilité.
 
 ```bash
-./oc.sh list
-```
-
-```
-  ID                   Chemin local                   Statut
-  ──────────────────────────────────────────────────────────
-  MON-APP              ~/workspace/mon-app            ✔ accessible
-  AUTRE-APP            ~/workspace/autre              ✘ introuvable
-```
-
----
-
-### `oc start [PROJECT_ID]`
-Lance OpenCode dans le dossier du projet.
-
-```bash
-./oc.sh start             # sélection interactive
-./oc.sh start MON-APP
+oc list
 ```
 
 ---
@@ -141,76 +183,100 @@ Lance OpenCode dans le dossier du projet.
 Supprime un projet du registre (avec confirmation).
 
 ```bash
-./oc.sh remove MON-APP
+oc remove MON-APP
 ```
 
 ---
 
 ### `oc sync`
-Injecte les skills dans les agents qui ont un marqueur `<!-- SKILLS: ... -->`.
+Injection legacy des skills dans `.opencode/agents/` via marqueurs HTML.
+Préférer `oc deploy opencode` pour le nouveau flux.
 
 ```bash
-./oc.sh sync
+oc sync
 ```
 
 ---
 
 ### `oc update`
-Met à jour OpenCode et Beads.
+Met à jour les outils installés (selon les cibles actives).
 
 ```bash
-./oc.sh update
+oc update
 ```
 
 ---
 
-## Agents
+## Agents canoniques
 
-Les agents sont définis dans `.opencode/agents/` et partagés entre tous les projets.
-
-### Exemple — `agents/dev.md`
+Les agents sont définis dans `agents/` avec un frontmatter déclarant
+leurs métadonnées, leurs cibles et leurs skills.
 
 ```markdown
 ---
-name: dev
-description: Agent développement principal
+id: developer
+label: Developer
+description: Assistant de développement...
+targets: [opencode, claude-code, vscode]
+skills: [developer/dev-standards-universal, developer/dev-standards-backend]
 ---
 
-Tu es un développeur senior. Tu suis les conventions du projet.
+# 👨‍💻 Developer
 
-<!-- SKILLS: git-flow, vue3 -->
-
-<!-- SKILLS_START -->
-<!-- injecté automatiquement par ./oc.sh sync -->
-<!-- SKILLS_END -->
+Tu es un assistant de développement...
 ```
 
-Le marqueur `<!-- SKILLS: skill1, skill2 -->` indique quels fichiers
-de `skills/` injecter. Lancer `./oc.sh sync` après toute modification
-d'un skill.
+| Champ | Rôle |
+|-------|------|
+| `id` | Identifiant unique du rôle |
+| `label` | Nom affiché dans l'outil cible |
+| `description` | Description courte |
+| `targets` | Cibles supportées : `opencode`, `claude-code`, `vscode` |
+| `skills` | Skills à injecter (chemins relatifs à `skills/`) |
+
+**Pour modifier un agent :** éditer `agents/<id>.md`, puis `oc deploy <target>`.
 
 ---
 
 ## Skills
 
-Les skills sont des blocs Markdown dans `skills/` décrivant des conventions
-ou bonnes pratiques réutilisables.
+Les skills sont des blocs Markdown dans `skills/` injectés automatiquement
+dans les agents qui les déclarent.
 
-### Exemple — `skills/git-flow.md`
-
-```markdown
-## Git Flow
-
-- Branches : `feature/`, `fix/`, `chore/`
-- Commits : format Conventional Commits
-- Une PR = une tâche Beads
-- Toujours rebaser sur `main` avant de merger
+```
+skills/
+├── planner.md                      ← Workflow Beads du planner
+└── developer/
+    ├── dev-standards-universal.md  ← Qualité, SOLID, TypeScript strict
+    ├── dev-standards-backend.md    ← Architecture en couches, DTOs
+    ├── dev-standards-frontend.md   ← Séparation logique/présentation
+    ├── dev-standards-frontend-a11y.md ← WCAG 2.1, sémantique HTML
+    └── dev-standards-vuejs.md      ← Composition API, Pinia, composables
 ```
 
-Ajouter un skill dans un agent :
+**Pour ajouter un skill :**
 1. Créer `skills/mon-skill.md`
-2. Ajouter `<!-- SKILLS: ..., mon-skill -->` dans l'agent
-3. Lancer `./oc.sh sync`
+2. L'ajouter dans le frontmatter de l'agent : `skills: [..., mon-skill]`
+3. Relancer `oc deploy <target>`
+
+---
+
+## Configuration hub
+
+`config/hub.json` contrôle le comportement global :
+
+```json
+{
+  "version": "2.0.0",
+  "default_target": "opencode",
+  "active_targets": ["opencode"]
+}
+```
+
+| Clé | Rôle |
+|-----|------|
+| `default_target` | Cible utilisée par `oc start` |
+| `active_targets` | Cibles déployées par `oc deploy all` et mises à jour par `oc update` |
 
 ---
 
@@ -219,8 +285,6 @@ Ajouter un skill dans un agent :
 ### `projects/projects.md` — versionné
 
 ```markdown
-# Projets
-
 ## MON-APP
 - Nom : Mon Application
 - Stack : Vue 3 + Laravel
@@ -231,45 +295,28 @@ Ajouter un skill dans un agent :
 ### `projects/paths.local.md` — ignoré par git
 
 ```
-# Chemins locaux (ignoré par git)
 MON-APP=~/workspace/mon-app
 AUTRE-APP=/home/user/projets/autre-app
 ```
 
 > Chaque développeur maintient son propre `paths.local.md`.
-> Il ne doit jamais être commité.
 
 ---
 
-## Workflow typique
+## Ce qui est versionné / généré
 
-```bash
-# 1. Installer le hub
-./oc.sh install
-
-# 2. Enregistrer un projet
-./oc.sh init MON-APP ~/workspace/mon-app
-
-# 3. Synchroniser les skills dans les agents
-./oc.sh sync
-
-# 4. Lancer OpenCode
-./oc.sh start MON-APP
-```
-
----
-
-## .gitignore recommandé
-
-```
-projects/paths.local.md
-.opencode/auth.json
-```
+| Versionné ✅ | Généré (ignoré git) ❌ |
+|-------------|----------------------|
+| `agents/` | `.opencode/agents/` |
+| `skills/` | `.claude/agents/` |
+| `config/hub.json` | `.vscode/prompts/` |
+| `scripts/` | `.github/copilot-instructions.md` |
+| `projects/projects.md` | `projects/paths.local.md` |
 
 ---
 
 ## Contribuer
 
-Les agents et skills sont versionnés et partagés par toute l'équipe.
-Pour ajouter un skill ou modifier un agent, soumettre une PR comme pour
-n'importe quel autre fichier du projet.
+Les agents, skills et config sont versionnés et partagés par toute l'équipe.
+Pour modifier un agent ou ajouter un skill, soumettre une PR puis relancer
+`oc deploy <target>` localement après merge.
