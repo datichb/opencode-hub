@@ -287,18 +287,193 @@ cmd_remove() {
   log_info    "N'oubliez pas de le retirer de la liste skills: de vos agents si nécessaire."
 }
 
+# ── USED-BY ──────────────────────────────────────────────────────────────────
+
+##
+# Liste les agents canoniques qui référencent un skill donné.
+# Fonctionne pour les skills locaux et externes (avec ou sans préfixe external/).
+# @param {string} $1 — Nom du skill (ex: developer/dev-standards-frontend ou external/pdf)
+##
+cmd_used_by() {
+  local skill="${1:-}"
+  if [ -z "$skill" ]; then
+    log_error "Usage : oc skills used-by <skill>"
+    log_info  "Exemples :"
+    log_info  "  oc skills used-by developer/dev-standards-frontend"
+    log_info  "  oc skills used-by external/pdf"
+    exit 1
+  fi
+
+  log_title "Agents utilisant le skill : $skill"
+  echo ""
+
+  local found=0
+  for agent_file in "$CANONICAL_AGENTS_DIR"/*.md; do
+    [ -f "$agent_file" ] || continue
+    local skills_line
+    skills_line=$(grep '^skills:' "$agent_file" | head -1 | tr -d '[]"')
+    # Normaliser les espaces autour des virgules pour une recherche fiable
+    if echo "$skills_line" | tr ',' '\n' | sed 's/^ *//' | sed 's/ *$//' | grep -qxF "$skill"; then
+      local agent_id
+      agent_id=$(basename "$agent_file" .md)
+      echo -e "  ${GREEN}✔${RESET}  $agent_id  (agents/${agent_id}.md)"
+      found=1
+    fi
+  done
+
+  if [ "$found" -eq 0 ]; then
+    echo "  (aucun agent n'utilise ce skill)"
+  fi
+  echo ""
+}
+
+# ── UPDATE ────────────────────────────────────────────────────────────────────
+
+##
+# Télécharge la version à jour d'un skill externe depuis sa source ctx7,
+# affiche un diff et demande confirmation avant d'écraser.
+# Sans argument → met à jour tous les skills externes enregistrés.
+# @param {string} $1 — (optionnel) Nom du skill à mettre à jour
+##
+cmd_update() {
+  _require_npx
+  _init_external
+
+  if ! command -v jq &>/dev/null; then
+    log_error "jq est requis pour lire les sources enregistrées."
+    exit 1
+  fi
+
+  if [ ! -f "$SOURCES_FILE" ] || [ "$(cat "$SOURCES_FILE")" = '{}' ]; then
+    log_info "Aucun skill externe enregistré. Rien à mettre à jour."
+    return
+  fi
+
+  local target_skill="${1:-}"
+  local skills_to_update=()
+
+  if [ -n "$target_skill" ]; then
+    # Accepter "external/pdf" ou "pdf"
+    target_skill="${target_skill#external/}"
+    if ! jq -e --arg n "$target_skill" 'has($n)' "$SOURCES_FILE" &>/dev/null; then
+      log_error "Skill externe '$target_skill' non trouvé dans .sources.json"
+      log_info  "Utilisez 'oc skills list' pour voir les skills enregistrés."
+      exit 1
+    fi
+    skills_to_update=("$target_skill")
+  else
+    while IFS= read -r s; do
+      [ -n "$s" ] && skills_to_update+=("$s")
+    done < <(jq -r 'keys[]' "$SOURCES_FILE")
+  fi
+
+  log_title "Mise à jour des skills externes"
+  echo ""
+
+  local updated=0 skipped=0
+  for skill_name in "${skills_to_update[@]}"; do
+    local repo dest tmp_file
+    repo=$(jq -r --arg n "$skill_name" '.[$n].repo' "$SOURCES_FILE")
+    dest="$EXTERNAL_SKILLS_DIR/${skill_name}.md"
+
+    log_info "Vérification de '$skill_name' depuis $repo..."
+
+    # Télécharger dans un fichier temporaire pour comparer
+    tmp_file=$(mktemp /tmp/oc-skill-update-XXXXXX.md)
+    # Supprimer le cache universel pour forcer le re-téléchargement
+    rm -f "$UNIVERSAL_SKILLS_DIR/${skill_name}.md"
+
+    # Installer silencieusement dans ~/.agents/skills/
+    if ! npx ctx7 skills install "$repo" "$skill_name" --universal &>/dev/null; then
+      log_warn "Échec du téléchargement de '$skill_name'. Ignoré."
+      rm -f "$tmp_file"
+      skipped=$((skipped + 1))
+      continue
+    fi
+
+    local cached="$UNIVERSAL_SKILLS_DIR/${skill_name}.md"
+    if [ ! -f "$cached" ]; then
+      cached=$(find "$UNIVERSAL_SKILLS_DIR" -iname "${skill_name}.*" -type f 2>/dev/null | head -1)
+    fi
+
+    if [ -z "$cached" ] || [ ! -f "$cached" ]; then
+      log_warn "Fichier téléchargé introuvable pour '$skill_name'. Ignoré."
+      rm -f "$tmp_file"
+      skipped=$((skipped + 1))
+      continue
+    fi
+
+    cp "$cached" "$tmp_file"
+
+    # Comparer avec la version locale
+    if [ -f "$dest" ] && diff -q "$dest" "$tmp_file" &>/dev/null; then
+      log_success "'$skill_name' est déjà à jour."
+      rm -f "$tmp_file"
+      skipped=$((skipped + 1))
+      continue
+    fi
+
+    # Afficher le diff
+    echo ""
+    echo -e "${BOLD}Diff pour '$skill_name' :${RESET}"
+    echo "  (- ancienne version  /  + nouvelle version)"
+    echo ""
+    diff "$dest" "$tmp_file" | head -60 || true
+    echo ""
+
+    read -rp "Appliquer la mise à jour pour '$skill_name' ? (Y/n) : " confirm
+    confirm="${confirm:-Y}"
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+      cp "$tmp_file" "$dest"
+      local now
+      now=$(date +%Y-%m-%d)
+      _record_source "$skill_name" "$repo" "$now"
+      log_success "'$skill_name' mis à jour."
+      updated=$((updated + 1))
+
+      # Lister les agents impactés
+      local agents_impacted=()
+      for agent_file in "$CANONICAL_AGENTS_DIR"/*.md; do
+        [ -f "$agent_file" ] || continue
+        local skills_line
+        skills_line=$(grep '^skills:' "$agent_file" | head -1 | tr -d '[]"')
+        if echo "$skills_line" | tr ',' '\n' | sed 's/^ *//' | sed 's/ *$//' | grep -qxF "external/$skill_name"; then
+          agents_impacted+=("$(basename "$agent_file" .md)")
+        fi
+      done
+
+      if [ ${#agents_impacted[@]} -gt 0 ]; then
+        echo -e "  ${YELLOW}⚠${RESET}  Agents impactés : ${agents_impacted[*]}"
+        echo -e "  ${YELLOW}⚠${RESET}  Relancez : ./oc.sh deploy all"
+      fi
+    else
+      log_info "Mise à jour de '$skill_name' ignorée."
+      skipped=$((skipped + 1))
+    fi
+
+    rm -f "$tmp_file"
+    echo ""
+  done
+
+  echo ""
+  [ "$updated" -gt 0 ] && log_success "$updated skill(s) mis à jour."
+  [ "$skipped" -gt 0 ] && log_info    "$skipped skill(s) inchangé(s) ou ignoré(s)."
+}
+
 # ── DISPATCH ─────────────────────────────────────────────────────────────────
 
 SUBCOMMAND="${1:-}"
 shift 2>/dev/null || true
 
 case "$SUBCOMMAND" in
-  search) cmd_search "$@" ;;
-  info)   cmd_info "$@" ;;
-  add)    cmd_add "$@" ;;
-  list)   cmd_list ;;
-  sync)   cmd_sync ;;
-  remove) cmd_remove "$@" ;;
+  search)  cmd_search "$@" ;;
+  info)    cmd_info "$@" ;;
+  add)     cmd_add "$@" ;;
+  list)    cmd_list ;;
+  sync)    cmd_sync ;;
+  update)  cmd_update "$@" ;;
+  used-by) cmd_used_by "$@" ;;
+  remove)  cmd_remove "$@" ;;
   *)
     echo -e "${BOLD}oc skills — Gestion des skills externes${RESET}"
     echo ""
@@ -306,14 +481,16 @@ case "$SUBCOMMAND" in
     echo "  info /owner/repo           Prévisualiser les skills d'un dépôt"
     echo "  add /owner/repo [name]     Ajouter un skill externe"
     echo "  list                       Lister tous les skills (locaux + externes)"
-    echo "  sync                       Re-télécharger les skills externes enregistrés"
+    echo "  update [name]              Mettre à jour un skill externe (ou tous)"
+    echo "  used-by <skill>            Lister les agents qui utilisent ce skill"
+    echo "  sync                       Re-télécharger tous les skills (après clone)"
     echo "  remove <name>              Supprimer un skill externe"
     echo ""
     echo -e "${BOLD}Exemples :${RESET}"
-    echo "  ./oc.sh skills search pdf"
-    echo "  ./oc.sh skills info /anthropics/skills"
-    echo "  ./oc.sh skills add /anthropics/skills pdf"
-    echo "  ./oc.sh skills list"
+    echo "  ./oc.sh skills update pdf"
+    echo "  ./oc.sh skills update"
+    echo "  ./oc.sh skills used-by external/pdf"
+    echo "  ./oc.sh skills used-by developer/dev-standards-frontend"
     echo ""
     ;;
 esac

@@ -13,5 +13,15 @@ done
 log_info "Mise à jour Beads..."
 npm update -g @beads/cli && log_success "Beads mis à jour" || log_warn "Échec de la mise à jour Beads"
 
+# ── Skills externes ───────────────────────────────────────────────────────────
+EXTERNAL_SOURCES="$HUB_DIR/skills/external/.sources.json"
+if [ -f "$EXTERNAL_SOURCES" ] && [ "$(cat "$EXTERNAL_SOURCES")" != '{}' ]; then
+  echo ""
+  log_info "Mise à jour des skills externes..."
+  bash "$SCRIPTS_DIR/cmd-skills.sh" update
+else
+  log_info "Aucun skill externe enregistré — étape ignorée."
+fi
+
 echo ""
 log_success "Mise à jour terminée"
