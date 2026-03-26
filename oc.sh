@@ -18,6 +18,7 @@ case "$COMMAND" in
   start)          bash "$SCRIPTS_DIR/cmd-start.sh" "${2:-}" "${3:-}" ;;
   deploy)         bash "$SCRIPTS_DIR/cmd-deploy.sh" "${2:-}" "${3:-}" ;;
   skills)         bash "$SCRIPTS_DIR/cmd-skills.sh" "${2:-}" "${3:-}" "${4:-}" ;;
+  agent)          bash "$SCRIPTS_DIR/cmd-agent.sh" "${2:-}" "${3:-}" ;;
   sync)           bash "$SCRIPTS_DIR/cmd-sync.sh" ;;
   update)         bash "$SCRIPTS_DIR/cmd-update.sh" ;;
   help|--help|-h) bash "$SCRIPTS_DIR/cmd-help.sh" ;;
