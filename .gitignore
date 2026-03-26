@@ -1,2 +1,8 @@
 projects/paths.local.md
 .DS_Store
+
+# Sorties générées par oc deploy — ne pas committer
+.opencode/agents/
+.claude/
+.github/copilot-instructions.md
+.vscode/prompts/

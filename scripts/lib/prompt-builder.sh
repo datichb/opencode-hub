@@ -58,7 +58,9 @@ build_agent_content() {
   get_agent_body "$agent_file"
 
   local skills=()
-  mapfile -t skills < <(extract_frontmatter_list "$agent_file" "skills")
+  while IFS= read -r skill; do
+    skills+=("$skill")
+  done < <(extract_frontmatter_list "$agent_file" "skills")
 
   if [ ${#skills[@]} -gt 0 ]; then
     echo ""
