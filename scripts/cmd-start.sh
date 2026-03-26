@@ -44,17 +44,14 @@ if [ ! -d "$PROJECT_PATH" ]; then
   exit 1
 fi
 
-# ── Lancement OpenCode ────────────────────
+# ── Lancement via adaptateur ─────────────
 log_info "Projet   : $PROJECT_ID"
 log_info "Dossier  : $PROJECT_PATH"
+
+source "$SCRIPTS_DIR/lib/adapter-manager.sh"
+default_target=$(get_default_target)
+log_info "Cible    : $default_target"
 echo ""
 
-cd "$PROJECT_PATH"
-
-if [ -n "$PROMPT" ]; then
-  log_info "Prompt   : $PROMPT"
-  echo ""
-  exec opencode --prompt "$PROMPT"
-else
-  exec opencode
-fi
+load_adapter "$default_target"
+adapter_start "$PROJECT_PATH" "$PROMPT"
