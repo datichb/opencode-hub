@@ -86,4 +86,8 @@ if [ ! -f "$PATHS_FILE" ]; then
 fi
 
 echo ""
+log_info "Tip : Enrichissez vos agents avec des skills tiers via context7 :"
+log_info "  ./oc.sh skills search <query>        # Rechercher"
+log_info "  ./oc.sh skills add /owner/repo name  # Ajouter"
+echo ""
 log_success "opencode-hub prêt !"

@@ -6,3 +6,7 @@ projects/paths.local.md
 .claude/
 .github/copilot-instructions.md
 .vscode/prompts/
+
+# Skills téléchargés depuis des sources externes — ne pas committer
+# Utilisez : oc skills sync   pour les re-télécharger après un clone
+skills/external/
