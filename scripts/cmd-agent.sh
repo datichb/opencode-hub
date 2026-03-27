@@ -35,71 +35,16 @@ _list_all_skills() {
 }
 
 ##
-# Affiche une page de skills avec numéros globaux, état sélectionné, et description.
-# Paramètres positionnels (pas de nameref — compatible sous-shell et fonction directe) :
-# $1 = page courante (0-based)
-# $2 = page_size
-# $3 = selected CSV (indices 0-based séparés par virgule)
-# $4... = liste de tous les skills
-##
-_print_skills_page() {
-  local page=$1 page_size=$2 selected_csv=$3
-  shift 3
-  local all_skills=("$@")
-  local total=${#all_skills[@]}
-  local total_pages=$(( (total + page_size - 1) / page_size ))
-  [ "$total_pages" -eq 0 ] && total_pages=1
-  local start=$(( page * page_size ))
-  local end=$(( start + page_size ))
-  [ "$end" -gt "$total" ] && end=$total
-
-  echo ""
-  echo -e "${BOLD}Skills disponibles — page $((page+1))/$total_pages${RESET}  (total : $total)"
-  echo ""
-
-  for (( i=start; i<end; i++ )); do
-    local skill="${all_skills[$i]}"
-    local num=$((i + 1))
-    local desc=""
-    local skill_file="$HUB_DIR/skills/${skill}.md"
-    [ -f "$skill_file" ] && desc=$(grep '^description:' "$skill_file" | head -1 | sed 's/^description:[[:space:]]*//')
-
-    # Vérifie si l'indice est dans la sélection active
-    local is_selected=0
-    IFS=',' read -ra sel_indices <<< "$selected_csv"
-    for s in "${sel_indices[@]}"; do
-      [ "$s" = "$i" ] && is_selected=1 && break
-    done
-
-    if [ "$is_selected" -eq 1 ]; then
-      printf "  ${GREEN}[x]${RESET} %3d. %-50s" "$num" "$skill"
-    else
-      printf "      %3d. %-50s" "$num" "$skill"
-    fi
-    [ -n "$desc" ] && printf "  ${BLUE}%s${RESET}" "$desc"
-    echo ""
-  done
-
-  echo ""
-  local nav=""
-  [ "$page" -gt 0 ]                  && nav+="[p] précédent  "
-  [ "$page" -lt $((total_pages-1)) ] && nav+="[n] suivant  "
-  nav+="[numéros] toggle  [0] vider  [entrée] valider"
-  echo -e "  $nav"
-  echo ""
-}
-
-##
-# Sélecteur de skills interactif avec pagination.
-# Résultat écrit dans le fichier $SKILLS_RESULT_FILE (CSV).
+# Menu interactif de sélection de skills avec navigation flèches + espace.
+# Résultat dans $PICKED_SKILLS (CSV).
 # Appeler directement (pas dans une sous-shell).
-# @param {string} $1 — sélection courante (CSV)
+# @param {string} $1 — sélection courante (CSV de noms de skills, sans guillemets)
 ##
 _pick_skills() {
   local current_csv="${1:-}"
   local page_size=10
 
-  # Charger tous les skills dans un array
+  # Charger tous les skills
   local all_skills=()
   while IFS= read -r s; do
     all_skills+=("$s")
@@ -111,67 +56,122 @@ _pick_skills() {
     return
   fi
 
-  # Initialiser la sélection courante (indices 0-based, CSV)
-  local selected_csv=""
-  for (( i=0; i<${#all_skills[@]}; i++ )); do
+  local total=${#all_skills[@]}
+  local total_pages=$(( (total + page_size - 1) / page_size ))
+
+  # Initialiser la sélection : tableau booléen indexed par position dans all_skills
+  # Nettoyer current_csv : retirer guillemets et espaces superflus
+  local clean_csv
+  clean_csv=$(echo "$current_csv" | tr -d '"' | tr ',' '\n' | sed 's/^ *//;s/ *$//' | grep -v '^$' | tr '\n' ',' | sed 's/,$//')
+
+  local checked=()
+  for (( i=0; i<total; i++ )); do
     local skill="${all_skills[$i]}"
-    if echo ",$current_csv," | grep -q ",${skill},"; then
-      selected_csv="${selected_csv:+$selected_csv,}$i"
+    if echo ",$clean_csv," | grep -qF ",$skill,"; then
+      checked+=("1")
+    else
+      checked+=("0")
     fi
   done
 
-  local page=0
-  local total_pages=$(( (${#all_skills[@]} + page_size - 1) / page_size ))
+  local cursor=0  # indice global du curseur dans all_skills
 
+  # Rendu d'une page
+  _render_page() {
+    local page=$(( cursor / page_size ))
+    local start=$(( page * page_size ))
+    local end=$(( start + page_size ))
+    [ "$end" -gt "$total" ] && end=$total
+
+    # Effacer l'écran du menu (lignes affichées)
+    tput clear 2>/dev/null || echo -e "\033[2J\033[H"
+
+    echo -e "${BOLD}Sélection des skills — page $((page+1))/$total_pages${RESET}"
+    echo -e "  ${BLUE}↑↓${RESET} naviguer  ${BLUE}espace${RESET} cocher/décocher  ${BLUE}entrée${RESET} valider  ${BLUE}0${RESET} tout désélectionner"
+    echo ""
+
+    for (( i=start; i<end; i++ )); do
+      local skill="${all_skills[$i]}"
+      local num=$((i + 1))
+      local desc=""
+      local skill_file="$HUB_DIR/skills/${skill}.md"
+      [ -f "$skill_file" ] && desc=$(grep '^description:' "$skill_file" | head -1 | sed 's/^description:[[:space:]]*//')
+
+      local check_mark="   "
+      [ "${checked[$i]}" = "1" ] && check_mark="${GREEN}[x]${RESET}"
+
+      if [ "$i" -eq "$cursor" ]; then
+        printf "  ${BOLD}▶ %s %3d. %-45s${RESET}" "$check_mark" "$num" "$skill"
+      else
+        printf "    %s %3d. %-45s" "$check_mark" "$num" "$skill"
+      fi
+      [ -n "$desc" ] && printf "  ${BLUE}%s${RESET}" "$desc"
+      echo ""
+    done
+
+    echo ""
+    # Compter les sélectionnés
+    local count=0
+    for v in "${checked[@]}"; do [ "$v" = "1" ] && count=$((count+1)); done
+    echo -e "  ${BOLD}$count skill(s) sélectionné(s)${RESET}"
+    [ "$total_pages" -gt 1 ] && echo -e "  ${BLUE}n${RESET} page suivante  ${BLUE}p${RESET} page précédente"
+    echo ""
+  }
+
+  # Boucle de navigation
   while true; do
-    _print_skills_page "$page" "$page_size" "$selected_csv" "${all_skills[@]}"
+    _render_page
 
-    read -rp "  > " input </dev/tty
+    # Lire une touche (gère les séquences d'échappement flèches)
+    local key
+    IFS= read -rsn1 key </dev/tty
+    if [[ "$key" == $'\x1b' ]]; then
+      local seq1 seq2
+      IFS= read -rsn1 -t 0.1 seq1 </dev/tty
+      IFS= read -rsn1 -t 0.1 seq2 </dev/tty
+      key="${key}${seq1}${seq2}"
+    fi
 
-    case "$input" in
-      n|N)
-        [ "$page" -lt $((total_pages-1)) ] && page=$((page+1)) \
-          || echo -e "  ${YELLOW}Déjà sur la dernière page.${RESET}"
+    case "$key" in
+      $'\x1b[A'|$'\x1b[D')  # flèche haut ou gauche
+        [ "$cursor" -gt 0 ] && cursor=$((cursor - 1))
         ;;
-      p|P)
-        [ "$page" -gt 0 ] && page=$((page-1)) \
-          || echo -e "  ${YELLOW}Déjà sur la première page.${RESET}"
+      $'\x1b[B'|$'\x1b[C')  # flèche bas ou droite
+        [ "$cursor" -lt $((total - 1)) ] && cursor=$((cursor + 1))
         ;;
-      "")
+      " ")  # espace — toggle
+        if [ "${checked[$cursor]}" = "1" ]; then
+          checked[$cursor]="0"
+        else
+          checked[$cursor]="1"
+        fi
+        ;;
+      "")  # entrée — valider
         break
         ;;
-      0)
-        selected_csv=""
-        echo -e "  ${YELLOW}Sélection vidée.${RESET}"
+      "0")  # tout désélectionner
+        for (( i=0; i<total; i++ )); do checked[$i]="0"; done
         ;;
-      *)
-        for num in $input; do
-          if ! echo "$num" | grep -qE '^[0-9]+$'; then
-            echo -e "  ${YELLOW}Numéro invalide ignoré : $num${RESET}"
-            continue
-          fi
-          local idx=$(( num - 1 ))
-          if [ "$idx" -lt 0 ] || [ "$idx" -ge "${#all_skills[@]}" ]; then
-            echo -e "  ${YELLOW}Numéro hors plage ignoré : $num${RESET}"
-            continue
-          fi
-          # Toggle
-          if echo ",$selected_csv," | grep -q ",$idx,"; then
-            selected_csv=$(echo "$selected_csv" | tr ',' '\n' | grep -v "^${idx}$" | tr '\n' ',' | sed 's/,$//')
-          else
-            selected_csv="${selected_csv:+$selected_csv,}$idx"
-          fi
-        done
+      "n"|"N")  # page suivante
+        local next_page=$(( cursor / page_size + 1 ))
+        if [ "$next_page" -lt "$total_pages" ]; then
+          cursor=$(( next_page * page_size ))
+        fi
+        ;;
+      "p"|"P")  # page précédente
+        local prev_page=$(( cursor / page_size - 1 ))
+        if [ "$prev_page" -ge 0 ]; then
+          cursor=$(( prev_page * page_size ))
+        fi
         ;;
     esac
   done
 
-  # Construire le CSV final trié par indice
+  # Reconstruire le CSV final
   local chosen=()
-  while IFS= read -r idx; do
-    [ -z "$idx" ] && continue
-    chosen+=("${all_skills[$idx]}")
-  done < <(echo "$selected_csv" | tr ',' '\n' | grep -v '^$' | sort -n)
+  for (( i=0; i<total; i++ )); do
+    [ "${checked[$i]}" = "1" ] && chosen+=("${all_skills[$i]}")
+  done
 
   PICKED_SKILLS=$(printf '%s\n' "${chosen[@]}" | tr '\n' ',' | sed 's/,$//')
 }
