@@ -8,14 +8,6 @@ adapter_validate() {
   command -v claude &>/dev/null || { log_warn "[claude-code] CLI non détecté → https://code.claudeai.ai"; return 1; }
 }
 
-adapter_check_deps() {
-  if ! command -v node &>/dev/null; then
-    log_error "[claude-code] Node.js requis → https://nodejs.org"
-    return 1
-  fi
-  return 0
-}
-
 adapter_deploy() {
   local deploy_dir="${1:-$HUB_DIR}"
   local out_dir="$deploy_dir/.claude/agents"

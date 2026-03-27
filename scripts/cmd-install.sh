@@ -29,18 +29,6 @@ esac
 
 echo ""
 
-# ── Vérifier les dépendances de chaque cible ────
-deps_ok=true
-for target in "${active_targets[@]}"; do
-  load_adapter "$target"
-  adapter_check_deps "$OS" || deps_ok=false
-done
-
-if [ "$deps_ok" = false ]; then
-  log_error "Dépendances manquantes — installer les outils ci-dessus puis relancer : ./oc.sh install"
-  exit 1
-fi
-
 # ── Dossiers requis ──────────────────────
 mkdir -p "$HUB_DIR/projects" "$HUB_DIR/skills" "$HUB_DIR/agents" \
          "$HUB_DIR/.opencode/agents" "$HUB_DIR/config" \
