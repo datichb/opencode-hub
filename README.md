@@ -55,6 +55,7 @@ opencode-hub/
 │   ├── cmd-list.sh
 │   ├── cmd-remove.sh
 │   ├── cmd-start.sh
+│   ├── cmd-beads.sh
 │   ├── cmd-agent.sh
 │   ├── cmd-skills.sh
 │   └── cmd-update.sh
@@ -271,6 +272,22 @@ oc skills remove <name>           # supprimer un skill externe
 
 ---
 
+### `oc beads <sous-commande>`
+Gère l'intégration Beads (`bd`) dans les projets enregistrés.
+`bd` doit être installé via Homebrew (`brew install bd`).
+
+```bash
+oc beads status                   # vérifie Beads sur tous les projets
+oc beads status MON-APP           # vérifie Beads sur un projet précis
+oc beads init MON-APP             # initialise .beads/ dans le projet
+oc beads list MON-APP             # liste les tickets ouverts du projet
+oc beads open MON-APP             # affiche le chemin pour utiliser bd manuellement
+```
+
+> `oc start` avertit automatiquement si `.beads/` n'est pas présent dans le projet.
+
+---
+
 ## Agents canoniques
 
 Les agents sont définis dans `agents/` avec un frontmatter déclarant
@@ -312,6 +329,7 @@ dans les agents qui les déclarent. Chaque fichier skill a un frontmatter
 skills/
 ├── planner.md                         ← Workflow Beads du planner
 └── developer/
+    ├── dev-beads.md                   ← Commandes bd et workflow tickets
     ├── dev-standards-universal.md     ← Clean Code, SOLID complet, TypeScript strict
     ├── dev-standards-backend.md       ← Architecture en couches, DTOs, sécurité
     ├── dev-standards-frontend.md      ← Séparation logique/présentation, performance
@@ -393,7 +411,8 @@ Pour modifier un agent ou ajouter un skill, soumettre une PR puis relancer
 
 - **`oc init`** rejette les `PROJECT_ID` contenant des espaces, slashes ou caractères spéciaux.
   Caractères autorisés : lettres, chiffres, `-` et `_`.
-- **`oc start`** avertit si les agents ne sont pas encore déployés dans le projet cible.
+- **`oc start`** avertit si les agents ne sont pas encore déployés dans le projet cible,
+  et si `.beads/` n'est pas initialisé dans le projet.
 - **`oc skills sync`** est non-interactif : il écrase silencieusement les fichiers existants
   (`--force` interne). La commande `oc skills add` elle, demande toujours confirmation en mode normal.
 - **`_generate_body`** dans `oc agent create` détecte automatiquement `timeout` ou `gtimeout`

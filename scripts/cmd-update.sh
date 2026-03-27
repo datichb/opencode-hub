@@ -10,8 +10,18 @@ for target in $(get_active_targets); do
   adapter_update
 done
 
-log_info "Mise à jour Beads..."
-npm update -g @beads/cli && log_success "Beads mis à jour" || log_warn "Échec de la mise à jour Beads"
+log_info "Mise à jour Beads (bd)..."
+if command -v bd &>/dev/null; then
+  if command -v brew &>/dev/null && brew list bd &>/dev/null 2>&1; then
+    brew upgrade bd && log_success "Beads mis à jour via Homebrew" \
+      || log_warn "Échec mise à jour Beads — déjà à jour ou erreur Homebrew"
+  else
+    log_warn "bd installé mais pas via Homebrew — mise à jour manuelle requise"
+    log_info "  → https://beads.sh ou via votre gestionnaire de paquets"
+  fi
+else
+  log_warn "bd non installé — lancez : oc install"
+fi
 
 # ── Skills externes ───────────────────────────────────────────────────────────
 EXTERNAL_SOURCES="$HUB_DIR/skills/external/.sources.json"

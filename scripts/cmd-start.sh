@@ -74,4 +74,10 @@ if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ]; then
   log_warn "Lancez d'abord : ./oc.sh deploy $default_target $PROJECT_ID"
 fi
 
+# ── Vérifier que Beads est initialisé dans le projet ───
+if [ ! -d "$PROJECT_PATH/.beads" ]; then
+  log_warn "Beads non initialisé dans ce projet (aucun .beads/ trouvé)"
+  log_warn "Pour utiliser les tickets : ./oc.sh beads init $PROJECT_ID"
+fi
+
 adapter_start "$PROJECT_PATH" "$PROMPT"

@@ -78,5 +78,23 @@ echo ""
 log_info "Tip : Enrichissez vos agents avec des skills tiers via context7 :"
 log_info "  ./oc.sh skills search <query>        # Rechercher"
 log_info "  ./oc.sh skills add /owner/repo name  # Ajouter"
+
+# ── Installer Beads (bd) ─────────────────
+echo ""
+log_title "Installation de Beads (bd)"
+if command -v bd &>/dev/null; then
+  log_success "Beads déjà installé ($(bd --version 2>/dev/null | head -1))"
+else
+  if command -v brew &>/dev/null; then
+    log_info "Installation de bd via Homebrew..."
+    brew install bd && log_success "Beads installé" \
+      || log_warn "Échec de l'installation via Homebrew"
+  else
+    log_warn "Homebrew non disponible — installation manuelle requise"
+    log_info "  macOS  : brew install bd"
+    log_info "  Linux  : voir https://beads.sh/install"
+  fi
+fi
+
 echo ""
 log_success "opencode-hub prêt !"
