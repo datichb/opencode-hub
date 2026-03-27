@@ -35,10 +35,55 @@ _list_all_skills() {
 }
 
 ##
+# Rendu d'une page du sélecteur de skills (compatible bash 3.2).
+# Variables utilisées depuis _pick_skills : all_skills, checked, cursor, page_size, total, total_pages
+##
+_render_skills_page() {
+  local page=$(( cursor / page_size ))
+  local start=$(( page * page_size ))
+  local end=$(( start + page_size ))
+  [ "$end" -gt "$total" ] && end=$total
+
+  printf "\033[2J\033[H"  # clear screen
+
+  echo -e "${BOLD}Sélection des skills — page $((page+1))/$total_pages${RESET}  (total : $total)"
+  echo -e "  ${BLUE}↑↓${RESET} naviguer   ${BLUE}espace${RESET} cocher/décocher   ${BLUE}entrée${RESET} valider   ${BLUE}n/p${RESET} changer de page   ${BLUE}0${RESET} tout vider"
+  echo ""
+
+  local i=$start
+  while [ "$i" -lt "$end" ]; do
+    local skill="${all_skills[$i]}"
+    local num=$((i + 1))
+    local desc=""
+    local skill_file="$HUB_DIR/skills/${skill}.md"
+    [ -f "$skill_file" ] && desc=$(grep '^description:' "$skill_file" | head -1 | sed 's/^description:[[:space:]]*//')
+
+    local check_mark="   "
+    [ "${checked[$i]}" = "1" ] && check_mark="${GREEN}[x]${RESET}"
+
+    if [ "$i" -eq "$cursor" ]; then
+      printf "  ${BOLD}> %s %3d. %-45s${RESET}" "$check_mark" "$num" "$skill"
+    else
+      printf "    %s %3d. %-45s" "$check_mark" "$num" "$skill"
+    fi
+    [ -n "$desc" ] && printf "  ${BLUE}%s${RESET}" "$desc"
+    echo ""
+    i=$((i + 1))
+  done
+
+  echo ""
+  local count=0
+  local v
+  for v in "${checked[@]}"; do [ "$v" = "1" ] && count=$((count+1)); done
+  echo -e "  ${BOLD}$count skill(s) sélectionné(s)${RESET}"
+  echo ""
+}
+
+##
 # Menu interactif de sélection de skills avec navigation flèches + espace.
-# Résultat dans $PICKED_SKILLS (CSV).
+# Compatible bash 3.2 (macOS). Résultat dans $PICKED_SKILLS (CSV).
 # Appeler directement (pas dans une sous-shell).
-# @param {string} $1 — sélection courante (CSV de noms de skills, sans guillemets)
+# @param {string} $1 — sélection courante (CSV de noms de skills)
 ##
 _pick_skills() {
   local current_csv="${1:-}"
@@ -59,84 +104,54 @@ _pick_skills() {
   local total=${#all_skills[@]}
   local total_pages=$(( (total + page_size - 1) / page_size ))
 
-  # Initialiser la sélection : tableau booléen indexed par position dans all_skills
   # Nettoyer current_csv : retirer guillemets et espaces superflus
   local clean_csv
   clean_csv=$(echo "$current_csv" | tr -d '"' | tr ',' '\n' | sed 's/^ *//;s/ *$//' | grep -v '^$' | tr '\n' ',' | sed 's/,$//')
 
+  # Tableau booléen de sélection (bash 3.2 : pas d'array associatif)
   local checked=()
-  for (( i=0; i<total; i++ )); do
+  local i=0
+  while [ "$i" -lt "$total" ]; do
     local skill="${all_skills[$i]}"
     if echo ",$clean_csv," | grep -qF ",$skill,"; then
       checked+=("1")
     else
       checked+=("0")
     fi
+    i=$((i + 1))
   done
 
-  local cursor=0  # indice global du curseur dans all_skills
+  local cursor=0
 
-  # Rendu d'une page
-  _render_page() {
-    local page=$(( cursor / page_size ))
-    local start=$(( page * page_size ))
-    local end=$(( start + page_size ))
-    [ "$end" -gt "$total" ] && end=$total
+  # Sauvegarde état terminal et passage en mode raw
+  local old_stty
+  old_stty=$(stty -g </dev/tty 2>/dev/null)
+  stty -echo -icanon min 1 time 0 </dev/tty 2>/dev/null
 
-    # Effacer l'écran du menu (lignes affichées)
-    tput clear 2>/dev/null || echo -e "\033[2J\033[H"
-
-    echo -e "${BOLD}Sélection des skills — page $((page+1))/$total_pages${RESET}"
-    echo -e "  ${BLUE}↑↓${RESET} naviguer  ${BLUE}espace${RESET} cocher/décocher  ${BLUE}entrée${RESET} valider  ${BLUE}0${RESET} tout désélectionner"
-    echo ""
-
-    for (( i=start; i<end; i++ )); do
-      local skill="${all_skills[$i]}"
-      local num=$((i + 1))
-      local desc=""
-      local skill_file="$HUB_DIR/skills/${skill}.md"
-      [ -f "$skill_file" ] && desc=$(grep '^description:' "$skill_file" | head -1 | sed 's/^description:[[:space:]]*//')
-
-      local check_mark="   "
-      [ "${checked[$i]}" = "1" ] && check_mark="${GREEN}[x]${RESET}"
-
-      if [ "$i" -eq "$cursor" ]; then
-        printf "  ${BOLD}▶ %s %3d. %-45s${RESET}" "$check_mark" "$num" "$skill"
-      else
-        printf "    %s %3d. %-45s" "$check_mark" "$num" "$skill"
-      fi
-      [ -n "$desc" ] && printf "  ${BLUE}%s${RESET}" "$desc"
-      echo ""
-    done
-
-    echo ""
-    # Compter les sélectionnés
-    local count=0
-    for v in "${checked[@]}"; do [ "$v" = "1" ] && count=$((count+1)); done
-    echo -e "  ${BOLD}$count skill(s) sélectionné(s)${RESET}"
-    [ "$total_pages" -gt 1 ] && echo -e "  ${BLUE}n${RESET} page suivante  ${BLUE}p${RESET} page précédente"
-    echo ""
-  }
-
-  # Boucle de navigation
   while true; do
-    _render_page
+    _render_skills_page
 
-    # Lire une touche (gère les séquences d'échappement flèches)
-    local key
-    IFS= read -rsn1 key </dev/tty
-    if [[ "$key" == $'\x1b' ]]; then
-      local seq1 seq2
-      IFS= read -rsn1 -t 0.1 seq1 </dev/tty
-      IFS= read -rsn1 -t 0.1 seq2 </dev/tty
-      key="${key}${seq1}${seq2}"
+    # Lecture d'une touche
+    local key byte1 byte2 byte3
+    IFS= read -rsn1 byte1 </dev/tty
+    key="$byte1"
+
+    # Séquence d'échappement (flèches) : ESC [ X
+    if [ "$byte1" = $'\x1b' ]; then
+      IFS= read -rsn1 -t 1 byte2 </dev/tty || byte2=""
+      if [ "$byte2" = "[" ]; then
+        IFS= read -rsn1 -t 1 byte3 </dev/tty || byte3=""
+        key="${byte1}${byte2}${byte3}"
+      else
+        key="${byte1}${byte2}"
+      fi
     fi
 
     case "$key" in
-      $'\x1b[A'|$'\x1b[D')  # flèche haut ou gauche
+      $'\x1b[A')  # flèche haut
         [ "$cursor" -gt 0 ] && cursor=$((cursor - 1))
         ;;
-      $'\x1b[B'|$'\x1b[C')  # flèche bas ou droite
+      $'\x1b[B')  # flèche bas
         [ "$cursor" -lt $((total - 1)) ] && cursor=$((cursor + 1))
         ;;
       " ")  # espace — toggle
@@ -146,19 +161,20 @@ _pick_skills() {
           checked[$cursor]="1"
         fi
         ;;
-      "")  # entrée — valider
+      ""| $'\n'| $'\r')  # entrée — valider
         break
         ;;
-      "0")  # tout désélectionner
-        for (( i=0; i<total; i++ )); do checked[$i]="0"; done
+      "0")
+        i=0
+        while [ "$i" -lt "$total" ]; do checked[$i]="0"; i=$((i+1)); done
         ;;
-      "n"|"N")  # page suivante
+      "n"|"N")
         local next_page=$(( cursor / page_size + 1 ))
         if [ "$next_page" -lt "$total_pages" ]; then
           cursor=$(( next_page * page_size ))
         fi
         ;;
-      "p"|"P")  # page précédente
+      "p"|"P")
         local prev_page=$(( cursor / page_size - 1 ))
         if [ "$prev_page" -ge 0 ]; then
           cursor=$(( prev_page * page_size ))
@@ -167,10 +183,17 @@ _pick_skills() {
     esac
   done
 
+  # Restaurer le terminal
+  [ -n "$old_stty" ] && stty "$old_stty" </dev/tty 2>/dev/null
+
+  printf "\033[2J\033[H"  # clear après sortie
+
   # Reconstruire le CSV final
   local chosen=()
-  for (( i=0; i<total; i++ )); do
+  i=0
+  while [ "$i" -lt "$total" ]; do
     [ "${checked[$i]}" = "1" ] && chosen+=("${all_skills[$i]}")
+    i=$((i + 1))
   done
 
   PICKED_SKILLS=$(printf '%s\n' "${chosen[@]}" | tr '\n' ',' | sed 's/,$//')
