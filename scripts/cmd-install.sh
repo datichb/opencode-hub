@@ -29,6 +29,18 @@ esac
 
 echo ""
 
+# ── Vérifier si une cible requiert Node.js ───────────────────────────────────
+needs_node=false
+for target in "${active_targets[@]}"; do
+  load_adapter "$target"
+  adapter_needs_node && needs_node=true && break
+done
+
+if [ "$needs_node" = true ]; then
+  source "$LIB_DIR/node-installer.sh"
+  ensure_node || exit 1
+fi
+
 # ── Dossiers requis ──────────────────────
 mkdir -p "$HUB_DIR/projects" "$HUB_DIR/skills" "$HUB_DIR/agents" \
          "$HUB_DIR/.opencode/agents" "$HUB_DIR/config" \

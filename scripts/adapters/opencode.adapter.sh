@@ -10,6 +10,8 @@ adapter_validate() {
   command -v opencode &>/dev/null || { log_error "OpenCode non installé → oc install"; return 1; }
 }
 
+adapter_needs_node() { return 0; }
+
 adapter_deploy() {
   local deploy_dir="${1:-$HUB_DIR}"
   local out_dir="$deploy_dir/.opencode/agents"

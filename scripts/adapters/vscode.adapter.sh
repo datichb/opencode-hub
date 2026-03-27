@@ -12,6 +12,8 @@ adapter_validate() {
   return 0
 }
 
+adapter_needs_node() { return 1; }
+
 adapter_deploy() {
   local deploy_dir="${1:-$HUB_DIR}"
   local github_dir="$deploy_dir/.github"
