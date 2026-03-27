@@ -237,8 +237,21 @@ oc agent info <agent-id>        # afficher le détail d'un agent
 oc agent keytest                # diagnostic clavier (sélecteur de skills)
 ```
 
+#### `oc agent create` — workflow interactif
+
+La création d'un agent suit ces étapes dans l'ordre :
+
+1. **Identifiant** — slug unique (ex: `reviewer`)
+2. **Label** — nom court affiché dans l'outil (ex: `CodeReviewer`)
+3. **Description** — phrase courte décrivant le rôle
+4. **Cibles** — sélecteur interactif ↑↓/espace : `opencode`, `claude-code`, `vscode`
+5. **Skills** — sélecteur interactif ↑↓/espace avec panneau de description
+6. **Corps** — si `opencode` est disponible, proposition de génération automatique via `opencode run`
+7. **Prévisualisation** — affichage du fichier `.md` complet avant écriture
+8. **Confirmation** — `Y/n` pour créer le fichier
+
 > `oc agent keytest` affiche les octets bruts reçus pour chaque touche.
-> Utile pour diagnostiquer un terminal où la navigation du sélecteur de skills
+> Utile pour diagnostiquer un terminal où la navigation du sélecteur
 > ne fonctionne pas comme attendu. Quitter avec `q`.
 
 ---

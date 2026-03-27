@@ -236,76 +236,270 @@ _pick_skills() {
 }
 
 ##
-# Sélection de cibles (targets) pour l'agent.
-# @param {string} $1 — Valeur courante (CSV)
-# Écrit la sélection finale sur stdout.
+# Sélection interactive de cibles (targets) avec navigation flèches + espace.
+# Compatible bash 3.2 (macOS). Résultat dans $PICKED_TARGETS (CSV).
+# Appeler directement (pas dans une sous-shell).
+# @param {string} $1 — sélection courante (CSV de cibles)
 ##
 _pick_targets() {
-  local current="${1:-opencode, claude-code, vscode}"
+  local current_csv="${1:-opencode, claude-code, vscode}"
   local available=("opencode" "claude-code" "vscode")
+  local total=${#available[@]}
 
-  echo ""
-  echo -e "${BOLD}Cibles disponibles :${RESET}"
-  echo "  (Entrez les numéros séparés par des espaces)"
-  echo ""
+  # Nettoyer le CSV courant
+  local clean_csv
+  clean_csv=$(printf '%s' "$current_csv" | tr -d '"' | tr ',' '\n' \
+    | sed 's/^ *//;s/ *$//' | grep -v '^$' | tr '\n' ',' | sed 's/,$//')
 
-  local i=1
-  for t in "${available[@]}"; do
-    if echo "$current" | grep -q "$t"; then
-      echo -e "  ${GREEN}[x]${RESET} $i. $t"
+  # Initialiser le tableau de sélection
+  local checked=()
+  local i=0
+  while [ "$i" -lt "$total" ]; do
+    if echo ",$clean_csv," | grep -qF ",${available[$i]},"; then
+      checked+=("1")
     else
-      echo "      $i. $t"
+      checked+=("0")
     fi
     i=$((i + 1))
   done
-  echo ""
 
-  read -rp "Numéros des cibles (laisser vide = toutes) : " selection
+  local cursor=0
 
-  if [ -z "$selection" ]; then
-    echo "opencode, claude-code, vscode"
+  # Sauvegarde + raw mode
+  local old_stty
+  old_stty=$(stty -g </dev/tty 2>/dev/null)
+  trap '[ -n "$old_stty" ] && stty "$old_stty" </dev/tty 2>/dev/null' EXIT INT TERM
+  stty -echo -icanon min 1 time 0 </dev/tty 2>/dev/null
+
+  local _cancelled=0
+
+  while true; do
+    # ── Rendu ────────────────────────────────────────────────────────────────
+    printf "\033[2J\033[H"
+    echo -e "${BOLD}Sélection des cibles${RESET}"
+    echo -e "  \033[0;34m↑↓\033[0m naviguer   \033[0;34mespace\033[0m cocher/décocher   \033[0;34mentrée\033[0m valider   \033[0;34mESC\033[0m annuler"
+    echo ""
+
+    local j=0
+    while [ "$j" -lt "$total" ]; do
+      local check_icon="   "
+      local check_color="" check_reset=""
+      if [ "${checked[$j]}" = "1" ]; then
+        check_icon="[x]"
+        check_color="$GREEN"
+        check_reset="$RESET"
+      fi
+      if [ "$j" -eq "$cursor" ]; then
+        printf "  \033[1m> ${check_color}%-3s${check_reset}\033[1m  %s\033[0m\n" \
+          "$check_icon" "${available[$j]}"
+      else
+        printf "    ${check_color}%-3s${check_reset}  %s\n" \
+          "$check_icon" "${available[$j]}"
+      fi
+      j=$((j + 1))
+    done
+
+    echo ""
+    local count=0
+    local v
+    for v in "${checked[@]}"; do [ "$v" = "1" ] && count=$((count+1)); done
+    echo -e "  ${BOLD}$count cible(s) sélectionnée(s)${RESET}"
+    echo ""
+
+    # ── Lecture touche ────────────────────────────────────────────────────────
+    local key byte1 byte2 byte3
+    IFS= read -rsn1 byte1 </dev/tty
+    key="$byte1"
+
+    if [ "$byte1" = $'\x1b' ]; then
+      IFS= read -rsn1 -t 1 byte2 </dev/tty || byte2=""
+      if [ "$byte2" = "[" ] || [ "$byte2" = "O" ]; then
+        IFS= read -rsn1 -t 1 byte3 </dev/tty || byte3=""
+        key="${byte1}${byte2}${byte3}"
+      elif [ -z "$byte2" ]; then
+        _cancelled=1; break
+      else
+        key="${byte1}${byte2}"
+      fi
+    fi
+
+    case "$key" in
+      $'\x1b[A'|$'\x1bOA') [ "$cursor" -gt 0 ] && cursor=$((cursor - 1)) ;;
+      $'\x1b[B'|$'\x1bOB') [ "$cursor" -lt $((total - 1)) ] && cursor=$((cursor + 1)) ;;
+      " ")
+        if [ "${checked[$cursor]}" = "1" ]; then
+          checked[$cursor]="0"
+        else
+          checked[$cursor]="1"
+        fi
+        ;;
+      ""|$'\n'|$'\r') break ;;
+    esac
+  done
+
+  trap - EXIT INT TERM
+  [ -n "$old_stty" ] && stty "$old_stty" </dev/tty 2>/dev/null
+  printf "\033[2J\033[H"
+
+  if [ "$_cancelled" = "1" ]; then
+    PICKED_TARGETS="$current_csv"
     return
   fi
 
+  # Reconstruire le CSV final
   local chosen=()
-  for num in $selection; do
-    if ! echo "$num" | grep -qE '^[0-9]+$'; then continue; fi
-    if [ "$num" -lt 1 ] || [ "$num" -gt "${#available[@]}" ]; then continue; fi
-    chosen+=("${available[$((num - 1))]}")
+  i=0
+  while [ "$i" -lt "$total" ]; do
+    [ "${checked[$i]}" = "1" ] && chosen+=("${available[$i]}")
+    i=$((i + 1))
   done
 
-  printf '%s\n' "${chosen[@]}" | tr '\n' ', ' | sed 's/, $//'
+  if [ ${#chosen[@]} -eq 0 ]; then
+    # Aucune cible cochée → garder la sélection courante
+    PICKED_TARGETS="$current_csv"
+  else
+    PICKED_TARGETS=$(printf '%s\n' "${chosen[@]}" | tr '\n' ',' | sed 's/,$//')
+  fi
 }
 
 ##
-# Réécrit le frontmatter d'un agent existant avec de nouvelles valeurs.
-# @param {string} $1 — Chemin du fichier agent
-# @param {string} $2 — Nouvelle valeur de skills (CSV → format YAML liste inline)
-# @param {string} $3 — Nouvelle valeur de targets (CSV → format YAML liste inline)
-# @param {string} $4 — Nouveau label
-# @param {string} $5 — Nouvelle description
+# Convertit un CSV de skills/targets en format YAML inline ["a","b","c"].
+# @param {string} $1 — CSV à convertir
+# Retourne la valeur sur stdout (usage interne uniquement — pas de TUI).
 ##
-_update_frontmatter() {
-  local file="$1" skills_csv="$2" targets_csv="$3" label="$4" description="$5"
+_csv_to_yaml_list() {
+  printf '%s\n' "$1" \
+    | tr ',' '\n' \
+    | sed 's/^ *//;s/ *$//' \
+    | grep -v '^$' \
+    | sed 's/.*/"&"/' \
+    | tr '\n' ',' \
+    | sed 's/,$//' \
+    | sed 's/^/[/;s/$/]/'
+}
 
-  # Convertir CSV en format YAML inline ["a", "b", "c"]
-  local skills_yaml
-  skills_yaml=$(printf '%s\n' "$skills_csv" | tr ',' '\n' | sed 's/^ *//' | sed 's/ *$//' | grep -v '^$' | sed 's/.*/"&"/' | tr '\n' ',' | sed 's/,$//' | sed 's/^/[/' | sed 's/$/]/')
+##
+# Génère le corps Markdown d'un agent via opencode run.
+# Si opencode est absent ou si l'utilisateur refuse, corps TODO par défaut.
+# Résultat dans $GENERATED_BODY.
+# @param {string} $1 — agent_id
+# @param {string} $2 — label
+# @param {string} $3 — description
+# @param {string} $4 — skills_csv
+##
+_generate_body() {
+  local agent_id="$1" label="$2" description="$3" skills_csv="$4"
 
-  local targets_yaml
-  targets_yaml=$(printf '%s\n' "$targets_csv" | tr ',' '\n' | sed 's/^ *//' | sed 's/ *$//' | grep -v '^$' | sed 's/.*/"&"/' | tr '\n' ',' | sed 's/,$//' | sed 's/^/[/' | sed 's/$/]/')
+  local default_body
+  default_body=$(printf '# %s\n\n%s\n\n## Ce que tu fais\n- TODO : décrire les responsabilités de cet agent\n\n## Workflow\n1. TODO : décrire le workflow\n\n## Ce que tu ne fais PAS\n- TODO : définir les limites\n' \
+    "$label" "$description")
 
-  # Extraire le corps (sans frontmatter)
-  local body
-  body=$(awk 'BEGIN{f=0;d=0} /^---$/{if(!f){f=1;next}else if(!d){d=1;next}} d{print}' "$file")
+  # opencode non disponible → corps par défaut sans question
+  if ! command -v opencode &>/dev/null; then
+    GENERATED_BODY="$default_body"
+    return
+  fi
 
-  # Reconstruire le fichier avec le nouveau frontmatter
-  local agent_id
-  agent_id=$(basename "$file" .md)
+  echo ""
+  read -rp "Générer le corps de l'agent avec opencode ? (Y/n) : " gen_choice </dev/tty
+  gen_choice="${gen_choice:-Y}"
+  if ! [[ "$gen_choice" =~ ^[Yy]$ ]]; then
+    GENERATED_BODY="$default_body"
+    return
+  fi
 
-  # Écriture avec printf pour éviter l'expansion des variables utilisateur
-  # (un heredoc non-quoté expand $label/$description — risque si elles contiennent $ ou `)
-  {
+  local skills_hint=""
+  [ -n "$skills_csv" ] && skills_hint="Skills injectés automatiquement : ${skills_csv}."
+
+  local prompt
+  prompt="Tu crées le corps Markdown d'un agent IA nommé \"${label}\" (id: ${agent_id}).
+Description : ${description}.
+${skills_hint}
+Génère uniquement le corps (sans frontmatter YAML). Structure attendue :
+
+# ${label}
+
+${description}
+
+## Ce que tu fais
+<liste des responsabilités précises, cohérentes avec la description et les skills>
+
+## Workflow
+<étapes numérotées, opérationnelles>
+
+## Ce que tu ne fais PAS
+<limites claires, 3-5 points>
+
+Sois concis et directement opérationnel. Pas d'introduction, pas de conclusion, pas de balises markdown superflues."
+
+  log_info "Génération en cours via opencode..."
+  local generated
+  generated=$(timeout 60 opencode run "$prompt" 2>/dev/null) || true
+
+  if [ -z "$generated" ]; then
+    log_warn "opencode n'a pas retourné de contenu — corps par défaut utilisé."
+    GENERATED_BODY="$default_body"
+  else
+    GENERATED_BODY="$generated"
+    log_success "Corps généré."
+  fi
+}
+
+# ── CREATE ───────────────────────────────────────────────────────────────────
+
+##
+# Crée un nouvel agent canonique de façon interactive.
+# Workflow : id → label → description → cibles → skills → corps (IA optionnel)
+#            → prévisualisation → confirmation → écriture
+##
+cmd_create() {
+  log_title "Créer un nouvel agent"
+  echo ""
+
+  # ── 1. Identifiant ────────────────────────────────────────────────────────
+  read -rp "Identifiant (ex: reviewer) : " agent_id
+  agent_id=$(printf '%s' "$agent_id" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/-/g')
+  if [ -z "$agent_id" ]; then
+    log_error "Identifiant requis."
+    exit 1
+  fi
+
+  local file="$CANONICAL_AGENTS_DIR/${agent_id}.md"
+  if [ -f "$file" ]; then
+    log_error "L'agent '$agent_id' existe déjà. Utilisez 'oc agent edit $agent_id'."
+    exit 1
+  fi
+
+  # ── 2. Label ──────────────────────────────────────────────────────────────
+  read -rp "Label (nom court, ex: CodeReviewer) [${agent_id}] : " label
+  label="${label:-$agent_id}"
+
+  # ── 3. Description ────────────────────────────────────────────────────────
+  read -rp "Description courte : " description
+  description="${description:-Assistant $label}"
+
+  # ── 4. Cibles ─────────────────────────────────────────────────────────────
+  PICKED_TARGETS=""
+  _pick_targets "opencode, claude-code, vscode"
+  local targets_csv="$PICKED_TARGETS"
+
+  # ── 5. Skills ─────────────────────────────────────────────────────────────
+  PICKED_SKILLS=""
+  _pick_skills ""
+  local skills_csv="$PICKED_SKILLS"
+
+  # ── 6. Corps (génération IA optionnelle) ──────────────────────────────────
+  GENERATED_BODY=""
+  _generate_body "$agent_id" "$label" "$description" "$skills_csv"
+  local body="$GENERATED_BODY"
+
+  # ── 7. Construire le contenu final ────────────────────────────────────────
+  local skills_yaml targets_yaml
+  skills_yaml=$(_csv_to_yaml_list "$skills_csv")
+  targets_yaml=$(_csv_to_yaml_list "$targets_csv")
+
+  local file_content
+  file_content=$(
     printf '%s\n' "---"
     printf 'id: %s\n'          "$agent_id"
     printf 'label: %s\n'       "$label"
@@ -313,10 +507,39 @@ _update_frontmatter() {
     printf 'targets: %s\n'     "$targets_yaml"
     printf 'skills: %s\n'      "$skills_yaml"
     printf '%s\n' "---"
-  } > "$file"
+    printf '\n'
+    printf '%s\n' "$body"
+  )
 
-  # Ré-append le corps en évitant un saut de ligne double
-  printf '%s\n' "$body" >> "$file"
+  # ── 8. Prévisualisation + confirmation ────────────────────────────────────
+  echo ""
+  local sep="────────────────────────────────────────────────────────────"
+  echo -e "  \033[0;34m${sep}\033[0m"
+  printf "  \033[1m  Aperçu — agents/%s.md\033[0m\n" "$agent_id"
+  echo -e "  \033[0;34m${sep}\033[0m"
+  echo ""
+  # Indenter chaque ligne de l'aperçu pour lisibilité
+  printf '%s\n' "$file_content" | while IFS= read -r line; do
+    printf '  %s\n' "$line"
+  done
+  echo ""
+  echo -e "  \033[0;34m${sep}\033[0m"
+  echo ""
+
+  read -rp "Créer l'agent '${agent_id}' ? (Y/n) : " confirm
+  confirm="${confirm:-Y}"
+  if ! [[ "$confirm" =~ ^[Yy]$ ]]; then
+    log_info "Annulé."
+    exit 0
+  fi
+
+  # ── 9. Écriture ───────────────────────────────────────────────────────────
+  printf '%s\n' "$file_content" > "$file"
+
+  echo ""
+  log_success "Agent '${agent_id}' créé → agents/${agent_id}.md"
+  log_info    "Personnalisez le corps dans agents/${agent_id}.md si nécessaire."
+  log_info    "Puis déployez : ./oc.sh deploy all"
 }
 
 # ── LIST ─────────────────────────────────────────────────────────────────────
@@ -384,91 +607,6 @@ cmd_info() {
       done
 }
 
-# ── CREATE ───────────────────────────────────────────────────────────────────
-
-##
-# Crée un nouvel agent canonique de façon interactive.
-##
-cmd_create() {
-  log_title "Créer un nouvel agent"
-  echo ""
-
-  # Identifiant
-  read -rp "Identifiant (ex: reviewer) : " agent_id
-  agent_id=$(echo "$agent_id" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/-/g')
-  if [ -z "$agent_id" ]; then
-    log_error "Identifiant requis."
-    exit 1
-  fi
-
-  local file="$CANONICAL_AGENTS_DIR/${agent_id}.md"
-  if [ -f "$file" ]; then
-    log_error "L'agent '$agent_id' existe déjà. Utilisez 'oc agent edit $agent_id'."
-    exit 1
-  fi
-
-  # Label
-  read -rp "Label (nom court, ex: CodeReviewer) [${agent_id}] : " label
-  label="${label:-$agent_id}"
-
-  # Description
-  read -rp "Description : " description
-  description="${description:-Assistant $label}"
-
-  # Targets
-  local targets_csv
-  targets_csv=$(_pick_targets "opencode, claude-code, vscode")
-  log_info "Cibles : $targets_csv"
-
-  # Skills
-  PICKED_SKILLS=""
-  _pick_skills ""
-  local skills_csv="$PICKED_SKILLS"
-  if [ -z "$skills_csv" ]; then
-    log_warn "Aucun skill sélectionné."
-  else
-    log_info "Skills : $skills_csv"
-  fi
-
-  # Corps par défaut
-  local body
-  body=$(cat << BODY
-
-# 🤖 ${label}
-
-${description}
-
-## Ce que tu fais
-- TODO : décrire les responsabilités de cet agent
-
-## Workflow
-1. TODO : décrire le workflow
-BODY
-)
-
-  # Construire le frontmatter
-  local skills_yaml targets_yaml
-  skills_yaml=$(printf '%s\n' "$skills_csv" | tr ',' '\n' | sed 's/^ *//' | sed 's/ *$//' | grep -v '^$' | sed 's/.*/"&"/' | tr '\n' ',' | sed 's/,$//' | sed 's/^/[/' | sed 's/$/]/')
-  targets_yaml=$(printf '%s\n' "$targets_csv" | tr ',' '\n' | sed 's/^ *//' | sed 's/ *$//' | grep -v '^$' | sed 's/.*/"&"/' | tr '\n' ',' | sed 's/,$//' | sed 's/^/[/' | sed 's/$/]/')
-
-  # Créer le fichier avec printf pour éviter l'expansion des variables utilisateur
-  {
-    printf '%s\n' "---"
-    printf 'id: %s\n'          "$agent_id"
-    printf 'label: %s\n'       "$label"
-    printf 'description: %s\n' "$description"
-    printf 'targets: %s\n'     "$targets_yaml"
-    printf 'skills: %s\n'      "$skills_yaml"
-    printf '%s\n' "---"
-  } > "$file"
-  printf '%s\n' "$body" >> "$file"
-
-  echo ""
-  log_success "Agent '$agent_id' créé → agents/${agent_id}.md"
-  log_info    "Personnalisez le corps dans agents/${agent_id}.md"
-  log_info    "Puis déployez : ./oc.sh deploy all"
-}
-
 # ── EDIT ─────────────────────────────────────────────────────────────────────
 
 ##
@@ -512,18 +650,18 @@ cmd_edit() {
 
   # Targets
   echo ""
-  read -rp "Modifier les cibles ? (y/N) : " edit_targets
+  read -rp "Modifier les cibles ? (y/N) : " edit_targets </dev/tty
   local new_targets="$cur_targets"
   if [[ "$edit_targets" =~ ^[Yy]$ ]]; then
-    new_targets=$(_pick_targets "$cur_targets")
-    log_info "Cibles : $new_targets"
+    PICKED_TARGETS=""
+    _pick_targets "$cur_targets"
+    new_targets="$PICKED_TARGETS"
   fi
 
   # Skills (toujours proposé)
   PICKED_SKILLS=""
   _pick_skills "$cur_skills"
   local new_skills="$PICKED_SKILLS"
-  log_info "Skills : ${new_skills:-aucun}"
 
   # Valider avant écriture
   echo ""
@@ -531,13 +669,31 @@ cmd_edit() {
   echo "  label       : $new_label"
   echo "  description : $new_desc"
   echo "  targets     : $new_targets"
-  echo "  skills      : $new_skills"
+  echo "  skills      : ${new_skills:-aucun}"
   echo ""
-  read -rp "Appliquer ? (Y/n) : " confirm
+  read -rp "Appliquer ? (Y/n) : " confirm </dev/tty
   confirm="${confirm:-Y}"
   [[ "$confirm" =~ ^[Yy]$ ]] || { log_info "Annulé."; exit 0; }
 
-  _update_frontmatter "$file" "$new_skills" "$new_targets" "$new_label" "$new_desc"
+  # Réécriture du frontmatter
+  local skills_yaml targets_yaml
+  skills_yaml=$(_csv_to_yaml_list "$new_skills")
+  targets_yaml=$(_csv_to_yaml_list "$new_targets")
+
+  local body
+  body=$(awk 'BEGIN{f=0;d=0} /^---$/{if(!f){f=1;next}else if(!d){d=1;next}} d{print}' "$file")
+
+  {
+    printf '%s\n' "---"
+    printf 'id: %s\n'          "$name"
+    printf 'label: %s\n'       "$new_label"
+    printf 'description: %s\n' "$new_desc"
+    printf 'targets: %s\n'     "$targets_yaml"
+    printf 'skills: %s\n'      "$skills_yaml"
+    printf '%s\n' "---"
+    printf '\n'
+    printf '%s\n' "$body"
+  } > "$file"
 
   echo ""
   log_success "Agent '$name' mis à jour → agents/${name}.md"
