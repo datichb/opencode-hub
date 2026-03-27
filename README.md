@@ -234,7 +234,12 @@ oc agent list                   # lister les agents
 oc agent create                 # créer un agent (interactif)
 oc agent edit <agent-id>        # modifier skills et métadonnées
 oc agent info <agent-id>        # afficher le détail d'un agent
+oc agent keytest                # diagnostic clavier (sélecteur de skills)
 ```
+
+> `oc agent keytest` affiche les octets bruts reçus pour chaque touche.
+> Utile pour diagnostiquer un terminal où la navigation du sélecteur de skills
+> ne fonctionne pas comme attendu. Quitter avec `q`.
 
 ---
 

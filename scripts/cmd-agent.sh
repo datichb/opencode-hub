@@ -126,7 +126,11 @@ _pick_skills() {
   # Sauvegarde état terminal et passage en mode raw
   local old_stty
   old_stty=$(stty -g </dev/tty 2>/dev/null)
+  # Restauration garantie même en cas d'interruption (Ctrl-C, set -e, etc.)
+  trap '[ -n "$old_stty" ] && stty "$old_stty" </dev/tty 2>/dev/null' EXIT INT TERM
   stty -echo -icanon min 1 time 0 </dev/tty 2>/dev/null
+
+  local _picker_cancelled=0
 
   while true; do
     _render_skills_page
@@ -139,19 +143,23 @@ _pick_skills() {
     # Séquence d'échappement (flèches) : ESC [ X
     if [ "$byte1" = $'\x1b' ]; then
       IFS= read -rsn1 -t 1 byte2 </dev/tty || byte2=""
-      if [ "$byte2" = "[" ]; then
+      if [ "$byte2" = "[" ] || [ "$byte2" = "O" ]; then
         IFS= read -rsn1 -t 1 byte3 </dev/tty || byte3=""
         key="${byte1}${byte2}${byte3}"
+      elif [ -z "$byte2" ]; then
+        # ESC seul → annuler le sélecteur
+        _picker_cancelled=1
+        break
       else
         key="${byte1}${byte2}"
       fi
     fi
 
     case "$key" in
-      $'\x1b[A')  # flèche haut
+      $'\x1b[A'|$'\x1bOA')  # flèche haut
         [ "$cursor" -gt 0 ] && cursor=$((cursor - 1))
         ;;
-      $'\x1b[B')  # flèche bas
+      $'\x1b[B'|$'\x1bOB')  # flèche bas
         [ "$cursor" -lt $((total - 1)) ] && cursor=$((cursor + 1))
         ;;
       " ")  # espace — toggle
@@ -183,8 +191,17 @@ _pick_skills() {
     esac
   done
 
-  # Restaurer le terminal
+  # Restaurer le terminal et désarmer le trap
+  trap - EXIT INT TERM
   [ -n "$old_stty" ] && stty "$old_stty" </dev/tty 2>/dev/null
+
+  # Annulation par ESC : conserver la sélection courante
+  if [ "$_picker_cancelled" = "1" ]; then
+    printf "\033[2J\033[H"
+    log_warn "Sélection annulée (ESC) — skills inchangés."
+    PICKED_SKILLS="$current_csv"
+    return
+  fi
 
   printf "\033[2J\033[H"  # clear après sortie
 
@@ -267,15 +284,17 @@ _update_frontmatter() {
   local agent_id
   agent_id=$(basename "$file" .md)
 
-  cat > "$file" << FRONTMATTER
----
-id: ${agent_id}
-label: ${label}
-description: ${description}
-targets: ${targets_yaml}
-skills: ${skills_yaml}
----
-FRONTMATTER
+  # Écriture avec printf pour éviter l'expansion des variables utilisateur
+  # (un heredoc non-quoté expand $label/$description — risque si elles contiennent $ ou `)
+  {
+    printf '%s\n' "---"
+    printf 'id: %s\n'          "$agent_id"
+    printf 'label: %s\n'       "$label"
+    printf 'description: %s\n' "$description"
+    printf 'targets: %s\n'     "$targets_yaml"
+    printf 'skills: %s\n'      "$skills_yaml"
+    printf '%s\n' "---"
+  } > "$file"
 
   # Ré-append le corps en évitant un saut de ligne double
   printf '%s\n' "$body" >> "$file"
@@ -413,16 +432,16 @@ BODY
   skills_yaml=$(printf '%s\n' "$skills_csv" | tr ',' '\n' | sed 's/^ *//' | sed 's/ *$//' | grep -v '^$' | sed 's/.*/"&"/' | tr '\n' ',' | sed 's/,$//' | sed 's/^/[/' | sed 's/$/]/')
   targets_yaml=$(printf '%s\n' "$targets_csv" | tr ',' '\n' | sed 's/^ *//' | sed 's/ *$//' | grep -v '^$' | sed 's/.*/"&"/' | tr '\n' ',' | sed 's/,$//' | sed 's/^/[/' | sed 's/$/]/')
 
-  # Créer le fichier
-  cat > "$file" << FRONTMATTER
----
-id: ${agent_id}
-label: ${label}
-description: ${description}
-targets: ${targets_yaml}
-skills: ${skills_yaml}
----
-FRONTMATTER
+  # Créer le fichier avec printf pour éviter l'expansion des variables utilisateur
+  {
+    printf '%s\n' "---"
+    printf 'id: %s\n'          "$agent_id"
+    printf 'label: %s\n'       "$label"
+    printf 'description: %s\n' "$description"
+    printf 'targets: %s\n'     "$targets_yaml"
+    printf 'skills: %s\n'      "$skills_yaml"
+    printf '%s\n' "---"
+  } > "$file"
   printf '%s\n' "$body" >> "$file"
 
   echo ""
@@ -506,16 +525,90 @@ cmd_edit() {
   log_info    "Relancez le déploiement pour appliquer : ./oc.sh deploy all"
 }
 
+# ── KEYTEST ──────────────────────────────────────────────────────────────────
+
+##
+# Diagnostic TTY : affiche les octets reçus pour chaque touche pressée.
+# Permet de vérifier ce que le terminal envoie réellement pour les flèches,
+# espace, entrée, ESC, etc.
+# Quitter avec q ou Ctrl-C.
+##
+cmd_keytest() {
+  echo -e "${BOLD}Diagnostic clavier (oc agent keytest)${RESET}"
+  echo "Appuyez sur des touches pour voir les octets reçus."
+  echo "Quittez avec  q  ou  Ctrl-C."
+  echo ""
+
+  local old_stty
+  old_stty=$(stty -g </dev/tty 2>/dev/null)
+  # Restauration garantie même en cas d'interruption
+  trap 'stty "$old_stty" </dev/tty 2>/dev/null; echo ""; exit 0' INT TERM EXIT
+
+  stty -echo -icanon min 1 time 0 </dev/tty 2>/dev/null
+
+  while true; do
+    local byte1 byte2 byte3
+    IFS= read -rsn1 byte1 </dev/tty
+
+    # Lire bytes supplémentaires si séquence ESC
+    local extra=""
+    if [ "$byte1" = $'\x1b' ]; then
+      IFS= read -rsn1 -t 1 byte2 </dev/tty || byte2=""
+      extra="$byte2"
+      if [ "$byte2" = "[" ] || [ "$byte2" = "O" ]; then
+        IFS= read -rsn1 -t 1 byte3 </dev/tty || byte3=""
+        extra="${byte2}${byte3}"
+      fi
+    fi
+
+    local full_seq="${byte1}${extra}"
+
+    # Affichage hex + description lisible
+    local hex
+    hex=$(printf '%s' "$full_seq" | xxd -p 2>/dev/null || printf '%s' "$full_seq" | od -An -tx1 | tr -d ' \n')
+
+    # Description humaine
+    local desc=""
+    case "$full_seq" in
+      $'\x1b[A') desc="flèche HAUT" ;;
+      $'\x1b[B') desc="flèche BAS" ;;
+      $'\x1b[C') desc="flèche DROITE" ;;
+      $'\x1b[D') desc="flèche GAUCHE" ;;
+      $'\x1b')   desc="ESC seul" ;;
+      " ")        desc="ESPACE" ;;
+      $'\n')      desc="ENTRÉE (LF)" ;;
+      $'\r')      desc="ENTRÉE (CR)" ;;
+      "q"|"Q")
+        desc="q — sortie"
+        printf "  hex=%-20s  %s\n" "$hex" "$desc"
+        break
+        ;;
+    esac
+
+    printf "  hex=%-20s  repr=%-10s  %s\n" \
+      "$hex" \
+      "$(printf '%s' "$full_seq" | cat -v 2>/dev/null || echo '?')" \
+      "$desc"
+  done
+
+  # Le trap gère la restauration
+  trap - INT TERM EXIT
+  stty "$old_stty" </dev/tty 2>/dev/null
+  echo ""
+  echo -e "${GREEN}Terminal restauré.${RESET}"
+}
+
 # ── DISPATCH ─────────────────────────────────────────────────────────────────
 
 SUBCOMMAND="${1:-}"
 shift 2>/dev/null || true
 
 case "$SUBCOMMAND" in
-  list)   cmd_list ;;
-  info)   cmd_info "$@" ;;
-  create) cmd_create ;;
-  edit)   cmd_edit "$@" ;;
+  list)    cmd_list ;;
+  info)    cmd_info "$@" ;;
+  create)  cmd_create ;;
+  edit)    cmd_edit "$@" ;;
+  keytest) cmd_keytest ;;
   *)
     echo -e "${BOLD}oc agent — Gestion des agents canoniques${RESET}"
     echo ""
@@ -523,12 +616,14 @@ case "$SUBCOMMAND" in
     echo "  info <agent-id>   Afficher le détail d'un agent"
     echo "  create            Créer un nouvel agent (interactif)"
     echo "  edit <agent-id>   Modifier les skills et métadonnées d'un agent"
+    echo "  keytest           Diagnostic clavier — affiche les octets reçus"
     echo ""
     echo -e "${BOLD}Exemples :${RESET}"
     echo "  ./oc.sh agent list"
     echo "  ./oc.sh agent create"
     echo "  ./oc.sh agent edit developer"
     echo "  ./oc.sh agent info planner"
+    echo "  ./oc.sh agent keytest"
     echo ""
     ;;
 esac
