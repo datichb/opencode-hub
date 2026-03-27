@@ -25,6 +25,7 @@ Les outils IA (OpenCode, Claude Code, VS Code Copilot) fonctionnent en silo.
 ```
 opencode-hub/
 ├── oc.sh                              ← Point d'entrée principal
+├── LICENSE
 ├── agents/                            ← Sources canoniques des rôles (éditer ici)
 │   ├── planner.md
 │   └── developer.md
@@ -42,27 +43,29 @@ opencode-hub/
 │   ├── common.sh                      ← Variables et helpers partagés
 │   ├── lib/
 │   │   ├── prompt-builder.sh          ← Assemblage agent + skills
-│   │   └── adapter-manager.sh         ← Chargement des adaptateurs
+│   │   ├── adapter-manager.sh         ← Chargement des adaptateurs
+│   │   └── node-installer.sh          ← Installation de Node.js (Volta/brew/nvm)
 │   ├── adapters/
 │   │   ├── opencode.adapter.sh        ← Génère .opencode/agents/ + config.json
 │   │   ├── claude-code.adapter.sh     ← Génère .claude/agents/
 │   │   └── vscode.adapter.sh          ← Génère copilot-instructions.md + prompts
-│   ├── cmd-deploy.sh                  ← oc deploy
+│   ├── cmd-deploy.sh
 │   ├── cmd-install.sh
 │   ├── cmd-init.sh
 │   ├── cmd-list.sh
 │   ├── cmd-remove.sh
 │   ├── cmd-start.sh
-│   ├── cmd-sync.sh
+│   ├── cmd-agent.sh
+│   ├── cmd-skills.sh
 │   └── cmd-update.sh
 └── projects/
     ├── projects.md                    ← Registre des projets (versionné)
     └── paths.local.md                 ← Chemins locaux (ignoré par git)
 ```
 
-> Les dossiers `.opencode/agents/`, `.claude/`, `.vscode/prompts/` et
-> `.github/copilot-instructions.md` sont des **sorties générées** — ne jamais
-> les éditer à la main.
+> Les dossiers `.opencode/agents/`, `.opencode/config.json`, `.claude/`,
+> `.vscode/prompts/` et `.github/copilot-instructions.md` sont des
+> **sorties générées** — ne jamais les éditer à la main.
 
 ---
 
@@ -76,20 +79,40 @@ cd ~/opencode-hub
 chmod +x oc.sh scripts/*.sh scripts/adapters/*.sh scripts/lib/*.sh
 ```
 
-### 2. Installer les dépendances
+### 2. Lancer l'installation
 
 ```bash
 ./oc.sh install
 ```
 
-Interactif : choisir la ou les cibles à configurer.
+Le script est interactif et se déroule en deux étapes :
 
-| Choix | Cibles installées |
-|-------|-------------------|
+**Étape 1 — Choisir les cibles**
+
+| Choix | Cibles configurées |
+|-------|--------------------|
 | 1 (défaut) | OpenCode |
 | 2 | Claude Code |
 | 3 | VS Code / Copilot |
 | 4 | Tout |
+
+**Étape 2 — Node.js (uniquement pour OpenCode et Claude Code)**
+
+Si Node.js n'est pas installé, le script détecte automatiquement l'installeur
+disponible et propose de l'installer :
+
+| Priorité | Installeur | Condition |
+|----------|------------|-----------|
+| 1 | Volta | `volta` présent dans le PATH |
+| 2 | Homebrew | `brew` présent (macOS) |
+| 3 | nvm | `nvm` présent dans le PATH |
+| 4 | Choix interactif | aucun installeur détecté |
+
+À chaque étape, le script propose soit l'**installation automatique**, soit
+les **commandes à copier-coller** pour une installation manuelle.
+
+> VS Code / Copilot ne requiert pas Node.js — `oc install` avec la cible `vscode`
+> ne vérifie pas Node.
 
 ### 3. Alias recommandé
 
@@ -123,8 +146,9 @@ oc start MON-APP
 
 ## Commandes
 
-### `oc install [target]`
+### `oc install`
 Installe les outils, crée la structure et configure les cibles actives.
+Vérifie et installe Node.js si une cible en a besoin.
 
 ```bash
 oc install
@@ -134,6 +158,7 @@ oc install
 
 ### `oc deploy <target> [PROJECT_ID]`
 Génère les fichiers agents pour la cible spécifiée.
+Vérifie que la cible est disponible (`adapter_validate`) avant de déployer.
 
 ```bash
 oc deploy opencode              # déploie au niveau du hub
@@ -150,12 +175,14 @@ oc deploy all                   # toutes les cibles actives
 
 ---
 
-### `oc start [PROJECT_ID]`
+### `oc start [PROJECT_ID] [prompt]`
 Lance l'outil par défaut (défini dans `config/hub.json`) dans le projet.
+Vérifie que la cible est disponible avant de lancer.
 
 ```bash
 oc start             # sélection interactive
 oc start MON-APP
+oc start MON-APP "explique l'architecture du projet"
 ```
 
 ---
@@ -188,21 +215,38 @@ oc remove MON-APP
 
 ---
 
-### `oc sync`
-Injection legacy des skills dans `.opencode/agents/` via marqueurs HTML.
-Préférer `oc deploy opencode` pour le nouveau flux.
-
-```bash
-oc sync
-```
-
----
-
 ### `oc update`
 Met à jour les outils installés (selon les cibles actives).
 
 ```bash
 oc update
+```
+
+---
+
+### `oc agent <sous-commande>`
+Gère les agents canoniques du hub.
+
+```bash
+oc agent list                   # lister les agents
+oc agent create                 # créer un agent (interactif)
+oc agent edit <agent-id>        # modifier skills et métadonnées
+oc agent info <agent-id>        # afficher le détail d'un agent
+```
+
+---
+
+### `oc skills <sous-commande>`
+Gère les skills externes téléchargés via context7.
+
+```bash
+oc skills search <query>          # rechercher des skills
+oc skills add /owner/repo [name]  # ajouter un skill externe
+oc skills list                    # lister tous les skills (locaux + externes)
+oc skills update [name]           # mettre à jour un skill externe (ou tous)
+oc skills used-by <skill>         # lister les agents qui utilisent ce skill
+oc skills sync                    # re-télécharger tous les skills (après clone)
+oc skills remove <name>           # supprimer un skill externe
 ```
 
 ---
@@ -241,21 +285,22 @@ Tu es un assistant de développement...
 ## Skills
 
 Les skills sont des blocs Markdown dans `skills/` injectés automatiquement
-dans les agents qui les déclarent.
+dans les agents qui les déclarent. Chaque fichier skill a un frontmatter
+`name` + `description`.
 
 ```
 skills/
-├── planner.md                      ← Workflow Beads du planner
+├── planner.md                         ← Workflow Beads du planner
 └── developer/
-    ├── dev-standards-universal.md  ← Qualité, SOLID, TypeScript strict
-    ├── dev-standards-backend.md    ← Architecture en couches, DTOs
-    ├── dev-standards-frontend.md   ← Séparation logique/présentation
-    ├── dev-standards-frontend-a11y.md ← WCAG 2.1, sémantique HTML
-    └── dev-standards-vuejs.md      ← Composition API, Pinia, composables
+    ├── dev-standards-universal.md     ← Clean Code, SOLID complet, TypeScript strict
+    ├── dev-standards-backend.md       ← Architecture en couches, DTOs, sécurité
+    ├── dev-standards-frontend.md      ← Séparation logique/présentation, performance
+    ├── dev-standards-frontend-a11y.md ← WCAG 2.1 A/AA, sémantique HTML, ARIA
+    └── dev-standards-vuejs.md         ← Composition API, Pinia, composables
 ```
 
 **Pour ajouter un skill :**
-1. Créer `skills/mon-skill.md`
+1. Créer `skills/mon-skill.md` avec un frontmatter `name` + `description`
 2. L'ajouter dans le frontmatter de l'agent : `skills: [..., mon-skill]`
 3. Relancer `oc deploy <target>`
 
@@ -308,10 +353,12 @@ AUTRE-APP=/home/user/projets/autre-app
 | Versionné ✅ | Généré (ignoré git) ❌ |
 |-------------|----------------------|
 | `agents/` | `.opencode/agents/` |
-| `skills/` | `.claude/agents/` |
-| `config/hub.json` | `.vscode/prompts/` |
-| `scripts/` | `.github/copilot-instructions.md` |
-| `projects/projects.md` | `projects/paths.local.md` |
+| `skills/` | `.opencode/config.json` |
+| `config/hub.json` | `.claude/agents/` |
+| `scripts/` | `.vscode/prompts/` |
+| `projects/projects.md` | `.github/copilot-instructions.md` |
+| | `projects/paths.local.md` |
+| | `skills/external/` |
 
 ---
 
