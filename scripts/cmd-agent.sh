@@ -35,74 +35,156 @@ _list_all_skills() {
 }
 
 ##
-# Affiche un menu de sélection de skills et retourne la liste choisie.
+# Affiche une page de skills avec numéros globaux, état sélectionné, et description.
+# @param {array nameref} $1 — all_skills[]
+# @param {array nameref} $2 — selected[] (indices 0-based actifs)
+# @param {int}           $3 — page courante (0-based)
+# @param {int}           $4 — taille de page
+##
+_print_skills_page() {
+  local -n _ps_skills=$1
+  local -n _ps_sel=$2
+  local page=$3 page_size=$4
+  local total=${#_ps_skills[@]}
+  local total_pages=$(( (total + page_size - 1) / page_size ))
+  local start=$(( page * page_size ))
+  local end=$(( start + page_size ))
+  [ "$end" -gt "$total" ] && end=$total
+
+  echo "" >&2
+  echo -e "${BOLD}Skills disponibles — page $((page+1))/$total_pages${RESET}  (total : $total)" >&2
+  echo "" >&2
+
+  for (( i=start; i<end; i++ )); do
+    local skill="${_ps_skills[$i]}"
+    local num=$((i + 1))
+    local desc=""
+    local skill_file="$HUB_DIR/skills/${skill}.md"
+    [ -f "$skill_file" ] && desc=$(grep '^description:' "$skill_file" | head -1 | sed 's/^description:[[:space:]]*//')
+
+    # Vérifie si l'indice est dans la sélection active
+    local selected=0
+    for s in "${_ps_sel[@]}"; do
+      [ "$s" -eq "$i" ] && selected=1 && break
+    done
+
+    if [ "$selected" -eq 1 ]; then
+      printf "  ${GREEN}[x]${RESET} %3d. %-50s" "$num" "$skill" >&2
+    else
+      printf "      %3d. %-50s" "$num" "$skill" >&2
+    fi
+    [ -n "$desc" ] && printf "  ${BLUE}%s${RESET}" "$desc" >&2
+    echo "" >&2
+  done
+
+  echo "" >&2
+  local nav=""
+  [ "$page" -gt 0 ]               && nav+="[p] précédent  "
+  [ "$page" -lt $((total_pages-1)) ] && nav+="[n] suivant  "
+  nav+="[numéros] sélectionner  [0] vider  [entrée] valider"
+  echo -e "  $nav" >&2
+  echo "" >&2
+}
+
+##
+# Affiche un menu de sélection de skills avec pagination et retourne la liste choisie.
 # Les skills déjà sélectionnés sont pré-cochés.
 # @param {string} $1 — Liste courante (séparée par virgules)
 # Écrit la sélection finale sur stdout (séparée par virgules).
 ##
 _pick_skills() {
   local current_csv="${1:-}"
+  local page_size=10
 
-  # Collect all available skills into an indexed array
+  # Charger tous les skills
   local all_skills=()
   while IFS= read -r s; do
     all_skills+=("$s")
   done < <(_list_all_skills)
 
   if [ ${#all_skills[@]} -eq 0 ]; then
-    log_warn "Aucun skill disponible."
+    log_warn "Aucun skill disponible." >&2
     echo "$current_csv"
     return
   fi
 
-  echo ""
-  echo -e "${BOLD}Skills disponibles :${RESET}"
-  echo "  (Entrez les numéros séparés par des espaces, ex: 1 3 5)"
-  echo ""
-
-  # Afficher chaque skill avec son numéro et son état (sélectionné ou non)
-  local i=1
-  for skill in "${all_skills[@]}"; do
+  # Initialiser la sélection courante (indices 0-based)
+  local selected=()
+  for (( i=0; i<${#all_skills[@]}; i++ )); do
+    local skill="${all_skills[$i]}"
     if echo ",$current_csv," | grep -q ",${skill},"; then
-      echo -e "  ${GREEN}[x]${RESET} $i. $skill"
-    else
-      echo "      $i. $skill"
+      selected+=("$i")
     fi
-    i=$((i + 1))
   done
-  echo ""
 
-  read -rp "Numéros des skills à activer (0 = aucun, vide = inchangé) : " selection
+  local page=0
+  local total_pages=$(( (${#all_skills[@]} + page_size - 1) / page_size ))
 
-  # Si vide, conserver la sélection courante
-  if [ -z "$selection" ]; then
-    echo "$current_csv"
-    return
-  fi
+  while true; do
+    _print_skills_page all_skills selected "$page" "$page_size"
 
-  # 0 = vider complètement la liste
-  if [ "$selection" = "0" ]; then
-    echo ""
-    return
-  fi
+    read -rp "  > " input </dev/tty
 
-  # Construire la nouvelle liste à partir des indices choisis
+    case "$input" in
+      n|N)
+        [ "$page" -lt $((total_pages-1)) ] && page=$((page+1)) || echo -e "  ${YELLOW}Déjà sur la dernière page.${RESET}" >&2
+        ;;
+      p|P)
+        [ "$page" -gt 0 ] && page=$((page-1)) || echo -e "  ${YELLOW}Déjà sur la première page.${RESET}" >&2
+        ;;
+      "")
+        # Valider — sortir de la boucle
+        break
+        ;;
+      0)
+        # Vider la sélection
+        selected=()
+        echo -e "  ${YELLOW}Sélection vidée.${RESET}" >&2
+        ;;
+      *)
+        # Traiter les numéros saisis
+        local changed=0
+        for num in $input; do
+          if ! echo "$num" | grep -qE '^[0-9]+$'; then
+            echo -e "  ${YELLOW}Numéro invalide ignoré : $num${RESET}" >&2
+            continue
+          fi
+          local idx=$(( num - 1 ))
+          if [ "$idx" -lt 0 ] || [ "$idx" -ge "${#all_skills[@]}" ]; then
+            echo -e "  ${YELLOW}Numéro hors plage ignoré : $num${RESET}" >&2
+            continue
+          fi
+          # Toggle : retirer si déjà présent, ajouter sinon
+          local found=0
+          local new_sel=()
+          for s in "${selected[@]}"; do
+            if [ "$s" -eq "$idx" ]; then
+              found=1
+            else
+              new_sel+=("$s")
+            fi
+          done
+          if [ "$found" -eq 0 ]; then
+            new_sel+=("$idx")
+          fi
+          selected=("${new_sel[@]}")
+          changed=1
+        done
+        ;;
+    esac
+  done
+
+  # Construire la liste CSV finale (dans l'ordre des indices)
   local chosen=()
-  for num in $selection; do
-    # Valider que c'est un entier dans la plage
-    if ! echo "$num" | grep -qE '^[0-9]+$'; then
-      log_warn "Numéro invalide ignoré : $num" >&2
-      continue
-    fi
-    if [ "$num" -lt 1 ] || [ "$num" -gt "${#all_skills[@]}" ]; then
-      log_warn "Numéro hors plage ignoré : $num" >&2
-      continue
-    fi
-    chosen+=("${all_skills[$((num - 1))]}")
-  done
+  # Trier les indices sélectionnés
+  local sorted_sel
+  sorted_sel=$(printf '%s\n' "${selected[@]}" | sort -n)
+  while IFS= read -r idx; do
+    [ -z "$idx" ] && continue
+    chosen+=("${all_skills[$idx]}")
+  done <<< "$sorted_sel"
 
-  # Retourner la liste CSV triée sans doublons
-  printf '%s\n' "${chosen[@]}" | sort -u | tr '\n' ',' | sed 's/,$//'
+  printf '%s\n' "${chosen[@]}" | tr '\n' ',' | sed 's/,$//'
 }
 
 ##
@@ -389,12 +471,7 @@ cmd_edit() {
   # Skills (toujours proposé)
   local new_skills
   new_skills=$(_pick_skills "$cur_skills")
-  if [ -n "$new_skills" ]; then
-    log_info "Skills : $new_skills"
-  else
-    new_skills="$cur_skills"
-    log_info "Skills inchangés."
-  fi
+  log_info "Skills : ${new_skills:-aucun}"
 
   # Valider avant écriture
   echo ""
