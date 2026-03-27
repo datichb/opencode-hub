@@ -98,17 +98,17 @@ Le script est interactif et se déroule en deux étapes :
 
 **Étape 2 — Node.js (uniquement pour OpenCode et Claude Code)**
 
-Si Node.js n'est pas installé, le script détecte automatiquement l'installeur
-disponible et propose de l'installer :
+Si Node.js n'est pas installé, le script affiche un menu interactif pour
+choisir l'installeur. Les options déjà disponibles sur la machine sont
+indiquées :
 
-| Priorité | Installeur | Condition |
-|----------|------------|-----------|
-| 1 | Volta | `volta` présent dans le PATH |
-| 2 | Homebrew | `brew` présent (macOS) |
-| 3 | nvm | `nvm` présent dans le PATH |
-| 4 | Choix interactif | aucun installeur détecté |
+| Option | Condition affichée |
+|--------|--------------------|
+| Volta | `(recommandé)` ou `(déjà installé, recommandé)` |
+| Homebrew | affiché sur macOS, `(déjà installé)` si présent |
+| nvm | `(déjà installé)` si présent, sinon lien vers GitHub |
 
-À chaque étape, le script propose soit l'**installation automatique**, soit
+Après le choix, le script propose soit l'**installation automatique**, soit
 les **commandes à copier-coller** pour une installation manuelle.
 
 > VS Code / Copilot ne requiert pas Node.js — `oc install` avec la cible `vscode`

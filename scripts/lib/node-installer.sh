@@ -127,26 +127,37 @@ _install_node_with() {
   _verify_node_in_path
 }
 
-# ── Choix interactif quand aucun installeur n'est présent ────────────────────
+# ── Choix interactif (toujours affiché, avec indication de disponibilité) ─────
 
 _choose_installer() {
   local os="$1"
   local options=()
   local labels=()
 
-  options+=("volta")
-  labels+=("Volta  (recommandé — https://volta.sh)")
+  # Charger nvm si présent avant détection
+  export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+  # shellcheck disable=SC1091
+  [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
 
-  if [ "$os" = "macos" ] && command -v brew &>/dev/null; then
+  local volta_label="Volta  (recommandé — https://volta.sh)"
+  command -v volta &>/dev/null && volta_label="Volta  (déjà installé, recommandé)"
+  options+=("volta")
+  labels+=("$volta_label")
+
+  if [ "$os" = "macos" ]; then
+    local brew_label="Homebrew"
+    command -v brew &>/dev/null && brew_label="Homebrew  (déjà installé)"
     options+=("brew")
-    labels+=("Homebrew")
+    labels+=("$brew_label")
   fi
 
+  local nvm_label="nvm    (https://github.com/nvm-sh/nvm)"
+  command -v nvm &>/dev/null && nvm_label="nvm    (déjà installé)"
   options+=("nvm")
-  labels+=("nvm    (https://github.com/nvm-sh/nvm)")
+  labels+=("$nvm_label")
 
   echo ""
-  log_info "Aucun installeur Node.js détecté. Choisir :"
+  log_info "Comment installer Node.js ?"
   echo ""
   for i in "${!labels[@]}"; do
     printf "  ${BLUE}%d${RESET}) %s\n" "$((i+1))" "${labels[$i]}"
@@ -168,32 +179,6 @@ _choose_installer() {
 
 _detect_and_install_node() {
   local os; os=$(detect_os)
-
-  # Priorité 1 : Volta déjà présent
-  if command -v volta &>/dev/null; then
-    log_info "Volta détecté — installation de Node.js via Volta"
-    _install_node_with "volta"
-    return $?
-  fi
-
-  # Priorité 2 : Homebrew déjà présent (macOS uniquement)
-  if [ "$os" = "macos" ] && command -v brew &>/dev/null; then
-    log_info "Homebrew détecté — installation de Node.js via brew"
-    _install_node_with "brew"
-    return $?
-  fi
-
-  # Priorité 3 : nvm déjà présent
-  export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-  # shellcheck disable=SC1091
-  [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
-  if command -v nvm &>/dev/null; then
-    log_info "nvm détecté — installation de Node.js via nvm"
-    _install_node_with "nvm"
-    return $?
-  fi
-
-  # Aucun installeur — choix interactif
   local method; method=$(_choose_installer "$os")
   _install_node_with "$method"
 }
