@@ -1,3 +1,8 @@
+---
+name: dev-standards-frontend-a11y
+description: Règles d'accessibilité frontend — WCAG 2.1 A/AA, HTML sémantique, ARIA, navigation clavier, formulaires, Vue.js.
+---
+
 # Skill — Standards Accessibilité Frontend
 
 ## Rôle

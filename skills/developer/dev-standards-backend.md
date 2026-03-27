@@ -1,3 +1,8 @@
+---
+name: dev-standards-backend
+description: Bonnes pratiques backend agnostiques du framework — architecture en couches, API, sécurité, gestion des erreurs.
+---
+
 # Skill — Standards Backend (Agnostique)
 
 ## Rôle

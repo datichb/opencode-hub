@@ -23,17 +23,19 @@ printf "  %s\n" "─────────────────────
 
 for id in "${ids[@]}"; do
   local_path=$(get_project_path "$id")
-  local_path="${local_path:-${YELLOW}non défini${RESET}}"
 
-  if [ -d "${local_path/#\~/$HOME}" ]; then
-    status="${GREEN}✔ accessible${RESET}"
-  elif [ "$local_path" = "${YELLOW}non défini${RESET}" ]; then
+  if [ -z "$local_path" ]; then
     status="${YELLOW}⚠ sans chemin${RESET}"
+    display_path="${YELLOW}non défini${RESET}"
+  elif [ -d "${local_path/#\~/$HOME}" ]; then
+    status="${GREEN}✔ accessible${RESET}"
+    display_path="$local_path"
   else
     status="${RED}✘ introuvable${RESET}"
+    display_path="$local_path"
   fi
 
-  printf "  %-20s %-30s " "$id" "$local_path"
+  printf "  %-20s %-30s " "$id" "$display_path"
   echo -e "$status"
 done
 

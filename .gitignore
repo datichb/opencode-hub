@@ -3,6 +3,7 @@ projects/paths.local.md
 
 # Sorties générées par oc deploy — ne pas committer
 .opencode/agents/
+.opencode/config.json
 .claude/
 .github/copilot-instructions.md
 .vscode/prompts/

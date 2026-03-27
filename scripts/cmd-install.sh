@@ -15,6 +15,20 @@ if ! command -v node &>/dev/null; then
 fi
 log_success "Node.js $(node -v) détecté"
 
+# ── jq ───────────────────────────────────
+if ! command -v jq &>/dev/null; then
+  log_warn "jq n'est pas installé — requis pour lire config/hub.json"
+  if [ "$OS" = "macos" ]; then
+    log_info "  → brew install jq"
+  else
+    log_info "  → sudo apt-get install jq  (Debian/Ubuntu)"
+    log_info "  → sudo dnf install jq      (Fedora/RHEL)"
+  fi
+  log_error "Installer jq puis relancer : ./oc.sh install"
+  exit 1
+fi
+log_success "jq $(jq --version) détecté"
+
 # ── OpenCode ─────────────────────────────
 if ! command -v opencode &>/dev/null; then
   log_info "Installation de OpenCode..."

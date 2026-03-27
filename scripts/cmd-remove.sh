@@ -21,7 +21,7 @@ log_success "Projet $PROJECT_ID supprimé de projects.md"
 
 # ── Supprimer du paths.local.md ───────────
 if path_exists "$PROJECT_ID"; then
-  sed -i "" "/^${PROJECT_ID}=/d" "$PATHS_FILE"
+  sed -i.bak "/^${PROJECT_ID}=/d" "$PATHS_FILE" && rm -f "${PATHS_FILE}.bak"
   log_success "Chemin supprimé de paths.local.md"
 fi
 

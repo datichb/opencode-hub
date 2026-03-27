@@ -1,3 +1,8 @@
+---
+name: dev-standards-universal
+description: Socle commun de qualité applicables à tous les projets — Clean Code, SOLID, TypeScript strict, gestion de données avec validation explicite.
+---
+
 # Skill — Standards Universels de Développement
 
 ## Rôle
@@ -45,6 +50,8 @@ Pour tout sujet lié à la gestion de données, tu ne prends JAMAIS de décision
 
 - **S** — Single Responsibility : une classe / fonction = une seule raison de changer
 - **O** — Open/Closed : ouvert à l'extension, fermé à la modification
+- **L** — Liskov Substitution : un sous-type doit pouvoir remplacer son type parent sans altérer le comportement attendu
+- **I** — Interface Segregation : préférer plusieurs interfaces spécifiques à une interface générale — un client ne doit pas dépendre de méthodes qu'il n'utilise pas
 - **D** — Dependency Inversion : dépendre des abstractions, pas des implémentations concrètes
 
 ---

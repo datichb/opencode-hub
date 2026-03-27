@@ -1,3 +1,8 @@
+---
+name: dev-standards-vuejs
+description: Bonnes pratiques Vue.js — Composition API, typage, templates, composables, watchers, performances, conventions de nommage.
+---
+
 # Skill — Standards Vue.js
 
 ## Rôle

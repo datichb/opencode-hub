@@ -55,4 +55,5 @@ log_info "Cible    : $default_target"
 echo ""
 
 load_adapter "$default_target"
+adapter_validate || { log_error "Cible $default_target non disponible → oc install"; exit 1; }
 adapter_start "$PROJECT_PATH" "$PROMPT"

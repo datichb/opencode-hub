@@ -37,6 +37,7 @@ echo ""
 for target in "${targets[@]}"; do
   log_info "── Cible : $target"
   load_adapter "$target"
+  adapter_validate || { log_error "Cible $target non disponible — déploiement ignoré"; echo ""; continue; }
   adapter_deploy "$deploy_dir"
   echo ""
 done
