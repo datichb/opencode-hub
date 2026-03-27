@@ -63,9 +63,11 @@ opencode-hub/
     └── paths.local.md                 ← Chemins locaux (ignoré par git)
 ```
 
-> Les dossiers `.opencode/agents/`, `.opencode/config.json`, `.claude/`,
+> Les dossiers `.opencode/agents/`, `.claude/`,
 > `.vscode/prompts/` et `.github/copilot-instructions.md` sont des
 > **sorties générées** — ne jamais les éditer à la main.
+> `opencode.json` à la racine d'un projet est créé par `oc deploy opencode`
+> s'il n'existe pas encore, puis conservé tel quel.
 
 ---
 
@@ -169,7 +171,7 @@ oc deploy all                   # toutes les cibles actives
 
 | Cible | Sorties générées |
 |-------|-----------------|
-| `opencode` | `.opencode/agents/*.md` + `.opencode/config.json` |
+| `opencode` | `.opencode/agents/*.md` + `opencode.json` (créé seulement s'il n'existe pas) |
 | `claude-code` | `.claude/agents/*.md` |
 | `vscode` | `.github/copilot-instructions.md` + `.vscode/prompts/*.prompt.md` |
 
@@ -353,11 +355,10 @@ AUTRE-APP=/home/user/projets/autre-app
 | Versionné ✅ | Généré (ignoré git) ❌ |
 |-------------|----------------------|
 | `agents/` | `.opencode/agents/` |
-| `skills/` | `.opencode/config.json` |
-| `config/hub.json` | `.claude/agents/` |
-| `scripts/` | `.vscode/prompts/` |
-| `projects/projects.md` | `.github/copilot-instructions.md` |
-| | `projects/paths.local.md` |
+| `skills/` | `.claude/agents/` |
+| `config/hub.json` | `.vscode/prompts/` |
+| `scripts/` | `.github/copilot-instructions.md` |
+| `projects/projects.md` | `projects/paths.local.md` |
 | | `skills/external/` |
 
 ---

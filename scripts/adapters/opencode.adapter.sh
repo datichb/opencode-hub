@@ -18,7 +18,7 @@ adapter_deploy() {
   mkdir -p "$out_dir"
   [ -d "$CANONICAL_AGENTS_DIR" ] || { log_error "[opencode] Dossier agents/ introuvable"; return 1; }
 
-  local deployed=0 agents_json=""
+  local deployed=0
 
   for agent_file in "$CANONICAL_AGENTS_DIR"/*.md; do
     [ -f "$agent_file" ] || continue
@@ -28,25 +28,25 @@ adapter_deploy() {
     log_info "[opencode] Génération : $agent_id"
     build_agent_content "$agent_file" "opencode" > "$out_dir/${agent_id}.md"
     log_success "[opencode] $agent_id"
-
-    [ -n "$agents_json" ] && agents_json+=","
-    agents_json+="
-    \"${agent_id}\": {
-      \"model\": \"${OPENCODE_MODEL}\",
-      \"system\": \".opencode/agents/${agent_id}.md\"
-    }"
     deployed=$((deployed + 1))
   done
 
-  mkdir -p "$deploy_dir/.opencode"
-  cat > "$deploy_dir/.opencode/config.json" << JSEOF
+  # Générer opencode.json à la racine du projet (format officiel)
+  # Les agents .md dans .opencode/agents/ sont chargés automatiquement par OpenCode
+  local config_file="$deploy_dir/opencode.json"
+  if [ ! -f "$config_file" ]; then
+    cat > "$config_file" << JSEOF
 {
-  "model": "${OPENCODE_MODEL}",
-  "agents": {${agents_json}
-  }
+  "\$schema": "https://opencode.ai/config.json",
+  "model": "${OPENCODE_MODEL}"
 }
 JSEOF
-  log_success "[opencode] config.json généré — $deployed agent(s)"
+    log_success "[opencode] opencode.json créé"
+  else
+    log_info "[opencode] opencode.json existant conservé"
+  fi
+
+  log_success "[opencode] $deployed agent(s) → ${deploy_dir}/.opencode/agents/"
 }
 
 adapter_install() {
