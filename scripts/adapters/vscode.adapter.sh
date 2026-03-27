@@ -8,7 +8,10 @@
 source "$HUB_DIR/scripts/lib/prompt-builder.sh"
 
 adapter_validate() {
-  command -v code &>/dev/null || log_warn "[vscode] CLI 'code' non détecté — déploiement possible sans lancement"
+  # Le déploiement vscode ne nécessite pas le CLI 'code'.
+  # Pour le lancement (adapter_start), la vérification est faite localement.
+  # Ici on avertit si absent mais on laisse le déploiement continuer.
+  command -v code &>/dev/null || log_warn "[vscode] CLI 'code' non détecté — déploiement possible, lancement impossible"
   return 0
 }
 

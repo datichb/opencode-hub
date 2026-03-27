@@ -7,7 +7,6 @@ HUB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROJECTS_FILE="$HUB_DIR/projects/projects.md"
 PATHS_FILE="$HUB_DIR/projects/paths.local.md"
 SKILLS_DIR="$HUB_DIR/skills"
-AGENTS_DIR="$HUB_DIR/.opencode/agents"
 SCRIPTS_DIR="$HUB_DIR/scripts"
 
 # Phase 2+ : sources canoniques (agents/ et config/)
@@ -69,6 +68,11 @@ project_exists() {
 path_exists() {
   local id="$1"
   grep -q "^${id}=" "$PATHS_FILE" 2>/dev/null
+}
+
+# Normalise un PROJECT_ID en majuscules
+normalize_project_id() {
+  echo "$1" | tr '[:lower:]' '[:upper:]'
 }
 
 # Detect OS

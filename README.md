@@ -386,3 +386,17 @@ AUTRE-APP=/home/user/projets/autre-app
 Les agents, skills et config sont versionnés et partagés par toute l'équipe.
 Pour modifier un agent ou ajouter un skill, soumettre une PR puis relancer
 `oc deploy <target>` localement après merge.
+
+---
+
+## Notes techniques
+
+- **`oc init`** rejette les `PROJECT_ID` contenant des espaces, slashes ou caractères spéciaux.
+  Caractères autorisés : lettres, chiffres, `-` et `_`.
+- **`oc start`** avertit si les agents ne sont pas encore déployés dans le projet cible.
+- **`oc skills sync`** est non-interactif : il écrase silencieusement les fichiers existants
+  (`--force` interne). La commande `oc skills add` elle, demande toujours confirmation en mode normal.
+- **`_generate_body`** dans `oc agent create` détecte automatiquement `timeout` ou `gtimeout`
+  (macOS) pour encadrer l'appel à `opencode run`.
+- **`oc remove`** : le `PROJECT_ID` est échappé dans la regex Perl (`\Q...\E`) pour éviter
+  toute interprétation de caractères spéciaux.

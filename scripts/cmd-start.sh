@@ -21,10 +21,14 @@ if [ -z "$PROJECT_ID" ]; then
   done
   echo ""
   read -rp "  Numéro : " choice
+  if ! [[ "$choice" =~ ^[0-9]+$ ]] || [ "$choice" -lt 1 ] || [ "$choice" -gt "${#ids[@]}" ]; then
+    log_error "Choix invalide : $choice (attendu 1-${#ids[@]})"
+    exit 1
+  fi
   PROJECT_ID="${ids[$((choice-1))]}"
 fi
 
-PROJECT_ID=$(echo "$PROJECT_ID" | tr '[:lower:]' '[:upper:]')
+PROJECT_ID=$(normalize_project_id "$PROJECT_ID")
 
 # ── Validations ───────────────────────────
 if ! project_exists "$PROJECT_ID"; then
@@ -56,4 +60,18 @@ echo ""
 
 load_adapter "$default_target"
 adapter_validate || { log_error "Cible $default_target non disponible → oc install"; exit 1; }
+
+# ── Vérifier que les agents sont déployés ──────────────
+case "$default_target" in
+  opencode)    agents_dir="$PROJECT_PATH/.opencode/agents" ;;
+  claude-code) agents_dir="$PROJECT_PATH/.claude/agents" ;;
+  vscode)      agents_dir="$PROJECT_PATH/.vscode/prompts" ;;
+  *)           agents_dir="" ;;
+esac
+
+if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ]; then
+  log_warn "Agents non déployés dans ce projet pour la cible $default_target"
+  log_warn "Lancez d'abord : ./oc.sh deploy $default_target $PROJECT_ID"
+fi
+
 adapter_start "$PROJECT_PATH" "$PROMPT"

@@ -35,6 +35,32 @@ _list_all_skills() {
 }
 
 ##
+# Lit une touche depuis /dev/tty (mode raw déjà actif).
+# Gère les séquences ESC (flèches, SS3). Résultat dans $KEY.
+# Retourne 1 si ESC seul (annulation).
+##
+_read_key() {
+  local byte1 byte2 byte3
+  IFS= read -rsn1 byte1 </dev/tty
+  KEY="$byte1"
+
+  if [ "$byte1" = $'\x1b' ]; then
+    IFS= read -rsn1 -t 1 byte2 </dev/tty || byte2=""
+    if [ "$byte2" = "[" ] || [ "$byte2" = "O" ]; then
+      IFS= read -rsn1 -t 1 byte3 </dev/tty || byte3=""
+      KEY="${byte1}${byte2}${byte3}"
+    elif [ -z "$byte2" ]; then
+      # ESC seul
+      KEY=$'\x1b'
+      return 1
+    else
+      KEY="${byte1}${byte2}"
+    fi
+  fi
+  return 0
+}
+
+##
 # Rendu d'une page du sélecteur de skills (compatible bash 3.2).
 # Variables utilisées depuis _pick_skills : all_skills, checked, cursor, page_size, total, total_pages
 ##
@@ -167,24 +193,13 @@ _pick_skills() {
     _render_skills_page
 
     # Lecture d'une touche
-    local key byte1 byte2 byte3
-    IFS= read -rsn1 byte1 </dev/tty
-    key="$byte1"
-
-    # Séquence d'échappement (flèches) : ESC [ X
-    if [ "$byte1" = $'\x1b' ]; then
-      IFS= read -rsn1 -t 1 byte2 </dev/tty || byte2=""
-      if [ "$byte2" = "[" ] || [ "$byte2" = "O" ]; then
-        IFS= read -rsn1 -t 1 byte3 </dev/tty || byte3=""
-        key="${byte1}${byte2}${byte3}"
-      elif [ -z "$byte2" ]; then
-        # ESC seul → annuler le sélecteur
-        _picker_cancelled=1
-        break
-      else
-        key="${byte1}${byte2}"
-      fi
+    local key
+    if ! _read_key; then
+      # ESC seul → annuler le sélecteur
+      _picker_cancelled=1
+      break
     fi
+    key="$KEY"
 
     case "$key" in
       $'\x1b[A'|$'\x1bOA')  # flèche haut
@@ -307,21 +322,11 @@ _pick_targets() {
     echo ""
 
     # ── Lecture touche ────────────────────────────────────────────────────────
-    local key byte1 byte2 byte3
-    IFS= read -rsn1 byte1 </dev/tty
-    key="$byte1"
-
-    if [ "$byte1" = $'\x1b' ]; then
-      IFS= read -rsn1 -t 1 byte2 </dev/tty || byte2=""
-      if [ "$byte2" = "[" ] || [ "$byte2" = "O" ]; then
-        IFS= read -rsn1 -t 1 byte3 </dev/tty || byte3=""
-        key="${byte1}${byte2}${byte3}"
-      elif [ -z "$byte2" ]; then
-        _cancelled=1; break
-      else
-        key="${byte1}${byte2}"
-      fi
+    local key
+    if ! _read_key; then
+      _cancelled=1; break
     fi
+    key="$KEY"
 
     case "$key" in
       $'\x1b[A'|$'\x1bOA') [ "$cursor" -gt 0 ] && cursor=$((cursor - 1)) ;;
@@ -434,7 +439,14 @@ Sois concis et directement opérationnel. Pas d'introduction, pas de conclusion,
 
   log_info "Génération en cours via opencode..."
   local generated
-  generated=$(timeout 60 opencode run "$prompt" 2>/dev/null) || true
+  # Sur macOS, 'timeout' n'est pas natif — utiliser 'gtimeout' si disponible, sinon sans timeout
+  local timeout_cmd=""
+  if command -v timeout &>/dev/null; then
+    timeout_cmd="timeout 60"
+  elif command -v gtimeout &>/dev/null; then
+    timeout_cmd="gtimeout 60"
+  fi
+  generated=$(${timeout_cmd} opencode run "$prompt" 2>/dev/null) || true
 
   if [ -z "$generated" ]; then
     log_warn "opencode n'a pas retourné de contenu — corps par défaut utilisé."

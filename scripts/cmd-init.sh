@@ -11,7 +11,14 @@ if [ -z "$PROJECT_ID" ]; then
   read -rp "  PROJECT_ID (ex: MON-APP) : " PROJECT_ID
 fi
 
-PROJECT_ID=$(echo "$PROJECT_ID" | tr '[:lower:]' '[:upper:]')
+PROJECT_ID=$(normalize_project_id "$PROJECT_ID")
+
+# Validation du format PROJECT_ID : lettres, chiffres, tirets et underscores uniquement
+if ! echo "$PROJECT_ID" | grep -qE '^[A-Z0-9_-]+$'; then
+  log_error "PROJECT_ID invalide : '$PROJECT_ID'"
+  log_info  "Caractères autorisés : lettres, chiffres, tirets (-) et underscores (_). Pas d'espaces ni de slashes."
+  exit 1
+fi
 
 if [ -z "$PROJECT_PATH" ]; then
   read -rp "  Chemin local (ex: ~/workspace/mon-app) : " PROJECT_PATH

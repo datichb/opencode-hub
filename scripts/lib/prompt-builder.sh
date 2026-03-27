@@ -18,8 +18,8 @@ extract_frontmatter_list() {
     | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$'
 }
 
-# Retourne le corps d'un fichier Markdown en ignorant le bloc frontmatter
-get_agent_body() {
+# Retourne le contenu d'un fichier Markdown en ignorant le bloc frontmatter YAML
+strip_frontmatter() {
   local file="$1"
   if head -1 "$file" | grep -q '^---$'; then
     awk 'BEGIN{f=0;d=0} /^---$/{if(!f){f=1;next}else if(!d){d=1;next}} d{print}' "$file"
@@ -28,14 +28,14 @@ get_agent_body() {
   fi
 }
 
+# Retourne le corps d'un fichier Markdown en ignorant le bloc frontmatter
+get_agent_body() {
+  strip_frontmatter "$1"
+}
+
 # Retourne le contenu d'un skill en ignorant son frontmatter
 get_skill_content() {
-  local file="$1"
-  if head -1 "$file" | grep -q '^---$'; then
-    awk 'BEGIN{f=0;d=0} /^---$/{if(!f){f=1;next}else if(!d){d=1;next}} d{print}' "$file"
-  else
-    cat "$file"
-  fi
+  strip_frontmatter "$1"
 }
 
 # Vérifie si un agent supporte une cible donnée (via frontmatter targets)

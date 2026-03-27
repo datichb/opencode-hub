@@ -18,7 +18,7 @@ fi
 
 # Résoudre le dossier de déploiement
 if [ -n "$PROJECT_ID" ]; then
-  PROJECT_ID=$(echo "$PROJECT_ID" | tr '[:lower:]' '[:upper:]')
+  PROJECT_ID=$(normalize_project_id "$PROJECT_ID")
   if ! project_exists "$PROJECT_ID"; then
     log_error "Projet $PROJECT_ID introuvable → oc list"
     exit 1

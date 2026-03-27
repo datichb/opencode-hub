@@ -68,6 +68,6 @@ adapter_update() {
 
 adapter_start() {
   local project_path="$1" prompt="${2:-}"
-  cd "$project_path"
+  cd "$project_path" || { log_error "[opencode] Impossible de naviguer vers $project_path"; exit 1; }
   [ -n "$prompt" ] && exec opencode --prompt "$prompt" || exec opencode
 }

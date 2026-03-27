@@ -101,9 +101,10 @@ cmd_info() {
 # Utilise ctx7 CLI comme relais : install dans ~/.agents/skills/ puis copie locale.
 # @param {string} $1 — Identifiant du dépôt au format /owner/repo
 # @param {string} $2 — (optionnel) Nom du skill à installer
+# @param {string} $3 — (optionnel) --force : ne pas demander confirmation si le fichier existe
 ##
 cmd_add() {
-  local repo="${1:-}" skill_name="${2:-}"
+  local repo="${1:-}" skill_name="${2:-}" force="${3:-}"
   if [ -z "$repo" ]; then
     log_error "Usage : oc skills add /owner/repo [skill-name]"
     log_info  "Exemple : oc skills add /anthropics/skills pdf"
@@ -130,8 +131,8 @@ cmd_add() {
 
   local dest="$EXTERNAL_SKILLS_DIR/${skill_name}.md"
 
-  # Confirmation si le skill existe déjà localement
-  if [ -f "$dest" ]; then
+  # Confirmation si le skill existe déjà localement (sauf en mode --force)
+  if [ -f "$dest" ] && [ "$force" != "--force" ]; then
     log_warn "Le skill 'external/${skill_name}' existe déjà."
     read -rp "Écraser ? (y/N) : " confirm
     [[ "$confirm" =~ ^[Yy]$ ]] || { log_info "Annulé."; exit 0; }
@@ -244,7 +245,7 @@ cmd_sync() {
     log_info "Re-téléchargement : $skill_name depuis $repo..."
     # Forcer le re-téléchargement en supprimant le cache universel
     rm -f "$UNIVERSAL_SKILLS_DIR/${skill_name}.md"
-    cmd_add "$repo" "$skill_name"
+    cmd_add "$repo" "$skill_name" "--force"
     count=$((count + 1))
   done < <(jq -r 'keys[]' "$SOURCES_FILE")
 

@@ -67,6 +67,6 @@ adapter_update() {
 adapter_start() {
   local project_path="$1" prompt="${2:-}"
   command -v claude &>/dev/null || { log_error "[claude-code] Non installé → oc install claude-code"; exit 1; }
-  cd "$project_path"
+  cd "$project_path" || { log_error "[claude-code] Impossible de naviguer vers $project_path"; exit 1; }
   [ -n "$prompt" ] && exec claude --print "$prompt" || exec claude
 }
