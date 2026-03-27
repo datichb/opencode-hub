@@ -156,19 +156,19 @@ _choose_installer() {
   options+=("nvm")
   labels+=("$nvm_label")
 
-  echo ""
-  log_info "Comment installer Node.js ?"
-  echo ""
+  echo "" >&2
+  log_info "Comment installer Node.js ?" >&2
+  echo "" >&2
   for i in "${!labels[@]}"; do
-    printf "  ${BLUE}%d${RESET}) %s\n" "$((i+1))" "${labels[$i]}"
+    printf "  ${BLUE}%d${RESET}) %s\n" "$((i+1))" "${labels[$i]}" >&2
   done
-  echo ""
-  read -rp "  Numéro (défaut: 1) : " choice
+  echo "" >&2
+  read -rp "  Numéro (défaut: 1) : " choice </dev/tty
   choice="${choice:-1}"
 
   local idx=$(( choice - 1 ))
   if [ "$idx" -lt 0 ] || [ "$idx" -ge "${#options[@]}" ]; then
-    log_warn "Choix invalide — Volta sélectionné par défaut"
+    log_warn "Choix invalide — Volta sélectionné par défaut" >&2
     idx=0
   fi
 
