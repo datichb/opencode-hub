@@ -51,6 +51,7 @@ JSEOF
 
 adapter_install() {
   if ! command -v opencode &>/dev/null; then
+    command -v npm &>/dev/null || { log_error "[opencode] npm non disponible — relancez le terminal et réessayez"; return 1; }
     log_info "Installation de OpenCode..."
     npm install -g opencode-ai
     log_success "OpenCode installé"
@@ -60,6 +61,7 @@ adapter_install() {
 }
 
 adapter_update() {
+  command -v npm &>/dev/null || { log_error "[opencode] npm non disponible — relancez le terminal et réessayez"; return 1; }
   log_info "Mise à jour OpenCode..."
   npm update -g opencode-ai && log_success "OpenCode mis à jour" || log_warn "Échec mise à jour OpenCode"
 }

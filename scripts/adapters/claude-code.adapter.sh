@@ -57,6 +57,7 @@ adapter_install() {
 
 adapter_update() {
   command -v claude &>/dev/null || { log_warn "[claude-code] Non installé"; return; }
+  command -v npm &>/dev/null || { log_error "[claude-code] npm non disponible — relancez le terminal et réessayez"; return 1; }
   log_info "Mise à jour Claude Code..."
   npm update -g @anthropic-ai/claude-code 2>/dev/null \
     && log_success "Claude Code mis à jour" \
