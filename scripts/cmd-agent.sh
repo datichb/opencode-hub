@@ -58,16 +58,27 @@ _render_skills_page() {
     local skill_file="$HUB_DIR/skills/${skill}.md"
     [ -f "$skill_file" ] && desc=$(grep '^description:' "$skill_file" | head -1 | sed 's/^description:[[:space:]]*//')
 
-    local check_mark="   "
-    [ "${checked[$i]}" = "1" ] && check_mark="${GREEN}[x]${RESET}"
+    # check_icon : texte pur sans codes ANSI (pour que %-3s soit correct)
+    # check_color : couleur à appliquer autour de l'icône
+    local check_icon="   "
+    local check_color=""
+    local check_reset=""
+    if [ "${checked[$i]}" = "1" ]; then
+      check_icon="[x]"
+      check_color="$GREEN"
+      check_reset="$RESET"
+    fi
 
     if [ "$i" -eq "$cursor" ]; then
-      printf "  ${BOLD}> %s %3d. %-45s${RESET}" "$check_mark" "$num" "$skill"
+      # Ligne curseur : fond gras, flèche visible
+      printf "  \033[1m> ${check_color}%-3s${check_reset}\033[1m %3d. %-45s\033[0m" \
+        "$check_icon" "$num" "$skill"
     else
-      printf "    %s %3d. %-45s" "$check_mark" "$num" "$skill"
+      printf "    ${check_color}%-3s${check_reset} %3d. %-45s" \
+        "$check_icon" "$num" "$skill"
     fi
-    [ -n "$desc" ] && printf "  ${BLUE}%s${RESET}" "$desc"
-    echo ""
+    [ -n "$desc" ] && printf "  \033[0;34m%s\033[0m" "$desc"
+    printf "\n"
     i=$((i + 1))
   done
 
