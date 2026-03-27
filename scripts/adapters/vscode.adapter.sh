@@ -12,6 +12,11 @@ adapter_validate() {
   return 0
 }
 
+adapter_check_deps() {
+  # VS Code n'a pas de dépendances système requises pour le déploiement
+  return 0
+}
+
 adapter_deploy() {
   local deploy_dir="${1:-$HUB_DIR}"
   local github_dir="$deploy_dir/.github"

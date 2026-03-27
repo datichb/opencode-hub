@@ -8,50 +8,6 @@ log_title "Installation de opencode-hub"
 OS=$(detect_os)
 log_info "OS détecté : $OS"
 
-# ── Node.js ──────────────────────────────
-if ! command -v node &>/dev/null; then
-  log_error "Node.js n'est pas installé → https://nodejs.org"
-  exit 1
-fi
-log_success "Node.js $(node -v) détecté"
-
-# ── jq ───────────────────────────────────
-if ! command -v jq &>/dev/null; then
-  log_warn "jq n'est pas installé — requis pour lire config/hub.json"
-  if [ "$OS" = "macos" ]; then
-    log_info "  → brew install jq"
-  else
-    log_info "  → sudo apt-get install jq  (Debian/Ubuntu)"
-    log_info "  → sudo dnf install jq      (Fedora/RHEL)"
-  fi
-  log_error "Installer jq puis relancer : ./oc.sh install"
-  exit 1
-fi
-log_success "jq $(jq --version) détecté"
-
-# ── OpenCode ─────────────────────────────
-if ! command -v opencode &>/dev/null; then
-  log_info "Installation de OpenCode..."
-  npm install -g opencode-ai
-  log_success "OpenCode installé"
-else
-  log_success "OpenCode déjà installé ($(opencode --version 2>/dev/null || echo '?'))"
-fi
-
-# ── Beads ────────────────────────────────
-if ! command -v beads &>/dev/null; then
-  log_info "Installation de Beads..."
-  npm install -g @beads/cli
-  log_success "Beads installé"
-else
-  log_success "Beads déjà installé"
-fi
-
-# ── Dossiers requis ──────────────────────
-mkdir -p "$HUB_DIR/projects" "$HUB_DIR/skills" "$HUB_DIR/agents" \
-         "$HUB_DIR/.opencode/agents" "$HUB_DIR/config" \
-         "$HUB_DIR/scripts/lib" "$HUB_DIR/scripts/adapters"
-
 # ── Choisir les cibles ───────────────────
 log_title "Cibles à configurer"
 echo ""
@@ -71,7 +27,26 @@ case "$tool_choice" in
   *) active_targets=("opencode") ;;
 esac
 
-# Écrire config/hub.json
+echo ""
+
+# ── Vérifier les dépendances de chaque cible ────
+deps_ok=true
+for target in "${active_targets[@]}"; do
+  load_adapter "$target"
+  adapter_check_deps "$OS" || deps_ok=false
+done
+
+if [ "$deps_ok" = false ]; then
+  log_error "Dépendances manquantes — installer les outils ci-dessus puis relancer : ./oc.sh install"
+  exit 1
+fi
+
+# ── Dossiers requis ──────────────────────
+mkdir -p "$HUB_DIR/projects" "$HUB_DIR/skills" "$HUB_DIR/agents" \
+         "$HUB_DIR/.opencode/agents" "$HUB_DIR/config" \
+         "$HUB_DIR/scripts/lib" "$HUB_DIR/scripts/adapters"
+
+# ── Écrire config/hub.json ───────────────
 targets_json=$(printf '"%s",' "${active_targets[@]}" | sed 's/,$//')
 cat > "$HUB_DIR/config/hub.json" << HUBJSON
 {
@@ -82,7 +57,7 @@ cat > "$HUB_DIR/config/hub.json" << HUBJSON
 HUBJSON
 log_success "config/hub.json mis à jour (cibles : ${active_targets[*]})"
 
-# Installer chaque cible sélectionnée
+# ── Installer chaque cible sélectionnée ──
 for target in "${active_targets[@]}"; do
   load_adapter "$target"
   adapter_install

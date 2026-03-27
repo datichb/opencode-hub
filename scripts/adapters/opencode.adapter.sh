@@ -10,6 +10,29 @@ adapter_validate() {
   command -v opencode &>/dev/null || { log_error "OpenCode non installé → oc install"; return 1; }
 }
 
+adapter_check_deps() {
+  local os="${1:-}"
+  local ok=0
+
+  if ! command -v node &>/dev/null; then
+    log_error "[opencode] Node.js requis → https://nodejs.org"
+    ok=1
+  fi
+
+  if ! command -v jq &>/dev/null; then
+    log_warn "[opencode] jq requis pour lire config/hub.json"
+    if [ "$os" = "macos" ]; then
+      log_info "  → brew install jq"
+    else
+      log_info "  → sudo apt-get install jq  (Debian/Ubuntu)"
+      log_info "  → sudo dnf install jq      (Fedora/RHEL)"
+    fi
+    ok=1
+  fi
+
+  return $ok
+}
+
 adapter_deploy() {
   local deploy_dir="${1:-$HUB_DIR}"
   local out_dir="$deploy_dir/.opencode/agents"
