@@ -38,28 +38,33 @@ _list_all_skills() {
 # Rendu d'une page du sélecteur de skills (compatible bash 3.2).
 # Variables utilisées depuis _pick_skills : all_skills, checked, cursor, page_size, total, total_pages
 ##
+##
+# Rendu du sélecteur de skills (compatible bash 3.2).
+# Variables utilisées depuis _pick_skills (dynamic scoping bash) :
+#   all_skills, checked, cursor, page_size, total
+##
 _render_skills_page() {
-  local page=$(( cursor / page_size ))
-  local start=$(( page * page_size ))
-  local end=$(( start + page_size ))
-  [ "$end" -gt "$total" ] && end=$total
+  local win_start=$(( cursor - page_size / 2 ))
+  [ "$win_start" -lt 0 ] && win_start=0
+  local win_end=$(( win_start + page_size ))
+  [ "$win_end" -gt "$total" ] && win_end=$total
+  # Réajuster win_start si on est proche de la fin
+  win_start=$(( win_end - page_size ))
+  [ "$win_start" -lt 0 ] && win_start=0
 
   printf "\033[2J\033[H"  # clear screen
 
-  echo -e "${BOLD}Sélection des skills — page $((page+1))/$total_pages${RESET}  (total : $total)"
-  echo -e "  ${BLUE}↑↓${RESET} naviguer   ${BLUE}espace${RESET} cocher/décocher   ${BLUE}entrée${RESET} valider   ${BLUE}n/p${RESET} changer de page   ${BLUE}0${RESET} tout vider"
+  # ── En-tête ──────────────────────────────────────────────────────────────
+  echo -e "${BOLD}Sélection des skills${RESET}  ($((cursor+1))/$total)"
+  echo -e "  \033[0;34m↑↓\033[0m naviguer   \033[0;34mespace\033[0m cocher/décocher   \033[0;34mentrée\033[0m valider   \033[0;34mESC\033[0m annuler   \033[0;34m0\033[0m tout vider"
   echo ""
 
-  local i=$start
-  while [ "$i" -lt "$end" ]; do
+  # ── Liste (fenêtre glissante) ─────────────────────────────────────────────
+  local i=$win_start
+  while [ "$i" -lt "$win_end" ]; do
     local skill="${all_skills[$i]}"
     local num=$((i + 1))
-    local desc=""
-    local skill_file="$HUB_DIR/skills/${skill}.md"
-    [ -f "$skill_file" ] && desc=$(grep '^description:' "$skill_file" | head -1 | sed 's/^description:[[:space:]]*//')
 
-    # check_icon : texte pur sans codes ANSI (pour que %-3s soit correct)
-    # check_color : couleur à appliquer autour de l'icône
     local check_icon="   "
     local check_color=""
     local check_reset=""
@@ -70,18 +75,34 @@ _render_skills_page() {
     fi
 
     if [ "$i" -eq "$cursor" ]; then
-      # Ligne curseur : fond gras, flèche visible
-      printf "  \033[1m> ${check_color}%-3s${check_reset}\033[1m %3d. %-45s\033[0m" \
+      printf "  \033[1m> ${check_color}%-3s${check_reset}\033[1m %3d. %-50s\033[0m\n" \
         "$check_icon" "$num" "$skill"
     else
-      printf "    ${check_color}%-3s${check_reset} %3d. %-45s" \
+      printf "    ${check_color}%-3s${check_reset} %3d. %-50s\n" \
         "$check_icon" "$num" "$skill"
     fi
-    [ -n "$desc" ] && printf "  \033[0;34m%s\033[0m" "$desc"
-    printf "\n"
     i=$((i + 1))
   done
 
+  # ── Séparateur ────────────────────────────────────────────────────────────
+  echo ""
+  printf "  \033[0;34m%s\033[0m\n" "────────────────────────────────────────────────────────────"
+
+  # ── Panneau description du skill sous le curseur ──────────────────────────
+  local cur_skill="${all_skills[$cursor]}"
+  local cur_desc=""
+  local skill_file="$HUB_DIR/skills/${cur_skill}.md"
+  [ -f "$skill_file" ] && cur_desc=$(grep '^description:' "$skill_file" | head -1 | sed 's/^description:[[:space:]]*//')
+
+  echo ""
+  printf "  \033[1m%s\033[0m\n" "$cur_skill"
+  if [ -n "$cur_desc" ]; then
+    printf "  %s\n" "$cur_desc"
+  else
+    printf "  \033[2m(pas de description)\033[0m\n"
+  fi
+
+  # ── Pied ──────────────────────────────────────────────────────────────────
   echo ""
   local count=0
   local v
@@ -113,7 +134,6 @@ _pick_skills() {
   fi
 
   local total=${#all_skills[@]}
-  local total_pages=$(( (total + page_size - 1) / page_size ))
 
   # Nettoyer current_csv : retirer guillemets et espaces superflus
   local clean_csv
@@ -186,18 +206,6 @@ _pick_skills() {
       "0")
         i=0
         while [ "$i" -lt "$total" ]; do checked[$i]="0"; i=$((i+1)); done
-        ;;
-      "n"|"N")
-        local next_page=$(( cursor / page_size + 1 ))
-        if [ "$next_page" -lt "$total_pages" ]; then
-          cursor=$(( next_page * page_size ))
-        fi
-        ;;
-      "p"|"P")
-        local prev_page=$(( cursor / page_size - 1 ))
-        if [ "$prev_page" -ge 0 ]; then
-          cursor=$(( prev_page * page_size ))
-        fi
         ;;
     esac
   done
