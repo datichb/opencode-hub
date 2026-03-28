@@ -49,11 +49,12 @@ require_project_id() {
 }
 
 # Retourne le chemin local d'un projet
+# Retourne 1 si paths.local.md est absent (ne fait pas exit pour permettre l'usage en subshell)
 get_project_path() {
   local id="$1"
   if [ ! -f "$PATHS_FILE" ]; then
-    log_error "Fichier paths.local.md introuvable"
-    exit 1
+    log_warn "Fichier paths.local.md introuvable — chemin local non disponible" >&2
+    return 1
   fi
   grep "^${id}=" "$PATHS_FILE" | cut -d'=' -f2- | tr -d ' '
 }

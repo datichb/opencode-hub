@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 
 SUBCMD="${1:-}"

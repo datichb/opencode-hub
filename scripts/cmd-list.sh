@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 
 log_title "Projets enregistrés"
@@ -22,7 +23,7 @@ printf "  ${BOLD}%-20s %-30s %-15s${RESET}\n" "ID" "Chemin local" "Statut"
 printf "  %s\n" "────────────────────────────────────────────────────────────"
 
 for id in "${ids[@]}"; do
-  local_path=$(get_project_path "$id")
+  local_path=$(get_project_path "$id" || true)
 
   if [ -z "$local_path" ]; then
     status="${YELLOW}⚠ sans chemin${RESET}"

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 
 echo -e "${BOLD}opencode-hub — oc.sh${RESET}"
