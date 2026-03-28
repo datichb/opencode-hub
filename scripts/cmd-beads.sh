@@ -85,19 +85,16 @@ _resolve_tracker() {
 # ── Mettre à jour le champ Tracker dans projects.md ──
 _set_project_tracker() {
   local id="$1" new_tracker="$2"
-  # Remplace la ligne "- Tracker : *" dans le bloc du projet
+  # Tente de remplacer une ligne "- Tracker : *" existante dans le bloc du projet
+  if perl -i -0pe "
+    s{(^## \Q${id}\E\$.*?)(- Tracker : \S+)}{\${1}- Tracker : ${new_tracker}}ms
+  " "$PROJECTS_FILE" 2>/dev/null && grep -q "- Tracker : ${new_tracker}" "$PROJECTS_FILE"; then
+    return 0
+  fi
+  # Si le champ n'existe pas encore, l'ajouter après "- Labels :"
   perl -i -0pe "
-    s{(^## \Q${id}\E\$.*?)(- Tracker : \S+)}{
-      \${1}- Tracker : ${new_tracker}
-    }ms
-  " "$PROJECTS_FILE" 2>/dev/null || {
-    # Si le champ n'existe pas encore, l'ajouter après "- Labels :"
-    perl -i -0pe "
-      s{(^## \Q${id}\E\$.*?- Labels : [^\n]+\n)}{
-        \${1}- Tracker : ${new_tracker}\n
-      }ms
-    " "$PROJECTS_FILE"
-  }
+    s{(^## \Q${id}\E\$.*?- Labels : [^\n]+\n)}{\${1}- Tracker : ${new_tracker}\n}ms
+  " "$PROJECTS_FILE"
 }
 
 # ══════════════════════════════════════════
@@ -322,11 +319,15 @@ cmd_tracker_switch() {
     *) log_error "Choix invalide"; exit 1 ;;
   esac
 
+  # Vérifier que Beads est initialisé avant d'appliquer le changement
+  if [ "$new_tracker" != "none" ]; then
+    _require_beads_init "$path" "$id"
+  fi
+
   _set_project_tracker "$id" "$new_tracker"
   log_success "Tracker mis à jour : $current → $new_tracker"
 
   if [ "$new_tracker" != "none" ]; then
-    _require_beads_init "$path" "$id"
     echo ""
     read -rp "  Configurer $new_tracker maintenant ? [Y/n] : " setup_now
     if [[ "${setup_now:-Y}" =~ ^[Yy]$ ]]; then
@@ -398,10 +399,8 @@ case "$SUBCMD" in
   open)    cmd_open    "$PROJECT_ID" ;;
   sync)    cmd_sync    "$PROJECT_ID" "${@:3}" ;;
   tracker)
-    TRACKER_SUBCMD="${3:-}"
-    TRACKER_PROJECT="${4:-$PROJECT_ID}"
-    # Accepter aussi : oc beads tracker setup PROJECT_ID
-    [ -z "$TRACKER_PROJECT" ] && TRACKER_PROJECT="$PROJECT_ID"
+    TRACKER_SUBCMD="${2:-}"
+    TRACKER_PROJECT="${3:-}"
     case "$TRACKER_SUBCMD" in
       status) cmd_tracker_status "$TRACKER_PROJECT" ;;
       setup)  cmd_tracker_setup  "$TRACKER_PROJECT" ;;

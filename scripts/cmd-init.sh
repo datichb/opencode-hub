@@ -68,9 +68,9 @@ EOF
     echo ""
     read -rp "  Configurer $PROJECT_TRACKER maintenant ? [Y/n] : " setup_now
     if [[ "${setup_now:-Y}" =~ ^[Yy]$ ]]; then
-      bash "$SCRIPTS_DIR/cmd-beads.sh" tracker-setup "$PROJECT_ID"
+      bash "$SCRIPTS_DIR/cmd-beads.sh" tracker setup "$PROJECT_ID"
     else
-      log_info "Configurer plus tard : ./oc.sh beads tracker-setup $PROJECT_ID"
+      log_info "Configurer plus tard : ./oc.sh beads tracker setup $PROJECT_ID"
     fi
   fi
 fi

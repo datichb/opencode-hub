@@ -19,9 +19,8 @@ case "$COMMAND" in
   deploy)          bash "$SCRIPTS_DIR/cmd-deploy.sh" "${2:-}" "${3:-}" ;;
   skills)          bash "$SCRIPTS_DIR/cmd-skills.sh" "${@:2}" ;;
   agent)           bash "$SCRIPTS_DIR/cmd-agent.sh" "${@:2}" ;;
-  sync)            bash "$SCRIPTS_DIR/cmd-sync.sh" ;;
   update)          bash "$SCRIPTS_DIR/cmd-update.sh" ;;
-  beads)           bash "$SCRIPTS_DIR/cmd-beads.sh" "${2:-}" "${3:-}" ;;
+  beads)           bash "$SCRIPTS_DIR/cmd-beads.sh" "${@:2}" ;;
   help|--help|-h)  bash "$SCRIPTS_DIR/cmd-help.sh" ;;
   "")              bash "$SCRIPTS_DIR/cmd-help.sh" ;;
   *)

@@ -32,6 +32,7 @@ opencode-hub/
 ├── skills/                            ← Blocs de bonnes pratiques réutilisables
 │   ├── planner.md
 │   └── developer/
+│       ├── dev-beads.md
 │       ├── dev-standards-universal.md
 │       ├── dev-standards-backend.md
 │       ├── dev-standards-frontend.md
@@ -49,15 +50,16 @@ opencode-hub/
 │   │   ├── opencode.adapter.sh        ← Génère .opencode/agents/ + config.json
 │   │   ├── claude-code.adapter.sh     ← Génère .claude/agents/
 │   │   └── vscode.adapter.sh          ← Génère copilot-instructions.md + prompts
+│   ├── cmd-agent.sh
+│   ├── cmd-beads.sh
 │   ├── cmd-deploy.sh
+│   ├── cmd-help.sh
 │   ├── cmd-install.sh
 │   ├── cmd-init.sh
 │   ├── cmd-list.sh
 │   ├── cmd-remove.sh
-│   ├── cmd-start.sh
-│   ├── cmd-beads.sh
-│   ├── cmd-agent.sh
 │   ├── cmd-skills.sh
+│   ├── cmd-start.sh
 │   └── cmd-update.sh
 └── projects/
     ├── projects.md                    ← Registre des projets (versionné)
@@ -178,7 +180,7 @@ oc deploy all                   # toutes les cibles actives
 
 ---
 
-### `oc start [PROJECT_ID] [prompt]`
+### `oc start [PROJECT_ID] [prompt] [--dev]`
 Lance l'outil par défaut (défini dans `config/hub.json`) dans le projet.
 Vérifie que la cible est disponible avant de lancer.
 
@@ -186,6 +188,7 @@ Vérifie que la cible est disponible avant de lancer.
 oc start             # sélection interactive
 oc start MON-APP
 oc start MON-APP "explique l'architecture du projet"
+oc start MON-APP --dev    # bootstrap : charge les tickets ai-delegated en prompt
 ```
 
 ---
