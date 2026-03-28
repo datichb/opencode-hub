@@ -27,9 +27,11 @@ opencode-hub/
 ├── oc.sh                              ← Point d'entrée principal
 ├── LICENSE
 ├── agents/                            ← Sources canoniques des rôles (éditer ici)
-│   ├── orchestrator.md                ← Coordinateur de feature (planner + developers + reviewer)
+│   ├── orchestrator.md                ← Coordinateur de feature (planner + developers + qa + reviewer)
 │   ├── planner.md                     ← Planification et création de tickets Beads
 │   ├── reviewer.md                    ← Review de code sur diff/branche
+│   ├── qa-engineer.md                 ← Écriture des tests manquants et rapport de couverture
+│   ├── debugger.md                    ← Diagnostic de bugs, rapport de cause racine, ticket Beads
 │   ├── auditor.md                     ← Coordinateur d'audit multi-domaine
 │   ├── auditor-security.md
 │   ├── auditor-performance.md
@@ -68,6 +70,10 @@ opencode-hub/
 │   │   └── audit-privacy.md
 │   ├── orchestrator/
 │   │   └── orchestrator-protocol.md   ← Workflow, routing agents, format checkpoints
+│   ├── qa/
+│   │   └── qa-protocol.md             ← Stratégie de tests, outils par stack, rapport de couverture
+│   ├── debugger/
+│   │   └── debug-protocol.md          ← Méthodologie de diagnostic, format rapport, création ticket
 │   └── reviewer/
 │       └── review-protocol.md
 ├── config/
@@ -408,9 +414,11 @@ Tu es un agent coordinateur de feature...
 
 | Agent | Rôle |
 |-------|------|
-| `orchestrator` | Coordinateur de feature — pilote planner + developers + reviewer |
+| `orchestrator` | Coordinateur de feature — pilote planner + developers + qa + reviewer |
 | `planner` | Planification et création de tickets Beads |
 | `reviewer` | Review de code sur diff ou branche |
+| `qa-engineer` | Écriture des tests manquants et rapport de couverture |
+| `debugger` | Diagnostic de bugs, rapport de cause racine, création de ticket Beads |
 | `auditor` | Coordinateur d'audit multi-domaine |
 | `auditor-security` | Audit sécurité (OWASP, RGS) |
 | `auditor-performance` | Audit performance (Core Web Vitals) |

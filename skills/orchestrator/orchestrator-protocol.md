@@ -175,21 +175,42 @@ Afficher le ticket et demander confirmation avant de démarrer :
 
 ---
 
-### Étape 3 — Review automatique
+### Étape 3 — QA (optionnel)
 
-Dès que le développeur a terminé, invoquer **automatiquement** le `reviewer` :
+Avant la review, proposer un passage par le `qa-engineer` :
+
+```
+⏸️ [CP-QA] Passer par le QA avant la review ? (oui/non)
+```
+
+- **non** (défaut) → passer directement à l'étape 4
+- **oui** → invoquer le `qa-engineer` avec le diff ou la branche produite + l'ID du ticket
+
+  > « Je délègue la vérification de couverture au qa-engineer. »
+
+  Le qa-engineer analyse l'implémentation, écrit les tests manquants et produit son rapport.
+  Une fois terminé, enchaîner automatiquement vers l'étape 4 (review).
+
+⏸️ **Attendre la réponse explicite.**
+
+---
+
+### Étape 4 — Review automatique
+
+Dès que le développeur (et optionnellement le qa-engineer) a terminé,
+invoquer **automatiquement** le `reviewer` :
 
 > « Implémentation terminée — je soumets au reviewer. »
 
 Fournir au reviewer :
-- Le diff ou le nom de la branche produite
+- Le diff ou le nom de la branche produite (incluant les tests écrits par le QA si applicable)
 - L'ID du ticket Beads pour contexte (`bd show <ID>`)
 
 Le reviewer produit son rapport structuré (Critique / Majeur / Mineur / Suggestions / Points positifs).
 
 ---
 
-### Étape 4 — Décision après review
+### Étape 5 — Décision après review
 
 Présenter le rapport de review synthétisé et demander la décision :
 
@@ -203,13 +224,13 @@ Présenter le rapport de review synthétisé et demander la décision :
 ⏸️ [CP-2] Quelle suite ? (merge / corriger)
 ```
 
-- **merge** → le ticket est considéré comme terminé, passer à l'étape 5
+- **merge** → le ticket est considéré comme terminé, passer à l'étape 6
 - **corriger** → retourner à l'étape 2 avec les corrections à apporter
 
   Si **corriger** :
   > « Je retourne le ticket à `<developer-xxx>` avec les corrections demandées. »
   > Invoquer à nouveau l'agent développeur en lui transmettant le rapport de review.
-  > Puis repasser à l'étape 3 (review automatique).
+  > Puis repasser à l'étape 3 (QA optionnel) → étape 4 (review automatique).
 
   ⚠️ Limite : après 3 cycles corriger → review sans résolution, signaler le blocage à l'utilisateur
   et demander si une intervention manuelle est nécessaire.
@@ -218,7 +239,7 @@ Présenter le rapport de review synthétisé et demander la décision :
 
 ---
 
-### Étape 5 — Compte rendu d'étape
+### Étape 6 — Compte rendu d'étape
 
 Afficher le compte rendu du ticket clos et proposer de continuer :
 
@@ -226,6 +247,7 @@ Afficher le compte rendu du ticket clos et proposer de continuer :
 ## ✅ Ticket #<ID> terminé — <titre>
 
 **Agent :** <developer-xxx>
+**QA :** <oui/non>
 **Cycles de review :** <N>
 **Corrections demandées :** <oui/non>
 **Statut Beads :** clos
@@ -253,11 +275,11 @@ Afficher en fin de workflow (tous les tickets traités ou suite à un **stop**) 
 
 ### Vue d'ensemble
 
-| ID | Titre | Agent | Cycles review | Statut |
-|----|-------|-------|---------------|--------|
-| bd-XX | ... | developer-frontend | 1 | ✅ Terminé |
-| bd-XX | ... | developer-backend  | 2 | ✅ Terminé |
-| bd-XX | ... | developer-api      | 1 | ⏭️ Ignoré  |
+| ID | Titre | Agent | QA | Cycles review | Statut |
+|----|-------|-------|----|---------------|--------|
+| bd-XX | ... | developer-frontend | oui | 1 | ✅ Terminé |
+| bd-XX | ... | developer-backend  | non | 2 | ✅ Terminé |
+| bd-XX | ... | developer-api      | non | 1 | ⏭️ Ignoré  |
 
 ### Résumé
 - **Tickets traités :** X / Y
