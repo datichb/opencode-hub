@@ -159,6 +159,9 @@ Vérifie et installe Node.js si une cible en a besoin.
 oc install
 ```
 
+> **Important :** Après `oc install`, lancez `oc deploy <target>` pour générer
+> les fichiers agents dans chaque projet. Le déploiement n'est **pas automatique**.
+
 ---
 
 ### `oc deploy <target> [PROJECT_ID]`
@@ -406,14 +409,23 @@ AUTRE-APP=/home/user/projets/autre-app
 
 ## Ce qui est versionné / généré
 
+Dans **opencode-hub** (ce dépôt) :
+
 | Versionné ✅ | Généré (ignoré git) ❌ |
 |-------------|----------------------|
 | `agents/` | `.opencode/agents/` |
-| `skills/` | `.claude/agents/` |
-| `config/hub.json` | `.vscode/prompts/` |
-| `scripts/` | `.github/copilot-instructions.md` |
-| `projects/projects.md` | `projects/paths.local.md` |
-| | `skills/external/` |
+| `skills/` | `skills/external/` |
+| `config/hub.json` | `projects/paths.local.md` |
+| `scripts/` | |
+| `projects/projects.md` | |
+
+Dans les **dépôts projets cibles** (générés par `oc deploy`) :
+
+| Cible | Fichiers générés | À committer dans le projet ? |
+|-------|-----------------|------------------------------|
+| `opencode` | `.opencode/agents/` + `opencode.json` | Non (`.opencode/agents/` ignoré, `opencode.json` oui) |
+| `claude-code` | `.claude/agents/` | Non |
+| `vscode` | `.github/copilot-instructions.md` + `.vscode/prompts/` | **Oui** — ces fichiers doivent être committés dans le projet cible |
 
 ---
 

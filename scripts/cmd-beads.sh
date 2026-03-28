@@ -2,6 +2,8 @@
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 
 SUBCMD="${1:-}"
+# NOTE : pour la sous-commande "tracker", $2 vaut la sous-sous-commande (setup/status/switch),
+# pas le PROJECT_ID. Le PROJECT_ID est alors $3. Voir le dispatch ci-dessous.
 PROJECT_ID="${2:-}"
 
 # ── Aide interne ──────────────────────────

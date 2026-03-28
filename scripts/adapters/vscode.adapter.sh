@@ -80,7 +80,8 @@ adapter_update() {
 }
 
 adapter_start() {
-  local project_path="$1"
+  local project_path="$1" prompt="${2:-}"
+  [ -n "$prompt" ] && log_warn "[vscode] Le prompt est ignoré pour la cible vscode (VS Code ne supporte pas l'injection de prompt en CLI)"
   command -v code &>/dev/null || { log_error "[vscode] CLI 'code' indisponible"; exit 1; }
   exec code "$project_path"
 }

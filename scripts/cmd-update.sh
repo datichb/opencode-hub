@@ -25,7 +25,7 @@ fi
 
 # ── Skills externes ───────────────────────────────────────────────────────────
 EXTERNAL_SOURCES="$HUB_DIR/skills/external/.sources.json"
-if [ -f "$EXTERNAL_SOURCES" ] && [ "$(cat "$EXTERNAL_SOURCES")" != '{}' ]; then
+if [ -f "$EXTERNAL_SOURCES" ] && [ -s "$EXTERNAL_SOURCES" ] && [ "$(cat "$EXTERNAL_SOURCES")" != '{}' ]; then
   echo ""
   log_info "Mise à jour des skills externes..."
   bash "$SCRIPTS_DIR/cmd-skills.sh" update

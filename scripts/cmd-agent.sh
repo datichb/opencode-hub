@@ -570,7 +570,9 @@ cmd_list() {
     id=$(grep '^id:' "$f" | head -1 | sed 's/^id:[[:space:]]*//')
     label=$(grep '^label:' "$f" | head -1 | sed 's/^label:[[:space:]]*//')
     description=$(grep '^description:' "$f" | head -1 | sed 's/^description:[[:space:]]*//')
-    skills_count=$(grep '^skills:' "$f" | head -1 | tr ',' '\n' | grep -v '^$' | wc -l | tr -d ' ')
+    skills_count=$(grep '^skills:' "$f" | head -1 \
+      | sed 's/^skills:[[:space:]]*//' | tr -d '[]"' \
+      | tr ',' '\n' | sed 's/^ *//;s/ *$//' | grep -v '^$' | wc -l | tr -d ' ')
     targets=$(grep '^targets:' "$f" | head -1 | sed 's/^targets:[[:space:]]*//')
     echo -e "  ${BOLD}${id}${RESET}  (${label})"
     echo "    → $description"

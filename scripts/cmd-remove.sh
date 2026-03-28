@@ -16,7 +16,8 @@ read -rp "$(echo -e "  ${YELLOW}⚠${RESET}  Supprimer $PROJECT_ID ? [y/N] ")" c
 
 # ── Supprimer du projects.md ──────────────
 # Supprime le bloc ## PROJECT_ID jusqu'au prochain ## ou fin de fichier
-perl -i -0pe "s/\n## \Q${PROJECT_ID}\E\n.*?(?=\n## |\z)//s" "$PROJECTS_FILE"
+command -v perl &>/dev/null || { log_error "perl requis pour cette opération"; exit 1; }
+perl -i -0pe 's/(^|\n)## \Q'"${PROJECT_ID}"'\E\n.*?(?=\n## |\z)//s' "$PROJECTS_FILE"
 log_success "Projet $PROJECT_ID supprimé de projects.md"
 
 # ── Supprimer du paths.local.md ───────────

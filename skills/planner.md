@@ -140,11 +140,13 @@ bd update $ID --notes "Dépendances, contexte, points d'attention"
 
 **Uniquement si l'utilisateur valide :**
 \`\`\`bash
-# Déléguer plusieurs tickets en une commande
-bd label add bd-1 bd-2 bd-3 ai-delegated
+# Déléguer un ticket
+bd label add <ID> ai-delegated
 
-# Ou ticket par ticket
+# Déléguer plusieurs tickets
 bd label add bd-1 ai-delegated
+bd label add bd-2 ai-delegated
+bd label add bd-3 ai-delegated
 \`\`\`
 
 **Règles absolues :**

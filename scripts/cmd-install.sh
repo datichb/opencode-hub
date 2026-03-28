@@ -83,7 +83,8 @@ log_info "  ./oc.sh skills add /owner/repo name  # Ajouter"
 echo ""
 log_title "Installation de Beads (bd)"
 if command -v bd &>/dev/null; then
-  log_success "Beads déjà installé ($(bd --version 2>/dev/null | head -1))"
+  bd_version=$(bd --version 2>/dev/null || bd version 2>/dev/null || echo '?')
+  log_success "Beads déjà installé ($bd_version)"
 else
   if command -v brew &>/dev/null; then
     log_info "Installation de bd via Homebrew..."

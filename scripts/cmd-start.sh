@@ -65,7 +65,7 @@ log_info "Cible    : $default_target"
 echo ""
 
 load_adapter "$default_target"
-adapter_validate || { log_error "Cible $default_target non disponible → oc install"; exit 1; }
+adapter_validate || { log_error "Cible '$default_target' non disponible → oc install (puis sélectionner $default_target)"; exit 1; }
 
 # ── Vérifier que les agents sont déployés ──────────────
 case "$default_target" in

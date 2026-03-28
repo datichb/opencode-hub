@@ -31,7 +31,7 @@ RESET='\033[0m'
 # ─────────────────────────────────────────
 log_info()    { echo -e "${BLUE}ℹ${RESET}  $*"; }
 log_success() { echo -e "${GREEN}✔${RESET}  $*"; }
-log_warn()    { echo -e "${YELLOW}⚠${RESET}  $*"; }
+log_warn()    { echo -e "${YELLOW}⚠${RESET}  $*" >&2; }
 log_error()   { echo -e "${RED}✘${RESET}  $*" >&2; }
 log_title()   { echo -e "\n${BOLD}$*${RESET}"; }
 
