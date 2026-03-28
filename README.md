@@ -27,9 +27,23 @@ opencode-hub/
 ├── oc.sh                              ← Point d'entrée principal
 ├── LICENSE
 ├── agents/                            ← Sources canoniques des rôles (éditer ici)
-│   ├── developer.md
-│   ├── planner.md
-│   └── reviewer.md
+│   ├── orchestrator.md                ← Coordinateur de feature (planner + developers + reviewer)
+│   ├── planner.md                     ← Planification et création de tickets Beads
+│   ├── reviewer.md                    ← Review de code sur diff/branche
+│   ├── auditor.md                     ← Coordinateur d'audit multi-domaine
+│   ├── auditor-security.md
+│   ├── auditor-performance.md
+│   ├── auditor-accessibility.md
+│   ├── auditor-ecodesign.md
+│   ├── auditor-architecture.md
+│   ├── auditor-privacy.md
+│   ├── developer-frontend.md          ← UI, composants, Vue.js, accessibilité
+│   ├── developer-backend.md           ← Services, repositories, logique métier
+│   ├── developer-fullstack.md         ← Features traversant front + back
+│   ├── developer-data.md              ← Pipelines, ETL, ML, dbt
+│   ├── developer-devops.md            ← Docker, CI/CD, scripts shell, infra
+│   ├── developer-mobile.md            ← React Native, Flutter, iOS, Android
+│   └── developer-api.md               ← REST, GraphQL, webhooks, intégrations
 ├── skills/                            ← Blocs de bonnes pratiques réutilisables
 │   ├── planner.md
 │   ├── developer/
@@ -40,7 +54,20 @@ opencode-hub/
 │   │   ├── dev-standards-frontend-a11y.md
 │   │   ├── dev-standards-vuejs.md
 │   │   ├── dev-standards-testing.md
-│   │   └── dev-standards-git.md
+│   │   ├── dev-standards-git.md
+│   │   ├── dev-standards-data.md
+│   │   ├── dev-standards-devops.md
+│   │   └── dev-standards-mobile.md
+│   ├── auditor/
+│   │   ├── audit-protocol.md
+│   │   ├── audit-security.md
+│   │   ├── audit-performance.md
+│   │   ├── audit-accessibility.md
+│   │   ├── audit-ecodesign.md
+│   │   ├── audit-architecture.md
+│   │   └── audit-privacy.md
+│   ├── orchestrator/
+│   │   └── orchestrator-protocol.md   ← Workflow, routing agents, format checkpoints
 │   └── reviewer/
 │       └── review-protocol.md
 ├── config/
@@ -357,16 +384,16 @@ leurs métadonnées, leurs cibles et leurs skills.
 
 ```markdown
 ---
-id: developer
-label: Developer
-description: Assistant de développement...
+id: orchestrator
+label: Orchestrator
+description: Agent coordinateur de feature...
 targets: [opencode, claude-code, vscode]
-skills: [developer/dev-standards-universal, developer/dev-standards-backend]
+skills: [orchestrator/orchestrator-protocol]
 ---
 
-# 👨‍💻 Developer
+# Orchestrator
 
-Tu es un assistant de développement...
+Tu es un agent coordinateur de feature...
 ```
 
 | Champ | Rôle |
@@ -376,6 +403,28 @@ Tu es un assistant de développement...
 | `description` | Description courte |
 | `targets` | Cibles supportées : `opencode`, `claude-code`, `vscode` |
 | `skills` | Skills à injecter (chemins relatifs à `skills/`) |
+
+### Agents disponibles
+
+| Agent | Rôle |
+|-------|------|
+| `orchestrator` | Coordinateur de feature — pilote planner + developers + reviewer |
+| `planner` | Planification et création de tickets Beads |
+| `reviewer` | Review de code sur diff ou branche |
+| `auditor` | Coordinateur d'audit multi-domaine |
+| `auditor-security` | Audit sécurité (OWASP, RGS) |
+| `auditor-performance` | Audit performance (Core Web Vitals) |
+| `auditor-accessibility` | Audit accessibilité (WCAG 2.1, RGAA) |
+| `auditor-ecodesign` | Audit éco-conception (RGESN) |
+| `auditor-architecture` | Audit architecture et dette technique |
+| `auditor-privacy` | Audit RGPD et protection des données |
+| `developer-frontend` | UI, composants, Vue.js, CSS, accessibilité |
+| `developer-backend` | Services, repositories, migrations, logique métier |
+| `developer-fullstack` | Features traversant les deux couches front + back |
+| `developer-data` | Pipelines, ETL, ML, dbt, Airflow |
+| `developer-devops` | Docker, CI/CD, scripts shell, infra |
+| `developer-mobile` | React Native, Flutter, iOS, Android |
+| `developer-api` | REST, GraphQL, webhooks, intégrations tierces |
 
 **Pour modifier un agent :** éditer `agents/<id>.md`, puis `oc deploy <target>`.
 
@@ -401,7 +450,20 @@ skills/
 │   ├── dev-standards-frontend-a11y.md ← WCAG 2.1 A/AA, sémantique HTML, ARIA
 │   ├── dev-standards-vuejs.md         ← Composition API, Pinia, composables
 │   ├── dev-standards-testing.md       ← Stratégie de tests, coverage, TDD
-│   └── dev-standards-git.md           ← Conventions de commits, branches, PR
+│   ├── dev-standards-git.md           ← Conventions de commits, branches, PR
+│   ├── dev-standards-data.md          ← Pipelines, ETL, ML, dbt, Airflow
+│   ├── dev-standards-devops.md        ← Docker, CI/CD, shell, infra
+│   └── dev-standards-mobile.md        ← React Native, Flutter, iOS, Android
+├── auditor/
+│   ├── audit-protocol.md              ← Format de rapport, niveaux de criticité
+│   ├── audit-security.md              ← OWASP Top 10, CVE, RGS
+│   ├── audit-performance.md           ← Core Web Vitals, N+1, cache
+│   ├── audit-accessibility.md         ← WCAG 2.1 AA, RGAA 4.1
+│   ├── audit-ecodesign.md             ← RGESN, GreenIT, Écoindex
+│   ├── audit-architecture.md          ← SOLID, Clean Architecture, dette
+│   └── audit-privacy.md               ← RGPD, EDPB, CNIL
+├── orchestrator/
+│   └── orchestrator-protocol.md       ← Workflow, routing agents, checkpoints, comptes rendus
 └── reviewer/
     └── review-protocol.md             ← Format et checklist de code review
 ```
