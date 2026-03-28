@@ -13,6 +13,7 @@ load_adapter() {
     exit 1
   fi
 
+  # shellcheck source=/dev/null
   source "$adapter_file"
 }
 

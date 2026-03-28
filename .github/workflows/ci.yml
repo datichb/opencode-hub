@@ -1,0 +1,71 @@
+name: CI — Shell & Agents
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install ShellCheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Run ShellCheck on all scripts
+        run: |
+          shellcheck \
+            oc.sh \
+            scripts/cmd-*.sh \
+            scripts/lib/*.sh \
+            scripts/adapters/*.sh
+
+  validate-agents:
+    name: Validate agent frontmatter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check required frontmatter fields in agents/
+        run: |
+          errors=0
+          for agent_file in agents/*.md; do
+            [ -f "$agent_file" ] || continue
+            name=$(basename "$agent_file")
+
+            for field in id label description targets skills; do
+              if ! grep -q "^${field}:" "$agent_file"; then
+                echo "::error file=${agent_file}::Champ frontmatter manquant : '${field}' dans ${name}"
+                errors=$((errors + 1))
+              fi
+            done
+          done
+
+          if [ "$errors" -gt 0 ]; then
+            echo ""
+            echo "::error::$errors erreur(s) de frontmatter détectée(s) dans agents/"
+            exit 1
+          fi
+
+          echo "Tous les agents ont un frontmatter valide."
+
+  check-staleness:
+    name: Check deployed agents are up to date
+    runs-on: ubuntu-latest
+    continue-on-error: true   # Informatif en CI — ne bloque pas le merge
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check staleness (opencode target — hub level)
+        run: |
+          echo "Vérification de la fraîcheur des agents déployés au niveau du hub..."
+          bash scripts/cmd-deploy.sh --check opencode || {
+            echo "::warning::Des agents déployés sont obsolètes. Relancez : ./oc.sh deploy"
+          }
