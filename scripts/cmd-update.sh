@@ -26,13 +26,27 @@ fi
 
 # ── Skills externes ───────────────────────────────────────────────────────────
 EXTERNAL_SOURCES="$HUB_DIR/skills/external/.sources.json"
+SKILLS_UPDATED=false
 if [ -f "$EXTERNAL_SOURCES" ] && [ -s "$EXTERNAL_SOURCES" ] && [ "$(cat "$EXTERNAL_SOURCES")" != '{}' ]; then
   echo ""
   log_info "Mise à jour des skills externes..."
-  bash "$SCRIPTS_DIR/cmd-skills.sh" update
+  bash "$SCRIPTS_DIR/cmd-skills.sh" update && SKILLS_UPDATED=true
 else
   log_info "Aucun skill externe enregistré — étape ignorée."
 fi
 
 echo ""
 log_success "Mise à jour terminée"
+
+# ── Proposer un sync si des skills ont été mis à jour ─────────────────────────
+if [ "$SKILLS_UPDATED" = true ]; then
+  echo ""
+  log_warn "Des skills ont été mis à jour — les agents déployés dans vos projets peuvent être obsolètes."
+  echo ""
+  read -rp "  Lancer oc sync pour redéployer sur tous les projets ? [Y/n] : " sync_now
+  if [[ "${sync_now:-Y}" =~ ^[Yy]$ ]]; then
+    bash "$SCRIPTS_DIR/cmd-sync.sh"
+  else
+    log_info "Redéployer manuellement : ./oc.sh sync"
+  fi
+fi

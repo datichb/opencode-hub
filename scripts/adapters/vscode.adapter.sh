@@ -39,7 +39,7 @@ adapter_deploy() {
   # copilot-instructions.md depuis les skills globaux (hub.json → vscode.global_skills)
   log_info "[vscode] Génération copilot-instructions.md..."
   {
-    echo "<!-- Généré par opencode-hub — ne pas éditer manuellement -->"
+    build_generated_header
     echo "<!-- Régénérer : oc deploy vscode -->"
     echo ""
     while IFS= read -r skill_name; do

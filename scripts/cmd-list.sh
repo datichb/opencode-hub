@@ -4,10 +4,7 @@ source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 
 log_title "Projets enregistrés"
 
-if [ ! -f "$PROJECTS_FILE" ]; then
-  log_warn "Aucun fichier projects.md trouvé"
-  exit 0
-fi
+ensure_projects_file
 
 # Extraire les PROJECT_IDs
 ids=()

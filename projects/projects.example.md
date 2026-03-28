@@ -1,6 +1,7 @@
 # Registre des projets
 
-> Ce fichier est versionné. Les chemins locaux sont dans paths.local.md (ignoré).
+> Ce fichier est un exemple. Copiez-le en `projects.md` (ignoré par git) pour enregistrer vos projets.
+> Les chemins locaux sont dans `paths.local.md` (ignoré par git).
 
 <!-- FORMAT (ne pas modifier ce bloc)
 ## <PROJECT_ID>

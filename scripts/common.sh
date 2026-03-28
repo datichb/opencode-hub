@@ -5,6 +5,7 @@
 # ─────────────────────────────────────────
 HUB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROJECTS_FILE="$HUB_DIR/projects/projects.md"
+PROJECTS_EXAMPLE_FILE="$HUB_DIR/projects/projects.example.md"
 PATHS_FILE="$HUB_DIR/projects/paths.local.md"
 SKILLS_DIR="$HUB_DIR/skills"
 SCRIPTS_DIR="$HUB_DIR/scripts"
@@ -38,6 +39,36 @@ log_title()   { echo -e "\n${BOLD}$*${RESET}"; }
 # ─────────────────────────────────────────
 # HELPERS
 # ─────────────────────────────────────────
+
+# S'assure que projects.md existe localement (copié depuis projects.example.md si absent)
+ensure_projects_file() {
+  if [ ! -f "$PROJECTS_FILE" ]; then
+    if [ -f "$PROJECTS_EXAMPLE_FILE" ]; then
+      cp "$PROJECTS_EXAMPLE_FILE" "$PROJECTS_FILE"
+      log_info "projects.md créé depuis projects.example.md"
+    else
+      mkdir -p "$(dirname "$PROJECTS_FILE")"
+      cat > "$PROJECTS_FILE" <<'PROJEOF'
+# Registre des projets
+
+<!-- FORMAT
+## <PROJECT_ID>
+- Nom : <nom lisible>
+- Stack : <technologies>
+- Board Beads : <PROJECT_ID>
+- Tracker : <jira|gitlab|none>
+- Labels : <liste séparée par virgules>
+-->
+
+---
+
+*Aucun projet enregistré pour l'instant.*
+*Ajouter un projet : ./oc.sh init*
+PROJEOF
+      log_info "projects.md créé"
+    fi
+  fi
+}
 
 # Vérifie qu'un PROJECT_ID est fourni
 require_project_id() {

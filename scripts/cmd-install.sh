@@ -94,10 +94,8 @@ for target in "${active_targets[@]}"; do
 done
 
 # ── Fichiers initiaux ────────────────────
-if [ ! -f "$PROJECTS_FILE" ]; then
-  echo "# Projets" > "$PROJECTS_FILE"
-  log_success "projects.md créé"
-fi
+ensure_projects_file
+log_success "projects.md prêt"
 
 if [ ! -f "$PATHS_FILE" ]; then
   echo "# Chemins locaux (ignoré par git)" > "$PATHS_FILE"

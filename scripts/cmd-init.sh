@@ -2,6 +2,9 @@
 set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 
+# S'assurer que projects.md existe avant toute opération
+ensure_projects_file
+
 PROJECT_ID="${1:-}"
 PROJECT_PATH="${2:-}"
 
@@ -89,3 +92,14 @@ fi
 
 echo ""
 log_success "Projet $PROJECT_ID initialisé → ./oc.sh start $PROJECT_ID"
+
+# ── Proposer un déploiement immédiat ──────────────────────────────────────────
+if [ -d "$PROJECT_PATH" ]; then
+  echo ""
+  read -rp "  Déployer les agents maintenant ? [Y/n] : " deploy_now
+  if [[ "${deploy_now:-Y}" =~ ^[Yy]$ ]]; then
+    bash "$SCRIPTS_DIR/cmd-deploy.sh" all "$PROJECT_ID"
+  else
+    log_info "Déployer plus tard : ./oc.sh deploy all $PROJECT_ID"
+  fi
+fi
