@@ -67,9 +67,23 @@ mkdir -p "$HUB_DIR/projects" "$HUB_DIR/skills" "$HUB_DIR/agents" \
          "$HUB_DIR/.opencode/agents" "$HUB_DIR/config" \
          "$HUB_DIR/scripts/lib" "$HUB_DIR/scripts/adapters"
 
-# ── Écrire config/hub.json ───────────────
+# ── Écrire config/hub.json (seulement si absent ou si l'utilisateur confirme) ──
 targets_json=$(printf '"%s",' "${active_targets[@]}" | sed 's/,$//')
-cat > "$HUB_DIR/config/hub.json" << HUBJSON
+if [ -f "$HUB_DIR/config/hub.json" ]; then
+  log_warn "config/hub.json existe déjà."
+  read -rp "  Écraser avec les nouvelles cibles ? [y/N] : " overwrite_choice
+  if [[ "${overwrite_choice:-N}" =~ ^[Yy]$ ]]; then
+    _write_hub_json=true
+  else
+    log_info "config/hub.json conservé tel quel."
+    _write_hub_json=false
+  fi
+else
+  _write_hub_json=true
+fi
+
+if [ "$_write_hub_json" = true ]; then
+  cat > "$HUB_DIR/config/hub.json" << HUBJSON
 {
   "version": "2.0.0",
   "default_target": "${active_targets[0]}",
@@ -85,7 +99,8 @@ cat > "$HUB_DIR/config/hub.json" << HUBJSON
   }
 }
 HUBJSON
-log_success "config/hub.json mis à jour (cibles : ${active_targets[*]})"
+  log_success "config/hub.json mis à jour (cibles : ${active_targets[*]})"
+fi
 
 # ── Installer chaque cible sélectionnée ──
 for target in "${active_targets[@]}"; do

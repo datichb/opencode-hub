@@ -27,17 +27,22 @@ opencode-hub/
 ├── oc.sh                              ← Point d'entrée principal
 ├── LICENSE
 ├── agents/                            ← Sources canoniques des rôles (éditer ici)
+│   ├── developer.md
 │   ├── planner.md
-│   └── developer.md
+│   └── reviewer.md
 ├── skills/                            ← Blocs de bonnes pratiques réutilisables
 │   ├── planner.md
-│   └── developer/
-│       ├── dev-beads.md
-│       ├── dev-standards-universal.md
-│       ├── dev-standards-backend.md
-│       ├── dev-standards-frontend.md
-│       ├── dev-standards-frontend-a11y.md
-│       └── dev-standards-vuejs.md
+│   ├── developer/
+│   │   ├── dev-beads.md
+│   │   ├── dev-standards-universal.md
+│   │   ├── dev-standards-backend.md
+│   │   ├── dev-standards-frontend.md
+│   │   ├── dev-standards-frontend-a11y.md
+│   │   ├── dev-standards-vuejs.md
+│   │   ├── dev-standards-testing.md
+│   │   └── dev-standards-git.md
+│   └── reviewer/
+│       └── review-protocol.md
 ├── config/
 │   └── hub.json                       ← Cible par défaut et cibles actives
 ├── scripts/
@@ -60,7 +65,9 @@ opencode-hub/
 │   ├── cmd-remove.sh
 │   ├── cmd-skills.sh
 │   ├── cmd-start.sh
-│   └── cmd-update.sh
+│   ├── cmd-sync.sh
+│   ├── cmd-update.sh
+│   └── cmd-version.sh
 └── projects/
     ├── projects.md                    ← Registre des projets (versionné)
     └── paths.local.md                 ← Chemins locaux (ignoré par git)
@@ -101,6 +108,10 @@ Le script est interactif et se déroule en deux étapes :
 | 3 | VS Code / Copilot |
 | 4 | Tout |
 
+> **Important :** Si `config/hub.json` existe déjà, le script demandera une
+> confirmation avant d'écraser vos cibles. Répondez `N` pour conserver votre
+> configuration existante.
+
 **Étape 2 — Node.js (uniquement pour OpenCode et Claude Code)**
 
 Si Node.js n'est pas installé, le script affiche un menu interactif pour
@@ -135,16 +146,15 @@ source ~/.zshrc
 # 1. Installer le hub et choisir les cibles
 oc install
 
-# 2. Enregistrer un projet
+# 2. Enregistrer un projet (propose le déploiement automatiquement)
 oc init MON-APP ~/workspace/mon-app
 
-# 3. Déployer les agents dans le projet
-oc deploy opencode MON-APP
-oc deploy claude-code MON-APP   # si activé
-oc deploy vscode MON-APP        # si activé
-
-# 4. Lancer l'outil par défaut dans le projet
+# 3. Lancer l'outil par défaut dans le projet
 oc start MON-APP
+
+# Après une mise à jour du hub (git pull) — redéployer sur tous les projets
+oc sync
+oc sync --dry-run   # vérifier sans déployer
 ```
 
 ---
@@ -154,6 +164,7 @@ oc start MON-APP
 ### `oc install`
 Installe les outils, crée la structure et configure les cibles actives.
 Vérifie et installe Node.js si une cible en a besoin.
+Demande confirmation avant d'écraser un `config/hub.json` existant.
 
 ```bash
 oc install
@@ -180,6 +191,28 @@ oc deploy all                   # toutes les cibles actives
 | `opencode` | `.opencode/agents/*.md` + `opencode.json` (créé seulement s'il n'existe pas) |
 | `claude-code` | `.claude/agents/*.md` |
 | `vscode` | `.github/copilot-instructions.md` + `.vscode/prompts/*.prompt.md` |
+
+#### `oc deploy --check [target] [PROJECT_ID]`
+Vérifie si les fichiers déployés sont à jour par rapport aux sources (agents + skills).
+Affiche `✓ À JOUR`, `⚠ OBSOLÈTE` ou `✗ MANQUANT` pour chaque agent/cible.
+Retourne exit code 1 si au moins un fichier est obsolète ou manquant.
+
+```bash
+oc deploy --check               # vérifie toutes les cibles actives au niveau du hub
+oc deploy --check opencode      # vérifie une cible précise
+oc deploy --check all MON-APP   # vérifie toutes les cibles pour un projet
+```
+
+---
+
+### `oc sync [--dry-run]`
+Synchronise (redéploie) les agents sur **tous les projets enregistrés** qui ont
+un chemin local défini dans `paths.local.md`.
+
+```bash
+oc sync             # redéploie sur tous les projets
+oc sync --dry-run   # vérifie la fraîcheur sans déployer (même logique que oc deploy --check)
+```
 
 ---
 
@@ -229,6 +262,15 @@ Met à jour les outils installés (selon les cibles actives).
 
 ```bash
 oc update
+```
+
+---
+
+### `oc version`
+Affiche la version du hub (lue depuis `config/hub.json`).
+
+```bash
+oc version
 ```
 
 ---
@@ -345,16 +387,23 @@ Les skills sont des blocs Markdown dans `skills/` injectés automatiquement
 dans les agents qui les déclarent. Chaque fichier skill a un frontmatter
 `name` + `description`.
 
+> Note : la clé `name` du frontmatter skill est purement documentaire — les
+> scripts (`cmd-agent.sh`, `cmd-skills.sh`) lisent uniquement la clé `description`.
+
 ```
 skills/
 ├── planner.md                         ← Workflow Beads du planner
-└── developer/
-    ├── dev-beads.md                   ← Commandes bd et workflow tickets
-    ├── dev-standards-universal.md     ← Clean Code, SOLID complet, TypeScript strict
-    ├── dev-standards-backend.md       ← Architecture en couches, DTOs, sécurité
-    ├── dev-standards-frontend.md      ← Séparation logique/présentation, performance
-    ├── dev-standards-frontend-a11y.md ← WCAG 2.1 A/AA, sémantique HTML, ARIA
-    └── dev-standards-vuejs.md         ← Composition API, Pinia, composables
+├── developer/
+│   ├── dev-beads.md                   ← Commandes bd et workflow tickets
+│   ├── dev-standards-universal.md     ← Clean Code, SOLID complet, TypeScript strict
+│   ├── dev-standards-backend.md       ← Architecture en couches, DTOs, sécurité
+│   ├── dev-standards-frontend.md      ← Séparation logique/présentation, performance
+│   ├── dev-standards-frontend-a11y.md ← WCAG 2.1 A/AA, sémantique HTML, ARIA
+│   ├── dev-standards-vuejs.md         ← Composition API, Pinia, composables
+│   ├── dev-standards-testing.md       ← Stratégie de tests, coverage, TDD
+│   └── dev-standards-git.md           ← Conventions de commits, branches, PR
+└── reviewer/
+    └── review-protocol.md             ← Format et checklist de code review
 ```
 
 **Pour ajouter un skill :**
@@ -372,20 +421,33 @@ skills/
 {
   "version": "2.0.0",
   "default_target": "opencode",
-  "active_targets": ["opencode"]
+  "active_targets": ["opencode"],
+  "opencode": {
+    "model": "claude-sonnet-4-5"
+  },
+  "vscode": {
+    "global_skills": [
+      "developer/dev-standards-universal",
+      "developer/dev-standards-frontend-a11y"
+    ]
+  }
 }
 ```
 
 | Clé | Rôle |
 |-----|------|
 | `default_target` | Cible utilisée par `oc start` |
-| `active_targets` | Cibles déployées par `oc deploy all` et mises à jour par `oc update` |
+| `active_targets` | Cibles déployées par `oc deploy all`, `oc sync` et mises à jour par `oc update` |
+| `opencode.model` | Modèle utilisé par OpenCode (injecté dans `opencode.json`) |
+| `vscode.global_skills` | Skills injectés dans `copilot-instructions.md` (partagés par tous les agents VS Code) |
 
 ---
 
 ## Projets
 
-### `projects/projects.md` — versionné
+### `projects/projects.example.md` — versionné (template)
+
+Copié automatiquement en `projects/projects.md` (ignoré par git) au premier `oc install` ou `oc init`.
 
 ```markdown
 ## MON-APP
@@ -395,6 +457,11 @@ skills/
 - Tracker : jira
 - Labels : feature, fix, front, back
 ```
+
+### `projects/projects.md` — ignoré par git (local)
+
+Chaque développeur maintient son propre registre de projets.
+Créé automatiquement depuis `projects.example.md` si absent.
 
 ### `projects/paths.local.md` — ignoré par git
 
@@ -411,13 +478,15 @@ AUTRE-APP=/home/user/projets/autre-app
 
 Dans **opencode-hub** (ce dépôt) :
 
-| Versionné ✅ | Généré (ignoré git) ❌ |
+| Versionné ✅ | Généré / local (ignoré git) ❌ |
 |-------------|----------------------|
 | `agents/` | `.opencode/agents/` |
 | `skills/` | `skills/external/` |
-| `config/hub.json` | `projects/paths.local.md` |
-| `scripts/` | |
-| `projects/projects.md` | |
+| `config/hub.json` | `projects/projects.md` |
+| `scripts/` | `projects/paths.local.md` |
+| `projects/projects.example.md` | `.opencode/node_modules/` |
+| `opencode.json` | `.opencode/package.json` |
+| | `.opencode/bun.lock` |
 
 Dans les **dépôts projets cibles** (générés par `oc deploy`) :
 
@@ -439,6 +508,8 @@ Pour modifier un agent ou ajouter un skill, soumettre une PR puis relancer
 
 ## Notes techniques
 
+- **`projects/projects.md`** est ignoré par git — chaque développeur a son propre registre local.
+  Le fichier est créé automatiquement depuis `projects.example.md` si absent (premier `oc init` ou `oc install`).
 - **`oc init`** rejette les `PROJECT_ID` contenant des espaces, slashes ou caractères spéciaux.
   Caractères autorisés : lettres, chiffres, `-` et `_`.
 - **`oc start`** avertit si les agents ne sont pas encore déployés dans le projet cible,
@@ -449,3 +520,5 @@ Pour modifier un agent ou ajouter un skill, soumettre une PR puis relancer
   (macOS) pour encadrer l'appel à `opencode run`.
 - **`oc remove`** : le `PROJECT_ID` est échappé dans la regex Perl (`\Q...\E`) pour éviter
   toute interprétation de caractères spéciaux.
+- **`oc install`** : si `config/hub.json` existe déjà, une confirmation est demandée avant
+  d'écraser les cibles. Répondre `N` conserve la configuration existante.

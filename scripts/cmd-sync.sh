@@ -70,7 +70,7 @@ for project_id in "${project_ids[@]}"; do
     project_ok=0
 
     for tgt in "${active_targets[@]}"; do
-      local gen_dir=""
+      gen_dir=""
       case "$tgt" in
         opencode)    gen_dir="$local_path/.opencode/agents" ;;
         claude-code) gen_dir="$local_path/.claude/agents" ;;
@@ -81,9 +81,9 @@ for project_id in "${project_ids[@]}"; do
       for agent_file in "$CANONICAL_AGENTS_DIR"/*.md; do
         [ -f "$agent_file" ] || continue
         agent_supports_target "$agent_file" "$tgt" || continue
-        local agent_id; agent_id=$(get_agent_id "$agent_file")
+        agent_id=$(get_agent_id "$agent_file")
 
-        local gen_file=""
+        gen_file=""
         case "$tgt" in
           opencode|claude-code) gen_file="$gen_dir/${agent_id}.md" ;;
           vscode)               gen_file="$gen_dir/${agent_id}.prompt.md" ;;
@@ -95,18 +95,18 @@ for project_id in "${project_ids[@]}"; do
           continue
         fi
 
-        local gen_mtime; gen_mtime=$(stat -f %m "$gen_file" 2>/dev/null || stat -c %Y "$gen_file" 2>/dev/null)
-        local max_src_mtime=0
-        local stale_reason=""
+        gen_mtime=$(stat -f %m "$gen_file" 2>/dev/null || stat -c %Y "$gen_file" 2>/dev/null)
+        max_src_mtime=0
+        stale_reason=""
 
-        local agent_mtime; agent_mtime=$(stat -f %m "$agent_file" 2>/dev/null || stat -c %Y "$agent_file" 2>/dev/null)
+        agent_mtime=$(stat -f %m "$agent_file" 2>/dev/null || stat -c %Y "$agent_file" 2>/dev/null)
         [ "$agent_mtime" -gt "$max_src_mtime" ] && max_src_mtime=$agent_mtime
 
         while IFS= read -r skill; do
           [ -z "$skill" ] && continue
-          local skill_file="$SKILLS_DIR/${skill}.md"
+          skill_file="$SKILLS_DIR/${skill}.md"
           [ -f "$skill_file" ] || continue
-          local skill_mtime; skill_mtime=$(stat -f %m "$skill_file" 2>/dev/null || stat -c %Y "$skill_file" 2>/dev/null)
+          skill_mtime=$(stat -f %m "$skill_file" 2>/dev/null || stat -c %Y "$skill_file" 2>/dev/null)
           if [ "$skill_mtime" -gt "$max_src_mtime" ]; then
             max_src_mtime=$skill_mtime
             stale_reason="skill: $skill"
@@ -142,8 +142,11 @@ for project_id in "${project_ids[@]}"; do
         log_warn "  [$tgt] non disponible — ignoré"
       fi
     done
-    "$deploy_ok" && deployed_count=$((deployed_count + 1)) \
-      || skipped_count=$((skipped_count + 1))
+    if [ "$deploy_ok" = "true" ]; then
+      deployed_count=$((deployed_count + 1))
+    else
+      skipped_count=$((skipped_count + 1))
+    fi
   fi
 
   echo ""

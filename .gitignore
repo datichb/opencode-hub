@@ -11,3 +11,8 @@ projects/paths.local.md
 # Skills téléchargés depuis des sources externes — ne pas committer
 # Utilisez : oc skills sync   pour les re-télécharger après un clone
 skills/external/
+
+# Fichiers générés dans .opencode/ par OpenCode (ignorés ici car .opencode/.gitignore s'ignore lui-même)
+.opencode/node_modules/
+.opencode/package.json
+.opencode/bun.lock
