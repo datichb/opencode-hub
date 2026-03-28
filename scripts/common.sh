@@ -75,6 +75,16 @@ normalize_project_id() {
   echo "$1" | tr '[:lower:]' '[:upper:]'
 }
 
+# Retourne le provider de tracker d'un projet (jira|gitlab|none)
+# Lit le champ "Tracker :" dans projects.md
+get_project_tracker() {
+  local id="$1"
+  local tracker
+  tracker=$(awk "/^## ${id}$/{found=1} found && /^- Tracker :/{print; exit}" "$PROJECTS_FILE" \
+    | sed 's/^- Tracker : *//' | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
+  echo "${tracker:-none}"
+}
+
 # Detect OS
 detect_os() {
   case "$(uname -s)" in

@@ -282,7 +282,21 @@ oc beads status MON-APP           # vérifie Beads sur un projet précis
 oc beads init MON-APP             # initialise .beads/ dans le projet
 oc beads list MON-APP             # liste les tickets ouverts du projet
 oc beads open MON-APP             # affiche le chemin pour utiliser bd manuellement
+
+# Synchronisation avec un tracker externe (Jira / GitLab)
+oc beads sync MON-APP             # synchronisation bidirectionnelle
+oc beads sync MON-APP --pull-only # importer seulement depuis le tracker
+oc beads sync MON-APP --push-only # exporter seulement vers le tracker
+oc beads sync MON-APP --dry-run   # simuler sans modifier
+
+# Gestion du tracker du projet
+oc beads tracker status MON-APP   # affiche le statut de connexion
+oc beads tracker setup  MON-APP   # configure le tracker (interactif)
+oc beads tracker switch MON-APP   # change de provider (jira ↔ gitlab ↔ none)
 ```
+
+Le provider de tracker est stocké dans `projects.md` (champ `Tracker`).
+Les credentials sont stockés localement par `bd config set` (non versionnés).
 
 > `oc start` avertit automatiquement si `.beads/` n'est pas présent dans le projet.
 
@@ -372,6 +386,7 @@ skills/
 - Nom : Mon Application
 - Stack : Vue 3 + Laravel
 - Board Beads : MON-APP
+- Tracker : jira
 - Labels : feature, fix, front, back
 ```
 

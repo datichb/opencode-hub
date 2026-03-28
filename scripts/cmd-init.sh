@@ -36,6 +36,20 @@ else
   read -rp "  Stack (ex: Vue 3 + Laravel) : " PROJECT_STACK
   read -rp "  Labels Beads (ex: feature,fix,front,back) : " PROJECT_LABELS
 
+  # Choix du tracker externe (optionnel)
+  echo ""
+  echo -e "  ${BOLD}Tracker externe (optionnel) :${RESET}"
+  echo "    1) Aucun"
+  echo "    2) Jira"
+  echo "    3) GitLab"
+  echo ""
+  read -rp "  Choix [1] : " tracker_choice
+  case "${tracker_choice:-1}" in
+    2) PROJECT_TRACKER="jira" ;;
+    3) PROJECT_TRACKER="gitlab" ;;
+    *)  PROJECT_TRACKER="none" ;;
+  esac
+
   # Ajouter dans projects.md
   cat >> "$PROJECTS_FILE" <<EOF
 
@@ -44,9 +58,21 @@ else
 - Stack : ${PROJECT_STACK:-N/A}
 - Board Beads : $PROJECT_ID
 - Labels : ${PROJECT_LABELS:-feature,fix}
+- Tracker : ${PROJECT_TRACKER}
 EOF
 
   log_success "Projet $PROJECT_ID ajouté dans projects.md"
+
+  # Proposer la configuration du tracker si non-none
+  if [ "$PROJECT_TRACKER" != "none" ]; then
+    echo ""
+    read -rp "  Configurer $PROJECT_TRACKER maintenant ? [Y/n] : " setup_now
+    if [[ "${setup_now:-Y}" =~ ^[Yy]$ ]]; then
+      bash "$SCRIPTS_DIR/cmd-beads.sh" tracker-setup "$PROJECT_ID"
+    else
+      log_info "Configurer plus tard : ./oc.sh beads tracker-setup $PROJECT_ID"
+    fi
+  fi
 fi
 
 # ── Chemin local ──────────────────────────

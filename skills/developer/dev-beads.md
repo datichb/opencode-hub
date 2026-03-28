@@ -86,6 +86,29 @@ bd close <ID> --reason "Implémenté dans le commit abc123"
 
 ---
 
+## 🔗 Lier un ticket à un ticket externe (Jira / GitLab)
+
+Si le projet est configuré avec un tracker externe (Jira ou GitLab), tu peux
+lier un ticket Beads à son correspondant externe via `--external-ref` :
+
+```bash
+# Lors de la création
+bd create "Titre" --external-ref jira-PROJECT-123
+
+# Sur un ticket existant
+bd update <ID> --external-ref jira-PROJECT-123
+bd update <ID> --external-ref gitlab-456
+```
+
+Le format de référence externe est libre mais par convention :
+- Jira : `jira-<PROJET>-<NUMÉRO>` (ex: `jira-MYAPP-42`)
+- GitLab : `gitlab-<NUMÉRO>` (ex: `gitlab-17`)
+
+> **Note :** La synchronisation bidirectionnelle est gérée par l'humain via
+> `oc beads sync <PROJECT_ID>` — tu ne lances pas cette commande toi-même.
+
+---
+
 ## 🔄 Workflow obligatoire
 
 ```
