@@ -1,8 +1,14 @@
 #!/bin/bash
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 
-PROJECT_ID="${1:-}"
-PROMPT="${2:-}"
+# ── Parsing des arguments (--dev est un flag libre) ───
+DEV_MODE=false
+ARGS=()
+for arg in "$@"; do
+  [ "$arg" = "--dev" ] && DEV_MODE=true || ARGS+=("$arg")
+done
+PROJECT_ID="${ARGS[0]:-}"
+PROMPT="${ARGS[1]:-}"
 
 # ── Sélection interactive si pas d'ID ─────
 if [ -z "$PROJECT_ID" ]; then
@@ -76,8 +82,29 @@ fi
 
 # ── Vérifier que Beads est initialisé dans le projet ───
 if [ ! -d "$PROJECT_PATH/.beads" ]; then
-  log_warn "Beads non initialisé dans ce projet (aucun .beads/ trouvé)"
-  log_warn "Pour utiliser les tickets : ./oc.sh beads init $PROJECT_ID"
+  if [ "$DEV_MODE" = true ]; then
+    log_error "--dev requiert Beads initialisé dans ce projet"
+    log_error "Lancez d'abord : ./oc.sh beads init $PROJECT_ID"
+    exit 1
+  else
+    log_warn "Beads non initialisé dans ce projet (aucun .beads/ trouvé)"
+    log_warn "Pour utiliser les tickets : ./oc.sh beads init $PROJECT_ID"
+  fi
+fi
+
+# ── Mode --dev : bootstrap prompt ai-delegated ─────────
+if [ "$DEV_MODE" = true ]; then
+  if ! command -v bd &>/dev/null; then
+    log_error "--dev requiert bd (Beads) : brew install bd"
+    exit 1
+  fi
+  if [ "$default_target" = "vscode" ]; then
+    log_warn "--dev ignoré pour la cible vscode (pas de support prompt)"
+  else
+    source "$LIB_DIR/prompt-builder.sh"
+    PROMPT=$(build_dev_bootstrap_prompt "$PROJECT_PATH")
+    log_info "Mode --dev : bootstrap tickets ai-delegated activé"
+  fi
 fi
 
 adapter_start "$PROJECT_PATH" "$PROMPT"

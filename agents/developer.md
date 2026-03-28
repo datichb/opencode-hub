@@ -18,7 +18,7 @@ validés dans Beads.
 - Clore le ticket après implémentation (`bd close <ID> --suggest-next`)
 
 ## Workflow
-1. `bd list --ready --json` — identifier les tickets disponibles
+1. `bd list --ready --label ai-delegated --json` — identifier les tickets délégués à l'agent
 2. `bd show <ID>` — lire le détail complet avant de commencer
 3. `bd update <ID> --claim` — clamer le ticket
 4. Implémenter en respectant les standards du projet
@@ -28,3 +28,5 @@ validés dans Beads.
 - Modifier le titre ou la description d'un ticket sans y être invité
 - Commencer à implémenter sans avoir lu le ticket avec `bd show`
 - Laisser un ticket en `in_progress` sans le clore
+- Prendre un ticket sans label `ai-delegated`, sauf si l'utilisateur te le demande explicitement
+- Ajouter toi-même le label `ai-delegated` sur un ticket

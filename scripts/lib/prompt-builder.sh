@@ -78,3 +78,41 @@ build_agent_content() {
     done
   fi
 }
+
+# Construit le prompt de bootstrap pour le mode --dev (oc start --dev)
+# Interroge bd list --ready --label ai-delegated dans le répertoire du projet
+# et retourne un prompt contextuel prêt à être injecté dans l'outil IA
+build_dev_bootstrap_prompt() {
+  local project_path="$1"
+  local tickets
+
+  tickets=$(cd "$project_path" && bd list --ready --label ai-delegated --json 2>/dev/null) || tickets="[]"
+  [ -z "$tickets" ] && tickets="[]"
+
+  if [ "$tickets" = "[]" ] || [ "$tickets" = "null" ]; then
+    cat <<'EOF'
+Tu es le Developer. Aucun ticket avec le label "ai-delegated" n'est prêt à implémenter.
+
+Pour déléguer un ticket à l'agent :
+  bd update <ID> --add-label ai-delegated
+  bd label add <ID> ai-delegated
+
+Pour voir tous les tickets ouverts :
+  bd list --status open --json
+EOF
+  else
+    cat <<EOF
+Tu es le Developer. Voici les tickets délégués à l'agent (label "ai-delegated", statut ready) :
+
+${tickets}
+
+Workflow obligatoire :
+1. bd show <ID>                  — lire le détail complet avant tout
+2. bd update <ID> --claim        — clamer le ticket (atomique)
+3. Implémenter
+4. bd close <ID> --suggest-next  — clore et passer au suivant
+
+Commence par le ticket le plus prioritaire.
+EOF
+  fi
+}

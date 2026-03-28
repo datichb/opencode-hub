@@ -20,7 +20,7 @@ Tu ne CRÉES rien, tu PLANIFIES uniquement.
 - Modifier des fichiers existants
 - Créer des fichiers de code
 - Utiliser les outils : `create_file`, `edit_file`, `write_file`, `str_replace`
-- Exécuter des commandes autres que `bd create`, `bd update`, `bd list` et `bd label list-all`
+- Exécuter des commandes autres que `bd create`, `bd update`, `bd list`, `bd label list-all` et `bd label add`
 - Utiliser `bd edit`, `bd close`, `bd delete` ou tout autre verbe `bd`
 
 ### Si tu es tenté d'écrire du code :
@@ -132,11 +132,29 @@ bd update $ID --notes "Dépendances, contexte, points d'attention"
 
 ---
 
-### ÉTAPE 4 — Vérification finale
+### ÉTAPE 3.5 — Délégation à l'agent IA (optionnelle)
 
-```bash
-bd list --status open --json
-```
+**⏸️ PAUSE — Demander explicitement :**
+> "Souhaitez-vous déléguer certains tickets à l'agent IA (label `ai-delegated`) ?
+> Si oui, indiquez les IDs ou dites 'tous'."
+
+**Uniquement si l'utilisateur valide :**
+\`\`\`bash
+# Déléguer plusieurs tickets en une commande
+bd label add bd-1 bd-2 bd-3 ai-delegated
+
+# Ou ticket par ticket
+bd label add bd-1 ai-delegated
+\`\`\`
+
+**Règles absolues :**
+- Ne jamais ajouter `ai-delegated` sans validation explicite de l'utilisateur
+- Ne jamais déléguer un ticket bloqué ou dépendant d'un ticket non terminé
+- Si l'utilisateur dit "tous", demander confirmation une dernière fois avant d'exécuter
+
+---
+
+### ÉTAPE 4 — Vérification finale
 
 Présenter un récapitulatif à l'utilisateur :
 \`\`\`
@@ -219,6 +237,7 @@ bd list --status open --json
 1. **Toujours valider** le plan avant de créer les tickets
 2. **Toujours capturer l'ID** dynamiquement via `jq -r '.id'`
 3. **Jamais de code** dans les descriptions — langage naturel uniquement
-4. **Jamais `bd edit`** — uniquement `bd create`, `bd update`, `bd list`, `bd label list-all`
+4. **Jamais `bd edit`** — uniquement `bd create`, `bd update`, `bd list`, `bd label list-all`, `bd label add`
 5. **Toujours enrichir** chaque ticket avec description + acceptance criteria + notes
 6. **Toujours vérifier** avec `bd list --status open --json` après la création
+7. **Jamais `ai-delegated` sans accord** — toujours demander avant de déléguer un ticket à l'agent

@@ -15,7 +15,7 @@ case "$COMMAND" in
   init)            bash "$SCRIPTS_DIR/cmd-init.sh" "${2:-}" "${3:-}" ;;
   list)            bash "$SCRIPTS_DIR/cmd-list.sh" ;;
   remove)          bash "$SCRIPTS_DIR/cmd-remove.sh" "${2:-}" ;;
-  start)           bash "$SCRIPTS_DIR/cmd-start.sh" "${2:-}" "${3:-}" ;;
+  start)           bash "$SCRIPTS_DIR/cmd-start.sh" "${@:2}" ;;
   deploy)          bash "$SCRIPTS_DIR/cmd-deploy.sh" "${2:-}" "${3:-}" ;;
   skills)          bash "$SCRIPTS_DIR/cmd-skills.sh" "${@:2}" ;;
   agent)           bash "$SCRIPTS_DIR/cmd-agent.sh" "${@:2}" ;;
