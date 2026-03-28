@@ -4,6 +4,15 @@
 
 source "$HUB_DIR/scripts/lib/prompt-builder.sh"
 
+# Modèle configurable depuis hub.json — fallback sur la valeur par défaut
+_get_opencode_model() {
+  local model=""
+  if command -v jq &>/dev/null && [ -f "$HUB_DIR/config/hub.json" ]; then
+    model=$(jq -r '.opencode.model // empty' "$HUB_DIR/config/hub.json" 2>/dev/null)
+  fi
+  echo "${OPENCODE_MODEL:-${model:-claude-sonnet-4-5}}"
+}
+
 OPENCODE_MODEL="${OPENCODE_MODEL:-claude-sonnet-4-5}"
 
 adapter_validate() {
@@ -34,14 +43,15 @@ adapter_deploy() {
   # Générer opencode.json à la racine du projet (format officiel)
   # Les agents .md dans .opencode/agents/ sont chargés automatiquement par OpenCode
   local config_file="$deploy_dir/opencode.json"
+  local model; model=$(_get_opencode_model)
   if [ ! -f "$config_file" ]; then
     cat > "$config_file" << JSEOF
 {
   "\$schema": "https://opencode.ai/config.json",
-  "model": "${OPENCODE_MODEL}"
+  "model": "${model}"
 }
 JSEOF
-    log_success "[opencode] opencode.json créé"
+    log_success "[opencode] opencode.json créé (modèle : $model)"
   else
     log_info "[opencode] opencode.json existant conservé"
   fi

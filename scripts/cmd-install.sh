@@ -8,6 +8,26 @@ log_title "Installation de opencode-hub"
 OS=$(detect_os)
 log_info "OS détecté : $OS"
 
+# ── Vérifier jq ─────────────────────────
+if ! command -v jq &>/dev/null; then
+  log_warn "jq non détecté — dépendance critique pour opencode-hub"
+  if [ "$OS" = "macos" ] && command -v brew &>/dev/null; then
+    read -rp "  Installer jq via Homebrew ? [Y/n] : " jq_choice
+    if [[ "${jq_choice:-Y}" =~ ^[Yy]$ ]]; then
+      brew install jq && log_success "jq installé" || log_error "Échec installation jq — à installer manuellement"
+    else
+      log_warn "Certaines fonctionnalités (deploy, skills, beads) seront dégradées sans jq"
+    fi
+  else
+    log_warn "Installer jq manuellement :"
+    log_info "  macOS  : brew install jq"
+    log_info "  Ubuntu : sudo apt-get install jq"
+    log_info "  Autre  : https://jqlang.github.io/jq/download/"
+  fi
+else
+  log_success "jq $(jq --version)"
+fi
+
 # ── Choisir les cibles ───────────────────
 log_title "Cibles à configurer"
 echo ""
@@ -52,7 +72,16 @@ cat > "$HUB_DIR/config/hub.json" << HUBJSON
 {
   "version": "2.0.0",
   "default_target": "${active_targets[0]}",
-  "active_targets": [${targets_json}]
+  "active_targets": [${targets_json}],
+  "opencode": {
+    "model": "claude-sonnet-4-5"
+  },
+  "vscode": {
+    "global_skills": [
+      "developer/dev-standards-universal",
+      "developer/dev-standards-frontend-a11y"
+    ]
+  }
 }
 HUBJSON
 log_success "config/hub.json mis à jour (cibles : ${active_targets[*]})"

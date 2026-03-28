@@ -1,5 +1,14 @@
 {
   "version": "2.0.0",
   "default_target": "opencode",
-  "active_targets": ["opencode", "vscode"]
+  "active_targets": ["opencode", "vscode"],
+  "opencode": {
+    "model": "claude-sonnet-4-5"
+  },
+  "vscode": {
+    "global_skills": [
+      "developer/dev-standards-universal",
+      "developer/dev-standards-frontend-a11y"
+    ]
+  }
 }

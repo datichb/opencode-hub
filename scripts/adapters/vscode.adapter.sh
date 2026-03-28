@@ -7,6 +7,18 @@
 
 source "$HUB_DIR/scripts/lib/prompt-builder.sh"
 
+# Lit la liste des skills globaux depuis hub.json, avec fallback codé en dur
+_get_vscode_global_skills() {
+  if command -v jq &>/dev/null && [ -f "$HUB_DIR/config/hub.json" ]; then
+    local skills
+    skills=$(jq -r '.vscode.global_skills // [] | .[]' "$HUB_DIR/config/hub.json" 2>/dev/null)
+    [ -n "$skills" ] && echo "$skills" && return
+  fi
+  # Fallback si jq absent ou champ non défini
+  echo "developer/dev-standards-universal"
+  echo "developer/dev-standards-frontend-a11y"
+}
+
 adapter_validate() {
   # Le déploiement vscode ne nécessite pas le CLI 'code'.
   # Pour le lancement (adapter_start), la vérification est faite localement.
@@ -24,16 +36,17 @@ adapter_deploy() {
   mkdir -p "$github_dir" "$prompts_dir"
   [ -d "$CANONICAL_AGENTS_DIR" ] || { log_error "[vscode] Dossier agents/ introuvable"; return 1; }
 
-  # copilot-instructions.md depuis les skills universels
+  # copilot-instructions.md depuis les skills globaux (hub.json → vscode.global_skills)
   log_info "[vscode] Génération copilot-instructions.md..."
   {
     echo "<!-- Généré par opencode-hub — ne pas éditer manuellement -->"
     echo "<!-- Régénérer : oc deploy vscode -->"
     echo ""
-    for skill_name in "developer/dev-standards-universal" "developer/dev-standards-frontend-a11y"; do
+    while IFS= read -r skill_name; do
+      [ -z "$skill_name" ] && continue
       local sf="$SKILLS_DIR/${skill_name}.md"
-      [ -f "$sf" ] && { get_skill_content "$sf"; echo ""; }
-    done
+      [ -f "$sf" ] && { get_skill_content "$sf"; echo ""; } || log_warn "[vscode] Skill global introuvable : $skill_name"
+    done < <(_get_vscode_global_skills)
   } > "$github_dir/copilot-instructions.md"
   log_success "[vscode] copilot-instructions.md"
 
