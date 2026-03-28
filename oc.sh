@@ -16,11 +16,12 @@ case "$COMMAND" in
   list)            bash "$SCRIPTS_DIR/cmd-list.sh" ;;
   remove)          bash "$SCRIPTS_DIR/cmd-remove.sh" "${2:-}" ;;
   start)           bash "$SCRIPTS_DIR/cmd-start.sh" "${@:2}" ;;
-  deploy)          bash "$SCRIPTS_DIR/cmd-deploy.sh" "${2:-}" "${3:-}" ;;
+  deploy)          bash "$SCRIPTS_DIR/cmd-deploy.sh" "${@:2}" ;;
   skills)          bash "$SCRIPTS_DIR/cmd-skills.sh" "${@:2}" ;;
   agent)           bash "$SCRIPTS_DIR/cmd-agent.sh" "${@:2}" ;;
   update)          bash "$SCRIPTS_DIR/cmd-update.sh" ;;
   beads)           bash "$SCRIPTS_DIR/cmd-beads.sh" "${@:2}" ;;
+  version|--version) bash "$SCRIPTS_DIR/cmd-version.sh" ;;
   help|--help|-h)  bash "$SCRIPTS_DIR/cmd-help.sh" ;;
   "")              bash "$SCRIPTS_DIR/cmd-help.sh" ;;
   *)

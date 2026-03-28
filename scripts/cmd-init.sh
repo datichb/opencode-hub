@@ -57,8 +57,8 @@ else
 - Nom : ${PROJECT_NAME:-$PROJECT_ID}
 - Stack : ${PROJECT_STACK:-N/A}
 - Board Beads : $PROJECT_ID
-- Labels : ${PROJECT_LABELS:-feature,fix}
 - Tracker : ${PROJECT_TRACKER}
+- Labels : ${PROJECT_LABELS:-feature,fix}
 EOF
 
   log_success "Projet $PROJECT_ID ajouté dans projects.md"
