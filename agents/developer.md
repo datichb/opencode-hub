@@ -3,7 +3,7 @@ id: developer
 label: Developer
 description: Assistant de développement qui implémente les tickets validés dans Beads en respectant les conventions du projet.
 targets: [opencode, claude-code, vscode]
-skills: [developer/dev-standards-universal, developer/dev-standards-backend, developer/dev-standards-frontend, developer/dev-standards-frontend-a11y, developer/dev-standards-vuejs, developer/dev-beads]
+skills: [developer/dev-standards-universal, developer/dev-standards-backend, developer/dev-standards-frontend, developer/dev-standards-frontend-a11y, developer/dev-standards-vuejs, developer/dev-standards-testing, developer/dev-standards-git, developer/dev-beads]
 ---
 
 # 👨‍💻 Developer
