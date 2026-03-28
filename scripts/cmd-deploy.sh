@@ -3,8 +3,163 @@
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 source "$LIB_DIR/adapter-manager.sh"
 
-TARGET="${1:-}"
-PROJECT_ID="${2:-}"
+# ── Mode --check ─────────────────────────────────────────────────────────────
+# Vérifie si les fichiers générés sont à jour par rapport aux sources.
+# Usage : oc deploy --check [target] [PROJECT_ID]
+_cmd_deploy_check() {
+  local target="${1:-all}" project_id="${2:-}"
+
+  # Résoudre le dossier de déploiement
+  local deploy_dir="$HUB_DIR"
+  if [ -n "$project_id" ]; then
+    project_id=$(normalize_project_id "$project_id")
+    project_exists "$project_id" || { log_error "Projet $project_id introuvable → oc list"; exit 1; }
+    deploy_dir=$(get_project_path "$project_id")
+    deploy_dir="${deploy_dir/#\~/$HOME}"
+  fi
+
+  # Résoudre les cibles à vérifier
+  local targets=()
+  if [ -z "$target" ] || [ "$target" = "all" ]; then
+    while IFS= read -r t; do targets+=("$t"); done < <(get_active_targets)
+  else
+    targets=("$target")
+  fi
+
+  log_title "Vérification de fraîcheur des agents déployés"
+  local stale_count=0
+  local ok_count=0
+
+  for tgt in "${targets[@]}"; do
+    log_info "── Cible : $tgt"
+
+    # Répertoire des fichiers générés selon la cible
+    local gen_dir=""
+    case "$tgt" in
+      opencode)     gen_dir="$deploy_dir/.opencode/agents" ;;
+      claude-code)  gen_dir="$deploy_dir/.claude/agents" ;;
+      vscode)       gen_dir="$deploy_dir/.vscode/prompts" ;;
+      *)            log_warn "Cible inconnue pour --check : $tgt"; continue ;;
+    esac
+
+    # Pour chaque agent source, trouver le fichier généré correspondant
+    for agent_file in "$CANONICAL_AGENTS_DIR"/*.md; do
+      [ -f "$agent_file" ] || continue
+
+      # Vérifier si l'agent supporte cette cible
+      source "$LIB_DIR/prompt-builder.sh"
+      agent_supports_target "$agent_file" "$tgt" || continue
+
+      local agent_id; agent_id=$(get_agent_id "$agent_file")
+
+      # Nom du fichier généré selon la cible
+      local gen_file=""
+      case "$tgt" in
+        opencode)     gen_file="$gen_dir/${agent_id}.md" ;;
+        claude-code)  gen_file="$gen_dir/${agent_id}.md" ;;
+        vscode)       gen_file="$gen_dir/${agent_id}.prompt.md" ;;
+      esac
+
+      if [ ! -f "$gen_file" ]; then
+        echo -e "  ${RED}✗ MANQUANT${RESET}  $agent_id → $(basename "$gen_file")"
+        stale_count=$((stale_count + 1))
+        continue
+      fi
+
+      # Timestamp du fichier généré
+      local gen_mtime; gen_mtime=$(stat -f %m "$gen_file" 2>/dev/null || stat -c %Y "$gen_file" 2>/dev/null)
+
+      # Timestamp le plus récent parmi : agent source + tous ses skills
+      local max_src_mtime=0
+      local stale_reason=""
+
+      local agent_mtime; agent_mtime=$(stat -f %m "$agent_file" 2>/dev/null || stat -c %Y "$agent_file" 2>/dev/null)
+      [ "$agent_mtime" -gt "$max_src_mtime" ] && max_src_mtime=$agent_mtime
+
+      # Vérifier chaque skill de l'agent
+      while IFS= read -r skill; do
+        [ -z "$skill" ] && continue
+        local skill_file="$SKILLS_DIR/${skill}.md"
+        [ -f "$skill_file" ] || continue
+        local skill_mtime; skill_mtime=$(stat -f %m "$skill_file" 2>/dev/null || stat -c %Y "$skill_file" 2>/dev/null)
+        if [ "$skill_mtime" -gt "$max_src_mtime" ]; then
+          max_src_mtime=$skill_mtime
+          stale_reason="skill: $skill"
+        fi
+      done < <(extract_frontmatter_list "$agent_file" "skills")
+
+      if [ "$agent_mtime" -gt "$gen_mtime" ] && [ "$max_src_mtime" = "$agent_mtime" ]; then
+        stale_reason="agent source modifié"
+      fi
+
+      if [ "$max_src_mtime" -gt "$gen_mtime" ]; then
+        echo -e "  ${YELLOW}⚠ OBSOLÈTE${RESET}  $agent_id → $(basename "$gen_file")  (${stale_reason:-source modifié})"
+        stale_count=$((stale_count + 1))
+      else
+        echo -e "  ${GREEN}✓ À JOUR${RESET}    $agent_id → $(basename "$gen_file")"
+        ok_count=$((ok_count + 1))
+      fi
+    done
+
+    # Vérifier copilot-instructions.md pour vscode
+    if [ "$tgt" = "vscode" ]; then
+      local ci_file="$deploy_dir/.github/copilot-instructions.md"
+      local max_global_mtime=0
+      if command -v jq &>/dev/null && [ -f "$HUB_DIR/config/hub.json" ]; then
+        while IFS= read -r skill_name; do
+          [ -z "$skill_name" ] && continue
+          local sf="$SKILLS_DIR/${skill_name}.md"
+          [ -f "$sf" ] || continue
+          local sm; sm=$(stat -f %m "$sf" 2>/dev/null || stat -c %Y "$sf" 2>/dev/null)
+          [ "$sm" -gt "$max_global_mtime" ] && max_global_mtime=$sm
+        done < <(jq -r '.vscode.global_skills // [] | .[]' "$HUB_DIR/config/hub.json" 2>/dev/null)
+      fi
+
+      if [ ! -f "$ci_file" ]; then
+        echo -e "  ${RED}✗ MANQUANT${RESET}  copilot-instructions.md"
+        stale_count=$((stale_count + 1))
+      elif [ "$max_global_mtime" -gt 0 ]; then
+        local ci_mtime; ci_mtime=$(stat -f %m "$ci_file" 2>/dev/null || stat -c %Y "$ci_file" 2>/dev/null)
+        if [ "$max_global_mtime" -gt "$ci_mtime" ]; then
+          echo -e "  ${YELLOW}⚠ OBSOLÈTE${RESET}  copilot-instructions.md  (global_skills modifiés)"
+          stale_count=$((stale_count + 1))
+        else
+          echo -e "  ${GREEN}✓ À JOUR${RESET}    copilot-instructions.md"
+          ok_count=$((ok_count + 1))
+        fi
+      fi
+    fi
+
+    echo ""
+  done
+
+  echo -e "Résultat : ${GREEN}$ok_count à jour${RESET}  |  ${stale_count:+${YELLOW}}$stale_count obsolète(s)/manquant(s)${RESET}"
+  if [ "$stale_count" -gt 0 ]; then
+    echo ""
+    log_info "Régénérer : ./oc.sh deploy${project_id:+ all $project_id}"
+    exit 1
+  fi
+}
+
+# ── Dispatch : --check ou déploiement normal ──────────────────────────────────
+# Analyser les arguments pour détecter --check (peut être en 1ère ou 2ème position)
+CHECK_MODE=false
+REMAINING_ARGS=()
+for arg in "$@"; do
+  if [ "$arg" = "--check" ]; then
+    CHECK_MODE=true
+  else
+    REMAINING_ARGS+=("$arg")
+  fi
+done
+
+TARGET="${REMAINING_ARGS[0]:-}"
+PROJECT_ID="${REMAINING_ARGS[1]:-}"
+
+if [ "$CHECK_MODE" = true ]; then
+  _cmd_deploy_check "$TARGET" "$PROJECT_ID"
+  exit 0
+fi
 
 log_title "Déploiement des agents"
 
@@ -43,3 +198,4 @@ for target in "${targets[@]}"; do
 done
 
 log_success "Déploiement terminé"
+
