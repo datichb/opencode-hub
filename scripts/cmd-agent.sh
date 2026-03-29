@@ -10,6 +10,23 @@ source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 # ── HELPERS ──────────────────────────────────────────────────────────────────
 
 ##
+# Résout un agent-id vers son chemin de fichier dans la structure en sous-dossiers.
+# Cherche récursivement dans agents/ le fichier dont le frontmatter id: correspond.
+# Imprime le chemin absolu sur stdout, ou rien si non trouvé.
+# @param {string} $1 — identifiant de l'agent (ex: documentarian)
+##
+_find_agent_file() {
+  local agent_id="$1"
+  find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort | while IFS= read -r f; do
+    local fid; fid=$(grep '^id:' "$f" 2>/dev/null | head -1 | sed 's/^id:[[:space:]]*//')
+    if [ "$fid" = "$agent_id" ]; then
+      echo "$f"
+      return 0
+    fi
+  done
+}
+
+##
 # Construit la liste de tous les skills disponibles (locaux + externes).
 # Imprime un skill par ligne sous la forme "chemin/relatif" (sans .md).
 ##
@@ -477,7 +494,7 @@ cmd_create() {
   fi
 
   local file="$CANONICAL_AGENTS_DIR/${agent_id}.md"
-  if [ -f "$file" ]; then
+  if [ -f "$file" ] || [ -n "$(_find_agent_file "$agent_id")" ]; then
     log_error "L'agent '$agent_id' existe déjà. Utilisez 'oc agent edit $agent_id'."
     exit 1
   fi
@@ -527,7 +544,7 @@ cmd_create() {
   echo ""
   local sep="────────────────────────────────────────────────────────────"
   echo -e "  \033[0;34m${sep}\033[0m"
-  printf "  \033[1m  Aperçu — agents/%s.md\033[0m\n" "$agent_id"
+  printf "  \033[1m  Aperçu — agents/<famille>/%s.md\033[0m\n" "$agent_id"
   echo -e "  \033[0;34m${sep}\033[0m"
   echo ""
   # Indenter chaque ligne de l'aperçu pour lisibilité
@@ -546,11 +563,24 @@ cmd_create() {
   fi
 
   # ── 9. Écriture ───────────────────────────────────────────────────────────
+  # Demander la famille pour placer le fichier dans le bon sous-dossier
+  echo ""
+  echo "Famille de l'agent (sous-dossier dans agents/) :"
+  echo "  auditor / developer / quality / planning / documentation"
+  read -rp "Famille [documentation] : " agent_family
+  agent_family="${agent_family:-documentation}"
+  # Valider et normaliser
+  case "$agent_family" in
+    auditor|developer|quality|planning|documentation) ;;
+    *) log_warn "Famille inconnue '$agent_family' — fichier créé dans agents/$agent_family/ (créez le dossier si nécessaire)" ;;
+  esac
+  mkdir -p "$CANONICAL_AGENTS_DIR/$agent_family"
+  file="$CANONICAL_AGENTS_DIR/$agent_family/${agent_id}.md"
   printf '%s\n' "$file_content" > "$file"
 
   echo ""
-  log_success "Agent '${agent_id}' créé → agents/${agent_id}.md"
-  log_info    "Personnalisez le corps dans agents/${agent_id}.md si nécessaire."
+  log_success "Agent '${agent_id}' créé → agents/${agent_family}/${agent_id}.md"
+  log_info    "Personnalisez le corps dans agents/${agent_family}/${agent_id}.md si nécessaire."
   log_info    "Puis déployez : ./oc.sh deploy all"
 }
 
@@ -564,7 +594,7 @@ cmd_list() {
   echo ""
 
   local found=0
-  for f in "$CANONICAL_AGENTS_DIR"/*.md; do
+  while IFS= read -r f; do
     [ -f "$f" ] || continue
     local id label description targets skills_count
     id=$(grep '^id:' "$f" | head -1 | sed 's/^id:[[:space:]]*//')
@@ -574,13 +604,14 @@ cmd_list() {
       | sed 's/^skills:[[:space:]]*//' | tr -d '[]"' \
       | tr ',' '\n' | sed 's/^ *//;s/ *$//' | grep -v '^$' | wc -l | tr -d ' ')
     targets=$(grep '^targets:' "$f" | head -1 | sed 's/^targets:[[:space:]]*//')
-    echo -e "  ${BOLD}${id}${RESET}  (${label})"
+    local family; family=$(basename "$(dirname "$f")")
+    echo -e "  ${BOLD}${id}${RESET}  (${label})  [${family}]"
     echo "    → $description"
     echo "    cibles : $targets"
     echo "    skills : $skills_count skill(s) configuré(s)"
     echo ""
     found=1
-  done
+  done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
 
   [ "$found" -eq 0 ] && echo "  (aucun agent dans agents/)"
 }
@@ -598,8 +629,8 @@ cmd_info() {
     exit 1
   fi
 
-  local file="$CANONICAL_AGENTS_DIR/${name}.md"
-  [ -f "$file" ] || { log_error "Agent '$name' introuvable dans agents/."; exit 1; }
+  local file; file=$(_find_agent_file "$name")
+  [ -n "$file" ] || { log_error "Agent '$name' introuvable dans agents/."; exit 1; }
 
   log_title "Agent : $name"
   echo ""
@@ -635,8 +666,8 @@ cmd_edit() {
     exit 1
   fi
 
-  local file="$CANONICAL_AGENTS_DIR/${name}.md"
-  [ -f "$file" ] || { log_error "Agent '$name' introuvable dans agents/."; exit 1; }
+  local file; file=$(_find_agent_file "$name")
+  [ -n "$file" ] || { log_error "Agent '$name' introuvable dans agents/."; exit 1; }
 
   log_title "Modifier l'agent : $name"
 
@@ -709,8 +740,9 @@ cmd_edit() {
     printf '%s\n' "$body"
   } > "$file"
 
+  local family; family=$(basename "$(dirname "$file")")
   echo ""
-  log_success "Agent '$name' mis à jour → agents/${name}.md"
+  log_success "Agent '$name' mis à jour → agents/${family}/${name}.md"
   log_info    "Relancez le déploiement pour appliquer : ./oc.sh deploy all"
 }
 

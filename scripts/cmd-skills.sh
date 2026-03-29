@@ -309,18 +309,19 @@ cmd_used_by() {
   echo ""
 
   local found=0
-  for agent_file in "$CANONICAL_AGENTS_DIR"/*.md; do
+  while IFS= read -r agent_file; do
     [ -f "$agent_file" ] || continue
     local skills_line
     skills_line=$(grep '^skills:' "$agent_file" | head -1 | tr -d '[]"')
     # Normaliser les espaces autour des virgules pour une recherche fiable
     if echo "$skills_line" | tr ',' '\n' | sed 's/^ *//' | sed 's/ *$//' | grep -qxF "$skill"; then
-      local agent_id
-      agent_id=$(basename "$agent_file" .md)
-      echo -e "  ${GREEN}✔${RESET}  $agent_id  (agents/${agent_id}.md)"
+      local agent_id family
+      agent_id=$(grep '^id:' "$agent_file" | head -1 | sed 's/^id:[[:space:]]*//')
+      family=$(basename "$(dirname "$agent_file")")
+      echo -e "  ${GREEN}✔${RESET}  $agent_id  (agents/${family}/${agent_id}.md)"
       found=1
     fi
-  done
+  done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
 
   if [ "$found" -eq 0 ]; then
     echo "  (aucun agent n'utilise ce skill)"
@@ -434,14 +435,15 @@ cmd_update() {
 
       # Lister les agents impactés
       local agents_impacted=()
-      for agent_file in "$CANONICAL_AGENTS_DIR"/*.md; do
+      while IFS= read -r agent_file; do
         [ -f "$agent_file" ] || continue
         local skills_line
         skills_line=$(grep '^skills:' "$agent_file" | head -1 | tr -d '[]"')
         if echo "$skills_line" | tr ',' '\n' | sed 's/^ *//' | sed 's/ *$//' | grep -qxF "external/$skill_name"; then
-          agents_impacted+=("$(basename "$agent_file" .md)")
+          local aid; aid=$(grep '^id:' "$agent_file" | head -1 | sed 's/^id:[[:space:]]*//')
+          agents_impacted+=("$aid")
         fi
-      done
+      done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
 
       if [ ${#agents_impacted[@]} -gt 0 ]; then
         echo -e "  ${YELLOW}⚠${RESET}  Agents impactés : ${agents_impacted[*]}"

@@ -52,7 +52,7 @@ adapter_deploy() {
 
   # Prompt par agent supportant vscode
   local deployed=0
-  for agent_file in "$CANONICAL_AGENTS_DIR"/*.md; do
+  while IFS= read -r agent_file; do
     [ -f "$agent_file" ] || continue
     agent_supports_target "$agent_file" "vscode" || { log_warn "[vscode] Ignoré : $(basename "$agent_file")"; continue; }
 
@@ -70,7 +70,7 @@ adapter_deploy() {
     } > "$prompts_dir/${agent_id}.prompt.md"
     log_success "[vscode] ${agent_id}.prompt.md"
     deployed=$((deployed + 1))
-  done
+  done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
 
   echo ""
   log_success "[vscode] $deployed prompt(s) → .vscode/prompts/"

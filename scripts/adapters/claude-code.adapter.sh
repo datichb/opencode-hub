@@ -18,7 +18,7 @@ adapter_deploy() {
 
   local deployed=0
 
-  for agent_file in "$CANONICAL_AGENTS_DIR"/*.md; do
+  while IFS= read -r agent_file; do
     [ -f "$agent_file" ] || continue
     agent_supports_target "$agent_file" "claude-code" || { log_warn "[claude-code] Ignoré : $(basename "$agent_file")"; continue; }
 
@@ -40,7 +40,7 @@ adapter_deploy() {
     } > "$out_dir/${agent_id}.md"
     log_success "[claude-code] $agent_id"
     deployed=$((deployed + 1))
-  done
+  done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
 
   log_success "[claude-code] $deployed agent(s) → ${deploy_dir}/.claude/agents/"
 }

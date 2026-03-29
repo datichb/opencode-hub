@@ -29,7 +29,7 @@ adapter_deploy() {
 
   local deployed=0
 
-  for agent_file in "$CANONICAL_AGENTS_DIR"/*.md; do
+  while IFS= read -r agent_file; do
     [ -f "$agent_file" ] || continue
     agent_supports_target "$agent_file" "opencode" || { log_warn "[opencode] Ignoré : $(basename "$agent_file")"; continue; }
 
@@ -38,7 +38,7 @@ adapter_deploy() {
     build_agent_content "$agent_file" "opencode" > "$out_dir/${agent_id}.md"
     log_success "[opencode] $agent_id"
     deployed=$((deployed + 1))
-  done
+  done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
 
   # Générer opencode.json à la racine du projet (format officiel)
   # Les agents .md dans .opencode/agents/ sont chargés automatiquement par OpenCode
