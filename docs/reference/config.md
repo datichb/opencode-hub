@@ -92,6 +92,7 @@ le sien. Créé automatiquement depuis `projects/projects.example.md` au premier
 - Board Beads : Identifiant du board Beads
 - Tracker : jira | gitlab | none
 - Labels : label1, label2, label3
+- Langue : english        # optionnel — si absent : agents en français par défaut
 ```
 
 ### Exemple
@@ -110,12 +111,14 @@ le sien. Créé automatiquement depuis `projects/projects.example.md` au premier
 - Board Beads : API-GATEWAY
 - Tracker : none
 - Labels : feature, fix, api
+- Langue : english
 ```
 
 ### Règles
 
 - `PROJECT_ID` : lettres, chiffres, `-` et `_` uniquement — pas d'espaces ni de slashes
 - `Tracker` : `jira`, `gitlab` ou `none`
+- `Langue` : optionnel — valeur libre (ex: `english`, `spanish`) — si absent, les agents s'expriment en français
 - Ce fichier est **local** — ne jamais le committer
 
 ---

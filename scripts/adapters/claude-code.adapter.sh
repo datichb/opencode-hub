@@ -16,6 +16,12 @@ adapter_deploy() {
   mkdir -p "$out_dir"
   [ -d "$CANONICAL_AGENTS_DIR" ] || { log_error "[claude-code] Dossier agents/ introuvable"; return 1; }
 
+  # Lire la langue du projet si PROJECT_ID est défini (ADR-005)
+  local lang=""
+  if [ -n "${PROJECT_ID:-}" ]; then
+    lang=$(get_project_language "$PROJECT_ID")
+  fi
+
   local deployed=0
 
   while IFS= read -r agent_file; do
@@ -36,7 +42,7 @@ adapter_deploy() {
       fi
       echo "---"
       echo ""
-      build_agent_content "$agent_file" "claude-code"
+      build_agent_content "$agent_file" "claude-code" "$lang"
     } > "$out_dir/${agent_id}.md"
     log_success "[claude-code] $agent_id"
     deployed=$((deployed + 1))

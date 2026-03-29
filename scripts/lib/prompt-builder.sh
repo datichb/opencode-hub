@@ -69,14 +69,20 @@ get_agent_id() {
 
 # Construit le contenu final : corps de l'agent + skills injectés → stdout
 # $2 (target) est réservé pour un futur filtrage par cible — non utilisé pour l'instant
+# $3 (lang) optionnel — si non vide, injecte une instruction de langue en tête de l'agent
 build_agent_content() {
   local agent_file="$1"
   # shellcheck disable=SC2034
   local target="${2:-opencode}"  # réservé : filtrage par cible (futur)
+  local lang="${3:-}"
   [ -f "$agent_file" ] || { log_warn "Agent introuvable : $agent_file" >&2; return 1; }
 
   build_generated_header
   echo ""
+  if [ -n "$lang" ]; then
+    echo "> **Langue de travail : ${lang}.** Rédige toutes tes réponses, rapports et commentaires en ${lang}, quelle que soit la langue des instructions ci-dessous."
+    echo ""
+  fi
   get_agent_body "$agent_file"
 
   local skills=()

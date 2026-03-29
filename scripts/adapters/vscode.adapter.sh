@@ -51,6 +51,12 @@ adapter_deploy() {
   log_success "[vscode] copilot-instructions.md"
 
   # Prompt par agent supportant vscode
+  # Lire la langue du projet si PROJECT_ID est défini (ADR-005)
+  local lang=""
+  if [ -n "${PROJECT_ID:-}" ]; then
+    lang=$(get_project_language "$PROJECT_ID")
+  fi
+
   local deployed=0
   while IFS= read -r agent_file; do
     [ -f "$agent_file" ] || continue
@@ -66,7 +72,7 @@ adapter_deploy() {
       [ -n "$description" ] && echo "description: '${description}'"
       echo "---"
       echo ""
-      build_agent_content "$agent_file" "vscode"
+      build_agent_content "$agent_file" "vscode" "$lang"
     } > "$prompts_dir/${agent_id}.prompt.md"
     log_success "[vscode] ${agent_id}.prompt.md"
     deployed=$((deployed + 1))

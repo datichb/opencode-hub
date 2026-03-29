@@ -10,6 +10,7 @@
 - Board Beads : <PROJECT_ID>
 - Tracker : <jira|gitlab|none>
 - Labels : <liste séparée par virgules>
+- Langue : <langue de travail>  # optionnel — si absent, les agents s'expriment en français
 -->
 
 ---

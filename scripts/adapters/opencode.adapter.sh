@@ -27,6 +27,12 @@ adapter_deploy() {
   mkdir -p "$out_dir"
   [ -d "$CANONICAL_AGENTS_DIR" ] || { log_error "[opencode] Dossier agents/ introuvable"; return 1; }
 
+  # Lire la langue du projet si PROJECT_ID est défini (ADR-005)
+  local lang=""
+  if [ -n "${PROJECT_ID:-}" ]; then
+    lang=$(get_project_language "$PROJECT_ID")
+  fi
+
   local deployed=0
 
   while IFS= read -r agent_file; do
@@ -35,7 +41,7 @@ adapter_deploy() {
 
     local agent_id; agent_id=$(get_agent_id "$agent_file")
     log_info "[opencode] Génération : $agent_id"
-    build_agent_content "$agent_file" "opencode" > "$out_dir/${agent_id}.md"
+    build_agent_content "$agent_file" "opencode" "$lang" > "$out_dir/${agent_id}.md"
     log_success "[opencode] $agent_id"
     deployed=$((deployed + 1))
   done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)

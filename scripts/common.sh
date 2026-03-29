@@ -117,6 +117,17 @@ get_project_tracker() {
   echo "${tracker:-none}"
 }
 
+# Retourne la langue de travail d'un projet (ex: "english", "spanish")
+# Lit le champ "Langue :" dans projects.md
+# Retourne une chaîne vide si le champ est absent (comportement par défaut : français)
+get_project_language() {
+  local id="$1"
+  local lang
+  lang=$(awk "/^## ${id}$/{found=1} found && /^- Langue :/{print; exit}" "$PROJECTS_FILE" \
+    | sed 's/^- Langue : *//' | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
+  echo "${lang:-}"
+}
+
 # Detect OS
 detect_os() {
   case "$(uname -s)" in

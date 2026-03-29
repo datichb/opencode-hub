@@ -9,6 +9,28 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 
 ## [Unreleased]
 
+### Added
+
+- Skill `developer/dev-standards-security` : pratiques de sécurité préventives
+  (secrets/config, validation des inputs, injections SQL/shell/LDAP, auth/autorisation,
+  logs sans données sensibles, audit des dépendances) — injecté dans tous les developer-* et reviewer
+- Adaptation linguistique des agents (ADR-005) : champ optionnel `Langue` dans `projects.md`
+  — si présent, une instruction de langue est injectée en tête de chaque agent déployé via
+  `build_agent_content` ; comportement par défaut (champ absent) inchangé — rétrocompatible
+
+### Changed
+
+- Tous les developer-* et reviewer : `dev-standards-security` ajouté après `dev-standards-universal`
+  dans le frontmatter `skills`
+- `scripts/lib/prompt-builder.sh` : `build_agent_content` accepte un 3e paramètre `lang` (optionnel)
+- `scripts/common.sh` : nouvelle fonction `get_project_language` (lecture du champ `Langue` dans `projects.md`)
+- `scripts/adapters/opencode.adapter.sh`, `claude-code.adapter.sh`, `vscode.adapter.sh` :
+  lecture de la langue via `get_project_language` et passage à `build_agent_content`
+- `projects/projects.example.md` et `docs/reference/config.md` : champ `Langue` documenté
+- `docs/architecture/adr/005-agent-language-adaptation.md` : statut Proposé → Accepté,
+  sections Décision, Implémentation et Options rejetées ajoutées
+- `docs/architecture/skills.md` et `agents.md` : mis à jour avec `dev-standards-security`
+
 ---
 
 ## [2.0.0] — 2026-03-29
