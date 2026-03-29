@@ -69,3 +69,16 @@ jobs:
           bash scripts/cmd-deploy.sh --check opencode || {
             echo "::warning::Des agents déployés sont obsolètes. Relancez : ./oc.sh deploy"
           }
+
+  bats:
+    name: Bats unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install bats-core
+        run: sudo apt-get install -y bats
+
+      - name: Run bats tests
+        run: bats tests/
