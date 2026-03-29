@@ -13,7 +13,7 @@ Les outils IA fonctionnent en silo. opencode-hub centralise tout :
 
 - Agents et rôles définis **une seule fois**, déployés partout
 - Skills (protocoles, standards) **injectés automatiquement** au déploiement
-- 19 agents spécialisés : orchestrateur, planificateur, 7 développeurs, QA, debugger, reviewer, 6 auditeurs
+- 20 agents spécialisés : orchestrateur, planificateur, documentariste, 7 développeurs, QA, debugger, reviewer, 6 auditeurs
 - Projets enregistrés et lancés via **une commande unique**
 - Workflow Beads intégré pour la **gestion des tâches**
 
@@ -54,7 +54,7 @@ oc start MON-APP
 | Document | Description |
 |----------|-------------|
 | [Vue d'ensemble](docs/architecture/overview.md) | Concepts, diagrammes de flux, principes de design |
-| [Agents](docs/architecture/agents.md) | Référence exhaustive des 19 agents |
+| [Agents](docs/architecture/agents.md) | Référence exhaustive des 20 agents |
 | [Skills](docs/architecture/skills.md) | Référence exhaustive des skills et leurs dépendances |
 | [ADR](docs/architecture/adr/) | Décisions architecturales (5 ADR) |
 
@@ -76,6 +76,7 @@ oc start MON-APP
 | Qualité | `reviewer`, `qa-engineer`, `debugger` |
 | Audit | `auditor-security`, `auditor-performance`, `auditor-accessibility`, `auditor-ecodesign`, `auditor-architecture`, `auditor-privacy` |
 | Planification | `planner` |
+| Documentation | `documentarian` |
 
 ---
 

@@ -1,7 +1,7 @@
 # Référence des agents
 
 20 agents au total, organisés en 6 familles.
-Chaque agent est défini dans `agents/<id>.md` avec un frontmatter déclarant ses métadonnées,
+Chaque agent est défini dans `agents/<famille>/<id>.md` avec un frontmatter déclarant ses métadonnées,
 ses cibles et ses skills.
 
 ---
@@ -41,7 +41,7 @@ Agents qui pilotent d'autres agents sans jamais coder eux-mêmes.
 | | |
 |--|--|
 | **Label** | Orchestrator |
-| **Fichier** | `agents/orchestrator.md` |
+| **Fichier** | `agents/planning/orchestrator.md` |
 | **Skills** | `orchestrator/orchestrator-protocol` |
 | **Invocation** | `"Implémente [feature]"` / `"Prends en charge les tickets [IDs]"` |
 
@@ -59,7 +59,7 @@ Deux modes : **Mode A** (feature en langage naturel → délègue au planner) /
 | | |
 |--|--|
 | **Label** | Auditeur |
-| **Fichier** | `agents/auditor.md` |
+| **Fichier** | `agents/auditor/auditor.md` |
 | **Skills** | `auditor/audit-protocol` |
 | **Invocation** | `"Audite [projet/périmètre]"` / `"Audit [domaine]"` |
 
@@ -75,12 +75,12 @@ Sous-agents de l'auditeur. Tous en lecture seule. Invocables directement ou via 
 
 | Agent | Fichier | Domaine | Référentiels |
 |-------|---------|---------|-------------|
-| `auditor-security` | `agents/auditor-security.md` | Sécurité applicative | OWASP Top 10, CVE, RGS |
-| `auditor-performance` | `agents/auditor-performance.md` | Performance web | Core Web Vitals, N+1, cache |
-| `auditor-accessibility` | `agents/auditor-accessibility.md` | Accessibilité | WCAG 2.1 AA, RGAA 4.1 |
-| `auditor-ecodesign` | `agents/auditor-ecodesign.md` | Éco-conception | RGESN, GreenIT, Écoindex |
-| `auditor-architecture` | `agents/auditor-architecture.md` | Architecture & dette | SOLID, Clean Architecture |
-| `auditor-privacy` | `agents/auditor-privacy.md` | Protection des données | RGPD, EDPB, CNIL |
+| `auditor-security` | `agents/auditor/auditor-security.md` | Sécurité applicative | OWASP Top 10, CVE, RGS |
+| `auditor-performance` | `agents/auditor/auditor-performance.md` | Performance web | Core Web Vitals, N+1, cache |
+| `auditor-accessibility` | `agents/auditor/auditor-accessibility.md` | Accessibilité | WCAG 2.1 AA, RGAA 4.1 |
+| `auditor-ecodesign` | `agents/auditor/auditor-ecodesign.md` | Éco-conception | RGESN, GreenIT, Écoindex |
+| `auditor-architecture` | `agents/auditor/auditor-architecture.md` | Architecture & dette | SOLID, Clean Architecture |
+| `auditor-privacy` | `agents/auditor/auditor-privacy.md` | Protection des données | RGPD, EDPB, CNIL |
 
 Tous les agents d'audit injectent `auditor/audit-protocol` (format de rapport commun)
 + leur skill de domaine spécifique (`auditor/audit-<domaine>`).
@@ -96,13 +96,13 @@ Skills communs à tous : `dev-standards-universal`, `dev-standards-git`, `dev-be
 
 | Agent | Fichier | Domaine | Skills spécifiques |
 |-------|---------|---------|-------------------|
-| `developer-frontend` | `agents/developer-frontend.md` | UI, composants, Vue.js, CSS, a11y | `dev-standards-frontend`, `dev-standards-frontend-a11y`, `dev-standards-vuejs`, `dev-standards-testing` |
-| `developer-backend` | `agents/developer-backend.md` | Services, repositories, migrations | `dev-standards-backend`, `dev-standards-testing` |
-| `developer-fullstack` | `agents/developer-fullstack.md` | Features front + back | `dev-standards-frontend`, `dev-standards-backend`, `dev-standards-testing` |
-| `developer-data` | `agents/developer-data.md` | Pipelines, ETL, ML, dbt | `dev-standards-data` |
-| `developer-devops` | `agents/developer-devops.md` | Docker, CI/CD, infra | `dev-standards-devops` |
-| `developer-mobile` | `agents/developer-mobile.md` | React Native, Flutter, iOS, Android | `dev-standards-mobile` |
-| `developer-api` | `agents/developer-api.md` | REST, GraphQL, webhooks | `dev-standards-backend`, `dev-standards-testing` |
+| `developer-frontend` | `agents/developer/developer-frontend.md` | UI, composants, Vue.js, CSS, a11y | `dev-standards-frontend`, `dev-standards-frontend-a11y`, `dev-standards-vuejs`, `dev-standards-testing` |
+| `developer-backend` | `agents/developer/developer-backend.md` | Services, repositories, migrations | `dev-standards-backend`, `dev-standards-testing` |
+| `developer-fullstack` | `agents/developer/developer-fullstack.md` | Features front + back | `dev-standards-frontend`, `dev-standards-backend`, `dev-standards-testing` |
+| `developer-data` | `agents/developer/developer-data.md` | Pipelines, ETL, ML, dbt | `dev-standards-data` |
+| `developer-devops` | `agents/developer/developer-devops.md` | Docker, CI/CD, infra | `dev-standards-devops` |
+| `developer-mobile` | `agents/developer/developer-mobile.md` | React Native, Flutter, iOS, Android | `dev-standards-mobile` |
+| `developer-api` | `agents/developer/developer-api.md` | REST, GraphQL, webhooks | `dev-standards-backend`, `dev-standards-testing` |
 
 > Voir [ADR-002](./adr/002-developer-segmentation.md) pour la décision de segmentation.
 
@@ -117,7 +117,7 @@ Agents dédiés à la qualité du code, invocables standalone ou via l'orchestra
 | | |
 |--|--|
 | **Label** | CodeReviewer |
-| **Fichier** | `agents/reviewer.md` |
+| **Fichier** | `agents/quality/reviewer.md` |
 | **Skills** | `dev-standards-universal`, `dev-standards-backend`, `dev-standards-frontend`, `dev-standards-frontend-a11y`, `dev-standards-vuejs`, `dev-standards-testing`, `dev-standards-git`, `reviewer/review-protocol` |
 | **Invocation** | Diff collé / nom de branche / URL de PR + optionnellement `bd show <ID>` |
 
@@ -132,7 +132,7 @@ de fichiers.
 | | |
 |--|--|
 | **Label** | QAEngineer |
-| **Fichier** | `agents/qa-engineer.md` |
+| **Fichier** | `agents/quality/qa-engineer.md` |
 | **Skills** | `dev-standards-universal`, `dev-standards-testing`, `dev-standards-git`, `qa/qa-protocol` |
 | **Invocation** | `"Écris les tests pour la branche [X]"` / `"QA sur le ticket [ID]"` |
 
@@ -149,7 +149,7 @@ le code fonctionnel.
 | | |
 |--|--|
 | **Label** | Debugger |
-| **Fichier** | `agents/debugger.md` |
+| **Fichier** | `agents/quality/debugger.md` |
 | **Skills** | `debugger/debug-protocol` |
 | **Invocation** | `"Ce bug : [stacktrace]"` / `"Analyse ces logs : [logs]"` |
 
@@ -169,7 +169,7 @@ Ne corrige jamais le bug.
 | | |
 |--|--|
 | **Label** | ProjectPlanner |
-| **Fichier** | `agents/planner.md` |
+| **Fichier** | `agents/planning/planner.md` |
 | **Skills** | `planner` |
 | **Invocation** | Description d'une feature en langage naturel |
 
@@ -186,7 +186,7 @@ Ne code jamais.
 | | |
 |--|--|
 | **Label** | Documentarian |
-| **Fichier** | `agents/documentarian.md` |
+| **Fichier** | `agents/documentation/documentarian.md` |
 | **Skills** | `developer/dev-standards-git`, `developer/dev-beads`, `documentarian/doc-protocol`, `documentarian/doc-standards`, `documentarian/doc-adr`, `documentarian/doc-api`, `documentarian/doc-changelog` |
 | **Invocation** | `"Documente [sujet]"` / `"Crée un ADR pour [décision]"` / `"Mets à jour le CHANGELOG"` / `"Qu'est-ce qui manque dans la doc ?"` |
 

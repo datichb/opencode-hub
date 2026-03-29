@@ -171,7 +171,7 @@ cmd_add() {
   log_success "Skill '$skill_name' ajouté → skills/external/${skill_name}.md"
   echo ""
   log_info "Pour l'utiliser dans un agent, ajoutez 'external/${skill_name}' à la liste"
-  log_info "  skills: de son fichier agents/*.md, puis relancez : ./oc.sh deploy all"
+  log_info "  skills: de son fichier agents/<famille>/<id>.md, puis relancez : ./oc.sh deploy all"
 }
 
 # ── LIST ─────────────────────────────────────────────────────────────────────

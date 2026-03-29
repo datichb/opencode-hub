@@ -16,14 +16,15 @@ source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 # @param {string} $1 — identifiant de l'agent (ex: documentarian)
 ##
 _find_agent_file() {
-  local agent_id="$1"
-  find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort | while IFS= read -r f; do
+  local agent_id="$1" result=""
+  while IFS= read -r f; do
     local fid; fid=$(grep '^id:' "$f" 2>/dev/null | head -1 | sed 's/^id:[[:space:]]*//')
     if [ "$fid" = "$agent_id" ]; then
-      echo "$f"
-      return 0
+      result="$f"
+      break
     fi
-  done
+  done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
+  echo "$result"
 }
 
 ##
