@@ -106,14 +106,11 @@ Skills de documentation. Utilisés par l'agent `documentarian`.
 
 ---
 
-## Domaine — `planner`
+## Domaine — `planning/`
 
 | Fichier | Agents qui l'utilisent | Contenu |
 |---------|----------------------|---------|
-| `planner.md` | planner | Workflow interactif en 4 étapes + étape 3.5 (délégation ai-delegated), commandes `bd` autorisées (`bd create`, `bd update`, `bd list`, `bd label`), format de proposition de découpage, exemple complet |
-
-> Note : ce skill est à la racine de `skills/` (pas dans un sous-dossier) car il est
-> antérieur à la convention de sous-dossiers par domaine.
+| `planning/planner.md` | planner | Phase 0 (exploration codebase + tickets existants + résumé de contexte), Phase 1 (questions contextualisées + déduction des priorités justifiées), Phase 2 (plan hiérarchique epics → tickets, règle >5 tickets), Phase 3 (création avec `--parent`, `--deps`, `--estimate`), Phase 4 (vérification `bd children`), gestion des aléas (scope change, scission, dépendance tardive, doublon) |
 
 ---
 
@@ -121,7 +118,7 @@ Skills de documentation. Utilisés par l'agent `documentarian`.
 
 ```
 orchestrator          → orchestrator/orchestrator-protocol
-planner               → planner
+planner               → developer/dev-beads, planning/planner
 reviewer              → dev-standards-universal, dev-standards-backend,
                          dev-standards-frontend, dev-standards-frontend-a11y,
                          dev-standards-vuejs, dev-standards-testing,
@@ -142,6 +139,7 @@ developer-frontend    → dev-standards-universal, dev-standards-frontend,
 developer-backend     → dev-standards-universal, dev-standards-backend,
                          dev-standards-testing, dev-standards-git, dev-beads
 developer-fullstack   → dev-standards-universal, dev-standards-frontend,
+                         dev-standards-frontend-a11y, dev-standards-vuejs,
                          dev-standards-backend, dev-standards-testing,
                          dev-standards-git, dev-beads
 developer-data        → dev-standards-universal, dev-standards-data,

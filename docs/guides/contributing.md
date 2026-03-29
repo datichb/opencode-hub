@@ -10,7 +10,7 @@ et comment contribuer via une PR.
 ### 1. Créer le fichier agent
 
 ```bash
-touch agents/<id>.md
+touch agents/<famille>/<id>.md
 ```
 
 Respecter la convention de nommage :
@@ -38,8 +38,8 @@ skills: [chemin/vers/skill, ...]
 
 ### 3. Corps de l'agent
 
-Structure recommandée (voir `agents/auditor.md` comme référence pour les coordinateurs,
-`agents/developer-frontend.md` pour les agents implémenteurs) :
+Structure recommandée (voir `agents/auditor/auditor.md` comme référence pour les coordinateurs,
+`agents/developer/developer-frontend.md` pour les agents implémenteurs) :
 
 ```markdown
 # <NomAffiché>
@@ -94,9 +94,11 @@ Les skills sont organisés par domaine dans `skills/` :
 | `skills/developer/` | Standards de développement (partagés entre developers et reviewer) |
 | `skills/auditor/` | Protocoles d'audit |
 | `skills/orchestrator/` | Protocoles de coordination |
+| `skills/planning/` | Protocoles de planification |
 | `skills/qa/` | Protocoles qualité |
 | `skills/debugger/` | Protocoles de diagnostic |
 | `skills/reviewer/` | Protocoles de review |
+| `skills/documentarian/` | Protocoles de documentation |
 
 Pour un nouveau domaine, créer un nouveau sous-dossier.
 
@@ -156,7 +158,7 @@ Voir `scripts/adapters/opencode.adapter.sh` comme référence.
 
 ### Enregistrer l'adapter
 
-Ajouter la cible dans `config/hub.json` et dans `scripts/adapter-manager.sh`.
+Ajouter la cible dans `config/hub.json` et dans `scripts/lib/adapter-manager.sh`.
 
 ---
 

@@ -35,7 +35,7 @@ jobs:
       - name: Check required frontmatter fields in agents/
         run: |
           errors=0
-          for agent_file in agents/*.md; do
+          for agent_file in $(find agents/ -name "*.md" | sort); do
             [ -f "$agent_file" ] || continue
             name=$(basename "$agent_file")
 
