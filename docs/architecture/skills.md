@@ -32,6 +32,7 @@ Skills de standards de développement. Partagés entre les agents développeurs 
 |---------|----------------------|---------|
 | `developer/dev-beads.md` | Tous les developer-* | Workflow Beads complet : `bd list`, `bd show`, `bd claim`, `bd close --suggest-next` |
 | `developer/dev-standards-universal.md` | Tous les developer-*, reviewer | Clean Code, SOLID complet, TypeScript strict, nommage, structure |
+| `developer/dev-standards-security.md` | Tous les developer-*, reviewer | Secrets/config, validation des inputs, injections (SQL/shell/LDAP), auth/autorisation, logs sans données sensibles, audit des dépendances |
 | `developer/dev-standards-backend.md` | developer-backend, developer-fullstack, developer-api, reviewer | Architecture en couches, DTOs, services, repositories, sécurité API |
 | `developer/dev-standards-frontend.md` | developer-frontend, developer-fullstack, reviewer | Séparation logique/présentation, performance, bundle, lazy loading |
 | `developer/dev-standards-frontend-a11y.md` | developer-frontend, developer-fullstack, reviewer | WCAG 2.1 A/AA, sémantique HTML, ARIA, contrastes |
@@ -119,7 +120,8 @@ Skills de documentation. Utilisés par l'agent `documentarian`.
 ```
 orchestrator          → orchestrator/orchestrator-protocol
 planner               → developer/dev-beads, planning/planner
-reviewer              → dev-standards-universal, dev-standards-backend,
+reviewer              → dev-standards-universal, dev-standards-security,
+                         dev-standards-backend,
                          dev-standards-frontend, dev-standards-frontend-a11y,
                          dev-standards-vuejs, dev-standards-testing,
                          dev-standards-git, reviewer/review-protocol
@@ -133,22 +135,29 @@ auditor-accessibility → auditor/audit-protocol, auditor/audit-accessibility
 auditor-ecodesign     → auditor/audit-protocol, auditor/audit-ecodesign
 auditor-architecture  → auditor/audit-protocol, auditor/audit-architecture
 auditor-privacy       → auditor/audit-protocol, auditor/audit-privacy
-developer-frontend    → dev-standards-universal, dev-standards-frontend,
+developer-frontend    → dev-standards-universal, dev-standards-security,
+                         dev-standards-frontend,
                          dev-standards-frontend-a11y, dev-standards-vuejs,
                          dev-standards-testing, dev-standards-git, dev-beads
-developer-backend     → dev-standards-universal, dev-standards-backend,
+developer-backend     → dev-standards-universal, dev-standards-security,
+                         dev-standards-backend,
                          dev-standards-testing, dev-standards-git, dev-beads
-developer-fullstack   → dev-standards-universal, dev-standards-frontend,
+developer-fullstack   → dev-standards-universal, dev-standards-security,
+                         dev-standards-frontend,
                          dev-standards-frontend-a11y, dev-standards-vuejs,
                          dev-standards-backend, dev-standards-testing,
                          dev-standards-git, dev-beads
-developer-data        → dev-standards-universal, dev-standards-data,
+developer-data        → dev-standards-universal, dev-standards-security,
+                         dev-standards-data,
                          dev-standards-git, dev-beads
-developer-devops      → dev-standards-universal, dev-standards-devops,
+developer-devops      → dev-standards-universal, dev-standards-security,
+                         dev-standards-devops,
                          dev-standards-git, dev-beads
-developer-mobile      → dev-standards-universal, dev-standards-mobile,
+developer-mobile      → dev-standards-universal, dev-standards-security,
+                         dev-standards-mobile,
                          dev-standards-git, dev-beads
-developer-api         → dev-standards-universal, dev-standards-backend,
+developer-api         → dev-standards-universal, dev-standards-security,
+                         dev-standards-backend,
                          dev-standards-testing, dev-standards-git, dev-beads
 documentarian         → dev-standards-git, dev-beads,
                          documentarian/doc-protocol, documentarian/doc-standards,

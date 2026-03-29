@@ -3,7 +3,7 @@ id: developer-backend
 label: DeveloperBackend
 description: Assistant de développement backend — implémente les services, repositories, logique métier, migrations et sécurité applicative côté serveur. Agnostique du framework.
 targets: [opencode, claude-code, vscode]
-skills: [developer/dev-standards-universal, developer/dev-standards-backend, developer/dev-standards-testing, developer/dev-standards-git, developer/dev-beads]
+skills: [developer/dev-standards-universal, developer/dev-standards-security, developer/dev-standards-backend, developer/dev-standards-testing, developer/dev-standards-git, developer/dev-beads]
 ---
 
 # DeveloperBackend

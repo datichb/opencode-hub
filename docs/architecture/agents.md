@@ -92,7 +92,7 @@ Tous les agents d'audit injectent `auditor/audit-protocol` (format de rapport co
 7 agents spécialisés par domaine technique. Tous suivent le même workflow Beads
 (`bd claim → implémenter → tester → bd close`).
 
-Skills communs à tous : `dev-standards-universal`, `dev-standards-git`, `dev-beads`.
+Skills communs à tous : `dev-standards-universal`, `dev-standards-security`, `dev-standards-git`, `dev-beads`.
 
 | Agent | Fichier | Domaine | Skills spécifiques |
 |-------|---------|---------|-------------------|
@@ -118,7 +118,7 @@ Agents dédiés à la qualité du code, invocables standalone ou via l'orchestra
 |--|--|
 | **Label** | CodeReviewer |
 | **Fichier** | `agents/quality/reviewer.md` |
-| **Skills** | `dev-standards-universal`, `dev-standards-backend`, `dev-standards-frontend`, `dev-standards-frontend-a11y`, `dev-standards-vuejs`, `dev-standards-testing`, `dev-standards-git`, `reviewer/review-protocol` |
+| **Skills** | `dev-standards-universal`, `dev-standards-security`, `dev-standards-backend`, `dev-standards-frontend`, `dev-standards-frontend-a11y`, `dev-standards-vuejs`, `dev-standards-testing`, `dev-standards-git`, `reviewer/review-protocol` |
 | **Invocation** | Diff collé / nom de branche / URL de PR + optionnellement `bd show <ID>` |
 
 Analyse les diffs de PR/MR. Produit un rapport structuré par sévérité (Critique /
