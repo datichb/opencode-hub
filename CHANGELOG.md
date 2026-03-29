@@ -17,6 +17,11 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 - Adaptation linguistique des agents (ADR-005) : champ optionnel `Langue` dans `projects.md`
   — si présent, une instruction de langue est injectée en tête de chaque agent déployé via
   `build_agent_content` ; comportement par défaut (champ absent) inchangé — rétrocompatible
+- Mode de workflow configurable pour l'orchestrateur (ADR-006) : trois modes disponibles au
+  démarrage de chaque feature — `manuel` (défaut, comportement existant inchangé), `semi-auto`
+  (CP-1 et CP-3 automatiques, QA et review restent manuels), `auto` (CP-1/CP-3 automatiques,
+  CP-QA fixé au démarrage) — CP-2 (merge ou corriger ?) reste une pause absolue dans tous
+  les modes — rétrocompatible
 
 ### Changed
 
