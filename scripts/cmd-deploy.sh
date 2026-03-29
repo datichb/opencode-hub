@@ -44,7 +44,7 @@ _cmd_deploy_check() {
     esac
 
     # Pour chaque agent source, trouver le fichier généré correspondant
-    for agent_file in "$CANONICAL_AGENTS_DIR"/*.md; do
+    while IFS= read -r agent_file; do
       [ -f "$agent_file" ] || continue
 
       # Vérifier si l'agent supporte cette cible
@@ -100,7 +100,7 @@ _cmd_deploy_check() {
         echo -e "  ${GREEN}✓ À JOUR${RESET}    $agent_id → $(basename "$gen_file")"
         ok_count=$((ok_count + 1))
       fi
-    done
+    done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
 
     # Vérifier copilot-instructions.md pour vscode
     if [ "$tgt" = "vscode" ]; then
