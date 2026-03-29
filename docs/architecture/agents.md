@@ -1,6 +1,6 @@
 # Référence des agents
 
-19 agents au total, organisés en 5 familles.
+20 agents au total, organisés en 6 familles.
 Chaque agent est défini dans `agents/<id>.md` avec un frontmatter déclarant ses métadonnées,
 ses cibles et ses skills.
 
@@ -179,9 +179,30 @@ Ne code jamais.
 
 ---
 
+## Famille — Agents de documentation
+
+### `documentarian`
+
+| | |
+|--|--|
+| **Label** | Documentarian |
+| **Fichier** | `agents/documentarian.md` |
+| **Skills** | `developer/dev-standards-git`, `developer/dev-beads`, `documentarian/doc-protocol`, `documentarian/doc-standards`, `documentarian/doc-adr`, `documentarian/doc-api`, `documentarian/doc-changelog` |
+| **Invocation** | `"Documente [sujet]"` / `"Crée un ADR pour [décision]"` / `"Mets à jour le CHANGELOG"` / `"Qu'est-ce qui manque dans la doc ?"` |
+
+Rédige et met à jour la documentation technique, fonctionnelle, architecturale, API
+et les changelogs. Explore systématiquement la structure existante avant d'écrire.
+S'adapte au format en place — recommande des améliorations sans les imposer.
+Ne change jamais un format sans confirmation explicite.
+
+Principe directeur : **explorer → adapter ou proposer → attendre si nécessaire → écrire**.
+
+---
+
 ## Règles communes à tous les agents
 
 - **Agents en lecture seule** : auditor-*, reviewer, debugger — ne modifient jamais de fichiers
-- **Agents qui écrivent** : developer-*, qa-engineer — modifient uniquement les fichiers de leur domaine
+- **Agents qui écrivent du code** : developer-*, qa-engineer — modifient uniquement les fichiers de leur domaine
+- **Agents qui écrivent de la documentation** : documentarian — modifie uniquement les fichiers de documentation
 - **Agents qui créent des tickets** : planner (tickets feature), debugger (tickets bug après confirmation)
 - **Agents qui lisent les tickets** : tous peuvent faire `bd show <ID>` pour contextualiser leur travail
