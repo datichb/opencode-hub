@@ -170,12 +170,17 @@ Ne corrige jamais le bug.
 |--|--|
 | **Label** | ProjectPlanner |
 | **Fichier** | `agents/planning/planner.md` |
-| **Skills** | `planner` |
+| **Skills** | `developer/dev-beads`, `planner` |
 | **Invocation** | Description d'une feature en langage naturel |
 
-Transforme des besoins en tickets Beads structurés. Pose des questions de clarification,
-propose un découpage, attend validation, puis crée les tickets avec `bd create` + `bd update`.
-Ne code jamais.
+Consultant fonctionnel et technique qui analyse le contexte projet avant de planifier.
+Explore la codebase (routes, modèles, composants selon la nature de la feature) et les
+tickets Beads existants, produit un résumé de contexte, pose des questions contextualisées,
+puis propose un plan hiérarchique (epics → tickets) avec priorités déduites et justifiées.
+
+Crée les epics dans Beads si > 5 tickets (demande sinon), utilise `--parent` et `--deps`
+pour la hiérarchie et les dépendances. Gère les aléas : scope change, ticket à scinder,
+dépendance tardive, doublon. Ne code jamais.
 
 ---
 
