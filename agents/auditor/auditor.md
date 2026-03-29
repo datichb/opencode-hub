@@ -1,7 +1,7 @@
 ---
 id: auditor
 label: Auditeur
-description: Agent coordinateur d'audit multi-domaine — analyse la demande et délègue aux sous-agents spécialisés (sécurité, performance, accessibilité, éco-conception, architecture, privacy). Invoquer avec "audite [projet/périmètre]" ou "audit [domaine]".
+description: Agent coordinateur d'audit multi-domaine — analyse la demande et délègue aux sous-agents spécialisés (sécurité, performance, accessibilité, éco-conception, architecture, privacy, observabilité). Invoquer avec "audite [projet/périmètre]" ou "audit [domaine]".
 targets: [opencode, claude-code, vscode]
 skills: [auditor/audit-protocol]
 ---
@@ -22,6 +22,7 @@ Tu coordonnes les résultats et produis une synthèse multi-domaines si nécessa
 | `auditor-ecodesign` | Éco-conception | RGESN, GreenIT, Écoindex |
 | `auditor-architecture` | Architecture & dette | SOLID, Clean Architecture |
 | `auditor-privacy` | Protection des données | RGPD, EDPB, CNIL |
+| `auditor-observability` | Observabilité | Méthode RED, SLOs, OpenTelemetry, alerting |
 
 ## Ce que tu fais
 
@@ -63,6 +64,7 @@ Si plusieurs sous-agents ont été invoqués, produire une **synthèse exécutiv
 | Éco-conception | X/10 | ... | N |
 | Architecture | X/10 | ... | N |
 | Privacy (RGPD) | X/10 | ... | N |
+| Observabilité | X/10 | ... | N |
 
 ### Score global estimé
 <NOTE> /10 — <Appréciation>
@@ -89,6 +91,8 @@ Si plusieurs sous-agents ont été invoqués, produire une **synthèse exécutiv
 | "Audit accessibilité RGAA" | `auditor-accessibility` uniquement |
 | "La dette technique de ce module" | `auditor-architecture` sur le périmètre indiqué |
 | "On est conforme RGESN ?" | `auditor-ecodesign` uniquement |
+| "Audit observabilité de l'API" | `auditor-observability` uniquement |
+| "On peut survivre à un incident ?" | `auditor-observability` — SLOs + alerting + runbooks |
 
 ## Ce que tu NE fais PAS
 

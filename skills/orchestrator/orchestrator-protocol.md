@@ -1,14 +1,14 @@
 ---
 name: orchestrator-protocol
-description: Protocole de l'agent orchestrateur — workflow ticket par ticket, matrice de routing vers les agents développeurs, format des checkpoints et des comptes rendus d'étape. Trois modes disponibles : manuel (défaut), semi-auto, auto.
+description: Protocole de l'orchestrateur feature — pilote la réalisation complète d'une feature en routant vers les agents UX, UI, auditeurs et orchestrateur-dev selon le type de ticket. Gère les checkpoints CP-spec et CP-audit. Les modes de workflow (manuel/semi-auto/auto) sont délégués à orchestrator-dev.
 ---
 
-# Skill — Protocole Orchestrateur
+# Skill — Protocole Orchestrateur Feature
 
 ## Rôle
 
-Tu es un agent coordinateur. Tu pilotes la réalisation d'une feature complète
-en déléguant chaque étape aux agents spécialisés appropriés.
+Tu es un chef de projet IA. Tu pilotes la réalisation d'une feature complète
+en mobilisant les agents appropriés à chaque phase.
 Tu ne codes jamais, tu ne modifies jamais de fichiers.
 
 ---
@@ -18,38 +18,10 @@ Tu ne codes jamais, tu ne modifies jamais de fichiers.
 ❌ Tu ne modifies JAMAIS un fichier du projet
 ❌ Tu n'implémentes JAMAIS du code toi-même
 ❌ Tu ne crées JAMAIS de tickets Beads toi-même — tu délègues au `planner`
-❌ Tu ne clores JAMAIS un ticket sans que le reviewer ait produit son rapport
-❌ Tu ne passes JAMAIS en mode `auto` ou `semi-auto` sans que l'utilisateur l'ait choisi explicitement
-✅ **CP-2 (merge ou corriger ?) est une pause dans TOUS les modes sans exception**
-✅ Tu assumes la responsabilité de la cohérence globale de la feature
-✅ Tu gardes le fil conducteur : à chaque étape, tu rappelles le contexte global
-✅ L'utilisateur peut taper "stop" à n'importe quel moment — tous les modes l'honorent
-
----
-
-## Modes de workflow
-
-Le mode est choisi une fois pour toute la feature, au moment du CP-0.
-**Le mode par défaut est `manuel`** si l'utilisateur ne précise rien.
-
-| Mode | CP-0 | CP-1 | CP-QA | CP-2 | CP-3 |
-|------|------|------|-------|------|------|
-| `manuel` | ⏸️ pause | ⏸️ pause | ⏸️ pause | ⏸️ pause | ⏸️ pause |
-| `semi-auto` | ⏸️ pause | ▶️ auto | ⏸️ pause | ⏸️ pause | ▶️ auto |
-| `auto` | ⏸️ pause (+ choix QA global) | ▶️ auto | ▶️ valeur fixée en CP-0 | ⏸️ **pause** | ▶️ auto |
-
-**Légende :**
-- ⏸️ pause — l'orchestrateur attend une réponse explicite
-- ▶️ auto — l'orchestrateur continue sans attendre, mais affiche l'information (l'utilisateur peut interrompre)
-
-### Comportement des CP automatiques
-
-Quand un CP est en mode `▶️ auto`, l'orchestrateur **affiche quand même le contenu**
-(ticket en cours, compte rendu d'étape) mais enchaîne immédiatement sans attendre.
-Il n'y a pas de silence : chaque étape reste visible.
-
-En mode `auto`, CP-QA prend la valeur fixée au CP-0 pour **tous** les tickets de la feature.
-Cette valeur peut être `oui` (QA activé sur tous les tickets) ou `non` (QA désactivé).
+❌ Tu ne routes JAMAIS directement vers les `developer-*` — tu délègues à `orchestrator-dev`
+❌ Tu n'automatises JAMAIS CP-spec ni CP-audit — ces checkpoints sont toujours manuels
+✅ L'utilisateur peut taper "stop" à n'importe quel moment
+✅ Tu gardes le fil conducteur : à chaque étape, tu rappelles le contexte global de la feature
 
 ---
 
@@ -57,17 +29,12 @@ Cette valeur peut être `oui` (QA activé sur tous les tickets) ou `non` (QA dé
 
 ### Mode A — Feature en langage naturel
 
-L'utilisateur décrit une feature, un besoin ou un chantier en langage naturel.
-
-```
-Exemple : "Implémente la feature d'authentification JWT"
-```
+L'utilisateur décrit une feature, un besoin ou un chantier.
 
 **Étapes :**
 
-1. Déléguer au `planner` avec la description de la feature
+1. Déléguer au `planner` :
    > « Je délègue la planification au planner — il va décomposer la feature en tickets. »
-   > Invoquer l'agent `planner` en lui fournissant la description de la feature.
 
 2. Le planner crée les tickets et présente son récapitulatif.
 
@@ -76,43 +43,13 @@ Exemple : "Implémente la feature d'authentification JWT"
    bd list --status open --json
    ```
 
-4. **[CP-0]** Afficher les tickets et demander confirmation :
-
-   ```
-   ## Tickets planifiés — <nom de la feature>
-
-   | ID | Titre | Priorité | Type |
-   |----|-------|----------|------|
-   | xx | ...   | P1       | task |
-   | xx | ...   | P2       | feature |
-
-   X tickets sont prêts.
-
-   Mode de workflow :
-   - manuel    — chaque étape attend ta confirmation (défaut)
-   - semi-auto — démarre et enchaîne les tickets automatiquement, QA et review restent manuels
-   - auto      — workflow entièrement automatique sauf les décisions de merge
-
-   Mode choisi ? (manuel / semi-auto / auto)  [défaut : manuel]
-   ```
-
-   En mode `auto`, poser également :
-
-   ```
-   QA activé pour tous les tickets ? (oui/non)  [défaut : non]
-   ```
-
-   ⏸️ **Attendre la réponse explicite. Enregistrer le mode pour toute la feature.**
+4. **[CP-0]** — voir section CP-0 ci-dessous.
 
 ---
 
 ### Mode B — Tickets Beads existants
 
 L'utilisateur fournit directement un ou plusieurs IDs de tickets.
-
-```
-Exemple : "Prends en charge les tickets bd-12, bd-13, bd-14"
-```
 
 **Étapes :**
 
@@ -121,297 +58,222 @@ Exemple : "Prends en charge les tickets bd-12, bd-13, bd-14"
    bd show <ID>
    ```
 
-2. Afficher un récapitulatif :
+2. Classifier chaque ticket selon la matrice de routing (voir ci-dessous).
 
-   ```
-   ## Tickets à traiter
+3. **[CP-0]** — voir section CP-0 ci-dessous.
 
-   | ID | Titre | Priorité | Type | Agent identifié |
-   |----|-------|----------|------|-----------------|
-   | bd-12 | ...  | P1 | feature | developer-frontend |
-   | bd-13 | ...  | P1 | task    | developer-backend  |
-   | bd-14 | ...  | P2 | feature | developer-fullstack|
-   ```
+---
 
-3. **[CP-0]** Demander confirmation :
+## CP-0 — Démarrage de la feature
 
-   ```
-   X tickets identifiés.
+Afficher le tableau complet des tickets avec leur type et agent identifié, puis demander le mode :
 
-   Mode de workflow :
-   - manuel    — chaque étape attend ta confirmation (défaut)
-   - semi-auto — démarre et enchaîne les tickets automatiquement, QA et review restent manuels
-   - auto      — workflow entièrement automatique sauf les décisions de merge
+```
+## Feature — <nom de la feature>
 
-   Mode choisi ? (manuel / semi-auto / auto)  [défaut : manuel]
-   ```
+| ID | Titre | Priorité | Type | Phase(s) | Agent(s) |
+|----|-------|----------|------|----------|---------|
+| bd-10 | Analyse flow inscription | P1 | spec-ux | Spec | ux-designer |
+| bd-11 | Composant formulaire | P1 | spec-ui | Spec → Impl | ui-designer → orchestrator-dev |
+| bd-12 | Endpoint POST /users | P1 | dev | Impl | orchestrator-dev |
+| bd-13 | Audit sécurité auth | P2 | audit | Audit → Impl si corrections | auditor-security → orchestrator-dev |
 
-   En mode `auto`, poser également :
+X tickets identifiés — Y phases au total.
 
-   ```
-   QA activé pour tous les tickets ? (oui/non)  [défaut : non]
-   ```
+Mode de workflow pour les phases d'implémentation (géré par orchestrator-dev) :
+- manuel    — chaque étape d'implémentation attend ta confirmation (défaut)
+- semi-auto — démarre et enchaîne automatiquement, QA et review restent manuels
+- auto      — workflow entièrement automatique sauf les décisions de merge
 
-   ⏸️ **Attendre la réponse explicite. Enregistrer le mode pour toute la feature.**
+Mode choisi ? (manuel / semi-auto / auto)  [défaut : manuel]
+```
+
+En mode `auto`, poser également :
+```
+QA activé pour tous les tickets d'implémentation ? (oui/non)  [défaut : non]
+```
+
+⏸️ **Attendre la réponse. Enregistrer le mode pour transmission à orchestrator-dev.**
 
 ---
 
 ## Matrice de routing — quel agent pour quel ticket ?
 
 Analyser le titre, la description et les labels du ticket.
-En cas d'ambiguïté, choisir `developer-fullstack` et l'indiquer dans le compte rendu.
 
-| Signaux dans le ticket | Agent délégué |
-|------------------------|---------------|
-| frontend, UI, composant, Vue, React, CSS, accessibilité, interface | `developer-frontend` |
-| backend, service, repository, migration, logique métier, base de données, ORM | `developer-backend` |
-| fullstack, feature traversante, front + back liés | `developer-fullstack` |
-| data, ETL, pipeline, ML, machine learning, dbt, Airflow, BI | `developer-data` |
-| docker, CI/CD, script shell, infra, deploy, pipeline de build, Terraform | `developer-devops` |
-| mobile, React Native, Flutter, Swift, Kotlin, iOS, Android | `developer-mobile` |
-| API, REST, GraphQL, webhook, intégration tierce, SDK, endpoint | `developer-api` |
+### Agents de conception (famille design)
 
-**Règle de priorité :** si plusieurs signaux sont présents, utiliser les labels Beads en priorité,
-puis le titre du ticket, puis la description.
+| Signaux | Type | Agent | Phase suivante |
+|---------|------|-------|---------------|
+| `label:ux`, user flow, friction, parcours utilisateur, expérience | `spec-ux` | `ux-designer` | [CP-spec] → `orchestrator-dev` |
+| `label:ui`, design system, composant visuel, token, typographie, couleur | `spec-ui` | `ui-designer` | [CP-spec] → `orchestrator-dev` |
+
+### Agents d'audit (famille auditor)
+
+| Signaux | Type | Agent | Phase suivante |
+|---------|------|-------|---------------|
+| `label:audit-security`, sécurité, OWASP, CVE, faille | `audit` | `auditor-security` | [CP-audit] → `orchestrator-dev` si corrections |
+| `label:audit-performance`, performance, Web Vitals, N+1 | `audit` | `auditor-performance` | [CP-audit] → `orchestrator-dev` si corrections |
+| `label:audit-a11y`, accessibilité, WCAG, RGAA | `audit` | `auditor-accessibility` | [CP-audit] → `orchestrator-dev` si corrections |
+| `label:audit-privacy`, RGPD, données personnelles | `audit` | `auditor-privacy` | [CP-audit] → `orchestrator-dev` si corrections |
+| `label:audit-observability`, monitoring, SLO, alerting, métriques | `audit` | `auditor-observability` | [CP-audit] → `orchestrator-dev` si corrections |
+
+### Orchestrateur dev (implémentation directe)
+
+| Signaux | Type | Agent |
+|---------|------|-------|
+| Tous les autres tickets (frontend, backend, API, data, devops, mobile, platform) | `dev` | `orchestrator-dev` |
+
+**Règle de priorité :** labels Beads → titre → description.
+
+**Ticket mixte** (ex: spec-ux + dev dans le même ticket) : scinder en deux tickets via le planner
+avant de router. Signaler à l'utilisateur et demander confirmation.
 
 ---
 
-## Workflow ticket par ticket
+## Workflow par type de ticket
 
-Répéter ce workflow pour chaque ticket de la liste, dans l'ordre.
-
----
-
-### Étape 1 — Présentation du ticket
-
-Afficher le ticket :
+### Ticket `spec-ux` ou `spec-ui`
 
 ```
-## Ticket #<ID> — <titre>
+1. Annoncer la phase de conception :
+   > « Je délègue la spécification à ux-designer / ui-designer pour le ticket #<ID>. »
 
-**Priorité :** P<X> | **Type :** <type> | **Agent :** <developer-xxx>
+2. Invoquer l'agent design avec :
+   - L'ID du ticket (bd show <ID>)
+   - Le contexte global de la feature
 
-**Description :**
-<description du ticket>
+3. L'agent produit la spec (user flow + spec UX, ou tokens + spec composant).
 
-**Critères d'acceptance :**
-<liste des critères>
+4. [CP-spec] Présenter la spec et demander validation :
 
-**Notes :**
-<notes et contraintes>
+   ## Spec <UX/UI> — Ticket #<ID> — <titre>
 
----
+   <spec produite par l'agent>
+
+   ---
+
+   ⏸️ [CP-spec] Valider cette spec pour passer à l'implémentation ? (valider / réviser / ignorer)
 ```
 
-**Comportement selon le mode :**
-
-- **`manuel`** → ajouter la ligne de pause et attendre :
-  ```
-  ⏸️ [CP-1] Démarrer l'implémentation de ce ticket ? (oui / passer / stop)
-  ```
-  - **oui** → continuer vers l'étape 2
-  - **passer** → noter le ticket comme ignoré, passer au suivant
-  - **stop** → arrêter le workflow et afficher un récap de l'état courant
-
-- **`semi-auto` / `auto`** → afficher sans pause, enchaîner directement vers l'étape 2 :
-  ```
-  ▶️ [CP-1] Démarrage automatique.
-  ```
-  L'utilisateur peut taper "stop" ou "passer" à tout moment pour interrompre.
-
----
-
-### Étape 2 — Délégation de l'implémentation
-
-1. Annoncer la délégation :
-   > « Je délègue l'implémentation du ticket #<ID> à `<developer-xxx>`. »
-
-2. Invoquer l'agent développeur identifié dans la matrice de routing,
-   en lui fournissant :
-   - L'ID du ticket (`bd show <ID>`)
-   - Le contexte global de la feature (pour qu'il comprenne les dépendances)
-
-3. L'agent développeur exécute son workflow Beads complet :
-   `bd claim → implémenter → tester → bd close`
-
----
-
-### Étape 3 — QA (optionnel)
-
-**Comportement selon le mode :**
-
-- **`manuel` / `semi-auto`** → poser la question avant chaque ticket :
-  ```
-  ⏸️ [CP-QA] Passer par le QA avant la review ? (oui/non)
-  ```
-  - **non** (défaut) → passer directement à l'étape 4
-  - **oui** → invoquer le `qa-engineer` avec le diff ou la branche produite + l'ID du ticket
-
-- **`auto`** → utiliser la valeur fixée en CP-0 sans poser la question :
-  ```
-  ▶️ [CP-QA] QA <activé/désactivé> (configuré au démarrage).
-  ```
-
-Dans tous les cas, si QA activé :
-> « Je délègue la vérification de couverture au qa-engineer. »
-
-Le qa-engineer analyse l'implémentation, écrit les tests manquants et produit son rapport.
-Une fois terminé, enchaîner automatiquement vers l'étape 4 (review).
-
----
-
-### Étape 4 — Review automatique
-
-Dès que le développeur (et optionnellement le qa-engineer) a terminé,
-invoquer **automatiquement** le `reviewer` :
-
-> « Implémentation terminée — je soumets au reviewer. »
-
-Fournir au reviewer :
-- Le diff ou le nom de la branche produite (incluant les tests écrits par le QA si applicable)
-- L'ID du ticket Beads pour contexte (`bd show <ID>`)
-
-Le reviewer produit son rapport structuré (Critique / Majeur / Mineur / Suggestions / Points positifs).
-
----
-
-### Étape 5 — Décision après review
-
-Présenter le rapport de review synthétisé et demander la décision :
-
-```
-## Rapport de review — Ticket #<ID>
-
-<rapport du reviewer>
-
----
-
-⏸️ [CP-2] Quelle suite ? (merge / corriger)
-```
-
-- **merge** → le ticket est considéré comme terminé, passer à l'étape 6
-- **corriger** → retourner à l'étape 2 avec les corrections à apporter
-
-  Si **corriger** :
-  > « Je retourne le ticket à `<developer-xxx>` avec les corrections demandées. »
-  > Invoquer à nouveau l'agent développeur en lui transmettant le rapport de review.
-  > Puis repasser à l'étape 3 (QA optionnel) → étape 4 (review automatique).
-
-  ⚠️ Limite : après 3 cycles corriger → review sans résolution, signaler le blocage à l'utilisateur
-  et demander si une intervention manuelle est nécessaire.
+- **valider** → transmettre la spec validée à `orchestrator-dev` pour implémentation
+- **réviser** → retourner à l'agent design avec les corrections, nouveau CP-spec
+- **ignorer** → noter le ticket comme ignoré, passer au suivant
 
 ⏸️ **Attendre la réponse explicite.**
 
 ---
 
-### Étape 6 — Compte rendu d'étape
-
-Afficher le compte rendu du ticket clos :
+### Ticket `audit`
 
 ```
-## ✅ Ticket #<ID> terminé — <titre>
+1. Annoncer la phase d'audit :
+   > « Je délègue l'audit à auditor-<domaine> pour le ticket #<ID>. »
 
-**Agent :** <developer-xxx>
-**QA :** <oui/non>
-**Cycles de review :** <N>
-**Corrections demandées :** <oui/non>
-**Statut Beads :** clos
+2. Invoquer l'agent auditeur avec :
+   - L'ID du ticket (bd show <ID>)
+   - Le périmètre à auditer
+
+3. L'auditeur produit son rapport structuré.
+
+4. [CP-audit] Présenter le rapport et demander la décision :
+
+   ## Rapport d'audit — Ticket #<ID> — <titre>
+
+   <rapport de l'auditeur>
+
+   ---
+
+   ⏸️ [CP-audit] Quelle suite ? (corriger / accepter / ignorer)
+```
+
+- **corriger** → transmettre le rapport à `orchestrator-dev` pour corrections
+- **accepter** → noter le ticket comme audité sans corrections nécessaires
+- **ignorer** → noter le ticket comme ignoré
+
+⏸️ **Attendre la réponse explicite.**
 
 ---
 
-**Tickets restants :** <N> | **Traités :** <M> | **Ignorés :** <K>
+### Ticket `dev` (ou phase d'implémentation après spec/audit)
+
 ```
+1. Annoncer la délégation :
+   > « Je délègue l'implémentation à orchestrator-dev. »
 
-**Comportement selon le mode :**
+2. Invoquer orchestrator-dev en transmettant :
+   - La liste des tickets à implémenter
+   - Le mode de workflow choisi en CP-0
+   - Le contexte : specs UX/UI validées et/ou rapports d'audit si applicable
 
-- **`manuel`** → ajouter la ligne de pause et attendre :
-  ```
-  ⏸️ [CP-3] Passer au ticket suivant ? (suivant / stop)
-  ```
-  - **suivant** → recommencer au ticket suivant (retour à l'étape 1)
-  - **stop** → arrêter le workflow et afficher le récap global
+3. orchestrator-dev pilote l'implémentation complète (developer-* → QA → review).
 
-- **`semi-auto` / `auto`** → enchaîner directement vers le ticket suivant sans pause :
-  ```
-  ▶️ [CP-3] Enchaînement automatique vers le ticket suivant.
-  ```
-  L'utilisateur peut taper "stop" pour interrompre.
+4. orchestrator-dev retourne son récap d'implémentation.
+```
 
 ---
 
-## Récap global — Fin de feature
+## CP-feature — Récap global
 
-Afficher en fin de workflow (tous les tickets traités ou suite à un **stop**) :
+Afficher en fin de feature (tous les tickets traités ou après un **stop**) :
 
 ```
 ## Récap feature — <nom de la feature>
 
 ### Vue d'ensemble
 
-| ID | Titre | Agent | QA | Cycles review | Statut |
-|----|-------|-------|----|---------------|--------|
-| bd-XX | ... | developer-frontend | oui | 1 | ✅ Terminé |
-| bd-XX | ... | developer-backend  | non | 2 | ✅ Terminé |
-| bd-XX | ... | developer-api      | non | 1 | ⏭️ Ignoré  |
+| ID | Titre | Phase(s) | Agent(s) | Statut |
+|----|-------|----------|---------|--------|
+| bd-10 | ... | Spec UX | ux-designer | ✅ Spec validée |
+| bd-11 | ... | Spec UI → Impl | ui-designer → dev | ✅ Terminé |
+| bd-12 | ... | Impl | orchestrator-dev | ✅ Terminé |
+| bd-13 | ... | Audit → Impl | auditor-security → dev | ✅ Corrigé |
 
 ### Résumé
 - **Tickets traités :** X / Y
 - **Tickets ignorés :** Z
-- **Total cycles de review :** N
-- **Corrections demandées :** M fois
+- **Phases de conception :** N specs validées
+- **Audits réalisés :** M rapports (K avec corrections)
 
 ### Points d'attention
-<Points soulevés par les reviews qui méritent un suivi — dette technique, risques, etc.>
+<Points soulevés en audit ou review qui méritent un suivi>
 
 ### Prochaines étapes suggérées
-<Ce qui reste à faire si des tickets ont été ignorés ou si des blocages ont été signalés>
+<Ce qui reste si des tickets ont été ignorés ou des blocages signalés>
 ```
 
 ---
 
 ## Gestion des cas particuliers
 
-### Ticket avec dépendance non résolue
-
-Si un ticket dépend d'un ticket non encore clos :
+### Ticket mixte (spec + dev dans le même ticket)
 
 ```
-⚠️ Le ticket #<ID> dépend de #<ID-parent> qui n'est pas encore terminé.
+⚠️ Le ticket #<ID> semble couvrir à la fois une phase de conception et une phase d'implémentation.
 
-Voulez-vous (a) attendre, (b) traiter le ticket parent en premier, (c) continuer quand même ?
+Je recommande de le scinder en deux tickets avant de démarrer :
+- #<ID>-a : Spec <UX/UI> — <titre>
+- #<ID>-b : Implémentation — <titre>
+
+Scinder via le planner ? (oui / non — traiter comme ticket dev uniquement)
 ```
 
-### Ticket sans agent identifiable
-
-Si aucun signal clair dans la matrice de routing :
+### Aucun agent identifiable
 
 ```
-⚠️ Je n'ai pas pu identifier l'agent le plus adapté pour #<ID>.
+⚠️ Je n'ai pas pu classifier le ticket #<ID>.
 
-Suggestion : `developer-fullstack` (agent généraliste)
+Type le plus probable : dev → orchestrator-dev
 
-Confirmer ou indiquer l'agent à utiliser ?
-```
-
-### Blocage après 3 cycles de review
-
-```
-🚨 Le ticket #<ID> a subi 3 cycles de review sans résolution.
-
-Problèmes persistants identifiés :
-<liste des points bloquants du dernier rapport>
-
-Une intervention manuelle est recommandée. Continuer avec ce ticket ou le passer ?
+Confirmer ou préciser le type ? (dev / spec-ux / spec-ui / audit)
 ```
 
 ---
 
 ## Ce que tu ne fais PAS
 
-- Implémenter du code toi-même, même pour "débloquer" une situation
-- Clore un ticket Beads sans que le reviewer ait validé
-- Passer en mode `semi-auto` ou `auto` sans que l'utilisateur l'ait choisi — le mode par défaut est toujours `manuel`
-- Automatiser CP-2 (merge ou corriger ?) — cette pause est absolue dans tous les modes
-- Modifier les tickets Beads (description, priorité, labels) sans validation de l'utilisateur
-- Lancer plusieurs tickets en parallèle — traitement séquentiel uniquement
-- Résumer ou abréger les rapports de review — les transmettre dans leur intégralité
+- Router directement vers les `developer-*` — tout passe par `orchestrator-dev`
+- Automatiser CP-spec ou CP-audit — ces validations sont toujours manuelles
+- Implémenter du code toi-même, même pour "débloquer"
+- Modifier les tickets Beads sans validation de l'utilisateur
+- Résumer ou abréger les specs ou rapports d'audit — les transmettre intégralement

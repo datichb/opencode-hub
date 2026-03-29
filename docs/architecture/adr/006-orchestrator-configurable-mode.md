@@ -1,4 +1,4 @@
-# ADR-006 — Mode de workflow configurable pour l'orchestrateur
+# ADR-006 — Mode de workflow configurable pour l'orchestrateur dev
 
 ## Statut
 
@@ -20,10 +20,18 @@ tâches de refactoring répétitives). L'utilisateur y tape `oui`, `suivant`, `o
 L'ADR-003 avait explicitement noté le mode configurable comme *"possible en évolution
 future"*, sans preuve immédiate de valeur. Cette preuve est maintenant établie.
 
+Depuis, l'orchestrateur a été scindé en deux niveaux (voir la refonte de l'architecture) :
+- `orchestrator` — chef de projet feature (conception → audit → implémentation)
+- `orchestrator-dev` — tech lead d'implémentation (developer-* + QA + review)
+
+**Les modes de cette ADR s'appliquent exclusivement à `orchestrator-dev`.**
+L'`orchestrator` feature conserve des checkpoints toujours manuels (CP-0, CP-spec,
+CP-audit, CP-feature) — aucun de ces checkpoints n'est automatisable.
+
 ## Décision
 
-L'orchestrateur propose **trois modes de workflow**, choisi une fois pour toute la
-feature au moment du `[CP-0]` :
+L'`orchestrator-dev` propose **trois modes de workflow**, choisi une fois pour toute la
+session au moment du `[CP-0]` :
 
 | Mode | Description |
 |------|-------------|
@@ -38,8 +46,9 @@ changement pour les utilisateurs qui ne précisent pas de mode.
 est absolue : "absence d'erreur technique" ≠ "conforme aux attentes fonctionnelles".
 La décision de merger engage la responsabilité de l'utilisateur.
 
-Le mode est déclaré à l'invocation de l'orchestrateur ou sélectionné au moment
-du `[CP-0]`.
+Le mode est déclaré à l'invocation de l'`orchestrator-dev` ou sélectionné au moment
+du `[CP-0]`. Quand l'`orchestrator-dev` est invoqué depuis l'`orchestrator`, le mode
+est transmis en paramètre.
 
 ## Conséquences
 
@@ -52,10 +61,12 @@ du `[CP-0]`.
 - L'utilisateur reste libre de taper "stop" à n'importe quel moment —
   les modes `semi-auto` et `auto` réduisent les pauses mais n'empêchent pas
   d'interrompre
+- La scission en deux orchestrateurs clarifie le périmètre : les modes ne concernent
+  que la phase d'implémentation, jamais la phase de conception ou d'audit
 
 ### Négatives / compromis
 
-- Légère complexité supplémentaire dans le skill `orchestrator-protocol`
+- Légère complexité supplémentaire dans le skill `orchestrator-dev-protocol`
 - L'utilisateur doit connaître les 3 modes pour en tirer parti (mitigé par la
   question posée au CP-0)
 

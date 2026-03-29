@@ -1,6 +1,6 @@
 # Référence des agents
 
-20 agents au total, organisés en 6 familles.
+28 agents au total, organisés en 7 familles.
 Chaque agent est défini dans `agents/<famille>/<id>.md` avec un frontmatter déclarant ses métadonnées,
 ses cibles et ses skills.
 
@@ -45,12 +45,35 @@ Agents qui pilotent d'autres agents sans jamais coder eux-mêmes.
 | **Skills** | `orchestrator/orchestrator-protocol` |
 | **Invocation** | `"Implémente [feature]"` / `"Prends en charge les tickets [IDs]"` |
 
-Coordinateur de feature. Pilote le workflow complet : planification (planner) →
-implémentation (developer-*) → qualité (qa-engineer, optionnel) → review (reviewer).
-Impose des checkpoints explicites à chaque étape. Ne code jamais.
+Chef de projet IA. Pilote la réalisation complète d'une feature en mobilisant tous
+les agents nécessaires : conception (ux-designer, ui-designer), audit (auditor-*),
+implémentation (via orchestrator-dev). Impose des checkpoints explicites à chaque
+phase. Ne code jamais.
 
 Deux modes : **Mode A** (feature en langage naturel → délègue au planner) /
 **Mode B** (tickets Beads existants → démarrage direct).
+
+Ne route jamais directement vers les `developer-*` — délègue toujours à `orchestrator-dev`.
+
+---
+
+### `orchestrator-dev`
+
+| | |
+|--|--|
+| **Label** | OrchestratorDev |
+| **Fichier** | `agents/planning/orchestrator-dev.md` |
+| **Skills** | `orchestrator/orchestrator-dev-protocol` |
+| **Invocation** | `"Implémente les tickets [IDs]"` / `"Workflow dev sur [feature]"` |
+
+Tech lead IA spécialisé dans le pilotage de l'implémentation. Prend en charge une
+liste de tickets Beads prêts à implémenter, route vers les 8 agents `developer-*`,
+supervise le QA optionnel et la review. Trois modes : `manuel` (défaut), `semi-auto`,
+`auto`. Invocable standalone ou depuis l'`orchestrator`.
+
+CP-2 (merge ou corriger ?) est toujours manuel dans tous les modes.
+
+> Voir [ADR-006](./adr/006-orchestrator-configurable-mode.md) — les modes s'appliquent à `orchestrator-dev` uniquement.
 
 ---
 
@@ -64,7 +87,7 @@ Deux modes : **Mode A** (feature en langage naturel → délègue au planner) /
 | **Invocation** | `"Audite [projet/périmètre]"` / `"Audit [domaine]"` |
 
 Coordinateur d'audit multi-domaine. Qualifie la demande (audit complet / ciblé / express)
-et délègue aux 6 sous-agents spécialisés. Produit une synthèse exécutive multi-domaines.
+et délègue aux 7 sous-agents spécialisés. Produit une synthèse exécutive multi-domaines.
 Lecture seule — ne modifie jamais de fichiers.
 
 ---
@@ -81,6 +104,7 @@ Sous-agents de l'auditeur. Tous en lecture seule. Invocables directement ou via 
 | `auditor-ecodesign` | `agents/auditor/auditor-ecodesign.md` | Éco-conception | RGESN, GreenIT, Écoindex |
 | `auditor-architecture` | `agents/auditor/auditor-architecture.md` | Architecture & dette | SOLID, Clean Architecture |
 | `auditor-privacy` | `agents/auditor/auditor-privacy.md` | Protection des données | RGPD, EDPB, CNIL |
+| `auditor-observability` | `agents/auditor/auditor-observability.md` | Observabilité | Méthode RED, SLOs, OpenTelemetry, alerting |
 
 Tous les agents d'audit injectent `auditor/audit-protocol` (format de rapport commun)
 + leur skill de domaine spécifique (`auditor/audit-<domaine>`).
@@ -89,7 +113,7 @@ Tous les agents d'audit injectent `auditor/audit-protocol` (format de rapport co
 
 ## Famille — Agents développeurs
 
-7 agents spécialisés par domaine technique. Tous suivent le même workflow Beads
+8 agents spécialisés par domaine technique. Tous suivent le même workflow Beads
 (`bd claim → implémenter → tester → bd close`).
 
 Skills communs à tous : `dev-standards-universal`, `dev-standards-security`, `dev-standards-git`, `dev-beads`.
@@ -100,11 +124,53 @@ Skills communs à tous : `dev-standards-universal`, `dev-standards-security`, `d
 | `developer-backend` | `agents/developer/developer-backend.md` | Services, repositories, migrations | `dev-standards-backend`, `dev-standards-testing` |
 | `developer-fullstack` | `agents/developer/developer-fullstack.md` | Features front + back | `dev-standards-frontend`, `dev-standards-backend`, `dev-standards-testing` |
 | `developer-data` | `agents/developer/developer-data.md` | Pipelines, ETL, ML, dbt | `dev-standards-data` |
-| `developer-devops` | `agents/developer/developer-devops.md` | Docker, CI/CD, infra | `dev-standards-devops` |
+| `developer-devops` | `agents/developer/developer-devops.md` | Docker, CI/CD, scripts shell | `dev-standards-devops` |
 | `developer-mobile` | `agents/developer/developer-mobile.md` | React Native, Flutter, iOS, Android | `dev-standards-mobile` |
 | `developer-api` | `agents/developer/developer-api.md` | REST, GraphQL, webhooks | `dev-standards-backend`, `dev-standards-testing` |
+| `developer-platform` | `agents/developer/developer-platform.md` | Terraform, K8s, Helm, GitOps, infra as code | `dev-standards-platform` |
 
 > Voir [ADR-002](./adr/002-developer-segmentation.md) pour la décision de segmentation.
+
+`developer-platform` se distingue de `developer-devops` : DevOps couvre Dockerfile,
+docker-compose, GitHub Actions et scripts shell applicatifs ; Platform couvre
+Terraform/Pulumi, manifests Kubernetes, Helm charts, ArgoCD/Flux.
+
+---
+
+## Famille — Agents de design
+
+Agents de conception UX/UI. Travaillent en amont de l'implémentation.
+Ne codent jamais. Invocables directement ou via l'`orchestrator`.
+
+### `ux-designer`
+
+| | |
+|--|--|
+| **Label** | UXDesigner |
+| **Fichier** | `agents/design/ux-designer.md` |
+| **Skills** | `designer/ux-protocol`, `developer/dev-beads` |
+| **Invocation** | `"Analyse le flow de [feature]"` / `"Spec UX pour [ticket]"` / `"Audit UX de [écran]"` |
+
+Expert en expérience utilisateur. Analyse les besoins, identifie les frictions,
+produit des user flows textuels et des spécifications UX actionnables avec critères
+d'acceptance. Pose au moins 2 questions de contexte avant de spécifier.
+Lit et clôt les tickets Beads. Ne produit pas de maquettes graphiques.
+
+---
+
+### `ui-designer`
+
+| | |
+|--|--|
+| **Label** | UIDesigner |
+| **Fichier** | `agents/design/ui-designer.md` |
+| **Skills** | `designer/ui-protocol`, `developer/dev-beads` |
+| **Invocation** | `"Spec UI pour [composant]"` / `"Design system [projet]"` / `"Harmonise [écran]"` |
+
+Expert en design d'interface. Définit les fondations d'un design system (tokens),
+spécifie les composants visuels avec variants et états, produit des guidelines UI
+actionnables pour `developer-frontend`. Utilise uniquement des tokens — jamais de
+valeurs en dur. Propose toujours des options pour les décisions de direction artistique.
 
 ---
 
@@ -206,8 +272,9 @@ Principe directeur : **explorer → adapter ou proposer → attendre si nécessa
 
 ## Règles communes à tous les agents
 
-- **Agents en lecture seule** : auditor-*, reviewer, debugger — ne modifient jamais de fichiers
+- **Agents en lecture seule** : auditor-*, reviewer, debugger, ux-designer, ui-designer — ne modifient jamais de fichiers
 - **Agents qui écrivent du code** : developer-*, qa-engineer — modifient uniquement les fichiers de leur domaine
 - **Agents qui écrivent de la documentation** : documentarian — modifie uniquement les fichiers de documentation
 - **Agents qui créent des tickets** : planner (tickets feature), debugger (tickets bug après confirmation)
 - **Agents qui lisent les tickets** : tous peuvent faire `bd show <ID>` pour contextualiser leur travail
+- **Agents coordinateurs** : orchestrator, orchestrator-dev, auditor — ne codent jamais, pilotent d'autres agents

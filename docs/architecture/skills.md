@@ -40,8 +40,9 @@ Skills de standards de développement. Partagés entre les agents développeurs 
 | `developer/dev-standards-testing.md` | developer-frontend, developer-backend, developer-fullstack, developer-api, qa-engineer | Stratégie de tests, coverage, TDD, Vitest, pytest, PHPUnit |
 | `developer/dev-standards-git.md` | Tous les developer-*, reviewer | Conventional Commits, branches, PR, messages de commit |
 | `developer/dev-standards-data.md` | developer-data | Pipelines de données, ETL, ML, dbt, Airflow, qualité des données |
-| `developer/dev-standards-devops.md` | developer-devops | Docker, CI/CD, scripts shell (`set -euo pipefail`), Terraform, sécurité infra |
+| `developer/dev-standards-devops.md` | developer-devops | Docker, CI/CD, scripts shell (`set -euo pipefail`) |
 | `developer/dev-standards-mobile.md` | developer-mobile | React Native, Flutter, Swift, Kotlin, patterns mobile, performance |
+| `developer/dev-standards-platform.md` | developer-platform | Terraform, Pulumi, Kubernetes, Helm, GitOps (ArgoCD/Flux), secrets à l'échelle (Vault, ESO) |
 
 ---
 
@@ -58,6 +59,7 @@ Skills d'audit. Tous les agents auditor-* injectent `audit-protocol` + leur skil
 | `auditor/audit-ecodesign.md` | auditor-ecodesign | RGESN, GreenIT, Écoindex, transfert de données, ressources, obsolescence |
 | `auditor/audit-architecture.md` | auditor-architecture | SOLID, Clean Architecture, dette technique, couplage, cohésion |
 | `auditor/audit-privacy.md` | auditor-privacy | RGPD articles 5/6/17/25/32, EDPB, CNIL, minimisation, consentement |
+| `auditor/audit-observability.md` | auditor-observability | Méthode RED (Rate/Errors/Duration), logs structurés, OpenTelemetry, SLOs/error budget, alerting (actionnable, runbooks), dashboards, grille des 5 questions |
 
 ---
 
@@ -65,7 +67,8 @@ Skills d'audit. Tous les agents auditor-* injectent `audit-protocol` + leur skil
 
 | Fichier | Agents qui l'utilisent | Contenu |
 |---------|----------------------|---------|
-| `orchestrator/orchestrator-protocol.md` | orchestrator | Workflow ticket par ticket, matrice de routing (7 signaux → 7 agents), format des 5 checkpoints ([CP-0] à [CP-3] + [CP-QA]), format du compte rendu d'étape et du récap global, gestion des cas particuliers |
+| `orchestrator/orchestrator-protocol.md` | orchestrator | Workflow feature complet, matrice de routing (3 familles : design, auditor, dev via orchestrator-dev), format des checkpoints ([CP-0], [CP-spec], [CP-audit], [CP-feature]), gestion des cas particuliers |
+| `orchestrator/orchestrator-dev-protocol.md` | orchestrator-dev | Workflow Beads ticket par ticket, matrice de routing developer-* (8 signaux → 8 agents), format des checkpoints ([CP-1] à [CP-3] + [CP-QA]), 3 modes (manuel/semi-auto/auto), format du compte rendu d'étape et du récap global |
 
 ---
 
@@ -115,10 +118,22 @@ Skills de documentation. Utilisés par l'agent `documentarian`.
 
 ---
 
+## Domaine — `designer/`
+
+Skills de design. Utilisés par les agents `ux-designer` et `ui-designer`.
+
+| Fichier | Agents qui l'utilisent | Contenu |
+|---------|----------------------|---------|
+| `designer/ux-protocol.md` | ux-designer | Heuristiques Nielsen (10 principes), grille des 5 questions UX, format user flow (nominal/alternatifs/erreurs), format spec UX avec critères d'acceptance, protocole d'audit friction |
+| `designer/ui-protocol.md` | ui-designer | Tokens de design (couleurs, typographie, espacement, radius, ombres), format spec composant (variants/états/tokens/do-don't), règles de cohérence visuelle, protocole d'audit d'incohérences, échelle modulaire typographique |
+
+---
+
 ## Matrice de dépendances agents ↔ skills
 
 ```
 orchestrator          → orchestrator/orchestrator-protocol
+orchestrator-dev      → orchestrator/orchestrator-dev-protocol
 planner               → developer/dev-beads, planning/planner
 reviewer              → dev-standards-universal, dev-standards-security,
                          dev-standards-backend,
@@ -135,6 +150,9 @@ auditor-accessibility → auditor/audit-protocol, auditor/audit-accessibility
 auditor-ecodesign     → auditor/audit-protocol, auditor/audit-ecodesign
 auditor-architecture  → auditor/audit-protocol, auditor/audit-architecture
 auditor-privacy       → auditor/audit-protocol, auditor/audit-privacy
+auditor-observability → auditor/audit-protocol, auditor/audit-observability
+ux-designer           → designer/ux-protocol, developer/dev-beads
+ui-designer           → designer/ui-protocol, developer/dev-beads
 developer-frontend    → dev-standards-universal, dev-standards-security,
                          dev-standards-frontend,
                          dev-standards-frontend-a11y, dev-standards-vuejs,
@@ -159,6 +177,9 @@ developer-mobile      → dev-standards-universal, dev-standards-security,
 developer-api         → dev-standards-universal, dev-standards-security,
                          dev-standards-backend,
                          dev-standards-testing, dev-standards-git, dev-beads
+developer-platform    → dev-standards-universal, dev-standards-security,
+                         dev-standards-platform,
+                         dev-standards-git, dev-beads
 documentarian         → dev-standards-git, dev-beads,
                          documentarian/doc-protocol, documentarian/doc-standards,
                          documentarian/doc-adr, documentarian/doc-api,
