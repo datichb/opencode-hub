@@ -68,7 +68,7 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
   CP-audit/CP-feature
 - `agents/auditor/auditor.md` : ajout de `auditor-observability` dans la table des sous-agents,
   tableau de synthèse multi-domaines et exemples d'invocation
-- `docs/architecture/agents.md` : mise à jour du total (28 agents, 7 familles), ajout famille
+- `docs/architecture/agents.md` : mise à jour du total (25 agents, 7 familles), ajout famille
   design/, `orchestrator-dev`, `developer-platform`, `auditor-observability`, refonte description
   `orchestrator`
 - `docs/architecture/skills.md` : ajout domaine `designer/`, `dev-standards-platform`,

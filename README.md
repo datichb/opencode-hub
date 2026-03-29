@@ -13,7 +13,7 @@ Les outils IA fonctionnent en silo. opencode-hub centralise tout :
 
 - Agents et rôles définis **une seule fois**, déployés partout
 - Skills (protocoles, standards) **injectés automatiquement** au déploiement
-- 20 agents spécialisés : orchestrateur, planificateur, documentariste, 7 développeurs, QA, debugger, reviewer, 6 auditeurs
+- 25 agents spécialisés : orchestrateur, orchestrateur-dev, planificateur, documentariste, 2 designers, 8 développeurs, QA, debugger, reviewer, 7 auditeurs
 - Projets enregistrés et lancés via **une commande unique**
 - Workflow Beads intégré pour la **gestion des tâches**
 
@@ -54,9 +54,9 @@ oc start MON-APP
 | Document | Description |
 |----------|-------------|
 | [Vue d'ensemble](docs/architecture/overview.md) | Concepts, diagrammes de flux, principes de design |
-| [Agents](docs/architecture/agents.md) | Référence exhaustive des 20 agents |
+| [Agents](docs/architecture/agents.md) | Référence exhaustive des 25 agents |
 | [Skills](docs/architecture/skills.md) | Référence exhaustive des skills et leurs dépendances |
-| [ADR](docs/architecture/adr/) | Décisions architecturales (5 ADR) |
+| [ADR](docs/architecture/adr/) | Décisions architecturales (6 ADR) |
 
 ### Référence
 
@@ -71,10 +71,11 @@ oc start MON-APP
 
 | Famille | Agents |
 |---------|--------|
-| Coordinateurs | `orchestrator`, `auditor` |
-| Développeurs | `developer-frontend`, `developer-backend`, `developer-fullstack`, `developer-data`, `developer-devops`, `developer-mobile`, `developer-api` |
+| Coordinateurs | `orchestrator`, `orchestrator-dev`, `auditor` |
+| Développeurs | `developer-frontend`, `developer-backend`, `developer-fullstack`, `developer-data`, `developer-devops`, `developer-mobile`, `developer-api`, `developer-platform` |
+| Design | `ux-designer`, `ui-designer` |
 | Qualité | `reviewer`, `qa-engineer`, `debugger` |
-| Audit | `auditor-security`, `auditor-performance`, `auditor-accessibility`, `auditor-ecodesign`, `auditor-architecture`, `auditor-privacy` |
+| Audit | `auditor-security`, `auditor-performance`, `auditor-accessibility`, `auditor-ecodesign`, `auditor-architecture`, `auditor-privacy`, `auditor-observability` |
 | Planification | `planner` |
 | Documentation | `documentarian` |
 

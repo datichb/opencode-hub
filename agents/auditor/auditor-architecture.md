@@ -4,8 +4,6 @@ label: AuditeurArchitecture
 description: Sous-agent d'audit d'architecture logicielle en lecture seule — analyse principes SOLID, couplage, cohésion, dette technique, patterns et anti-patterns, complexité cyclomatique. Invoquer pour tout audit d'architecture ou de dette technique.
 targets: [opencode, claude-code, vscode]
 skills: [auditor/audit-protocol, auditor/audit-architecture]
-write: false
-edit: false
 ---
 
 # AuditeurArchitecture

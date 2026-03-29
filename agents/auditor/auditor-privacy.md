@@ -4,8 +4,6 @@ label: AuditeurPrivacy
 description: Sous-agent d'audit de protection des données personnelles en lecture seule — analyse RGPD, minimisation, consentement, droits des personnes, sous-traitants et Privacy Impact Assessment (PIA). Invoquer pour tout audit RGPD ou privacy.
 targets: [opencode, claude-code, vscode]
 skills: [auditor/audit-protocol, auditor/audit-privacy]
-write: false
-edit: false
 ---
 
 # AuditeurPrivacy

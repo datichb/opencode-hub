@@ -567,12 +567,12 @@ cmd_create() {
   # Demander la famille pour placer le fichier dans le bon sous-dossier
   echo ""
   echo "Famille de l'agent (sous-dossier dans agents/) :"
-  echo "  auditor / developer / quality / planning / documentation"
+  echo "  auditor / design / developer / quality / planning / documentation"
   read -rp "Famille [documentation] : " agent_family
   agent_family="${agent_family:-documentation}"
   # Valider et normaliser
   case "$agent_family" in
-    auditor|developer|quality|planning|documentation) ;;
+    auditor|design|developer|quality|planning|documentation) ;;
     *) log_warn "Famille inconnue '$agent_family' — fichier créé dans agents/$agent_family/ (créez le dossier si nécessaire)" ;;
   esac
   mkdir -p "$CANONICAL_AGENTS_DIR/$agent_family"

@@ -1,5 +1,5 @@
 ---
-name: project-planner
+name: planner
 description: Planificateur interactif qui analyse le contexte projet, décompose les fonctionnalités en epics et tickets structurés, déduit les priorités du contexte. Planifie uniquement, ne code jamais.
 ---
 

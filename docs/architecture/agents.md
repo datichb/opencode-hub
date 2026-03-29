@@ -1,6 +1,6 @@
 # Référence des agents
 
-28 agents au total, organisés en 7 familles.
+25 agents au total, organisés en 7 familles.
 Chaque agent est défini dans `agents/<famille>/<id>.md` avec un frontmatter déclarant ses métadonnées,
 ses cibles et ses skills.
 
@@ -236,7 +236,7 @@ Ne corrige jamais le bug.
 |--|--|
 | **Label** | ProjectPlanner |
 | **Fichier** | `agents/planning/planner.md` |
-| **Skills** | `developer/dev-beads`, `planner` |
+| **Skills** | `developer/dev-beads`, `planning/planner` |
 | **Invocation** | Description d'une feature en langage naturel |
 
 Consultant fonctionnel et technique qui analyse le contexte projet avant de planifier.
