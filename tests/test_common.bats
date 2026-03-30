@@ -110,6 +110,12 @@ EOF
   [ "$status" -ne 0 ]
 }
 
+@test "project_exists : ne matche pas un préfixe de PROJECT_ID (sous-chaîne)" {
+  # PROJ-FR existe, mais PROJ ne doit pas matcher
+  run project_exists "PROJ"
+  [ "$status" -ne 0 ]
+}
+
 # ── normalize_project_id ──────────────────────────────────────────────────────
 
 @test "normalize_project_id : convertit en majuscules" {
@@ -139,6 +145,18 @@ provider=anthropic
 api_key=sk-ant-testkey
 EOF
   run api_keys_entry_exists "INEXISTANT"
+  [ "$status" -ne 0 ]
+}
+
+@test "api_keys_entry_exists : ne matche pas un préfixe de section (sous-chaîne)" {
+  cat > "$API_KEYS_FILE" <<'EOF'
+[PROJ-FULL]
+model=claude-opus-4-5
+provider=anthropic
+api_key=sk-ant-testkey
+EOF
+  # [PROJ] ne doit pas matcher [PROJ-FULL]
+  run api_keys_entry_exists "PROJ"
   [ "$status" -ne 0 ]
 }
 

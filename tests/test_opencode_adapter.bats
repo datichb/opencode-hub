@@ -76,11 +76,11 @@ teardown() {
 
 @test "_build_provider_block : bloc anthropic est du JSON valide (partiel encapsulé)" {
   printf '[PROJ-ANT]\nmodel=claude-opus-4-5\nprovider=anthropic\napi_key=sk-ant-test123\n' > "$API_KEYS_FILE"
+  command -v jq &>/dev/null || skip "jq non disponible"
   block=$(_build_provider_block "PROJ-ANT")
   # Encapsuler dans un objet JSON pour valider la syntaxe
-  run bash -c "command -v jq &>/dev/null && echo '{' \"\$1\" '}' | jq . >/dev/null" _ "$block"
-  # Si jq absent, on skip la validation syntaxique (pas bloquant)
-  true
+  run bash -c "echo '{'  '$1'  '}' | jq . >/dev/null" _ "$block"
+  [ "$status" -eq 0 ]
 }
 
 # ── _build_provider_block : litellm ──────────────────────────────────────────
@@ -99,9 +99,8 @@ teardown() {
   run _build_provider_block "PROJ-LIT2"
   [ "$status" -eq 0 ]
   echo "$output" | grep -q '"litellm"'
-  # Pas de baseURL dans la sortie
-  run bash -c "echo \"\$1\" | grep -q 'baseURL'" _ "$output"
-  [ "$status" -ne 0 ]
+  # Vérifier que baseURL est absent de la sortie (sans écraser $output avec un second run)
+  ! echo "$output" | grep -q 'baseURL'
 }
 
 # ── Génération opencode.json via adapter_deploy ───────────────────────────────

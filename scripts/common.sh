@@ -94,9 +94,11 @@ get_project_path() {
 }
 
 # Vérifie qu'un projet existe dans projects.md
+# Utilise une comparaison de ligne exacte pour éviter les faux positifs
+# (ex: "## PROJ" ne doit pas matcher "## PROJ-FR")
 project_exists() {
   local id="$1"
-  grep -qF "## ${id}" "$PROJECTS_FILE" 2>/dev/null
+  awk -v section="## ${id}" '$0 == section { found=1; exit } END { exit !found }' "$PROJECTS_FILE" 2>/dev/null
 }
 
 # Vérifie qu'un chemin existe dans paths.local.md
@@ -189,10 +191,12 @@ get_project_api_base_url() {
 }
 
 # Vérifie si une section [PROJECT_ID] existe dans api-keys.local.md
+# Utilise une comparaison de ligne exacte pour éviter les faux positifs
+# (ex: "[PROJ]" ne doit pas matcher "[PROJ-FULL]")
 api_keys_entry_exists() {
   local id="$1"
   [ -f "$API_KEYS_FILE" ] || return 1
-  grep -qF "[${id}]" "$API_KEYS_FILE"
+  awk -v section="[${id}]" '$0 == section { found=1; exit } END { exit !found }' "$API_KEYS_FILE"
 }
 
 # Supprime une section [PROJECT_ID] complète de api-keys.local.md
