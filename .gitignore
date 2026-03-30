@@ -1,5 +1,6 @@
 projects/projects.md
 projects/paths.local.md
+projects/api-keys.local.md
 .DS_Store
 
 # Sorties générées par oc deploy — ne pas committer

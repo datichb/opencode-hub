@@ -7,6 +7,7 @@ HUB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROJECTS_FILE="$HUB_DIR/projects/projects.md"
 PROJECTS_EXAMPLE_FILE="$HUB_DIR/projects/projects.example.md"
 PATHS_FILE="$HUB_DIR/projects/paths.local.md"
+API_KEYS_FILE="$HUB_DIR/projects/api-keys.local.md"
 SKILLS_DIR="$HUB_DIR/skills"
 SCRIPTS_DIR="$HUB_DIR/scripts"
 
@@ -135,4 +136,53 @@ detect_os() {
     Darwin*) echo "macos" ;;
     *)       echo "unknown" ;;
   esac
+}
+
+# ─────────────────────────────────────────
+# API KEYS — parser INI-like (api-keys.local.md)
+# ─────────────────────────────────────────
+# Format attendu dans api-keys.local.md :
+#   [PROJECT_ID]
+#   model=claude-opus-4-5
+#   provider=anthropic
+#   api_key=sk-ant-...
+#   base_url=https://...    # optionnel
+
+# Lit une clé INI pour une section donnée
+# Usage : _api_keys_get <PROJECT_ID> <key>
+_api_keys_get() {
+  local id="$1" key="$2"
+  [ -f "$API_KEYS_FILE" ] || return 0
+  awk -v section="[${id}]" -v key="${key}" '
+    $0 == section { found=1; next }
+    found && /^\[/ { found=0 }
+    found && $0 ~ "^" key "=" { sub(/^[^=]+=/, ""); print; exit }
+  ' "$API_KEYS_FILE"
+}
+
+# Retourne le modèle configuré pour un projet (vide si absent)
+get_project_api_model() {
+  _api_keys_get "$1" "model"
+}
+
+# Retourne le provider configuré pour un projet (vide si absent)
+get_project_api_provider() {
+  _api_keys_get "$1" "provider"
+}
+
+# Retourne la clé API configurée pour un projet (vide si absent)
+get_project_api_key() {
+  _api_keys_get "$1" "api_key"
+}
+
+# Retourne la base URL configurée pour un projet (vide si absent)
+get_project_api_base_url() {
+  _api_keys_get "$1" "base_url"
+}
+
+# Vérifie si une section [PROJECT_ID] existe dans api-keys.local.md
+api_keys_entry_exists() {
+  local id="$1"
+  [ -f "$API_KEYS_FILE" ] || return 1
+  grep -q "^\[${id}\]$" "$API_KEYS_FILE"
 }

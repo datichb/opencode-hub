@@ -11,7 +11,33 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 
 ### Added
 
-- Agent `onboarder` (famille planning/) : découverte d'un projet existant en lecture
+- Commande `oc config` : gestion des clés API et modèles IA par projet — sous-commandes
+  `set` (flux interactif avec saisie masquée de la clé), `get`, `list`, `unset` ; stockage
+  local dans `projects/api-keys.local.md` (non versionné) au format INI-like ; providers
+  supportés : `anthropic` (clé directe) et `litellm` / compatible OpenAI (avec `base_url`)
+- `scripts/cmd-config.sh` : implémentation complète de la commande — parser INI-like,
+  affichage masqué des clés (8 premiers caractères + `***`), proposition automatique de
+  re-déploiement après `set`
+- `scripts/common.sh` : parser INI-like (`_api_keys_get`), fonctions `get_project_api_model`,
+  `get_project_api_provider`, `get_project_api_key`, `get_project_api_base_url`,
+  `api_keys_entry_exists` ; constante `API_KEYS_FILE`
+
+### Changed
+
+- `scripts/adapters/opencode.adapter.sh` : `_get_opencode_model()` lit désormais
+  `api-keys.local.md` en priorité (niveau 1 avant `$OPENCODE_MODEL` et `hub.json`) ;
+  `adapter_deploy()` génère le bloc `provider` complet dans `opencode.json` si une clé est
+  configurée pour le projet, régénère le fichier à chaque déploiement dans ce cas,
+  applique `chmod 600` et ajoute `opencode.json` au `.gitignore` du projet cible
+- `scripts/adapters/claude-code.adapter.sh` : `adapter_start()` injecte `ANTHROPIC_API_KEY`
+  depuis `api-keys.local.md` si une clé est configurée pour le projet
+- `oc.sh` : ajout du case `config)` dans le dispatcher
+- `scripts/cmd-help.sh` : section "Configuration API" avec les 4 sous-commandes
+- `docs/reference/config.md` : sections `projects/api-keys.local.md`, `oc config` et
+  `opencode.json` mises à jour (formats avec/sans clé, règle `.gitignore`, priorité modèle)
+- `.gitignore` : ajout de `projects/api-keys.local.md`
+
+ (famille planning/) : découverte d'un projet existant en lecture
   seule — détecte la stack, explore adaptativement les fichiers structurants selon le
   profil (Vue, React, Node.js, Python, API, Data/ML, DevOps/Platform, Mobile), lit les
   tickets Beads et ADRs existants, produit un rapport de contexte structuré (stack,

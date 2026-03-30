@@ -74,5 +74,15 @@ adapter_start() {
   local project_path="$1" prompt="${2:-}"
   command -v claude &>/dev/null || { log_error "[claude-code] Non installé → oc install (puis sélectionner Claude Code)"; exit 1; }
   cd "$project_path" || { log_error "[claude-code] Impossible de naviguer vers $project_path"; exit 1; }
+
+  # Injecter ANTHROPIC_API_KEY si une clé est configurée pour ce projet
+  if [ -n "${PROJECT_ID:-}" ] && api_keys_entry_exists "${PROJECT_ID}"; then
+    local api_key; api_key=$(get_project_api_key "${PROJECT_ID}")
+    if [ -n "$api_key" ]; then
+      export ANTHROPIC_API_KEY="$api_key"
+      log_info "[claude-code] Clé API projet injectée (ANTHROPIC_API_KEY)"
+    fi
+  fi
+
   [ -n "$prompt" ] && exec claude --print "$prompt" || exec claude
 }
