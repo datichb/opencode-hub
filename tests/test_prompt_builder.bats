@@ -171,3 +171,39 @@ EOF
   [ "$status" -eq 0 ]
   echo "$output" | grep -q "Aucun ticket"
 }
+
+# ── Intégrité skills ↔ agents ─────────────────────────────────────────────────
+
+@test "intégrité : chaque skill référencé dans un agent existe sur le disque" {
+  local hub_dir="$BATS_TEST_DIRNAME/.."
+  local real_skills_dir="$hub_dir/skills"
+  local real_agents_dir="$hub_dir/agents"
+  local missing=""
+
+  for agent_file in "$real_agents_dir"/*/*.md; do
+    local agent_id
+    agent_id=$(basename "$agent_file" .md)
+
+    # Extraire la liste de skills du frontmatter
+    local skills_line
+    skills_line=$(awk '/^---$/{n++; next} n==1 && /^skills:/' "$agent_file")
+    [ -z "$skills_line" ] && continue
+
+    # Parser la liste [a, b, c]
+    local skills_csv
+    skills_csv=$(echo "$skills_line" | sed 's/^skills: *\[//;s/\] *$//')
+    local IFS=','
+    for skill in $skills_csv; do
+      skill=$(echo "$skill" | sed 's/^ *//;s/ *$//')
+      local skill_file="$real_skills_dir/${skill}.md"
+      if [ ! -f "$skill_file" ]; then
+        missing="${missing}  ${agent_id} → ${skill}\n"
+      fi
+    done
+  done
+
+  if [ -n "$missing" ]; then
+    echo -e "Skills manquants :\n${missing}"
+    return 1
+  fi
+}
