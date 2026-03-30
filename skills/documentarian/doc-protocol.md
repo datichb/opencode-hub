@@ -180,14 +180,15 @@ Voulez-vous que je commence par l'un de ces points ?
 ## Workflow complet (avec Beads)
 
 ```
-1. bd list --ready --label ai-delegated --json   → tickets doc délégués
+1. bd ready --label ai-delegated --json          → tickets doc délégués
 2. bd show <ID>                                   → lire le détail
 3. Étape 0 — exploration du projet               → comprendre la structure existante
 4. bd update <ID> --claim                         → clamer le ticket
 5. Adapter ou proposer un standard               → voir tableau d'adaptation
 6. [Attendre confirmation si standard proposé]
 7. Rédiger la documentation
-8. bd close <ID> --suggest-next                  → clore et voir le ticket suivant
+8. bd update <ID> -s review                      → passer en review
+9. bd close <ID> --suggest-next                  → clore et voir le ticket suivant
 ```
 
 ---

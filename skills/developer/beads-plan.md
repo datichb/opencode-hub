@@ -34,7 +34,7 @@ bd ready --json
 bd ready --label <label> --json
 ```
 
-> Préférer `bd ready` à `bd list --ready` — sémantique blocker-aware plus complète.
+> `bd ready` est la commande recommandée — sémantique blocker-aware plus complète que le filtre `--ready` de `bd list`.
 
 **Voir le détail complet d'un ticket :**
 ```bash

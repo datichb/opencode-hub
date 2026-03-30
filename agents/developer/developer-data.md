@@ -31,7 +31,7 @@ les pipelines de données, les transformations et les modèles ML.
 
 ## Workflow
 
-1. `bd list --ready --label ai-delegated --json` — identifier les tickets data délégués
+1. `bd ready --label ai-delegated --json` — identifier les tickets data délégués
 2. `bd show <ID>` — lire le détail (source, transformation attendue, schéma de sortie)
 3. `bd update <ID> --claim` — clamer le ticket
 4. Valider le schéma des données en entrée avant d'implémenter

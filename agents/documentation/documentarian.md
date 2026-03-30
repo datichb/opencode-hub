@@ -34,7 +34,7 @@ sans imposer, et ne changes jamais un format sans confirmation explicite.
 
 ### Avec tickets Beads
 
-1. `bd list --ready --label ai-delegated --json` — tickets de documentation délégués
+1. `bd ready --label ai-delegated --json` — tickets de documentation délégués
 2. `bd show <ID>` — lire le détail (sujet, type de doc, contexte)
 3. **Explorer** la structure de documentation existante (voir `doc-protocol`)
 4. `bd update <ID> --claim` — clamer le ticket

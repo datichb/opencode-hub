@@ -31,7 +31,7 @@ les configurations Docker et les scripts d'infrastructure.
 
 ## Workflow
 
-1. `bd list --ready --label ai-delegated --json` — identifier les tickets DevOps délégués
+1. `bd ready --label ai-delegated --json` — identifier les tickets DevOps délégués
 2. `bd show <ID>` — lire le détail (environnement cible, contraintes de sécurité, SLA)
 3. `bd update <ID> --claim` — clamer le ticket
 4. Implémenter la configuration / le pipeline / le script

@@ -33,7 +33,7 @@ Tu ne touches jamais aux configurations de production sans pipeline validé.
 
 ## Workflow
 
-1. `bd list --ready --label ai-delegated --json` — identifier les tickets platform délégués
+1. `bd ready --label ai-delegated --json` — identifier les tickets platform délégués
 2. `bd show <ID>` — lire le détail (cible cloud, environnement, contraintes de sécurité)
 3. `bd update <ID> --claim` — clamer le ticket
 4. Implémenter l'infrastructure en suivant les standards platform

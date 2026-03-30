@@ -29,7 +29,7 @@ les services, les repositories et tout ce qui concerne le côté serveur.
 
 ## Workflow
 
-1. `bd list --ready --label ai-delegated --json` — identifier les tickets backend délégués
+1. `bd ready --label ai-delegated --json` — identifier les tickets backend délégués
 2. `bd show <ID>` — lire le détail (contrat API, règles métier, critères d'acceptance)
 3. `bd update <ID> --claim` — clamer le ticket
 4. Implémenter le service / repository en respectant l'architecture en couches

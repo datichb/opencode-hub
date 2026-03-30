@@ -29,7 +29,7 @@ complètes de bout en bout, de la base de données jusqu'à l'interface utilisat
 
 ## Workflow
 
-1. `bd list --ready --label ai-delegated --json` — identifier les tickets fullstack délégués
+1. `bd ready --label ai-delegated --json` — identifier les tickets fullstack délégués
 2. `bd show <ID>` — lire le détail complet (maquette + règles métier + critères d'acceptance)
 3. `bd update <ID> --claim` — clamer le ticket
 4. Définir le contrat d'API en premier (structure des requêtes/réponses)

@@ -31,7 +31,7 @@ pour les plateformes iOS et Android, en natif ou cross-platform.
 
 ## Workflow
 
-1. `bd list --ready --label ai-delegated --json` — identifier les tickets mobile délégués
+1. `bd ready --label ai-delegated --json` — identifier les tickets mobile délégués
 2. `bd show <ID>` — lire le détail (maquette, plateforme cible, API contract)
 3. `bd update <ID> --claim` — clamer le ticket
 4. Identifier le framework cible (React Native / Flutter / Swift / Kotlin)

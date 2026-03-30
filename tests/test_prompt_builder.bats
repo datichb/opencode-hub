@@ -207,3 +207,78 @@ EOF
     return 1
   fi
 }
+
+# ── Cohérence data model dans les skills ──────────────────────────────────────
+
+@test "data model : aucun skill n'utilise --priority high/medium/low (forme invalide)" {
+  local hub_dir="$BATS_TEST_DIRNAME/.."
+  local violations=""
+
+  for skill_file in "$hub_dir"/skills/*/*.md; do
+    if grep -n -- '--priority \(high\|medium\|low\)' "$skill_file" 2>/dev/null; then
+      violations="${violations}  $(basename "$skill_file")\n"
+    fi
+  done
+
+  if [ -n "$violations" ]; then
+    echo -e "Skills utilisant --priority string (invalide) :\n${violations}"
+    return 1
+  fi
+}
+
+@test "data model : aucun skill n'utilise -t decision (type supprimé)" {
+  local hub_dir="$BATS_TEST_DIRNAME/.."
+  local violations=""
+
+  for skill_file in "$hub_dir"/skills/*/*.md; do
+    if grep -n -- '-t decision' "$skill_file" 2>/dev/null; then
+      violations="${violations}  $(basename "$skill_file")\n"
+    fi
+  done
+
+  if [ -n "$violations" ]; then
+    echo -e "Skills utilisant -t decision (type supprimé) :\n${violations}"
+    return 1
+  fi
+}
+
+@test "data model : aucun skill, script ou agent n'utilise bd list --ready (utiliser bd ready)" {
+  local hub_dir="$BATS_TEST_DIRNAME/.."
+  local violations=""
+
+  for f in "$hub_dir"/skills/*/*.md "$hub_dir"/scripts/*.sh "$hub_dir"/scripts/lib/*.sh "$hub_dir"/agents/*/*.md; do
+    [ -f "$f" ] || continue
+    if grep -n 'bd list --ready' "$f" 2>/dev/null; then
+      violations="${violations}  $(basename "$f")\n"
+    fi
+  done
+
+  if [ -n "$violations" ]; then
+    echo -e "Fichiers utilisant bd list --ready (utiliser bd ready) :\n${violations}"
+    return 1
+  fi
+}
+
+@test "data model : aucun skill n'utilise -p 4 (priorité P4 supprimée)" {
+  local hub_dir="$BATS_TEST_DIRNAME/.."
+  local violations=""
+
+  for skill_file in "$hub_dir"/skills/*/*.md; do
+    if grep -n -- '-p 4' "$skill_file" 2>/dev/null; then
+      violations="${violations}  $(basename "$skill_file")\n"
+    fi
+  done
+
+  if [ -n "$violations" ]; then
+    echo -e "Skills utilisant -p 4 (P4 supprimée) :\n${violations}"
+    return 1
+  fi
+}
+
+@test "data model : build_dev_bootstrap_prompt inclut l'étape review dans le workflow" {
+  bd() { echo '[{"id":"T-1","title":"Test ticket","status":"ready"}]'; }
+  export -f bd
+  run build_dev_bootstrap_prompt "$TEST_DIR"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q "review"
+}

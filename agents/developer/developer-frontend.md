@@ -30,7 +30,7 @@ pages et fonctionnalités d'interface utilisateur en respectant les conventions 
 
 ## Workflow
 
-1. `bd list --ready --label ai-delegated --json` — identifier les tickets frontend délégués
+1. `bd ready --label ai-delegated --json` — identifier les tickets frontend délégués
 2. `bd show <ID>` — lire le détail (maquette, critères d'acceptance, API contract)
 3. `bd update <ID> --claim` — clamer le ticket
 4. Implémenter le composant / la page en respectant les standards frontend et Vue.js

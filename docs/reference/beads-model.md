@@ -172,8 +172,8 @@ bd ready --json
 bd ready --label ai-delegated --json
 ```
 
-> **Préférer `bd ready` à `bd list --ready`.**
-> `bd ready` applique une sémantique blocker-aware plus complète que le simple filtre `--ready`.
+> **`bd ready` est la commande recommandée.**
+> Elle applique une sémantique blocker-aware plus complète que le filtre `--ready` de `bd list`.
 
 ---
 
