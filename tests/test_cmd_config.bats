@@ -1,0 +1,185 @@
+#!/usr/bin/env bats
+# Tests pour les helpers de cmd-config.sh et remove_api_keys_section (common.sh)
+# Stratégie : sourcer uniquement common.sh, puis redéfinir les helpers privés
+#             (_ensure_api_keys_file, _remove_section, _write_section) inline
+#             pour éviter les dépendances de chemin de cmd-config.sh.
+
+setup() {
+  TEST_DIR="$(mktemp -d)"
+
+  # Sourcer common.sh pour les fonctions partagées
+  source "$BATS_TEST_DIRNAME/../scripts/common.sh"
+
+  # Surcharger les chemins vers des fichiers temporaires de test
+  API_KEYS_FILE="$TEST_DIR/api-keys.local.md"
+  PROJECTS_FILE="$TEST_DIR/projects.md"
+  PATHS_FILE="$TEST_DIR/paths.local.md"
+
+  # Mocks des fonctions de log
+  log_info()    { true; }
+  log_success() { true; }
+  log_warn()    { true; }
+  log_error()   { true; }
+
+  # Redéfinition des helpers privés de cmd-config.sh (même logique, sans dépendance de chemin)
+  _ensure_api_keys_file() {
+    if [ ! -f "$API_KEYS_FILE" ]; then
+      mkdir -p "$(dirname "$API_KEYS_FILE")"
+      printf '# Clés API — test\n' > "$API_KEYS_FILE"
+    fi
+  }
+
+  _remove_section() {
+    remove_api_keys_section "$1"
+  }
+
+  _write_section() {
+    local id="$1" model="$2" provider="$3" api_key="$4" base_url="$5"
+    _ensure_api_keys_file
+    if api_keys_entry_exists "$id"; then
+      _remove_section "$id"
+    fi
+    local tmp; tmp=$(mktemp)
+    {
+      echo ""
+      echo "[${id}]"
+      echo "model=${model}"
+      echo "provider=${provider}"
+      echo "api_key=${api_key}"
+      [ -n "$base_url" ] && echo "base_url=${base_url}"
+    } > "$tmp"
+    cat "$tmp" >> "$API_KEYS_FILE"
+    rm -f "$tmp"
+  }
+}
+
+teardown() {
+  rm -rf "$TEST_DIR"
+}
+
+# ── _write_section : écriture initiale ───────────────────────────────────────
+
+@test "_write_section : crée une nouvelle entrée avec les 4 champs obligatoires" {
+  _write_section "PROJ-A" "claude-opus-4-5" "anthropic" "sk-ant-abc123" ""
+  run grep -F "[PROJ-A]" "$API_KEYS_FILE"
+  [ "$status" -eq 0 ]
+  run grep "model=claude-opus-4-5" "$API_KEYS_FILE"
+  [ "$status" -eq 0 ]
+  run grep "provider=anthropic" "$API_KEYS_FILE"
+  [ "$status" -eq 0 ]
+  run grep "api_key=sk-ant-abc123" "$API_KEYS_FILE"
+  [ "$status" -eq 0 ]
+}
+
+@test "_write_section : ajoute base_url uniquement si non vide" {
+  _write_section "PROJ-B" "claude-sonnet-4-5" "litellm" "sk-bRf-xyz" "https://api.mammouth.ai/v1"
+  run grep "base_url=https://api.mammouth.ai/v1" "$API_KEYS_FILE"
+  [ "$status" -eq 0 ]
+}
+
+@test "_write_section : n'ajoute pas base_url si vide" {
+  _write_section "PROJ-C" "claude-sonnet-4-5" "anthropic" "sk-ant-xyz" ""
+  run grep "base_url" "$API_KEYS_FILE"
+  [ "$status" -ne 0 ]
+}
+
+# ── _write_section : idempotence (mise à jour) ────────────────────────────────
+
+@test "_write_section : remplace une entrée existante sans doublon" {
+  _write_section "PROJ-A" "claude-opus-4-5" "anthropic" "sk-ant-old" ""
+  _write_section "PROJ-A" "claude-sonnet-4-5" "anthropic" "sk-ant-new" ""
+
+  run grep "sk-ant-old" "$API_KEYS_FILE"
+  [ "$status" -ne 0 ]
+
+  run grep "sk-ant-new" "$API_KEYS_FILE"
+  [ "$status" -eq 0 ]
+
+  count=$(grep -cF "[PROJ-A]" "$API_KEYS_FILE")
+  [ "$count" -eq 1 ]
+}
+
+@test "_write_section : préserve les autres sections lors d'une mise à jour" {
+  _write_section "PROJ-X" "claude-opus-4-5" "anthropic" "sk-ant-x" ""
+  _write_section "PROJ-Y" "claude-sonnet-4-5" "litellm" "sk-bRf-y" "https://api.y.ai/v1"
+  _write_section "PROJ-X" "claude-haiku-4-5" "anthropic" "sk-ant-x2" ""
+
+  run grep -F "[PROJ-Y]" "$API_KEYS_FILE"
+  [ "$status" -eq 0 ]
+  run grep "sk-bRf-y" "$API_KEYS_FILE"
+  [ "$status" -eq 0 ]
+}
+
+# ── remove_api_keys_section ───────────────────────────────────────────────────
+
+@test "remove_api_keys_section : supprime la section demandée" {
+  _write_section "PROJ-DEL" "claude-opus-4-5" "anthropic" "sk-ant-del" ""
+  remove_api_keys_section "PROJ-DEL"
+
+  run grep -F "[PROJ-DEL]" "$API_KEYS_FILE"
+  [ "$status" -ne 0 ]
+}
+
+@test "remove_api_keys_section : ne touche pas aux autres sections" {
+  _write_section "PROJ-KEEP" "claude-opus-4-5" "anthropic" "sk-ant-keep" ""
+  _write_section "PROJ-DEL" "claude-sonnet-4-5" "anthropic" "sk-ant-del" ""
+  remove_api_keys_section "PROJ-DEL"
+
+  run grep -F "[PROJ-KEEP]" "$API_KEYS_FILE"
+  [ "$status" -eq 0 ]
+  run grep "sk-ant-keep" "$API_KEYS_FILE"
+  [ "$status" -eq 0 ]
+}
+
+@test "remove_api_keys_section : ne plante pas si la section est absente" {
+  printf '# Fichier vide\n' > "$API_KEYS_FILE"
+  run remove_api_keys_section "INEXISTANT"
+  [ "$status" -eq 0 ]
+}
+
+@test "remove_api_keys_section : ne plante pas si le fichier est absent" {
+  run remove_api_keys_section "PROJ-X"
+  [ "$status" -eq 0 ]
+}
+
+# ── api_keys_entry_exists ─────────────────────────────────────────────────────
+
+@test "api_keys_entry_exists : retourne 0 si la section existe" {
+  _write_section "PROJ-EXISTS" "claude-opus-4-5" "anthropic" "sk-ant-e" ""
+  run api_keys_entry_exists "PROJ-EXISTS"
+  [ "$status" -eq 0 ]
+}
+
+@test "api_keys_entry_exists : retourne non-zero si la section est absente" {
+  printf '[AUTRE]\nmodel=claude-haiku-4-5\nprovider=anthropic\napi_key=sk-ant-autre\n' > "$API_KEYS_FILE"
+  run api_keys_entry_exists "PROJ-ABSENT"
+  [ "$status" -ne 0 ]
+}
+
+@test "api_keys_entry_exists : retourne non-zero si le fichier est absent" {
+  run api_keys_entry_exists "PROJ-X"
+  [ "$status" -ne 0 ]
+}
+
+# ── Isolation de sections ────────────────────────────────────────────────────
+
+@test "get_project_api_key : les valeurs de deux sections sont indépendantes" {
+  _write_section "PROJ-1" "claude-opus-4-5" "anthropic" "sk-ant-111" ""
+  _write_section "PROJ-2" "claude-sonnet-4-5" "litellm" "sk-bRf-222" "https://api.two.ai"
+
+  run get_project_api_key "PROJ-1"
+  [ "$status" -eq 0 ]
+  [ "$output" = "sk-ant-111" ]
+
+  run get_project_api_key "PROJ-2"
+  [ "$status" -eq 0 ]
+  [ "$output" = "sk-bRf-222" ]
+}
+
+@test "get_project_api_base_url : retourne vide pour une section sans base_url" {
+  _write_section "PROJ-1" "claude-opus-4-5" "anthropic" "sk-ant-111" ""
+  _write_section "PROJ-2" "claude-sonnet-4-5" "litellm" "sk-bRf-222" "https://api.two.ai"
+
+  run get_project_api_base_url "PROJ-1"
+  [ "$output" = "" ]
+}
