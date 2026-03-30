@@ -67,36 +67,55 @@ flowchart LR
 
 ## Diagramme — Workflow orchestrateur
 
+L'orchestrateur opère en deux niveaux : `orchestrator` (chef de projet feature)
+délègue la conception, les audits, puis l'implémentation à `orchestrator-dev`
+(tech lead d'implémentation) qui pilote les agents `developer-*`.
+
 ```mermaid
 sequenceDiagram
     participant U as Utilisateur
     participant O as Orchestrator
     participant PL as Planner
+    participant DS as ux/ui-designer
+    participant AU as auditor-*
+    participant OD as OrchestratorDev
     participant DEV as Developer-*
     participant QA as QA Engineer
     participant R as Reviewer
 
     U->>O: "Implémente [feature]"
     O->>PL: Délègue la planification
-    PL-->>O: Tickets créés
-    O->>U: [CP-0] Tickets prêts — démarrer ?
+    PL-->>O: Tickets créés (spec, audit, dev)
+    O->>U: [CP-0] Plan + mode de workflow ?
 
-    loop Pour chaque ticket
-        O->>U: [CP-1] Démarrer ticket #XX ?
-        O->>DEV: Délègue l'implémentation
-        DEV-->>O: Implémentation terminée
-        O->>U: [CP-QA] Passer par le QA ? (optionnel)
-        opt QA activé
-            O->>QA: Délègue la vérification de couverture
-            QA-->>O: Tests écrits + rapport couverture
-        end
-        O->>R: Review automatique
-        R-->>O: Rapport de review
-        O->>U: [CP-2] Merger ou corriger ?
-        O->>U: [CP-3] Ticket suivant ou stop ?
+    opt Tickets spec-ux / spec-ui
+        O->>DS: Délègue la conception
+        DS-->>O: Spec produite
+        O->>U: [CP-spec] Valider la spec ?
     end
 
-    O->>U: Récap global de la feature
+    opt Tickets label:audit-*
+        O->>AU: Délègue l'audit
+        AU-->>O: Rapport d'audit
+        O->>U: [CP-audit] Corriger / accepter / ignorer ?
+    end
+
+    O->>OD: Tickets dev (+ mode transmis)
+    loop Pour chaque ticket dev
+        OD->>DEV: Délègue l'implémentation
+        DEV-->>OD: Implémentation terminée
+        opt QA activé
+            OD->>QA: Délègue la vérification
+            QA-->>OD: Tests écrits + rapport couverture
+        end
+        OD->>R: Review automatique
+        R-->>OD: Rapport de review
+        OD->>U: [CP-2] Merger ou corriger ? ← TOUJOURS PAUSE
+        OD->>U: [CP-3] Ticket suivant ou stop ?
+    end
+    OD-->>O: Récap implémentation
+
+    O->>U: [CP-feature] Récap global de la feature
 ```
 
 ---

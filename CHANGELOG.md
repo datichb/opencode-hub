@@ -19,7 +19,14 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
   injecté dans 11 agents : `auditor`, `auditor-security`, `auditor-performance`,
   `auditor-accessibility`, `auditor-ecodesign`, `auditor-architecture`, `auditor-privacy`,
   `auditor-observability`, `ux-designer`, `ui-designer`, `planner`
-
+- `docs/guides/workflows.md` : refonte complète — guide de choix d'entrée (8 situations →
+  agent recommandé), Scénario 1 réécrit pour l'architecture deux niveaux
+  (orchestrator → phases design/audit → orchestrator-dev → developer-*), Scénario 2 mis à
+  jour (7 sous-agents dont `auditor-observability`), Scénario 5 ajouté (designers standalone
+  → orchestrator-dev), Scénario 6 ajouté (documentarian — documentation d'une feature livrée)
+- `docs/architecture/overview.md` : diagramme "Workflow orchestrateur" mis à jour —
+  architecture deux niveaux avec phases conception (ux/ui-designer), audit (auditor-*),
+  implémentation (orchestrator-dev → developer-*) et CP-2 toujours pause absolue
 - Skill `developer/dev-standards-security` : pratiques de sécurité préventives
   (secrets/config, validation des inputs, injections SQL/shell/LDAP, auth/autorisation,
   logs sans données sensibles, audit des dépendances) — injecté dans tous les developer-* et reviewer

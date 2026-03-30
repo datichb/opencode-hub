@@ -1,14 +1,36 @@
 # Workflows
 
-Ce guide illustre les trois scénarios principaux d'utilisation du hub,
+Ce guide illustre les scénarios principaux d'utilisation du hub,
 de bout en bout, avec les prompts réels et les sorties attendues.
+
+---
+
+## Choisir son point d'entrée
+
+Avant d'invoquer un agent, identifiez votre situation :
+
+| Situation | Point d'entrée recommandé | Prompt type |
+|-----------|--------------------------|-------------|
+| Feature à concevoir + implémenter de zéro | `orchestrator` | `"Implémente [feature]"` |
+| Tickets Beads déjà planifiés, prêts à coder | `orchestrator-dev` | `"Implémente les tickets bd-X à bd-Y"` |
+| Spécifications UX/UI uniquement, sans implémenter | `ux-designer` / `ui-designer` | `"Spec UX pour [feature]"` |
+| Audit avant mise en production | `auditor` | `"Audite le projet"` |
+| Bug en production avec stacktrace ou logs | `debugger` | `"Ce bug : [stacktrace]"` |
+| Review d'une PR développée manuellement | `reviewer` | `"Review de ma PR — diff : [...]"` |
+| Planifier une feature sans l'implémenter | `planner` | `"Décompose [feature] en tickets"` |
+| Documenter une feature livrée ou une décision | `documentarian` | `"Documente [sujet]"` |
+
+**Règle de décision rapide :**
+- Tu as une idée → `orchestrator` (il orchestre tout, de la spec au merge)
+- Tu as des tickets prêts → `orchestrator-dev` (implémentation directe)
+- Tu as un besoin précis et délimité → l'agent spécialisé directement
 
 ---
 
 ## Scénario 1 — Feature complète (orchestrateur)
 
 **Contexte :** vous voulez implémenter une nouvelle feature de A à Z,
-depuis la planification jusqu'au merge.
+depuis la conception jusqu'au merge, en mobilisant tous les agents nécessaires.
 
 ### Diagramme
 
@@ -17,6 +39,10 @@ sequenceDiagram
     participant U as Utilisateur
     participant O as Orchestrator
     participant PL as Planner
+    participant UX as ux-designer
+    participant UI as ui-designer
+    participant AU as auditor-*
+    participant OD as OrchestratorDev
     participant DEV as Developer-*
     participant QA as QA Engineer
     participant R as Reviewer
@@ -24,28 +50,39 @@ sequenceDiagram
     U->>O: "Implémente l'authentification JWT"
     O->>PL: Délègue la planification
     PL->>PL: Clarification → découpage → bd create
-    PL-->>O: 4 tickets créés (bd-1 à bd-4)
-    O->>U: [CP-0] "4 tickets prêts — démarrer ?"
-    U->>O: "oui"
+    PL-->>O: 6 tickets créés (bd-1 à bd-6)
+    O->>U: [CP-0] Plan + mode de workflow ? (manuel/semi-auto/auto)
+    U->>O: "semi-auto"
 
+    O->>UX: Ticket spec-ux (bd-1)
+    UX-->>O: Spec UX — flow login/register
+    O->>U: [CP-spec] Valider la spec UX ?
+    U->>O: "valider"
+
+    O->>UI: Ticket spec-ui (bd-2)
+    UI-->>O: Spec UI — composants + tokens
+    O->>U: [CP-spec] Valider la spec UI ?
+    U->>O: "valider"
+
+    O->>AU: Ticket label:audit-security (bd-3)
+    AU-->>O: Rapport audit sécurité
+    O->>U: [CP-audit] Corriger / accepter / ignorer ?
+    U->>O: "corriger → ajouter ticket bd-7"
+
+    O->>OD: Tickets dev bd-4, bd-5, bd-6, bd-7 (mode semi-auto transmis)
     loop Pour chaque ticket
-        O->>U: [CP-1] "Démarrer ticket bd-1 — Créer le modèle User ?"
-        U->>O: "oui"
-        O->>DEV: developer-backend — bd-1
-        DEV-->>O: Implémentation terminée
-        O->>U: [CP-QA] "Passer par le QA ?"
-        U->>O: "oui"
-        O->>QA: Analyse du diff + bd-1
-        QA-->>O: 8 tests écrits, couverture 85%
-        O->>R: Review diff complet (code + tests)
-        R-->>O: Rapport : 1 Mineur, 3 Suggestions
-        O->>U: [CP-2] "Merger ou corriger ?"
-        U->>O: "merge"
-        O->>U: [CP-3] "Ticket suivant ?"
-        U->>O: "suivant"
+        OD->>DEV: Délègue l'implémentation (auto en semi-auto)
+        DEV-->>OD: Implémentation terminée
+        OD->>QA: QA (si activé au CP-QA)
+        QA-->>OD: Tests écrits
+        OD->>R: Review automatique
+        R-->>OD: Rapport de review
+        OD->>U: [CP-2] Merger ou corriger ? ← TOUJOURS PAUSE
+        U->>OD: "merge"
     end
+    OD-->>O: Récap implémentation
 
-    O->>U: Récap global — 4 tickets traités
+    O->>U: [CP-feature] Récap global feature
 ```
 
 ### Étapes détaillées
@@ -56,67 +93,86 @@ sequenceDiagram
 Prompt : "Implémente la feature d'authentification JWT pour notre API REST"
 ```
 
-L'orchestrateur annonce qu'il délègue au planner et l'invoque.
+L'orchestrateur délègue immédiatement au `planner` pour décomposer la feature.
 
 #### 2. Le planner décompose
 
-Le planner pose ses questions de clarification, puis propose un découpage :
+Le planner explore la codebase (routes, modèles, composants), pose ses questions
+de clarification, puis propose un plan :
 
 ```
-## 📋 Plan de décomposition — Authentification JWT
+## Plan de décomposition — Authentification JWT
 
-### Phase 1 — Modèle de données
-- [ ] Créer le modèle User (P1, task)
+### Phase 0 — Spécifications
+- [ ] Spec UX — flow login / register / reset password (label:ux)
+- [ ] Spec UI — composants formulaires + feedback d'erreur (label:ui)
 
-### Phase 2 — Authentification
-- [ ] Implémenter JWT (P1, feature)
-- [ ] Endpoints login/logout (P1, feature)
-- [ ] Refresh token (P2, feature)
+### Phase 1 — Audit préalable
+- [ ] Audit sécurité — OWASP Top 10 sur le périmètre auth (label:audit-security)
+
+### Phase 2 — Implémentation
+- [ ] Modèle User + migrations
+- [ ] Service JWT (sign, verify, refresh)
+- [ ] Endpoints login / logout / refresh
 ```
 
-Après validation, il crée les tickets avec `bd create` + `bd update`.
-
-#### 3. [CP-0] Validation du plan
+#### 3. [CP-0] Validation du plan + choix du mode
 
 ```
 ## Tickets planifiés — Authentification JWT
 
-| ID    | Titre                  | Priorité | Type    |
-|-------|------------------------|----------|---------|
-| bd-1  | Créer le modèle User   | P1       | task    |
-| bd-2  | Implémenter JWT        | P1       | feature |
-| bd-3  | Endpoints login/logout | P1       | feature |
-| bd-4  | Refresh token          | P2       | feature |
+| ID   | Titre                          | Type          | Agent prévu       |
+|------|--------------------------------|---------------|-------------------|
+| bd-1 | Spec UX — flow auth            | spec-ux       | ux-designer       |
+| bd-2 | Spec UI — composants auth      | spec-ui       | ui-designer       |
+| bd-3 | Audit sécurité périmètre auth  | audit         | auditor-security  |
+| bd-4 | Modèle User + migrations       | task          | developer-backend |
+| bd-5 | Service JWT                    | feature       | developer-backend |
+| bd-6 | Endpoints login/logout/refresh | feature       | developer-backend |
 
-4 tickets prêts. Démarrer le workflow ? (oui/non)
+Mode de workflow : manuel / semi-auto / auto ?
+(semi-auto : CP-1 et CP-3 automatiques, CP-2 toujours manuel)
 ```
 
-#### 4. Workflow par ticket
+#### 4. Phases conception et audit
 
-Pour chaque ticket, l'orchestrateur :
-1. Présente le ticket avec sa description complète `[CP-1]`
-2. Identifie l'agent via la matrice de routing (ici `developer-backend`)
-3. Délègue l'implémentation
-4. Propose le QA `[CP-QA]`
-5. Lance la review automatiquement
-6. Présente le rapport `[CP-2]`
-7. Clôture et demande de continuer `[CP-3]`
+L'orchestrateur traite d'abord les tickets de type `spec-*` et `audit` :
 
-#### 5. Récap global
+- Invoque `ux-designer` → spec UX produite → **[CP-spec]** valider / réviser / ignorer
+- Invoque `ui-designer` → spec UI produite → **[CP-spec]** valider / réviser / ignorer
+- Invoque `auditor-security` → rapport d'audit → **[CP-audit]** corriger / accepter / ignorer
+  - Si "corriger" : un ticket de correction est ajouté à la liste dev
+
+#### 5. Phase implémentation via orchestrator-dev
+
+L'orchestrateur transmet les tickets dev à `orchestrator-dev` avec le mode choisi.
+`orchestrator-dev` prend le relais :
+
+1. Présente chaque ticket `[CP-1]` (automatique en semi-auto/auto)
+2. Identifie l'agent via la matrice de routing et délègue
+3. Propose le QA `[CP-QA]` (automatique en mode auto si activé au CP-0)
+4. Lance la review automatiquement après implémentation (± QA)
+5. Présente le rapport de review `[CP-2]` — **toujours une pause**, sans exception
+6. Clôture et passe au suivant `[CP-3]` (automatique en semi-auto/auto)
+
+#### 6. [CP-feature] Récap global
 
 ```
 ## Récap feature — Authentification JWT
 
-| ID   | Titre                  | Agent             | QA  | Cycles | Statut     |
-|------|------------------------|-------------------|-----|--------|------------|
-| bd-1 | Créer le modèle User   | developer-backend | oui | 1      | ✅ Terminé |
-| bd-2 | Implémenter JWT        | developer-backend | oui | 1      | ✅ Terminé |
-| bd-3 | Endpoints login/logout | developer-backend | non | 2      | ✅ Terminé |
-| bd-4 | Refresh token          | developer-backend | non | 1      | ✅ Terminé |
+| ID   | Titre                          | Phase    | Agent             | Statut     |
+|------|--------------------------------|----------|-------------------|------------|
+| bd-1 | Spec UX — flow auth            | design   | ux-designer       | ✅ Validé  |
+| bd-2 | Spec UI — composants auth      | design   | ui-designer       | ✅ Validé  |
+| bd-3 | Audit sécurité périmètre auth  | audit    | auditor-security  | ✅ Accepté |
+| bd-4 | Modèle User + migrations       | dev      | developer-backend | ✅ Mergé   |
+| bd-5 | Service JWT                    | dev      | developer-backend | ✅ Mergé   |
+| bd-6 | Endpoints login/logout/refresh | dev      | developer-backend | ✅ Mergé   |
+| bd-7 | Corriger CORS mal configuré    | dev      | developer-backend | ✅ Mergé   |
 
-- Tickets traités : 4 / 4
-- Total cycles de review : 5
-- Corrections demandées : 1 fois (bd-3)
+- Tickets traités : 7 / 7
+- Cycles de review : 8
+- Corrections demandées : 1 (audit sécurité → bd-7)
 ```
 
 ---
@@ -136,12 +192,14 @@ flowchart TD
     A --> AE[auditor-ecodesign]
     A --> AR[auditor-architecture]
     A --> APR[auditor-privacy]
+    A --> AO[auditor-observability]
     AS --> S[Synthèse exécutive\nmulti-domaines]
     AP --> S
     AA --> S
     AE --> S
     AR --> S
     APR --> S
+    AO --> S
     S --> U2[Rapport final\navec score global]
 ```
 
@@ -153,7 +211,7 @@ flowchart TD
 Prompt : "Audite le projet"
 ```
 
-L'auditeur qualifie la demande comme un **audit complet** et délègue aux 6 sous-agents.
+L'auditeur qualifie la demande comme un **audit complet** et délègue aux 7 sous-agents.
 
 #### 2. Audit ciblé
 
@@ -186,16 +244,17 @@ L'auditeur délègue à `auditor-security`, `auditor-accessibility`, `auditor-pe
 | Éco-conception | 7/10  | 🟡     | 0         |
 | Architecture   | 7/10  | 🟡     | 0         |
 | Privacy (RGPD) | 9/10  | ✅     | 0         |
+| Observabilité  | 6/10  | 🟠     | 1         |
 
 ### Score global estimé
-6.8/10 — Passable — 3 problèmes critiques à résoudre avant mise en production
+6.7/10 — Passable — 4 problèmes critiques à résoudre avant mise en production
 
 ### Top 5 des actions prioritaires
 1. [Sécurité 🔴] Injection SQL possible — src/controllers/user.controller.ts:34
 2. [Sécurité 🔴] Secret exposé dans le code — config/database.ts:12
 3. [Accessibilité 🔴] Images sans attribut alt — src/components/Gallery.vue
-4. [Sécurité 🟠] CORS mal configuré — src/middleware/cors.ts
-5. [Accessibilité 🟠] Contraste insuffisant — src/styles/theme.css
+4. [Observabilité 🔴] Aucun SLO défini — pas d'error budget ni d'alerting actionnable
+5. [Sécurité 🟠] CORS mal configuré — src/middleware/cors.ts
 ```
 
 ---
@@ -313,3 +372,177 @@ Prompt : "Review de la branche feat/user-profile — ticket bd-28"
 
 Le reviewer lit le ticket bd-28 pour contextualiser, applique sa checklist
 systématique, et produit un rapport structuré.
+
+---
+
+## Scénario 5 — Spec UX/UI puis implémentation (designers standalone)
+
+**Contexte :** vous voulez concevoir l'expérience et l'interface d'une feature
+avant de coder, sans passer par l'orchestrateur complet. Utile quand les specs
+doivent être validées par une équipe ou un client avant tout développement.
+
+### Diagramme
+
+```mermaid
+sequenceDiagram
+    participant U as Utilisateur
+    participant UX as ux-designer
+    participant UI as ui-designer
+    participant OD as orchestrator-dev
+    participant DEV as Developer-*
+    participant R as Reviewer
+
+    U->>UX: "Spec UX pour le flow d'onboarding utilisateur"
+    UX->>UX: Questions de contexte (min. 2)
+    UX-->>U: Spec UX — user flows + critères d'acceptance + tickets Beads
+    U->>U: Validation de la spec UX
+
+    U->>UI: "Spec UI pour les écrans d'onboarding — spec UX : bd-10"
+    UI->>UI: Lecture spec UX (bd show bd-10)
+    UI-->>U: Spec UI — tokens + composants + guidelines + tickets Beads
+    U->>U: Validation de la spec UI
+
+    U->>OD: "Implémente les tickets bd-11 à bd-15"
+    loop Pour chaque ticket
+        OD->>DEV: developer-frontend (signaux UI/composants)
+        DEV-->>OD: Implémentation terminée
+        OD->>R: Review automatique
+        R-->>OD: Rapport de review
+        OD->>U: [CP-2] Merger ou corriger ?
+        U->>OD: "merge"
+    end
+    OD-->>U: Récap implémentation
+```
+
+### Étapes détaillées
+
+#### 1. Spec UX
+
+```
+Prompt : "Spec UX pour le flow d'onboarding utilisateur —
+notre app est une plateforme B2B SaaS de gestion de projets"
+```
+
+Le `ux-designer` pose au minimum 2 questions de contexte avant de produire :
+
+```
+Questions :
+1. Quel est le profil de l'utilisateur qui s'inscrit
+   (admin entreprise, membre d'équipe invité, les deux) ?
+2. Quelles informations sont obligatoires à la création de compte ?
+```
+
+Puis produit la spec UX avec :
+- User flow nominal + alternatifs + cas d'erreur
+- Critères d'acceptance par étape
+- Points de friction identifiés et recommandations
+- Tickets Beads suggérés (avec labels `label:ui` pour les écrans à spécifier)
+
+#### 2. Spec UI
+
+```
+Prompt : "Spec UI pour les écrans d'onboarding — spec UX disponible dans bd-10"
+```
+
+Le `ui-designer` lit la spec UX via `bd show bd-10`, puis produit :
+- Tokens de design utilisés (couleurs, typographie, espacement)
+- Spécification des composants (variants, états, do/don't)
+- Guidelines visuelles spécifiques au flow
+- Tickets Beads mis à jour avec les contraintes UI
+
+#### 3. Implémentation via orchestrator-dev
+
+Une fois les specs validées, lancer `orchestrator-dev` directement sur les tickets
+de développement (les tickets spec sont déjà clôturés) :
+
+```
+Prompt : "Implémente les tickets bd-11 à bd-15 — mode semi-auto"
+```
+
+---
+
+## Scénario 6 — Documentation d'une feature livrée
+
+**Contexte :** une feature vient d'être mergée. Vous voulez documenter ce qui a changé :
+README, guides utilisateur, ADR si une décision architecturale a été prise, CHANGELOG,
+ou documentation API si de nouveaux endpoints ont été créés.
+
+### Diagramme
+
+```mermaid
+sequenceDiagram
+    participant U as Utilisateur
+    participant D as Documentarian
+    participant B as Beads
+
+    U->>D: "Documente la feature d'auth JWT — tickets bd-1 à bd-6"
+    D->>B: bd show bd-1 … bd-6 (lecture du contexte)
+    D->>D: Exploration codebase — routes, modèles, composants modifiés
+    D-->>U: Rapport de lacunes doc détecté
+
+    Note over D,U: "README manquant section auth,<br/>CHANGELOG non mis à jour,<br/>endpoint /auth/refresh non documenté dans l'API"
+
+    D-->>U: Proposition de plan de documentation
+    U->>D: "Valider — commence par le CHANGELOG et l'API"
+
+    D-->>U: CHANGELOG mis à jour (section Added + Changed)
+    D-->>U: doc API — /auth/login, /auth/logout, /auth/refresh
+    U->>D: "Maintenant le README et un ADR pour le choix JWT"
+    D-->>U: Section README auth + ADR-007 proposé
+    U->>D: "Valider l'ADR"
+    D-->>U: ADR-007 créé
+```
+
+### Étapes détaillées
+
+#### 1. Lancer le documentarian avec le contexte
+
+```
+Prompt : "Documente la feature d'authentification JWT livrée dans les tickets bd-1 à bd-6"
+```
+
+Le `documentarian` commence par explorer avant d'écrire :
+1. Lit les tickets Beads pour comprendre le périmètre
+2. Explore la codebase (nouveaux fichiers, routes modifiées, modèles ajoutés)
+3. Inspecte la documentation existante (README, `docs/`, CHANGELOG, spec API)
+
+#### 2. Rapport de lacunes
+
+```
+## Lacunes documentaires détectées — Feature Auth JWT
+
+| Document              | Statut   | Action recommandée                              |
+|-----------------------|----------|-------------------------------------------------|
+| README.md             | Partiel  | Ajouter section "Authentification" avec exemples|
+| CHANGELOG.md          | Absent   | Ajouter entrées Added + Changed pour la release |
+| docs/api/auth.md      | Absent   | Créer doc OpenAPI pour /auth/* (3 endpoints)    |
+| ADR                   | Absent   | Proposer ADR-007 — Choix JWT vs sessions        |
+| docs/guides/          | Conforme | Aucune modification nécessaire                  |
+
+Par quoi commencer ? (ou "tout" pour laisser le documentarian décider de l'ordre)
+```
+
+#### 3. Écriture par sections validées
+
+Le `documentarian` **ne modifie jamais un format sans confirmation**. Pour chaque
+document :
+- Il détecte le format existant et s'y adapte
+- Il propose le contenu avant d'écrire si le document est nouveau
+- Il ne change jamais de format (ex : passer de Nygard à MADR pour les ADR)
+  sans confirmation explicite
+
+#### 4. Exemple — entrée CHANGELOG générée
+
+```markdown
+## [1.2.0] — 2026-03-30
+
+### Added
+- Authentification JWT : endpoints `/auth/login`, `/auth/logout`, `/auth/refresh`
+- Modèle `User` avec champs `email`, `password_hash`, `refresh_token`
+- Service `JwtService` — sign, verify, refresh avec rotation des tokens
+
+### Changed
+- `AuthController` : migration de sessions cookie vers JWT Bearer
+```
+
+---
