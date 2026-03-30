@@ -119,7 +119,10 @@ build_dev_bootstrap_prompt() {
   local tickets
 
   tickets=$(cd "$project_path" && bd list --ready --label ai-delegated --json 2>/dev/null) || tickets="[]"
-  [ -z "$tickets" ] && tickets="[]"
+  # Valider que la sortie est un JSON array — si bd retourne du texte d'erreur, ignorer
+  if [ -z "$tickets" ] || [[ "$tickets" != \[* ]]; then
+    tickets="[]"
+  fi
 
   if [ "$tickets" = "[]" ] || [ "$tickets" = "null" ]; then
     cat <<'EOF'
