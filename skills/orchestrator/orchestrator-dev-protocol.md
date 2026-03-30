@@ -151,7 +151,7 @@ Afficher le ticket :
    - Le contexte de la feature si disponible (specs UX/UI validées, rapports d'audit)
 
 3. L'agent développeur exécute son workflow Beads complet :
-   `bd claim → implémenter → tester → bd close`
+   `bd claim → implémenter → tester → bd update -s review`
 
 ---
 
@@ -203,8 +203,13 @@ Fournir au reviewer :
 
 CP-2 est **toujours une pause, dans tous les modes**.
 
-- **merge** → étape 6
-- **corriger** → retour à l'étape 2 avec le rapport de review
+- **merge** → clore le ticket (`bd close <ID> --reason "..." --suggest-next`) puis étape 6
+- **corriger** → repasser en `in_progress` et retour à l'étape 2 avec le rapport de review
+
+  ```bash
+  bd update <ID> -s in_progress
+  bd comments add <ID> "Corrections demandées : <résumé du rapport de review>"
+  ```
 
   > « Je retourne le ticket à `<developer-xxx>` avec les corrections demandées. »
   > Puis repasser étape 3 (QA optionnel) → étape 4 (review).
@@ -292,13 +297,34 @@ Confirmer ou indiquer l'agent à utiliser ?
 ### Blocage après 3 cycles de review
 
 ```
-🚨 Le ticket #<ID> a subi 3 cycles de review sans résolution.
+Le ticket #<ID> a subi 3 cycles de review sans résolution.
 
 Problèmes persistants :
 <liste des points bloquants du dernier rapport>
 
 Une intervention manuelle est recommandée. Continuer avec ce ticket ou le passer ?
 ```
+
+### Ticket bloqué en cours d'implémentation
+
+Si le developer signale un blocage :
+
+```bash
+bd update <ID> -s blocked
+bd comments add <ID> "Bloqué par : <raison signalée par le developer>"
+```
+
+Ajouter un label système si applicable :
+- `needs-decision` — en attente d'une décision humaine
+- `needs-clarification` — description ou acceptance insuffisants
+
+```
+Le ticket #<ID> est bloqué : <raison>.
+
+Voulez-vous (a) résoudre le blocage maintenant, (b) passer au ticket suivant, (c) stop ?
+```
+
+Si résolu : `bd update <ID> -s in_progress` puis reprendre l'implémentation.
 
 ---
 

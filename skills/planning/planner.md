@@ -24,8 +24,8 @@ Tu ne CRÉES rien, tu PLANIFIES uniquement.
 - Utiliser `bd edit`, `bd delete` ou tout autre verbe `bd` non listé ici
 
 ### Commandes bd autorisées :
-- Lecture : `bd list`, `bd show`, `bd children`, `bd label list-all`, `bd search`, `bd count`
-- Écriture (après validation uniquement) : `bd create`, `bd update`, `bd label add`
+- Lecture : `bd list`, `bd ready`, `bd show`, `bd children`, `bd label list-all`, `bd search`, `bd count`, `bd dep list`, `bd dep tree`, `bd dep cycles`
+- Écriture (après validation uniquement) : `bd create`, `bd update`, `bd label add`, `bd dep add`, `bd dep remove`, `bd duplicate`, `bd supersede`, `bd comments add`
 
 ### Si tu es tenté d'écrire du code :
 **STOP** — Tu es un consultant, pas un développeur.
@@ -41,7 +41,7 @@ Avant toute question, explore le projet pour contextualiser ta planification.
 
 ```bash
 # Tickets ouverts — détecter doublons potentiels et dépendances
-bd list --status open --json
+bd list -s open --json
 
 # Labels disponibles
 bd label list-all
@@ -216,7 +216,8 @@ Dans ce cas : proposer de scinder avant de valider le plan.
 1. Créer les epics en premier (si applicable)
 2. Créer les tickets fils avec `--parent`
 3. Enrichir chaque ticket avec description + acceptance + notes
-4. Ajouter les dépendances via `--deps` à la création quand possible
+4. Ajouter les dépendances via `bd dep add` après création
+5. Ajouter les labels pertinents (`-l` à la création ou `bd label add` après)
 
 ### Commandes autorisées
 
@@ -237,19 +238,30 @@ bd update $T_ID \
   --notes "Dépendances, contexte, risques, points d'attention"
 ```
 
+**Création d'un ticket avec labels et assignee :**
+```bash
+T=$(bd create "Titre" -t task -p 2 -l ai-delegated -a dev-agent --parent $EPIC_ID --json)
+```
+
 **Création d'un ticket avec dépendance :**
 ```bash
-T=$(bd create "Titre" -t task -p 2 --parent $EPIC_ID --deps $T_PRECEDENT_ID --json)
+T=$(bd create "Titre" -t task -p 2 --parent $EPIC_ID --json)
 T_ID=$(echo $T | jq -r '.id')
+bd dep add $T_ID $T_PRECEDENT_ID
 bd update $T_ID \
   --description "..." \
   --acceptance "..." \
   --notes "Dépend de $T_PRECEDENT_ID — ne pas démarrer avant que ce ticket soit clos."
 ```
 
-**Ajout d'une dépendance après création (dépendance tardive) :**
+**Ajout d'une dépendance après création :**
 ```bash
-bd update $T_ID --deps $AUTRE_ID
+bd dep add $T_ID $AUTRE_ID
+```
+
+**Ticket issu d'une scission :**
+```bash
+T=$(bd create "Titre" -t task -p 2 -l split-from-$ORIGINAL_ID --parent $EPIC_ID --json)
 ```
 
 **Avec estimation (si connue) :**
@@ -258,20 +270,18 @@ bd create "Titre" -t task -p 1 --parent $EPIC_ID --estimate 120 --json
 # --estimate en minutes : 60 = 1h, 120 = 2h, 480 = 1 jour
 ```
 
-**Types disponibles :**
-- `-t task` → tâche générale
-- `-t feature` → nouvelle fonctionnalité
-- `-t bug` → correction de bug
-- `-t chore` → maintenance / refactoring
+**Types disponibles (5) :**
 - `-t epic` → epic (conteneur de tickets)
-- `-t decision` → décision architecturale (ADR)
+- `-t feature` → nouvelle fonctionnalité
+- `-t task` → tâche technique (refactoring, migration, configuration, ADR)
+- `-t bug` → correction de bug
+- `-t chore` → maintenance, CI/CD, documentation, nettoyage
 
-**Priorités :**
+**Priorités (4) — forme numérique uniquement :**
 - `-p 0` → P0 critique / bloquant
 - `-p 1` → P1 haute priorité
 - `-p 2` → P2 normale (défaut)
 - `-p 3` → P3 basse priorité
-- `-p 4` → P4 backlog / un jour peut-être
 
 **Règles impératives :**
 - Toujours utiliser `--json` sur `bd create`
@@ -285,9 +295,10 @@ bd create "Titre" -t task -p 1 --parent $EPIC_ID --estimate 120 --json
 | Situation | Réponse |
 |-----------|---------|
 | L'utilisateur modifie le scope | Stopper la création. Re-présenter le delta (tickets à ajouter/retirer). Valider avant de reprendre. |
-| Un ticket semble trop gros en le rédigeant | Proposer de le scinder. Attendre la validation. |
-| Dépendance découverte à la création | Ajouter `--deps` sur le ticket en cours. Signaler dans les notes. |
+| Un ticket semble trop gros en le rédigeant | Proposer de le scinder avec le label `split-from-<ID>`. Attendre la validation. |
+| Dépendance découverte à la création | `bd dep add` sur le ticket en cours. Signaler dans les notes. |
 | Erreur sur un `bd create` | Signaler, ne pas créer de doublon, reprendre proprement. |
+| Doublon détecté | `bd duplicate <ID> --of <CANONICAL>` (auto-ferme le doublon). Signaler à l'utilisateur. |
 
 ---
 
@@ -321,7 +332,7 @@ bd label add bd-2 ai-delegated
 bd children <epic-id>
 
 # Tous les tickets ouverts créés dans cette session
-bd list --status open --json
+bd list -s open --json
 ```
 
 Présenter le récapitulatif sous cette forme :
@@ -357,10 +368,10 @@ Epics créés : N | Tickets créés : M
 |-----------|---------|
 | Scope change en cours de plan | Stopper. Re-présenter le delta. Valider avant de continuer. |
 | Scope change en cours de création | Stopper la création. Re-proposer le delta. Valider avant de reprendre. |
-| Ticket à scinder | Proposer le découpage en 2-3 tickets. Attendre validation. Créer les nouveaux, ne pas créer l'original. |
-| Dépendance découverte après création | `bd update <id> --deps <autre-id>`. Signaler dans le récap final. |
-| Doublon avec ticket existant | Signaler. Demander : fusionner / ignorer / créer quand même. Ne jamais décider seul. |
-| L'utilisateur dit "stop" | Lister ce qui a été créé. Proposer de reprendre avec `bd list --status open`. |
+| Ticket à scinder | Proposer le découpage en 2-3 tickets avec le label `split-from-<ID>`. Attendre validation. Créer les nouveaux, ne pas créer l'original. |
+| Dépendance découverte après création | `bd dep add <id> <autre-id>`. Signaler dans le récap final. |
+| Doublon avec ticket existant | Signaler. Demander : `bd duplicate` / ignorer / créer quand même. Ne jamais décider seul. |
+| L'utilisateur dit "stop" | Lister ce qui a été créé. Proposer de reprendre avec `bd list -s open`. |
 | Ticket existant à réutiliser | Signaler le ticket existant. Demander : utiliser / créer un nouveau / dépendre de l'existant. |
 
 ---

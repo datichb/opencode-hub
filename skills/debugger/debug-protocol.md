@@ -164,16 +164,19 @@ Après avoir produit le rapport, proposer la création du ticket :
 **Si oui :**
 
 ```bash
-TICKET=$(bd create "<titre>" -p <priorité> -t bug --json)
+TICKET=$(bd create "<titre>" -p <priorité> -t bug -l from-diagnostic --json)
 ID=$(echo $TICKET | jq -r '.id')
 bd update $ID --description "<description>"
 bd update $ID --acceptance "<critères d'acceptance>"
 bd update $ID --notes "<cause racine, fichiers impliqués, points d'attention>"
 ```
 
+> Le label `from-diagnostic` signale que le ticket provient d'un rapport de diagnostic.
+
 **Règles :**
 - Toujours utiliser `--json` sur `bd create`
 - Toujours capturer l'ID via `jq -r '.id'`
+- Toujours ajouter `-l from-diagnostic` à la création
 - La description est en langage naturel — jamais de code dans les champs Beads
 - Afficher l'ID créé à l'utilisateur après création
 
