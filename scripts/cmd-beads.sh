@@ -349,7 +349,9 @@ _setup_jira() {
   read -rp "  URL Jira (ex: https://company.atlassian.net) : " jira_url
   read -rp "  Clé de projet Jira (ex: PROJ) : " jira_project
   read -rp "  Email / username Jira : " jira_user
+  trap 'stty echo 2>/dev/null; echo ""; exit 130' INT TERM
   read -rsp "  API token Jira (masqué) : " jira_token
+  stty echo 2>/dev/null; trap - INT TERM
   echo ""
 
   (
@@ -370,7 +372,9 @@ _setup_gitlab() {
   local path="$1" id="$2"
 
   read -rp "  URL GitLab (ex: https://gitlab.com ou instance privée) : " gl_url
+  trap 'stty echo 2>/dev/null; echo ""; exit 130' INT TERM
   read -rsp "  Token d'accès personnel GitLab (masqué) : " gl_token
+  stty echo 2>/dev/null; trap - INT TERM
   echo ""
 
   # Lister les projets accessibles pour aider à trouver l'ID

@@ -162,13 +162,17 @@ cmd_set() {
   _write_section "$id" "$flag_model" "$flag_provider" "$flag_api_key" "$flag_base_url"
   log_success "Configuration enregistrée pour $id"
 
-  # Proposer un re-déploiement
+  # Proposer un re-déploiement uniquement si le chemin du projet est connu
   echo ""
-  read -rp "  Appliquer maintenant au projet (re-déployer opencode.json) ? [Y/n] : " apply_now
-  if [[ "${apply_now:-Y}" =~ ^[Yy]$ ]]; then
-    PROJECT_ID="$id" bash "$SCRIPTS_DIR/cmd-deploy.sh" opencode "$id"
+  if path_exists "$id"; then
+    read -rp "  Appliquer maintenant au projet (re-déployer opencode.json) ? [Y/n] : " apply_now
+    if [[ "${apply_now:-Y}" =~ ^[Yy]$ ]]; then
+      PROJECT_ID="$id" bash "$SCRIPTS_DIR/cmd-deploy.sh" opencode "$id"
+    else
+      log_info "Appliquer plus tard : ./oc.sh deploy opencode $id"
+    fi
   else
-    log_info "Appliquer plus tard : ./oc.sh deploy opencode $id"
+    log_info "Chemin non enregistré pour $id — appliquer via : ./oc.sh deploy opencode $id"
   fi
 }
 

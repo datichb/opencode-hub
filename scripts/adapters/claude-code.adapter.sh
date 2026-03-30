@@ -89,5 +89,5 @@ adapter_start() {
     fi
   fi
 
-  [ -n "$prompt" ] && exec claude --print "$prompt" || exec claude
+  [ -n "$prompt" ] && exec claude "$prompt" || exec claude
 }

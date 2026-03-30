@@ -69,7 +69,8 @@ adapter_deploy() {
     {
       echo "---"
       echo "mode: agent"
-      [ -n "$description" ] && echo "description: '${description}'"
+      # Échapper les apostrophes pour le YAML single-quoted : ' → ''
+      [ -n "$description" ] && echo "description: '${description//\'/\'\'}'"
       echo "---"
       echo ""
       build_agent_content "$agent_file" "vscode" "$lang"
