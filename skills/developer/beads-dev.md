@@ -1,16 +1,18 @@
 ---
 name: beads-dev
-description: Workflow exécuteur Beads (bd) — clamer, implémenter, clore les tickets, règles ai-delegated. Pour les agents qui implémentent.
+description: Workflow exécuteur Beads (bd) — clamer, implémenter, passer en review, gérer les blocages, clore les tickets. Règles ai-delegated. Référence complète dans docs/reference/beads-model.md.
 ---
 
 ## Workflow obligatoire
 
 ```
-1. bd list --ready --label ai-delegated --json  → tickets délégués à l'agent
-2. bd show <ID>                                 → lire le détail (description, acceptance, notes)
-3. bd update <ID> --claim                       → clamer avant de commencer
-4. [implémenter]
-5. bd close <ID> --suggest-next                 → clore et voir le ticket suivant
+1. bd ready --label ai-delegated --json  → tickets délégués à l'agent
+2. bd show <ID>                          → lire le détail (description, acceptance, notes)
+3. bd update <ID> --claim                → clamer avant de commencer
+4. [implémenter + tester]
+5. bd update <ID> -s review              → passer en review
+6. [review — accepté ou rejeté]
+7. bd close <ID> --suggest-next          → clore et voir le ticket suivant
 ```
 
 ---
@@ -28,20 +30,70 @@ Cette commande met le statut à `in_progress` et t'assigne le ticket en une seul
 
 ---
 
-## Clore un ticket
+## Passer en review
 
-Après implémentation et validation :
+Après implémentation et tests, signaler que le travail est prêt pour relecture :
 
 ```bash
-bd close <ID> --suggest-next
+bd update <ID> -s review
+```
+
+### Si la review accepte :
+
+```bash
+bd close <ID> --reason "Implémenté dans le commit abc123" --suggest-next
 ```
 
 `--suggest-next` affiche les tickets qui viennent d'être débloqués par cette clôture,
-ce qui permet de choisir la prochaine tâche sans relancer `bd list`.
+ce qui permet de choisir la prochaine tâche sans relancer `bd ready`.
 
-**Clore avec une raison :**
+### Si la review rejette :
+
+Le ticket repasse en `in_progress` pour un cycle de correction :
+
 ```bash
-bd close <ID> --reason "Implémenté dans le commit abc123"
+bd update <ID> -s in_progress
+bd comments add <ID> "Corrections demandées : ..."
+```
+
+Corriger, puis repasser en review (`bd update <ID> -s review`).
+
+---
+
+## Gérer un blocage
+
+Si un ticket est bloqué par une dépendance ou un facteur externe :
+
+```bash
+bd update <ID> -s blocked
+bd comments add <ID> "Bloqué par : <raison>"
+```
+
+Ajouter un label système si applicable :
+
+```bash
+bd update <ID> --add-label needs-decision       # en attente d'une décision humaine
+bd update <ID> --add-label needs-clarification   # description insuffisante
+```
+
+Quand le blocage est résolu, repasser en `in_progress` :
+
+```bash
+bd update <ID> -s in_progress
+```
+
+> Si aucun ticket n'est débloquable, utiliser `bd ready --label ai-delegated --json`
+> pour trouver un autre ticket à traiter en attendant.
+
+---
+
+## Commentaires
+
+Utiliser les commentaires pour tracer les décisions et échanges sans modifier
+la description ou les notes du ticket :
+
+```bash
+bd comments add <ID> "Texte du commentaire"
 ```
 
 ---
@@ -50,9 +102,10 @@ bd close <ID> --reason "Implémenté dans le commit abc123"
 
 - Toujours `bd show <ID>` avant d'implémenter — ne jamais supposer le contenu d'un ticket
 - Toujours clamer avant d'implémenter — évite les conflits si plusieurs agents tournent
-- Toujours clore explicitement — ne pas laisser de tickets `in_progress` orphelins
+- Toujours passer en `review` après implémentation — ne jamais clore directement
+- Toujours clore explicitement après validation — ne pas laisser de tickets `in_progress` orphelins
 - Ne pas modifier le titre ou la description d'un ticket sans y être invité
-- Si un ticket est bloqué par une dépendance, utiliser `bd list --ready --label ai-delegated` pour en trouver un autre
+- Un ticket `closed` ou `cancelled` n'est jamais rouvert — créer un nouveau ticket si nécessaire
 
 ---
 
@@ -69,10 +122,10 @@ Seuls les tickets portant le label **`ai-delegated`** te sont assignés au déma
 **Commandes utiles :**
 ```bash
 # Voir tes tickets délégués
-bd list --ready --label ai-delegated --json
+bd ready --label ai-delegated --json
 
 # L'humain délègue un ticket à l'agent
-bd update <ID> --add-label ai-delegated
+bd label add <ID> ai-delegated
 
 # L'humain reprend la main sur un ticket
 bd update <ID> --remove-label ai-delegated
