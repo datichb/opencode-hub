@@ -11,7 +11,44 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 
 ### Added
 
-- Agent `developer-security` (famille developer/) : hardening applicatif post-audit —
+- Agent `onboarder` (famille planning/) : découverte d'un projet existant en lecture
+  seule — détecte la stack, explore adaptativement les fichiers structurants selon le
+  profil (Vue, React, Node.js, Python, API, Data/ML, DevOps/Platform, Mobile), lit les
+  tickets Beads et ADRs existants, produit un rapport de contexte structuré (stack,
+  architecture, patterns, points d'attention 🔴/🟠/🟡, zones d'ombre, questions de
+  clarification) et une carte des agents recommandés à double entrée (prioritaires par
+  risques détectés + recommandés par stack + optionnels avec invocations suggérées) —
+  invocable directement, depuis `oc start` (suggestion affichée) ou depuis l'orchestrator
+  (Mode C — pré-phase sur projet inconnu)
+- Skill `planning/project-discovery` : protocole complet d'exploration adaptative —
+  détection de stack (manifestes, CI, infra), tableaux de fichiers structurants par profil
+  (8 profils couverts), format du rapport de contexte imposé, matrice de recommandation
+  des agents (13 signaux → agents prioritaires, 14 stacks → agents recommandés, 4 cas →
+  agents optionnels), règles de conduite (honnêteté sur les zones d'ombre, citations
+  concrètes pour les 🔴/🟠, invocations suggérées jamais exécutées), protocole de mise
+  à jour `projects.md` avec confirmation explicite
+- `docs/guides/onboarding.md` : guide utilisateur complet — quand invoquer l'onboarder
+  (4 situations), session complète annotée (invocation → exploration → rapport → carte
+  agents), interprétation du rapport (niveaux 🔴/🟠/🟡, zones d'ombre, carte agents),
+  intégration dans le workflow orchestrator (Mode C avec exemple), cas d'usage avancés
+  (onboarder + planner en séquence, onboarder + auditor en séquence, re-onboarding)
+
+### Changed
+
+- Agent `orchestrator` : `onboarder` ajouté dans la table des agents disponibles,
+  Mode C (projet inconnu) ajouté dans le workflow avec checkpoint `[CP-onboard]`
+  optionnel et sautables — exemple d'invocation Mode C ajouté
+- Skill `orchestrator/orchestrator-protocol` : Mode C documenté avec condition de
+  déclenchement, proposition à l'utilisateur, format du `[CP-onboard]` et règle
+  "toujours optionnel et sautables"
+- `scripts/cmd-start.sh` : suggestion d'invocation de l'onboarder affichée au
+  démarrage quand les agents sont déployés dans le projet
+- `docs/architecture/agents.md` : total mis à jour (27 agents), `onboarder` ajouté
+  dans la famille Coordinateurs, nouvelle règle "Agents de découverte" en bas du fichier
+- `docs/architecture/skills.md` : `planning/project-discovery` ajouté dans le domaine
+  planning/, matrice de dépendances mise à jour pour `onboarder`
+
+ (famille developer/) : hardening applicatif post-audit —
   implémente CORS restrictif, headers HTTP de sécurité (CSP, HSTS, X-Frame-Options),
   hashing des mots de passe (bcrypt, argon2id), gestion sécurisée des tokens JWT
   (rotation, révocation), sessions (httpOnly, secure, sameSite), rate limiting sur les

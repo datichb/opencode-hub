@@ -117,6 +117,7 @@ Skills de documentation. Utilisés par l'agent `documentarian`.
 | Fichier | Agents qui l'utilisent | Contenu |
 |---------|----------------------|---------|
 | `planning/planner.md` | planner | Phase 0 (exploration codebase + tickets existants + résumé de contexte), Phase 1 (questions contextualisées + déduction des priorités justifiées), Phase 2 (plan hiérarchique epics → tickets, règle >5 tickets), Phase 3 (création avec `--parent`, `--deps`, `--estimate`), Phase 4 (vérification `bd children`), gestion des aléas (scope change, scission, dépendance tardive, doublon) |
+| `planning/project-discovery.md` | onboarder | Détection de stack (manifestes, CI, infra), exploration adaptative par profil (Vue, React, Node.js, Python, API, Data/ML, DevOps, Mobile), format du rapport de contexte (stack, architecture, patterns, 🔴/🟠/🟡, zones d'ombre, questions, carte agents), matrice de recommandation agents (prioritaires par risque + recommandés par stack + optionnels), protocole de mise à jour `projects.md` |
 
 ---
 
@@ -146,6 +147,8 @@ Skills de posture transverse. Injectables dans tout agent nécessitant une postu
 ```
 orchestrator          → orchestrator/orchestrator-protocol
 orchestrator-dev      → orchestrator/orchestrator-dev-protocol
+onboarder             → planning/project-discovery, posture/expert-posture,
+                         developer/dev-beads
 planner               → developer/dev-beads, planning/planner, posture/expert-posture
 reviewer              → dev-standards-universal, dev-standards-security,
                          dev-standards-backend,

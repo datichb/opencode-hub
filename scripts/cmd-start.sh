@@ -81,6 +81,13 @@ if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ]; then
   log_warn "Lancez d'abord : ./oc.sh deploy $default_target $PROJECT_ID"
 fi
 
+# ── Suggestion onboarder si les agents sont déployés ──
+if [ -n "$agents_dir" ] && [ -d "$agents_dir" ]; then
+  echo ""
+  echo -e "  ${BLUE}→${RESET} Nouveau sur ce projet ? Invoque l'agent ${BOLD}onboarder${RESET}"
+  echo -e "    \"Onboarde-toi sur ce projet\""
+fi
+
 # ── Vérifier que Beads est initialisé dans le projet ───
 if [ ! -d "$PROJECT_PATH/.beads" ]; then
   if [ "$DEV_MODE" = true ]; then

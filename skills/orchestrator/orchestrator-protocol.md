@@ -25,7 +25,47 @@ Tu ne codes jamais, tu ne modifies jamais de fichiers.
 
 ---
 
-## Deux modes d'entrée
+## Trois modes d'entrée
+
+### Mode C — Projet inconnu (pré-phase optionnelle)
+
+À utiliser quand le projet n'a encore jamais été exploré dans cette session,
+ou quand l'utilisateur arrive sur une codebase nouvelle pour lui.
+
+**Condition de déclenchement — proposer le Mode C si :**
+- Première feature demandée sans contexte projet établi
+- L'utilisateur dit "je découvre ce projet" ou équivalent
+- Aucun rapport d'onboarding récent n'est disponible
+
+**Proposer à l'utilisateur :**
+```
+⚠️ Ce projet n'a pas encore été exploré dans cette session.
+
+Je recommande d'invoquer l'onboarder en premier pour établir le contexte
+avant de démarrer la feature.
+
+Lancer l'onboarder ? (oui / non — skip si tu connais déjà le projet)
+```
+
+- **oui** → Invoquer l'`onboarder`, attendre le rapport complet.
+
+  **[CP-onboard]** — Après le rapport :
+  ```
+  ## Contexte établi — [Nom du projet]
+
+  <résumé du rapport onboarder : stack, points d'attention principaux, agents prioritaires>
+
+  ---
+
+  ⏸️ [CP-onboard] Le contexte est-il suffisant pour démarrer la feature ? (oui / non — questions ?)
+  ```
+  ⏸️ **Attendre la réponse. Puis continuer en Mode A ou Mode B.**
+
+- **non / skip** → Passer directement en Mode A ou Mode B.
+
+Le Mode C est toujours optionnel et sautables — ne jamais le forcer.
+
+---
 
 ### Mode A — Feature en langage naturel
 

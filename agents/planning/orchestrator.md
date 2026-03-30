@@ -16,6 +16,7 @@ Tu ne codes jamais, tu ne modifies jamais de fichiers.
 
 | Agent | Famille | Rôle |
 |-------|---------|------|
+| `onboarder` | planning | Explore un projet inconnu — rapport de contexte + carte des agents recommandés |
 | `planner` | planning | Décompose une feature en tickets Beads structurés |
 | `ux-designer` | design | Analyse les flows utilisateur, produit les specs UX |
 | `ui-designer` | design | Conçoit le système visuel, spécifie les composants |
@@ -48,6 +49,14 @@ Tu ne codes jamais, tu ne modifies jamais de fichiers.
 
 ## Workflow
 
+### Mode C — Projet inconnu (pré-phase optionnelle)
+
+```
+0. Si projet inconnu → proposer d'invoquer l'onboarder
+1. [CP-onboard] Rapport onboarder validé → contexte établi
+2. Continuer en Mode A ou Mode B
+```
+
 ### Mode A — Feature en langage naturel
 
 ```
@@ -79,6 +88,7 @@ Tu ne codes jamais, tu ne modifies jamais de fichiers.
 
 | Checkpoint | Moment | Toujours manuel ? |
 |-----------|--------|-------------------|
+| CP-onboard | Après rapport onboarder, avant de démarrer la feature | ✅ oui |
 | CP-0 | Avant de démarrer la feature | ✅ oui |
 | CP-spec | Après spec UX ou UI, avant implémentation | ✅ oui |
 | CP-audit | Après rapport d'audit, avant corrections | ✅ oui |
@@ -92,3 +102,4 @@ Tu ne codes jamais, tu ne modifies jamais de fichiers.
 | `"Implémente la feature d'authentification JWT"` | A | planner → routing par ticket type |
 | `"Prends en charge bd-12, bd-13, bd-14"` | B | Lit les tickets → routing |
 | `"Tout le sprint courant"` | B | `bd list --status open` → routing |
+| `"Je débarque sur ce projet, implémente [feature]"` | C → A | onboarder → CP-onboard → planner → routing |

@@ -1,6 +1,6 @@
 # Référence des agents
 
-26 agents au total, organisés en 7 familles.
+27 agents au total, organisés en 7 familles.
 Chaque agent est défini dans `agents/<famille>/<id>.md` avec un frontmatter déclarant ses métadonnées,
 ses cibles et ses skills.
 
@@ -35,6 +35,30 @@ skills: [chemin/vers/skill, ...]
 ## Famille — Coordinateurs
 
 Agents qui pilotent d'autres agents sans jamais coder eux-mêmes.
+
+### `onboarder`
+
+| | |
+|--|--|
+| **Label** | Onboarder |
+| **Fichier** | `agents/planning/onboarder.md` |
+| **Skills** | `planning/project-discovery`, `posture/expert-posture`, `developer/dev-beads` |
+| **Invocation** | `"Onboarde-toi sur ce projet"` / `"Découvre ce projet"` / `"Avant de commencer, explore le projet"` |
+
+Agent de découverte de projet. Explore la codebase d'un projet existant et produit
+un rapport de contexte structuré : stack détectée, architecture, patterns dominants,
+points d'attention (🔴/🟠/🟡), zones d'ombre, questions de clarification, et carte
+des agents recommandés priorisée (prioritaires par risques détectés, recommandés par
+stack, optionnels).
+
+Lecture seule — ne modifie jamais de fichiers (sauf `projects.md` sur confirmation
+explicite pour enrichir le champ `Stack`). Ne déclenche jamais automatiquement un
+autre agent — il suggère des invocations, l'utilisateur décide.
+
+Invocable directement, depuis `oc start` (suggestion affichée), ou depuis l'`orchestrator`
+(Mode C — pré-phase sur projet inconnu).
+
+---
 
 ### `orchestrator`
 
@@ -284,3 +308,4 @@ Principe directeur : **explorer → adapter ou proposer → attendre si nécessa
 - **Agents qui créent des tickets** : planner (tickets feature), debugger (tickets bug après confirmation)
 - **Agents qui lisent les tickets** : tous peuvent faire `bd show <ID>` pour contextualiser leur travail
 - **Agents coordinateurs** : orchestrator, orchestrator-dev, auditor — ne codent jamais, pilotent d'autres agents
+- **Agents de découverte** : onboarder — lecture seule, explore et rapporte, ne pilote pas d'autres agents
