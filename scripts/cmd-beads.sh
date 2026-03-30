@@ -220,7 +220,7 @@ cmd_list() {
 
   log_title "Tickets ouverts — $id"
   echo ""
-  (cd "$path" && bd list --status open) || { log_error "Échec de bd list"; exit 1; }
+  (cd "$path" && bd list -s open) || { log_error "Échec de bd list"; exit 1; }
 }
 
 # ══════════════════════════════════════════
@@ -241,7 +241,7 @@ cmd_open() {
   log_info "Vous pouvez maintenant utiliser bd directement dans ce répertoire"
   echo ""
   echo "  cd $path"
-  echo "  bd list --status open"
+  echo "  bd list -s open"
 }
 
 # ══════════════════════════════════════════
