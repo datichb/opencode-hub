@@ -64,7 +64,11 @@ agent_supports_target() {
 get_agent_id() {
   local id
   id=$(extract_frontmatter_value "$1" "id")
-  [ -z "$id" ] && basename "$1" .md || echo "$id"
+  if [ -z "$id" ]; then
+    basename "$1" .md
+  else
+    echo "$id"
+  fi
 }
 
 # Construit le contenu final : corps de l'agent + skills injectés → stdout

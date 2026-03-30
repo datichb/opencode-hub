@@ -24,16 +24,24 @@ for id in "${ids[@]}"; do
 
   if [ -z "$local_path" ]; then
     status="${YELLOW}⚠ sans chemin${RESET}"
-    display_path="${YELLOW}non défini${RESET}"
+    display_path="non défini"
+    display_color="$YELLOW"
   elif [ -d "${local_path/#\~/$HOME}" ]; then
     status="${GREEN}✔ accessible${RESET}"
     display_path="$local_path"
+    display_color=""
   else
     status="${RED}✘ introuvable${RESET}"
     display_path="$local_path"
+    display_color=""
   fi
 
-  printf "  %-20s %-30s " "$id" "$display_path"
+  # Utiliser printf pour le padding, puis injecter la couleur via %b
+  if [ -n "$display_color" ]; then
+    printf "  %-20s ${display_color}%-30s${RESET} " "$id" "$display_path"
+  else
+    printf "  %-20s %-30s " "$id" "$display_path"
+  fi
   echo -e "$status"
 done
 

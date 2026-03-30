@@ -463,13 +463,13 @@ Sois concis et directement opérationnel. Pas d'introduction, pas de conclusion,
   log_info "Génération en cours via opencode..."
   local generated
   # Sur macOS, 'timeout' n'est pas natif — utiliser 'gtimeout' si disponible, sinon sans timeout
-  local timeout_cmd=""
   if command -v timeout &>/dev/null; then
-    timeout_cmd="timeout 60"
+    generated=$(timeout 60 opencode run "$prompt" 2>/dev/null) || true
   elif command -v gtimeout &>/dev/null; then
-    timeout_cmd="gtimeout 60"
+    generated=$(gtimeout 60 opencode run "$prompt" 2>/dev/null) || true
+  else
+    generated=$(opencode run "$prompt" 2>/dev/null) || true
   fi
-  generated=$(${timeout_cmd} opencode run "$prompt" 2>/dev/null) || true
 
   if [ -z "$generated" ]; then
     log_warn "opencode n'a pas retourné de contenu — corps par défaut utilisé."

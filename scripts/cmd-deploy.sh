@@ -31,6 +31,8 @@ _cmd_deploy_check() {
   local stale_count=0
   local ok_count=0
 
+  source "$LIB_DIR/prompt-builder.sh"
+
   for tgt in "${targets[@]}"; do
     log_info "── Cible : $tgt"
 
@@ -48,7 +50,6 @@ _cmd_deploy_check() {
       [ -f "$agent_file" ] || continue
 
       # Vérifier si l'agent supporte cette cible
-      source "$LIB_DIR/prompt-builder.sh"
       agent_supports_target "$agent_file" "$tgt" || continue
 
       local agent_id; agent_id=$(get_agent_id "$agent_file")
