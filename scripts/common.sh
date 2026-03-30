@@ -88,7 +88,8 @@ get_project_path() {
     log_warn "Fichier paths.local.md introuvable — chemin local non disponible"
     return 1
   fi
-  grep -F "${id}=" "$PATHS_FILE" | cut -d'=' -f2- | tr -d ' '
+  # || true : évite que pipefail propage exit 1 si grep ne matche rien
+  grep -F "${id}=" "$PATHS_FILE" | cut -d'=' -f2- | tr -d ' ' || true
 }
 
 # Vérifie qu'un projet existe dans projects.md

@@ -418,9 +418,13 @@ cmd_update() {
     # Afficher le diff
     echo ""
     echo -e "${BOLD}Diff pour '$skill_name' :${RESET}"
-    echo "  (- ancienne version  /  + nouvelle version)"
-    echo ""
-    diff "$dest" "$tmp_file" | head -60 || true
+    if [ -f "$dest" ]; then
+      echo "  (- ancienne version  /  + nouvelle version)"
+      echo ""
+      diff "$dest" "$tmp_file" | head -60 || true
+    else
+      echo "  (nouveau skill — fichier local absent)"
+    fi
     echo ""
 
     read -rp "Appliquer la mise à jour pour '$skill_name' ? (Y/n) : " confirm

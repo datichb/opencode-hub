@@ -89,10 +89,10 @@ cmd_set() {
   local flag_model="" flag_provider="" flag_api_key="" flag_base_url=""
   while [ $# -gt 0 ]; do
     case "$1" in
-      --model)    flag_model="$2";    shift 2 ;;
-      --provider) flag_provider="$2"; shift 2 ;;
-      --api-key)  flag_api_key="$2";  shift 2 ;;
-      --base-url) flag_base_url="$2"; shift 2 ;;
+      --model)    [ $# -ge 2 ] || { log_error "Option $1 requiert une valeur"; exit 1; }; flag_model="$2";    shift 2 ;;
+      --provider) [ $# -ge 2 ] || { log_error "Option $1 requiert une valeur"; exit 1; }; flag_provider="$2"; shift 2 ;;
+      --api-key)  [ $# -ge 2 ] || { log_error "Option $1 requiert une valeur"; exit 1; }; flag_api_key="$2";  shift 2 ;;
+      --base-url) [ $# -ge 2 ] || { log_error "Option $1 requiert une valeur"; exit 1; }; flag_base_url="$2"; shift 2 ;;
       *) log_error "Option inconnue : $1"; exit 1 ;;
     esac
   done
