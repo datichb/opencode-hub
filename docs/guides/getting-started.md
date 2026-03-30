@@ -8,10 +8,11 @@ Ce guide vous permet d'installer le hub et de lancer votre premier agent en moin
 |-------|-----------------|--------------|
 | Git | 2.x | `git --version` |
 | Node.js | 18+ | `node --version` |
-| Beads (`bd`) | dernière | `bd --version` |
 
 > **Note :** Node.js est requis uniquement si vous ciblez OpenCode ou Claude Code.
 > VS Code / Copilot ne nécessite pas Node.js.
+>
+> **Beads (`bd`)** est installé automatiquement par `oc install` — pas besoin de l'installer manuellement.
 
 ---
 
