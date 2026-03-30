@@ -127,6 +127,11 @@ adapter_deploy() {
   fi
 
   if [ "$should_write" = true ]; then
+    if [ "$has_api_key" = true ]; then
+      # Protéger le fichier avant l'écriture : gitignore d'abord pour éviter
+      # toute fenêtre où opencode.json existe avec une clé sans être ignoré
+      _gitignore_opencode_json "$deploy_dir"
+    fi
     # Écriture safe : pas de printf avec interpolation pour éviter que % dans la clé
     # soit interprété comme spécificateur de format
     {
@@ -142,9 +147,8 @@ adapter_deploy() {
     } > "$config_file"
     if [ "$has_api_key" = true ]; then
       log_success "[opencode] opencode.json créé avec clé API (modèle : $model, provider : $(get_project_api_provider "${PROJECT_ID}"))"
-      # Protéger le fichier (contient une clé) et l'exclure du commit projet
+      # Protéger les permissions du fichier (contient une clé)
       chmod 600 "$config_file"
-      _gitignore_opencode_json "$deploy_dir"
     else
       log_success "[opencode] opencode.json créé (modèle : $model)"
     fi

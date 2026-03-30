@@ -29,16 +29,9 @@ EOF
   fi
 }
 
-# Supprime une section [PROJECT_ID] complète du fichier
+# Supprime une section [PROJECT_ID] complète du fichier (délègue à common.sh)
 _remove_section() {
-  local id="$1"
-  local tmp; tmp=$(mktemp)
-  awk -v section="[${id}]" '
-    $0 == section { skip=1; next }
-    skip && /^\[/ { skip=0 }
-    !skip { print }
-  ' "$API_KEYS_FILE" > "$tmp"
-  mv "$tmp" "$API_KEYS_FILE"
+  remove_api_keys_section "$1"
 }
 
 # Écrit ou remplace une section complète

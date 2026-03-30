@@ -186,3 +186,24 @@ api_keys_entry_exists() {
   [ -f "$API_KEYS_FILE" ] || return 1
   grep -q "^\[${id}\]$" "$API_KEYS_FILE"
 }
+
+# Supprime une section [PROJECT_ID] complète de api-keys.local.md
+# (ligne vide précédente incluse)
+remove_api_keys_section() {
+  local id="$1"
+  [ -f "$API_KEYS_FILE" ] || return 0
+  api_keys_entry_exists "$id" || return 0
+  local tmp; tmp=$(mktemp)
+  awk -v section="[${id}]" '
+    BEGIN { skip=0; pending_blank=0 }
+    /^$/ { if (!skip) { pending_blank=1 }; next }
+    $0 == section { pending_blank=0; skip=1; next }
+    skip && /^\[/ { skip=0 }
+    !skip {
+      if (pending_blank) { print ""; pending_blank=0 }
+      print
+    }
+    skip { next }
+  ' "$API_KEYS_FILE" > "$tmp"
+  mv "$tmp" "$API_KEYS_FILE"
+}

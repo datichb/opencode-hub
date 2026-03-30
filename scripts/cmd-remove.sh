@@ -27,5 +27,11 @@ if path_exists "$PROJECT_ID"; then
   log_success "Chemin supprimé de paths.local.md"
 fi
 
+# ── Supprimer de api-keys.local.md ────────
+if api_keys_entry_exists "$PROJECT_ID"; then
+  remove_api_keys_section "$PROJECT_ID"
+  log_success "Clé API supprimée de api-keys.local.md"
+fi
+
 echo ""
 log_success "$PROJECT_ID retiré du registre"
