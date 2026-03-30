@@ -133,6 +133,8 @@ for project_id in "${project_ids[@]}"; do
   else
     # ── Mode déploiement ──────────────────────────────────────────────────────
     deploy_ok=true
+    # Exporter PROJECT_ID pour que les adaptateurs puissent lire api-keys.local.md
+    PROJECT_ID="$project_id"
     for tgt in "${active_targets[@]}"; do
       load_adapter "$tgt"
       if adapter_validate 2>/dev/null; then

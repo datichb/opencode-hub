@@ -34,7 +34,7 @@ echo "  config list                          Liste toutes les configurations enr
 echo "  config unset <PROJECT_ID>            Supprime la configuration d'un projet"
 echo ""
 echo -e "${BOLD}Cibles deploy:${RESET}"
-echo "  opencode     → .opencode/agents/ + config.json"
+echo "  opencode     → .opencode/agents/ + opencode.json"
 echo "  claude-code  → .claude/agents/"
 echo "  vscode       → .github/copilot-instructions.md + .vscode/prompts/"
 echo "  all          → toutes les cibles actives"

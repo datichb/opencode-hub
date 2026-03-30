@@ -139,7 +139,11 @@ cmd_set() {
   if [ -z "$flag_api_key" ]; then
     local masked_cur=""
     [ -n "$cur_api_key" ] && masked_cur=" [actuelle : ${cur_api_key:0:8}***]"
+    # Restaurer l'écho terminal si l'utilisateur interrompt (Ctrl+C)
+    trap 'stty echo 2>/dev/null; echo ""; exit 130' INT TERM
     read -rsp "  Clé API${masked_cur} : " flag_api_key
+    stty echo 2>/dev/null
+    trap - INT TERM
     echo ""
     # Si aucune nouvelle saisie et qu'une ancienne existe, conserver l'ancienne
     if [ -z "$flag_api_key" ] && [ -n "$cur_api_key" ]; then

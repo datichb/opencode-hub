@@ -37,7 +37,7 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
   `opencode.json` mises à jour (formats avec/sans clé, règle `.gitignore`, priorité modèle)
 - `.gitignore` : ajout de `projects/api-keys.local.md`
 
- (famille planning/) : découverte d'un projet existant en lecture
+- Agent `onboarder` (famille planning/) : découverte d'un projet existant en lecture
   seule — détecte la stack, explore adaptativement les fichiers structurants selon le
   profil (Vue, React, Node.js, Python, API, Data/ML, DevOps/Platform, Mobile), lit les
   tickets Beads et ADRs existants, produit un rapport de contexte structuré (stack,
@@ -74,7 +74,7 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 - `docs/architecture/skills.md` : `planning/project-discovery` ajouté dans le domaine
   planning/, matrice de dépendances mise à jour pour `onboarder`
 
- (famille developer/) : hardening applicatif post-audit —
+- Agent `developer-security` (famille developer/) : hardening applicatif post-audit —
   implémente CORS restrictif, headers HTTP de sécurité (CSP, HSTS, X-Frame-Options),
   hashing des mots de passe (bcrypt, argon2id), gestion sécurisée des tokens JWT
   (rotation, révocation), sessions (httpOnly, secure, sameSite), rate limiting sur les
@@ -123,6 +123,9 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 ---
 
 
+### Added
+
+- Skill `posture/expert-posture` :
   exploration systématique des artefacts avant de répondre (annonce de ce qui a été consulté,
   identification des zones d'incertitude), recommandation contraire argumentée au format ⚠️
   (problème / alternative / pourquoi / trade-offs, formulation à la première personne),

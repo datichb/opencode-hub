@@ -37,7 +37,6 @@ _build_provider_block() {
   case "$provider" in
     anthropic)
       cat <<JSON
-,
   "provider": {
     "anthropic": {
       "apiKey": "${api_key}"
@@ -48,7 +47,6 @@ JSON
     litellm)
       base_url=$(get_project_api_base_url "$project_id")
       cat <<JSON
-,
   "provider": {
     "litellm": {
       "npm": "@ai-sdk/openai-compatible",
@@ -116,10 +114,32 @@ adapter_deploy() {
     [ -n "$provider_block" ] && has_api_key=true
   fi
 
-  if [ ! -f "$config_file" ] || [ "$has_api_key" = true ]; then
-    # Réécrire si : fichier absent OU clé API à injecter (toujours régénérer pour tenir à jour)
-    printf '{\n  "$schema": "https://opencode.ai/config.json",\n  "model": "%s"%s\n}\n' \
-      "$model" "$provider_block" > "$config_file"
+  # Régénérer si : fichier absent, clé API à injecter, ou PROJECT_ID défini sans clé
+  # (ce dernier cas couvre le retrait de clé après oc config unset)
+  local should_write=false
+  if [ ! -f "$config_file" ]; then
+    should_write=true
+  elif [ "$has_api_key" = true ]; then
+    should_write=true
+  elif [ -n "${PROJECT_ID:-}" ]; then
+    # PROJECT_ID défini mais sans clé : régénérer pour retirer un ancien bloc provider
+    should_write=true
+  fi
+
+  if [ "$should_write" = true ]; then
+    # Écriture safe : pas de printf avec interpolation pour éviter que % dans la clé
+    # soit interprété comme spécificateur de format
+    {
+      echo '{'
+      echo '  "$schema": "https://opencode.ai/config.json",'
+      if [ "$has_api_key" = true ]; then
+        echo "  \"model\": \"${model}\","
+        printf '%s' "$provider_block"
+      else
+        echo "  \"model\": \"${model}\""
+      fi
+      echo '}'
+    } > "$config_file"
     if [ "$has_api_key" = true ]; then
       log_success "[opencode] opencode.json créé avec clé API (modèle : $model, provider : $(get_project_api_provider "${PROJECT_ID}"))"
       # Protéger le fichier (contient une clé) et l'exclure du commit projet
