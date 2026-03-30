@@ -32,7 +32,7 @@ _build_provider_block() {
   local provider api_key base_url
   provider=$(get_project_api_provider "$project_id")
   api_key=$(get_project_api_key "$project_id")
-  [ -z "$provider" ] || [ -z "$api_key" ] && return 0
+  { [ -z "$provider" ] || [ -z "$api_key" ]; } && return 0
 
   case "$provider" in
     anthropic)

@@ -88,19 +88,19 @@ get_project_path() {
     log_warn "Fichier paths.local.md introuvable — chemin local non disponible" >&2
     return 1
   fi
-  grep "^${id}=" "$PATHS_FILE" | cut -d'=' -f2- | tr -d ' '
+  grep -F "${id}=" "$PATHS_FILE" | cut -d'=' -f2- | tr -d ' '
 }
 
 # Vérifie qu'un projet existe dans projects.md
 project_exists() {
   local id="$1"
-  grep -q "^## ${id}$" "$PROJECTS_FILE" 2>/dev/null
+  grep -qF "## ${id}" "$PROJECTS_FILE" 2>/dev/null
 }
 
 # Vérifie qu'un chemin existe dans paths.local.md
 path_exists() {
   local id="$1"
-  grep -q "^${id}=" "$PATHS_FILE" 2>/dev/null
+  grep -qF "${id}=" "$PATHS_FILE" 2>/dev/null
 }
 
 # Normalise un PROJECT_ID en majuscules
@@ -184,7 +184,7 @@ get_project_api_base_url() {
 api_keys_entry_exists() {
   local id="$1"
   [ -f "$API_KEYS_FILE" ] || return 1
-  grep -q "^\[${id}\]$" "$API_KEYS_FILE"
+  grep -qF "[${id}]" "$API_KEYS_FILE"
 }
 
 # Supprime une section [PROJECT_ID] complète de api-keys.local.md

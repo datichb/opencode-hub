@@ -2,6 +2,8 @@
 set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 
+ensure_projects_file
+
 # ── Parsing des arguments (--dev est un flag libre) ───
 DEV_MODE=false
 ARGS=()

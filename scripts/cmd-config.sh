@@ -34,7 +34,7 @@ _remove_section() {
   remove_api_keys_section "$1"
 }
 
-# Écrit ou remplace une section complète
+# Écrit ou remplace une section complète (atomique via tmpfile + mv)
 _write_section() {
   local id="$1" model="$2" provider="$3" api_key="$4" base_url="$5"
   _ensure_api_keys_file
@@ -42,7 +42,8 @@ _write_section() {
   if api_keys_entry_exists "$id"; then
     _remove_section "$id"
   fi
-  # Ajouter la nouvelle entrée
+  # Construire la nouvelle entrée dans un tmpfile, puis l'appendre atomiquement
+  local tmp; tmp=$(mktemp)
   {
     echo ""
     echo "[${id}]"
@@ -50,7 +51,9 @@ _write_section() {
     echo "provider=${provider}"
     echo "api_key=${api_key}"
     [ -n "$base_url" ] && echo "base_url=${base_url}"
-  } >> "$API_KEYS_FILE"
+  } > "$tmp"
+  cat "$tmp" >> "$API_KEYS_FILE"
+  rm -f "$tmp"
 }
 
 # Affiche la configuration d'un projet (masque la clé)
@@ -167,7 +170,7 @@ cmd_set() {
   if path_exists "$id"; then
     read -rp "  Appliquer maintenant au projet (re-déployer opencode.json) ? [Y/n] : " apply_now
     if [[ "${apply_now:-Y}" =~ ^[Yy]$ ]]; then
-      PROJECT_ID="$id" bash "$SCRIPTS_DIR/cmd-deploy.sh" opencode "$id"
+      PROJECT_ID="$id" bash "$SCRIPTS_DIR/cmd-deploy.sh" all "$id"
     else
       log_info "Appliquer plus tard : ./oc.sh deploy opencode $id"
     fi
