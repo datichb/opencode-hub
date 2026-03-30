@@ -102,12 +102,24 @@ if [ ! -d "$PROJECT_PATH/.beads" ]; then
   fi
 fi
 
-# ── Mode --dev : bootstrap prompt ai-delegated ─────────
+# ── Mode --dev : sync auto + bootstrap prompt ai-delegated ──
 if [ "$DEV_MODE" = true ]; then
   if ! command -v bd &>/dev/null; then
     log_error "--dev requiert bd (Beads) : brew install bd"
     exit 1
   fi
+
+  # Sync non-bloquant : pull les derniers tickets avant injection
+  _tracker=$(get_project_tracker "$PROJECT_ID")
+  if [ "$_tracker" != "none" ]; then
+    log_info "Sync $_tracker --pull-only avant démarrage…"
+    if (cd "$PROJECT_PATH" && bd "$_tracker" sync --pull-only) 2>/dev/null; then
+      log_success "Sync $_tracker terminé"
+    else
+      log_warn "Sync $_tracker échoué — les tickets locaux seront utilisés"
+    fi
+  fi
+
   if [ "$default_target" = "vscode" ]; then
     log_warn "--dev ignoré pour la cible vscode (pas de support prompt)"
   else
