@@ -46,13 +46,19 @@ JSON
       ;;
     litellm)
       base_url=$(get_project_api_base_url "$project_id")
+      # Sanitiser les valeurs avant injection JSON : échapper \ puis "
+      local safe_api_key safe_base_url
+      safe_api_key="${api_key//\\/\\\\}"
+      safe_api_key="${safe_api_key//\"/\\\"}"
+      safe_base_url="${base_url//\\/\\\\}"
+      safe_base_url="${safe_base_url//\"/\\\"}"
       cat <<JSON
   "provider": {
     "litellm": {
       "npm": "@ai-sdk/openai-compatible",
       "options": {
-        "apiKey": "${api_key}"$([ -n "$base_url" ] && echo ",
-        \"baseURL\": \"${base_url}\"")
+        "apiKey": "${safe_api_key}"$([ -n "$safe_base_url" ] && echo ",
+        \"baseURL\": \"${safe_base_url}\"")
       }
     }
   }
