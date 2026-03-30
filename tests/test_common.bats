@@ -1,7 +1,8 @@
 #!/usr/bin/env bats
 # Tests unitaires pour scripts/common.sh
 # Fonctions testées : get_project_language, get_project_tracker, project_exists,
-#                     normalize_project_id, api_keys_entry_exists, get_project_api_*
+#                     normalize_project_id, api_keys_entry_exists, get_project_api_*,
+#                     get_project_path, path_exists
 
 setup() {
   TEST_DIR="$(mktemp -d)"
@@ -13,6 +14,8 @@ setup() {
   PROJECTS_FILE="$TEST_DIR/projects.md"
   # Surcharger API_KEYS_FILE pour les tests de clés API
   API_KEYS_FILE="$TEST_DIR/api-keys.local.md"
+  # Surcharger PATHS_FILE pour les tests de chemins
+  PATHS_FILE="$TEST_DIR/paths.local.md"
 
   # Écrire un projects.md minimal pour les tests
   cat > "$PROJECTS_FILE" <<'PROJEOF'
@@ -271,4 +274,33 @@ EOF
   run get_project_api_base_url "PROJ-URL"
   [ "$status" -eq 0 ]
   [ "$output" = "https://api.example.com/v1?foo=bar&baz=qux" ]
+}
+
+# ── get_project_path ──────────────────────────────────────────────────────────
+
+@test "get_project_path : retourne le chemin quand paths.local.md est présent" {
+  printf 'PROJ-FR=/home/user/projets/proj-fr\nPROJ-EN=/home/user/projets/proj-en\n' > "$PATHS_FILE"
+  run get_project_path "PROJ-FR"
+  [ "$status" -eq 0 ]
+  [ "$output" = "/home/user/projets/proj-fr" ]
+}
+
+@test "get_project_path : retourne 1 si paths.local.md est absent" {
+  # PATHS_FILE pointe vers un fichier inexistant (pas créé dans ce test)
+  run get_project_path "PROJ-FR"
+  [ "$status" -ne 0 ]
+}
+
+# ── path_exists ───────────────────────────────────────────────────────────────
+
+@test "path_exists : retourne 0 si l'entrée existe" {
+  printf 'PROJ-FR=/home/user/projets/proj-fr\n' > "$PATHS_FILE"
+  run path_exists "PROJ-FR"
+  [ "$status" -eq 0 ]
+}
+
+@test "path_exists : retourne non-zero si l'entrée est absente" {
+  printf 'PROJ-FR=/home/user/projets/proj-fr\n' > "$PATHS_FILE"
+  run path_exists "PROJ-ABSENT"
+  [ "$status" -ne 0 ]
 }
