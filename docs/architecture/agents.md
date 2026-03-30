@@ -266,7 +266,7 @@ Ne corrige jamais le bug.
 |--|--|
 | **Label** | ProjectPlanner |
 | **Fichier** | `agents/planning/planner.md` |
-| **Skills** | `developer/dev-beads`, `planning/planner` |
+| **Skills** | `developer/dev-beads`, `planning/planner`, `posture/expert-posture` |
 | **Invocation** | Description d'une feature en langage naturel |
 
 Consultant fonctionnel et technique qui analyse le contexte projet avant de planifier.

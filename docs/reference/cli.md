@@ -75,7 +75,7 @@ oc deploy --check all MON-APP   # vérifie toutes les cibles pour MON-APP
 
 | Cible | Fichiers générés |
 |-------|-----------------|
-| `opencode` | `.opencode/agents/*.md` + `opencode.json` (créé seulement s'il n'existe pas) |
+| `opencode` | `.opencode/agents/*.md` + `opencode.json` (régénéré si une clé API ou un PROJECT_ID est défini) |
 | `claude-code` | `.claude/agents/*.md` |
 | `vscode` | `.github/copilot-instructions.md` + `.vscode/prompts/*.prompt.md` |
 
@@ -208,6 +208,46 @@ oc version
 
 ---
 
+## `oc config`
+
+Gère les clés API et les modèles IA par projet. Les données sont stockées dans `projects/api-keys.local.md` (non versionné).
+
+```bash
+oc config <sous-commande> [options]
+```
+
+| Sous-commande | Description |
+|---------------|-------------|
+| `set <PROJECT_ID> [options]` | Configure la clé API, le modèle et le provider pour un projet |
+| `get <PROJECT_ID>` | Affiche la configuration d'un projet (clé masquée) |
+| `list` | Liste toutes les configurations enregistrées |
+| `unset <PROJECT_ID>` | Supprime la configuration d'un projet (avec confirmation) |
+
+**Options de `oc config set` :**
+
+| Option | Description |
+|--------|-------------|
+| `--model <modèle>` | Modèle IA (défaut : `claude-sonnet-4-5`) |
+| `--provider <provider>` | `anthropic` ou `litellm` (défaut : `anthropic`) |
+| `--api-key <clé>` | Clé API (saisie masquée en mode interactif) |
+| `--base-url <url>` | URL de base (litellm uniquement) |
+
+> Sans options, `set` est interactif — propose les valeurs actuelles comme défaut.
+> Après un `set`, propose de re-déployer `opencode.json` dans le projet si le chemin est connu.
+
+**Exemples :**
+
+```bash
+oc config set MON-APP                                 # mode interactif
+oc config set MON-APP --model claude-opus-4-5 --provider anthropic --api-key sk-ant-...
+oc config set MON-APP --provider litellm --api-key sk-... --base-url https://api.example.com/v1
+oc config get MON-APP                                 # affiche la config (clé masquée)
+oc config list                                        # liste toutes les entrées
+oc config unset MON-APP                               # supprime (avec confirmation)
+```
+
+---
+
 ## `oc agent`
 
 Gère les agents canoniques du hub.
@@ -254,6 +294,7 @@ oc skills <sous-commande>
 | `add /owner/repo [name]` | Ajoute un skill externe |
 | `list` | Liste tous les skills (locaux + externes) |
 | `update [name]` | Met à jour un skill externe (ou tous si absent) |
+| `info /owner/repo` | Prévisualise les skills disponibles dans un dépôt |
 | `used-by <skill>` | Liste les agents qui utilisent ce skill |
 | `sync` | Re-télécharge tous les skills externes (utile après clone) |
 | `remove <name>` | Supprime un skill externe |
