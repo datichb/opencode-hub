@@ -265,7 +265,12 @@ _pick_skills() {
     i=$((i + 1))
   done
 
-  PICKED_SKILLS=$(printf '%s\n' "${chosen[@]}" | tr '\n' ',' | sed 's/,$//')
+  # Protection bash 3.2 : tableau vide → chaîne vide (pas de crash avec set -u)
+  if [ ${#chosen[@]} -eq 0 ]; then
+    PICKED_SKILLS=""
+  else
+    PICKED_SKILLS=$(printf '%s\n' "${chosen[@]}" | tr '\n' ',' | sed 's/,$//')
+  fi
 }
 
 ##

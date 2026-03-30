@@ -78,7 +78,9 @@ for project_id in "${project_ids[@]}"; do
         *) continue ;;
       esac
 
-      for agent_file in "$CANONICAL_AGENTS_DIR"/*.md; do
+      # Utiliser find pour inclure les sous-dossiers (auditor/, developer/, etc.)
+      # — cohérent avec cmd-deploy.sh qui utilise find
+      while IFS= read -r agent_file; do
         [ -f "$agent_file" ] || continue
         agent_supports_target "$agent_file" "$tgt" || continue
         agent_id=$(get_agent_id "$agent_file")
@@ -124,7 +126,7 @@ for project_id in "${project_ids[@]}"; do
           echo -e "  ${GREEN}✓ À JOUR${RESET}     [$tgt] $agent_id"
           project_ok=$((project_ok + 1))
         fi
-      done
+      done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
     done
 
     stale_count=$((stale_count + project_stale))

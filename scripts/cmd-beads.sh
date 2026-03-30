@@ -221,7 +221,8 @@ cmd_sync() {
   tracker=$(_resolve_tracker "$id")
 
   log_info "Sync $tracker ← → Beads  [$id]"
-  (cd "$path" && bd "$tracker" sync "${extra_flags[@]}") \
+  # Protection bash 3.2 : ${extra_flags[@]+...} évite le crash si le tableau est vide avec set -u
+  (cd "$path" && bd "$tracker" sync ${extra_flags[@]+"${extra_flags[@]}"}) \
     || { log_error "Échec du sync $tracker"; exit 1; }
   log_success "Sync $tracker terminé pour $id"
 }
