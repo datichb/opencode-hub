@@ -172,10 +172,10 @@ cmd_set() {
     if [[ "${apply_now:-Y}" =~ ^[Yy]$ ]]; then
       PROJECT_ID="$id" bash "$SCRIPTS_DIR/cmd-deploy.sh" all "$id"
     else
-      log_info "Appliquer plus tard : ./oc.sh deploy opencode $id"
+      log_info "Appliquer plus tard : ./oc.sh deploy all $id"
     fi
   else
-    log_info "Chemin non enregistré pour $id — appliquer via : ./oc.sh deploy opencode $id"
+    log_info "Chemin non enregistré pour $id — appliquer via : ./oc.sh deploy all $id"
   fi
 }
 

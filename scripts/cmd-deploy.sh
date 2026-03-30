@@ -89,7 +89,7 @@ _cmd_deploy_check() {
         fi
       done < <(extract_frontmatter_list "$agent_file" "skills")
 
-      if [ "$agent_mtime" -gt "$gen_mtime" ] && [ "$max_src_mtime" = "$agent_mtime" ]; then
+      if [ "$agent_mtime" -gt "$gen_mtime" ] && [ "$max_src_mtime" -eq "$agent_mtime" ]; then
         stale_reason="agent source modifié"
       fi
 
