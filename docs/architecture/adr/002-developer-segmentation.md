@@ -30,7 +30,7 @@ L'agent `developer.md` est supprimé et remplacé par 7 agents spécialisés :
 | `developer-api` | REST, GraphQL, webhooks, intégrations tierces |
 
 Chaque agent spécialisé n'injecte que les skills pertinents à son domaine.
-Tous partagent `dev-standards-universal`, `dev-standards-git` et `dev-beads`.
+Tous partagent `dev-standards-universal`, `dev-standards-git`, `beads-plan` et `beads-dev`.
 
 ## Conséquences
 

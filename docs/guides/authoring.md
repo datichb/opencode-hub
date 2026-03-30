@@ -69,11 +69,11 @@ Un agent qui audite (lecture seule) va dans `auditor/`.
 
 | Type d'agent | Skills de base recommandés |
 |-------------|---------------------------|
-| Developer | `dev-standards-universal`, `dev-standards-security`, `dev-beads` + skills domaine |
+| Developer | `dev-standards-universal`, `dev-standards-security`, `beads-plan`, `beads-dev` + skills domaine |
 | Auditeur | `audit-protocol` + skill domaine spécifique + `posture/expert-posture` |
-| Coordinateur (lecture seule) | Son protocole propre — pas de `dev-beads` |
+| Coordinateur (lecture seule) | Son protocole propre — pas de `beads-dev` |
 | Agent expert conseiller | `posture/expert-posture` |
-| Agent qui gère des tickets | `dev-beads` |
+| Agent qui gère des tickets | `beads-plan` (lecture + création), `beads-dev` (exécution) |
 | Agent qui produit du code à tester | `dev-standards-testing` |
 | Agent qui commit | `dev-standards-git` |
 
@@ -152,7 +152,8 @@ Ce skill définit... Il complète <autre-skill> si applicable.
 - [ ] Le corps contient : identité + ce qu'il fait + ce qu'il NE fait PAS + workflow
 - [ ] Les limites explicites pointent vers le bon agent alternatif si applicable
 - [ ] `posture/expert-posture` est injecté si l'agent a un rôle de conseil ou d'expertise
-- [ ] `dev-beads` est injecté si l'agent gère des tickets Beads
+- [ ] `beads-plan` est injecté si l'agent lit ou crée des tickets Beads
+- [ ] `beads-dev` est injecté en plus si l'agent exécute (clame, implémente, clôt) des tickets
 - [ ] La matrice de dépendances dans `docs/architecture/skills.md` est mise à jour
 
 ### Skill
@@ -182,7 +183,8 @@ skills:                                   # ← du plus générique au plus spé
   - developer/dev-standards-backend       #   contexte d'application
   - developer/dev-standards-testing       #   il écrit des tests
   - developer/dev-standards-git           #   il commit
-  - developer/dev-beads                   #   il gère des tickets
+  - developer/beads-plan                  #   il lit et crée des tickets
+  - developer/beads-dev                   #   il exécute des tickets
 ---
 ```
 

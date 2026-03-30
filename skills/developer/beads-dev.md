@@ -1,0 +1,79 @@
+---
+name: beads-dev
+description: Workflow exécuteur Beads (bd) — clamer, implémenter, clore les tickets, règles ai-delegated. Pour les agents qui implémentent.
+---
+
+## Workflow obligatoire
+
+```
+1. bd list --ready --label ai-delegated --json  → tickets délégués à l'agent
+2. bd show <ID>                                 → lire le détail (description, acceptance, notes)
+3. bd update <ID> --claim                       → clamer avant de commencer
+4. [implémenter]
+5. bd close <ID> --suggest-next                 → clore et voir le ticket suivant
+```
+
+---
+
+## Clamer un ticket
+
+Avant de commencer à implémenter, clame le ticket pour signaler que tu travailles dessus.
+`--claim` est atomique : il échoue si un autre acteur a déjà réclamé le ticket.
+
+```bash
+bd update <ID> --claim
+```
+
+Cette commande met le statut à `in_progress` et t'assigne le ticket en une seule opération.
+
+---
+
+## Clore un ticket
+
+Après implémentation et validation :
+
+```bash
+bd close <ID> --suggest-next
+```
+
+`--suggest-next` affiche les tickets qui viennent d'être débloqués par cette clôture,
+ce qui permet de choisir la prochaine tâche sans relancer `bd list`.
+
+**Clore avec une raison :**
+```bash
+bd close <ID> --reason "Implémenté dans le commit abc123"
+```
+
+---
+
+## Règles strictes
+
+- Toujours `bd show <ID>` avant d'implémenter — ne jamais supposer le contenu d'un ticket
+- Toujours clamer avant d'implémenter — évite les conflits si plusieurs agents tournent
+- Toujours clore explicitement — ne pas laisser de tickets `in_progress` orphelins
+- Ne pas modifier le titre ou la description d'un ticket sans y être invité
+- Si un ticket est bloqué par une dépendance, utiliser `bd list --ready --label ai-delegated` pour en trouver un autre
+
+---
+
+## Label `ai-delegated` — délégation à l'agent
+
+Seuls les tickets portant le label **`ai-delegated`** te sont assignés au démarrage.
+**L'humain décide quels tickets déléguer** — tu n'ajoutes jamais ce label toi-même.
+
+**Tu ne dois JAMAIS :**
+- Prendre un ticket sans label `ai-delegated`, sauf si l'utilisateur te le demande
+  explicitement dans la conversation
+- Ajouter toi-même le label `ai-delegated` sur un ticket
+
+**Commandes utiles :**
+```bash
+# Voir tes tickets délégués
+bd list --ready --label ai-delegated --json
+
+# L'humain délègue un ticket à l'agent
+bd update <ID> --add-label ai-delegated
+
+# L'humain reprend la main sur un ticket
+bd update <ID> --remove-label ai-delegated
+```

@@ -42,7 +42,7 @@ Agents qui pilotent d'autres agents sans jamais coder eux-mêmes.
 |--|--|
 | **Label** | Onboarder |
 | **Fichier** | `agents/planning/onboarder.md` |
-| **Skills** | `planning/project-discovery`, `posture/expert-posture`, `developer/dev-beads` |
+| **Skills** | `planning/project-discovery`, `posture/expert-posture`, `developer/beads-plan` |
 | **Invocation** | `"Onboarde-toi sur ce projet"` / `"Découvre ce projet"` / `"Avant de commencer, explore le projet"` |
 
 Agent de découverte de projet. Explore la codebase d'un projet existant et produit
@@ -140,7 +140,7 @@ Tous les agents d'audit injectent `auditor/audit-protocol` (format de rapport co
 9 agents spécialisés par domaine technique. Tous suivent le même workflow Beads
 (`bd claim → implémenter → tester → bd close`).
 
-Skills communs à tous : `dev-standards-universal`, `dev-standards-security`, `dev-standards-git`, `dev-beads`.
+Skills communs à tous : `dev-standards-universal`, `dev-standards-security`, `dev-standards-git`, `beads-plan`, `beads-dev`.
 
 | Agent | Fichier | Domaine | Skills spécifiques |
 |-------|---------|---------|-------------------|
@@ -178,7 +178,7 @@ Ne codent jamais. Invocables directement ou via l'`orchestrator`.
 |--|--|
 | **Label** | UXDesigner |
 | **Fichier** | `agents/design/ux-designer.md` |
-| **Skills** | `designer/ux-protocol`, `developer/dev-beads` |
+| **Skills** | `designer/ux-protocol`, `developer/beads-plan`, `developer/beads-dev` |
 | **Invocation** | `"Analyse le flow de [feature]"` / `"Spec UX pour [ticket]"` / `"Audit UX de [écran]"` |
 
 Expert en expérience utilisateur. Analyse les besoins, identifie les frictions,
@@ -194,7 +194,7 @@ Lit et clôt les tickets Beads. Ne produit pas de maquettes graphiques.
 |--|--|
 | **Label** | UIDesigner |
 | **Fichier** | `agents/design/ui-designer.md` |
-| **Skills** | `designer/ui-protocol`, `developer/dev-beads` |
+| **Skills** | `designer/ui-protocol`, `developer/beads-plan`, `developer/beads-dev` |
 | **Invocation** | `"Spec UI pour [composant]"` / `"Design system [projet]"` / `"Harmonise [écran]"` |
 
 Expert en design d'interface. Définit les fondations d'un design system (tokens),
@@ -266,7 +266,7 @@ Ne corrige jamais le bug.
 |--|--|
 | **Label** | ProjectPlanner |
 | **Fichier** | `agents/planning/planner.md` |
-| **Skills** | `developer/dev-beads`, `planning/planner`, `posture/expert-posture` |
+| **Skills** | `developer/beads-plan`, `planning/planner`, `posture/expert-posture` |
 | **Invocation** | Description d'une feature en langage naturel |
 
 Consultant fonctionnel et technique qui analyse le contexte projet avant de planifier.
@@ -288,7 +288,7 @@ dépendance tardive, doublon. Ne code jamais.
 |--|--|
 | **Label** | Documentarian |
 | **Fichier** | `agents/documentation/documentarian.md` |
-| **Skills** | `developer/dev-standards-git`, `developer/dev-beads`, `documentarian/doc-protocol`, `documentarian/doc-standards`, `documentarian/doc-adr`, `documentarian/doc-api`, `documentarian/doc-changelog`, `posture/expert-posture` |
+| **Skills** | `developer/dev-standards-git`, `developer/beads-plan`, `developer/beads-dev`, `documentarian/doc-protocol`, `documentarian/doc-standards`, `documentarian/doc-adr`, `documentarian/doc-api`, `documentarian/doc-changelog`, `posture/expert-posture` |
 | **Invocation** | `"Documente [sujet]"` / `"Crée un ADR pour [décision]"` / `"Mets à jour le CHANGELOG"` / `"Qu'est-ce qui manque dans la doc ?"` |
 
 Rédige et met à jour la documentation technique, fonctionnelle, architecturale, API

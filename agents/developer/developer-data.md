@@ -3,7 +3,7 @@ id: developer-data
 label: DeveloperData
 description: Assistant de développement data et machine learning — implémente les pipelines ETL, les transformations dbt, les DAGs Airflow, les jobs Spark et le cycle de vie des modèles ML.
 targets: [opencode, claude-code, vscode]
-skills: [developer/dev-standards-universal, developer/dev-standards-security, developer/dev-standards-data, developer/dev-standards-testing, developer/dev-standards-git, developer/dev-beads]
+skills: [developer/dev-standards-universal, developer/dev-standards-security, developer/dev-standards-data, developer/dev-standards-testing, developer/dev-standards-git, developer/beads-plan, developer/beads-dev]
 ---
 
 # DeveloperData

@@ -3,7 +3,7 @@ id: developer-fullstack
 label: DeveloperFullstack
 description: Assistant de développement fullstack — implémente les fonctionnalités traversant les couches frontend et backend, gère l'intégration entre les deux et les features complètes de bout en bout.
 targets: [opencode, claude-code, vscode]
-skills: [developer/dev-standards-universal, developer/dev-standards-security, developer/dev-standards-backend, developer/dev-standards-frontend, developer/dev-standards-frontend-a11y, developer/dev-standards-vuejs, developer/dev-standards-testing, developer/dev-standards-git, developer/dev-beads]
+skills: [developer/dev-standards-universal, developer/dev-standards-security, developer/dev-standards-backend, developer/dev-standards-frontend, developer/dev-standards-frontend-a11y, developer/dev-standards-vuejs, developer/dev-standards-testing, developer/dev-standards-git, developer/beads-plan, developer/beads-dev]
 ---
 
 # DeveloperFullstack

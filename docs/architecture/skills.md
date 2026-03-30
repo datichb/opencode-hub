@@ -30,7 +30,8 @@ Skills de standards de développement. Partagés entre les agents développeurs 
 
 | Fichier | Agents qui l'utilisent | Contenu |
 |---------|----------------------|---------|
-| `developer/dev-beads.md` | Tous les developer-* | Workflow Beads complet : `bd list`, `bd show`, `bd claim`, `bd close --suggest-next` |
+| `developer/beads-plan.md` | Tous les developer-*, planner, onboarder, designers, documentarian | Lecture et création de tickets Beads : `bd list`, `bd show`, `bd create`, `bd label list-all`, liens externes |
+| `developer/beads-dev.md` | Tous les developer-*, designers, documentarian | Workflow exécuteur Beads : `bd update --claim`, `bd close --suggest-next`, règles `ai-delegated` |
 | `developer/dev-standards-universal.md` | Tous les developer-*, reviewer | Clean Code, SOLID complet, TypeScript strict, nommage, structure |
 | `developer/dev-standards-security.md` | Tous les developer-*, reviewer | Secrets/config, validation des inputs, injections (SQL/shell/LDAP), auth/autorisation, logs sans données sensibles, audit des dépendances |
 | `developer/dev-standards-backend.md` | developer-backend, developer-fullstack, developer-api, reviewer | Architecture en couches, DTOs, services, repositories, sécurité API |
@@ -148,8 +149,8 @@ Skills de posture transverse. Injectables dans tout agent nécessitant une postu
 orchestrator          → orchestrator/orchestrator-protocol
 orchestrator-dev      → orchestrator/orchestrator-dev-protocol
 onboarder             → planning/project-discovery, posture/expert-posture,
-                         developer/dev-beads
-planner               → developer/dev-beads, planning/planner, posture/expert-posture
+                         developer/beads-plan
+planner               → developer/beads-plan, planning/planner, posture/expert-posture
 reviewer              → dev-standards-universal, dev-standards-security,
                          dev-standards-backend,
                          dev-standards-frontend, dev-standards-frontend-a11y,
@@ -166,40 +167,44 @@ auditor-ecodesign     → auditor/audit-protocol, auditor/audit-ecodesign, postu
 auditor-architecture  → auditor/audit-protocol, auditor/audit-architecture, posture/expert-posture
 auditor-privacy       → auditor/audit-protocol, auditor/audit-privacy, posture/expert-posture
 auditor-observability → auditor/audit-protocol, auditor/audit-observability, posture/expert-posture
-ux-designer           → designer/ux-protocol, developer/dev-beads, posture/expert-posture
-ui-designer           → designer/ui-protocol, developer/dev-beads, posture/expert-posture
+ux-designer           → designer/ux-protocol, developer/beads-plan, developer/beads-dev, posture/expert-posture
+ui-designer           → designer/ui-protocol, developer/beads-plan, developer/beads-dev, posture/expert-posture
 developer-frontend    → dev-standards-universal, dev-standards-security,
                          dev-standards-frontend,
                          dev-standards-frontend-a11y, dev-standards-vuejs,
-                         dev-standards-testing, dev-standards-git, dev-beads
+                         dev-standards-testing, dev-standards-git,
+                         beads-plan, beads-dev
 developer-backend     → dev-standards-universal, dev-standards-security,
                          dev-standards-backend,
-                         dev-standards-testing, dev-standards-git, dev-beads
+                         dev-standards-testing, dev-standards-git,
+                         beads-plan, beads-dev
 developer-fullstack   → dev-standards-universal, dev-standards-security,
                          dev-standards-frontend,
                          dev-standards-frontend-a11y, dev-standards-vuejs,
                          dev-standards-backend, dev-standards-testing,
-                         dev-standards-git, dev-beads
+                         dev-standards-git, beads-plan, beads-dev
 developer-data        → dev-standards-universal, dev-standards-security,
                          dev-standards-data, dev-standards-testing,
-                         dev-standards-git, dev-beads
+                         dev-standards-git, beads-plan, beads-dev
 developer-devops      → dev-standards-universal, dev-standards-security,
                          dev-standards-devops,
-                         dev-standards-git, dev-beads
+                         dev-standards-git, beads-plan, beads-dev
 developer-mobile      → dev-standards-universal, dev-standards-security,
                          dev-standards-mobile,
-                         dev-standards-git, dev-beads
+                         dev-standards-git, beads-plan, beads-dev
 developer-api         → dev-standards-universal, dev-standards-security,
                          dev-standards-backend, dev-standards-api,
-                         dev-standards-testing, dev-standards-git, dev-beads
+                         dev-standards-testing, dev-standards-git,
+                         beads-plan, beads-dev
 developer-platform    → dev-standards-universal, dev-standards-security,
                          dev-standards-platform,
-                         dev-standards-git, dev-beads
+                         dev-standards-git, beads-plan, beads-dev
 developer-security    → dev-standards-universal, dev-standards-security,
                          dev-standards-security-hardening,
                          dev-standards-backend,
-                         dev-standards-testing, dev-standards-git, dev-beads
-documentarian         → dev-standards-git, dev-beads,
+                         dev-standards-testing, dev-standards-git,
+                         beads-plan, beads-dev
+documentarian         → dev-standards-git, beads-plan, beads-dev,
                          documentarian/doc-protocol, documentarian/doc-standards,
                          documentarian/doc-adr, documentarian/doc-api,
                          documentarian/doc-changelog, posture/expert-posture
