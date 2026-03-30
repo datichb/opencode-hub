@@ -39,10 +39,12 @@ Skills de standards de développement. Partagés entre les agents développeurs 
 | `developer/dev-standards-vuejs.md` | developer-frontend, developer-fullstack | Composition API, `<script setup>`, Pinia, composables, Vue Router |
 | `developer/dev-standards-testing.md` | developer-frontend, developer-backend, developer-fullstack, developer-api, developer-data, qa-engineer | Stratégie de tests, coverage, TDD, Vitest, pytest, PHPUnit |
 | `developer/dev-standards-git.md` | Tous les developer-*, reviewer | Conventional Commits, branches, PR, messages de commit |
-| `developer/dev-standards-data.md` | developer-data | Pipelines de données, ETL, ML, dbt, Airflow, qualité des données |
+| `developer/dev-standards-data.md` | developer-data | Pipelines de données, ETL, ML, dbt, Airflow, qualité des données, tests dbt/Airflow/PySpark/ML |
 | `developer/dev-standards-devops.md` | developer-devops | Docker, CI/CD, scripts shell (`set -euo pipefail`) |
 | `developer/dev-standards-mobile.md` | developer-mobile | React Native, Flutter, Swift, Kotlin, patterns mobile, performance |
 | `developer/dev-standards-platform.md` | developer-platform | Terraform, Pulumi, Kubernetes, Helm, GitOps (ArgoCD/Flux), secrets à l'échelle (Vault, ESO) |
+| `developer/dev-standards-api.md` | developer-api | Versioning d'API, pagination, format de réponse uniforme, codes HTTP, idempotence, OpenAPI, breaking changes, webhooks, rate limiting |
+| `developer/dev-standards-security-hardening.md` | developer-security | CORS, headers HTTP (CSP, HSTS, X-Frame-Options), bcrypt/argon2id, JWT (rotation, révocation), sessions (httpOnly/secure/sameSite), rate limiting, chiffrement AES-256-GCM |
 
 ---
 
@@ -185,11 +187,15 @@ developer-mobile      → dev-standards-universal, dev-standards-security,
                          dev-standards-mobile,
                          dev-standards-git, dev-beads
 developer-api         → dev-standards-universal, dev-standards-security,
-                         dev-standards-backend,
+                         dev-standards-backend, dev-standards-api,
                          dev-standards-testing, dev-standards-git, dev-beads
 developer-platform    → dev-standards-universal, dev-standards-security,
                          dev-standards-platform,
                          dev-standards-git, dev-beads
+developer-security    → dev-standards-universal, dev-standards-security,
+                         dev-standards-security-hardening,
+                         dev-standards-backend,
+                         dev-standards-testing, dev-standards-git, dev-beads
 documentarian         → dev-standards-git, dev-beads,
                          documentarian/doc-protocol, documentarian/doc-standards,
                          documentarian/doc-adr, documentarian/doc-api,

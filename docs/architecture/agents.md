@@ -1,6 +1,6 @@
 # Référence des agents
 
-25 agents au total, organisés en 7 familles.
+26 agents au total, organisés en 7 familles.
 Chaque agent est défini dans `agents/<famille>/<id>.md` avec un frontmatter déclarant ses métadonnées,
 ses cibles et ses skills.
 
@@ -113,7 +113,7 @@ Tous les agents d'audit injectent `auditor/audit-protocol` (format de rapport co
 
 ## Famille — Agents développeurs
 
-8 agents spécialisés par domaine technique. Tous suivent le même workflow Beads
+9 agents spécialisés par domaine technique. Tous suivent le même workflow Beads
 (`bd claim → implémenter → tester → bd close`).
 
 Skills communs à tous : `dev-standards-universal`, `dev-standards-security`, `dev-standards-git`, `dev-beads`.
@@ -126,14 +126,20 @@ Skills communs à tous : `dev-standards-universal`, `dev-standards-security`, `d
 | `developer-data` | `agents/developer/developer-data.md` | Pipelines, ETL, ML, dbt | `dev-standards-data` |
 | `developer-devops` | `agents/developer/developer-devops.md` | Docker, CI/CD, scripts shell | `dev-standards-devops` |
 | `developer-mobile` | `agents/developer/developer-mobile.md` | React Native, Flutter, iOS, Android | `dev-standards-mobile` |
-| `developer-api` | `agents/developer/developer-api.md` | REST, GraphQL, webhooks | `dev-standards-backend`, `dev-standards-testing` |
+| `developer-api` | `agents/developer/developer-api.md` | REST, GraphQL, webhooks | `dev-standards-backend`, `dev-standards-api`, `dev-standards-testing` |
 | `developer-platform` | `agents/developer/developer-platform.md` | Terraform, K8s, Helm, GitOps, infra as code | `dev-standards-platform` |
+| `developer-security` | `agents/developer/developer-security.md` | Hardening applicatif post-audit | `dev-standards-security-hardening`, `dev-standards-backend`, `dev-standards-testing` |
 
 > Voir [ADR-002](./adr/002-developer-segmentation.md) pour la décision de segmentation.
 
 `developer-platform` se distingue de `developer-devops` : DevOps couvre Dockerfile,
 docker-compose, GitHub Actions et scripts shell applicatifs ; Platform couvre
 Terraform/Pulumi, manifests Kubernetes, Helm charts, ArgoCD/Flux.
+
+`developer-security` se distingue de `developer-backend` : il intervient
+exclusivement après un audit `auditor-security` pour corriger les failles identifiées
+(headers HTTP, CORS, hashing, JWT, sessions, rate limiting, chiffrement). Il ne
+réalise pas d'audit.
 
 ---
 

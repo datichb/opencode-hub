@@ -11,7 +11,55 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 
 ### Added
 
-- Skill `posture/expert-posture` : posture transverse injectable dans les agents experts —
+- Agent `developer-security` (famille developer/) : hardening applicatif post-audit —
+  implémente CORS restrictif, headers HTTP de sécurité (CSP, HSTS, X-Frame-Options),
+  hashing des mots de passe (bcrypt, argon2id), gestion sécurisée des tokens JWT
+  (rotation, révocation), sessions (httpOnly, secure, sameSite), rate limiting sur les
+  endpoints sensibles, chiffrement AES-256-GCM — intervient après `auditor-security`
+  dans l'ordre de criticité 🔴 → 🟠 → 🟡
+- Skill `developer/dev-standards-security-hardening` : patterns concrets de hardening
+  applicatif — configuration CORS (origines explicites, méthodes autorisées, headers
+  exposés), headers HTTP (CSP, HSTS, X-Frame-Options, X-Content-Type-Options,
+  Permissions-Policy), bcrypt/argon2id (coût, upgrade legacy), JWT (algorithme HS256
+  interdit, rotation, révocation via liste de révocation), sessions (régénération après
+  auth, expiration), rate limiting (throttling par IP/user/endpoint), chiffrement
+  AES-256-GCM (IV aléatoire, séparation clé de chiffrement / clé d'authentification)
+- Skill `developer/dev-standards-api` : standards de conception et d'implémentation
+  d'API — versioning (préfixe d'URL, stratégie de dépréciation et sunset), pagination
+  (cursor-based et offset/limit avec métadonnées), format de réponse uniforme
+  (`{ data, meta, error }`), codes HTTP sémantiques, idempotence (PUT/DELETE/PATCH +
+  clé d'idempotence pour POST), OpenAPI 3.x (contrat first, schémas réutilisables),
+  breaking changes (audit préalable, période de double support), webhooks (signature
+  HMAC, réponse immédiate, traitement asynchrone, retry), rate limiting côté API
+  (headers `X-RateLimit-*`, réponse 429 avec `Retry-After`)
+- `docs/guides/authoring.md` : guide de création d'agents et de skills — décision
+  agent vs skill (5 critères), checklist de qualité (frontmatter, corps, testabilité),
+  exemples commentés d'agent et de skill bien formés, anti-patterns courants
+
+### Changed
+
+- Agent `developer-api` : skill `developer/dev-standards-api` ajouté dans le frontmatter
+- Skill `developer/dev-standards-data` : section `Tests data` enrichie avec patterns
+  dbt (tests natifs schema.yml + tests SQL personnalisés dans `tests/`), tests Airflow
+  (structure DAG + tasks isolées avec mock des connexions), tests PySpark (fixtures
+  locales SparkSession + `assertDataFrameEqual`), tests ML (shape des sorties,
+  reproductibilité avec `random_state`, robustesse aux nulls)
+- Agent `documentarian` : skill `posture/expert-posture` ajouté dans le frontmatter
+- Agent `orchestrator` : skills `auditor/audit-ecodesign` et `auditor/audit-architecture`
+  ajoutés dans la liste des domaines d'audit délégués
+- Agent `reviewer` : skill `dev-standards-vuejs` retiré du frontmatter (le reviewer
+  n'est pas spécialisé Vue.js — il applique les standards universels)
+- Skill `orchestrator/orchestrator-protocol` : labels `auditor-ecodesign` et
+  `auditor-architecture` ajoutés dans la table de routing d'audit
+- `docs/architecture/agents.md` : total mis à jour (26 agents), ajout `developer-security`
+  dans la famille developer/, note de distinction avec `developer-backend`
+- `docs/architecture/skills.md` : ajout `dev-standards-api` et
+  `dev-standards-security-hardening` dans le domaine developer/, matrice de dépendances
+  mise à jour pour `developer-api` et `developer-security`
+
+---
+
+
   exploration systématique des artefacts avant de répondre (annonce de ce qui a été consulté,
   identification des zones d'incertitude), recommandation contraire argumentée au format ⚠️
   (problème / alternative / pourquoi / trade-offs, formulation à la première personne),

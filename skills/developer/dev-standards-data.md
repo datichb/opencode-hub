@@ -252,10 +252,13 @@ pipeline = Pipeline([
 
 ## Tests data
 
+### Principes généraux
+
 - Tester les transformations avec des fixtures de données connues (entrée → sortie attendue)
-- Tester les cas limites : DataFrame vide, valeurs nulles, types inattendus
-- Ne pas tester contre une vraie base de données — utiliser SQLite in-memory ou des fichiers parquet de test
+- Tester les cas limites : DataFrame vide, valeurs nulles, types inattendus, doublons
+- Ne pas tester contre une vraie base de données — utiliser SQLite in-memory, DuckDB ou des fichiers parquet de test
 - Utiliser `pytest` avec `pytest-mock` pour les dépendances externes
+- Les fixtures de données sont inline dans les tests — pas de fichiers CSV séparés
 
 ```python
 def test_calcul_prix_ttc():
@@ -267,6 +270,126 @@ def test_calcul_prix_ttc():
 
     # Assert
     assert result["prix_ttc"].tolist() == [120.0, 55.0]
+
+def test_calcul_prix_ttc_valeurs_nulles():
+    df = pd.DataFrame({"prix_ht": [100.0, None], "taux_tva": [0.2, 0.1]})
+    with pytest.raises(ValueError, match="valeur nulle"):
+        calculer_prix_ttc(df)
+
+def test_calcul_prix_ttc_dataframe_vide():
+    df = pd.DataFrame({"prix_ht": [], "taux_tva": []})
+    result = calculer_prix_ttc(df)
+    assert result.empty
+```
+
+### Tests dbt
+
+- Utiliser les tests natifs dbt (`not_null`, `unique`, `accepted_values`, `relationships`) dans `schema.yml`
+- Tests personnalisés dans `tests/` pour les règles métier non couvertes par les tests natifs
+- Tester avec `dbt test --select <modèle>` sur des données de test (seeds ou sources mockées)
+- Chaque modèle `mart` a au minimum : `not_null` + `unique` sur sa clé primaire
+
+```yaml
+# ✅ schema.yml — tests complets sur un modèle mart
+models:
+  - name: mart_commandes
+    columns:
+      - name: commande_id
+        tests:
+          - not_null
+          - unique
+      - name: statut
+        tests:
+          - accepted_values:
+              values: ['validee', 'annulee', 'en_attente']
+      - name: client_id
+        tests:
+          - relationships:
+              to: ref('dim_clients')
+              field: id
+```
+
+```sql
+-- tests/valider_montant_positif.sql
+-- Test personnalisé : aucune commande ne doit avoir un montant négatif
+SELECT commande_id
+FROM {{ ref('mart_commandes') }}
+WHERE montant_ttc < 0
+```
+
+### Tests Airflow (DAGs)
+
+- Tester la structure du DAG sans l'exécuter (import + assertions sur le graphe)
+- Mocker les connexions Airflow (`mock_get_connection`) pour les tests unitaires des tasks
+- Tester chaque `@task` isolément — les tasks sont des fonctions pures testables
+
+```python
+from airflow.models import DagBag
+
+def test_dag_chargement():
+    """Le DAG doit se charger sans erreur et avoir les bonnes tâches."""
+    dag_bag = DagBag(dag_folder='dags/', include_examples=False)
+    assert 'pipeline_commandes' in dag_bag.dags
+    dag = dag_bag.dags['pipeline_commandes']
+    assert dag.catchup is False
+    assert set(dag.task_ids) == {'extraire', 'transformer', 'charger'}
+
+def test_task_transformer_logique():
+    """La logique de transformation est testée isolément."""
+    input_data = [{"montant_ht": 100, "taux_tva": 0.2}]
+    result = transformer(input_data)
+    assert result[0]["montant_ttc"] == 120.0
+```
+
+### Tests PySpark
+
+- Utiliser `pyspark.testing.assertDataFrameEqual` (Spark 3.5+) ou `chispa` pour comparer les DataFrames
+- Initialiser une `SparkSession` locale dans les fixtures pytest — pas de cluster requis
+- Tester avec des DataFrames de petite taille (< 100 lignes) — les tests Spark sont lents
+
+```python
+import pytest
+from pyspark.sql import SparkSession
+from pyspark.testing import assertDataFrameEqual
+
+@pytest.fixture(scope="session")
+def spark():
+    return SparkSession.builder.master("local[1]").appName("tests").getOrCreate()
+
+def test_transformation_montant(spark):
+    input_df = spark.createDataFrame(
+        [{"prix_ht": 100.0, "taux_tva": 0.2}]
+    )
+    result_df = calculer_prix_ttc(input_df)
+    expected_df = spark.createDataFrame(
+        [{"prix_ht": 100.0, "taux_tva": 0.2, "prix_ttc": 120.0}]
+    )
+    assertDataFrameEqual(result_df, expected_df)
+```
+
+### Tests ML
+
+- Tester la forme des outputs du modèle (shape, dtype, plage de valeurs)
+- Tester la reproductibilité : mêmes inputs + même seed → mêmes outputs
+- Tester la robustesse aux inputs limites : features nulles, valeurs hors distribution
+- Ne pas tester les métriques ML (accuracy, F1) en test unitaire — elles varient selon les données
+
+```python
+def test_modele_shape_output(trained_pipeline, sample_features):
+    predictions = trained_pipeline.predict(sample_features)
+    assert predictions.shape == (len(sample_features),)
+    assert predictions.dtype in [np.float32, np.float64]
+
+def test_modele_reproductibilite(trained_pipeline, sample_features):
+    pred1 = trained_pipeline.predict(sample_features)
+    pred2 = trained_pipeline.predict(sample_features)
+    np.testing.assert_array_equal(pred1, pred2)
+
+def test_modele_valeurs_nulles(trained_pipeline):
+    """Le modèle doit lever une erreur explicite sur des inputs nuls."""
+    features_with_nulls = pd.DataFrame({"feature_a": [None], "feature_b": [1.0]})
+    with pytest.raises(ValueError):
+        trained_pipeline.predict(features_with_nulls)
 ```
 
 ---
