@@ -151,7 +151,6 @@ Un adapter traduit les agents du format hub vers le format d'un outil cible.
 
 adapter_validate()     # Vérifie que l'outil cible est installé et accessible
 adapter_deploy()       # Génère les fichiers dans le projet cible
-adapter_check()        # Vérifie si les fichiers déployés sont à jour
 ```
 
 Voir `scripts/adapters/opencode.adapter.sh` comme référence.

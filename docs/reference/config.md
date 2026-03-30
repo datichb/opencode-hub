@@ -197,9 +197,12 @@ base_url=https://api.mammouth.ai/v1
 
 Lors d'un `oc deploy opencode <PROJECT_ID>`, si une entrée existe pour le projet :
 
+- `opencode.json` est ajouté au `.gitignore` du projet cible **avant** l'écriture du fichier (contient la clé API)
 - `opencode.json` est régénéré avec le bloc `provider` complet
-- `opencode.json` est ajouté au `.gitignore` du projet cible (contient la clé API)
 - Le fichier est créé avec les permissions `600`
+
+Si `PROJECT_ID` est défini sans clé API (ou après un `oc config unset`), `opencode.json` est
+également régénéré pour retirer tout ancien bloc `provider`.
 
 Pour Claude Code, la clé est injectée comme `ANTHROPIC_API_KEY` au moment du `oc start`.
 
@@ -250,8 +253,8 @@ Si appelé sans flags, le flux est interactif avec les valeurs actuelles comme d
 ## `opencode.json`
 
 Fichier de configuration OpenCode à la racine d'un projet cible.
-Créé par `oc deploy opencode` — **régénéré à chaque déploiement si une clé API est configurée**
-pour le projet, conservé tel quel sinon.
+Créé par `oc deploy opencode` — **régénéré si une clé API est configurée, si `PROJECT_ID` est
+défini (pour retirer un ancien bloc provider), ou si le fichier est absent** ; conservé tel quel sinon.
 
 ### Contenu sans clé API
 
