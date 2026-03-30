@@ -77,6 +77,8 @@ _resolve_tracker() {
   local id="$1"
   local tracker
   tracker=$(get_project_tracker "$id")
+  # Normaliser en minuscules (protection contre casse incorrecte dans projects.md)
+  tracker=$(echo "$tracker" | tr '[:upper:]' '[:lower:]')
   if [ "$tracker" = "none" ] || [ -z "$tracker" ]; then
     log_error "Aucun tracker configuré pour $id"
     log_info  "Configurer : ./oc.sh beads tracker setup $id"
@@ -88,6 +90,11 @@ _resolve_tracker() {
 # ── Mettre à jour le champ Tracker dans projects.md ──
 _set_project_tracker() {
   local id="$1" new_tracker="$2"
+  # Whitelist stricte — protège aussi contre l'injection Perl
+  case "$new_tracker" in
+    jira|gitlab|none) ;;
+    *) log_error "Tracker invalide : $new_tracker (jira | gitlab | none)"; exit 1 ;;
+  esac
   # Tente de remplacer une ligne "- Tracker : *" existante dans le bloc du projet
   if perl -i -0pe "
     s{(^## \Q${id}\E\$.*?)(- Tracker : \S+)}{\${1}- Tracker : ${new_tracker}}ms
@@ -95,9 +102,19 @@ _set_project_tracker() {
     return 0
   fi
   # Si le champ n'existe pas encore, l'ajouter après "- Labels :"
-  perl -i -0pe "
+  if perl -i -0pe "
     s{(^## \Q${id}\E\$.*?- Labels : [^\n]+\n)}{\${1}- Tracker : ${new_tracker}\n}ms
-  " "$PROJECTS_FILE"
+  " "$PROJECTS_FILE" 2>/dev/null && grep -q "- Tracker : ${new_tracker}" "$PROJECTS_FILE"; then
+    return 0
+  fi
+  # Fallback : si "- Labels :" absent, ajouter après le dernier champ "- " du bloc projet
+  if perl -i -0pe "
+    s{(^## \Q${id}\E\$.*?- [^\n]+\n)}{\${1}- Tracker : ${new_tracker}\n}ms
+  " "$PROJECTS_FILE" 2>/dev/null && grep -q "- Tracker : ${new_tracker}" "$PROJECTS_FILE"; then
+    return 0
+  fi
+  log_error "Impossible d'insérer le champ Tracker dans le bloc $id de projects.md"
+  return 1
 }
 
 # ══════════════════════════════════════════
@@ -200,6 +217,9 @@ cmd_open() {
   path=$(_resolve_project_path "$id")
 
   log_info "Répertoire du projet $id : $path"
+  if ! command -v bd &>/dev/null; then
+    log_warn "bd (Beads) n'est pas installé — installer : brew install bd"
+  fi
   log_info "Vous pouvez maintenant utiliser bd directement dans ce répertoire"
   echo ""
   echo "  cd $path"
@@ -353,12 +373,16 @@ _setup_jira() {
   local path="$1" id="$2"
 
   read -rp "  URL Jira (ex: https://company.atlassian.net) : " jira_url
+  [ -z "$jira_url" ] && { log_error "URL Jira requise"; exit 1; }
   read -rp "  Clé de projet Jira (ex: PROJ) : " jira_project
+  [ -z "$jira_project" ] && { log_error "Clé de projet Jira requise"; exit 1; }
   read -rp "  Email / username Jira : " jira_user
+  [ -z "$jira_user" ] && { log_error "Email / username Jira requis"; exit 1; }
   trap 'stty echo 2>/dev/null; echo ""; exit 130' INT TERM
   read -rsp "  API token Jira (masqué) : " jira_token
   stty echo 2>/dev/null; trap - INT TERM
   echo ""
+  [ -z "$jira_token" ] && { log_error "Token Jira requis"; exit 1; }
 
   (
     cd "$path"
@@ -378,10 +402,12 @@ _setup_gitlab() {
   local path="$1" id="$2"
 
   read -rp "  URL GitLab (ex: https://gitlab.com ou instance privée) : " gl_url
+  [ -z "$gl_url" ] && { log_error "URL GitLab requise"; exit 1; }
   trap 'stty echo 2>/dev/null; echo ""; exit 130' INT TERM
   read -rsp "  Token d'accès personnel GitLab (masqué) : " gl_token
   stty echo 2>/dev/null; trap - INT TERM
   echo ""
+  [ -z "$gl_token" ] && { log_error "Token GitLab requis"; exit 1; }
 
   # Lister les projets accessibles pour aider à trouver l'ID
   echo ""
@@ -390,13 +416,11 @@ _setup_gitlab() {
     && bd gitlab projects) 2>/dev/null && echo "" || log_warn "Impossible de lister les projets (vérifier l'URL et le token)"
 
   read -rp "  ID ou chemin du projet GitLab (ex: 12345 ou namespace/project) : " gl_project_id
+  [ -z "$gl_project_id" ] && { log_error "ID de projet GitLab requis"; exit 1; }
 
-  (
-    cd "$path"
-    bd config set gitlab.url "$gl_url"
-    bd config set gitlab.token "$gl_token"
-    bd config set gitlab.project_id "$gl_project_id"
-  ) || { log_error "Échec de la configuration GitLab"; exit 1; }
+  # url et token déjà configurés ci-dessus — ajouter uniquement project_id
+  (cd "$path" && bd config set gitlab.project_id "$gl_project_id") \
+    || { log_error "Échec de la configuration GitLab"; exit 1; }
 
   log_success "GitLab configuré pour $id"
   echo ""
