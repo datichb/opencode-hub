@@ -85,7 +85,7 @@ require_project_id() {
 get_project_path() {
   local id="$1"
   if [ ! -f "$PATHS_FILE" ]; then
-    log_warn "Fichier paths.local.md introuvable — chemin local non disponible" >&2
+    log_warn "Fichier paths.local.md introuvable — chemin local non disponible"
     return 1
   fi
   grep -F "${id}=" "$PATHS_FILE" | cut -d'=' -f2- | tr -d ' '

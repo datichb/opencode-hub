@@ -20,7 +20,7 @@ printf "  ${BOLD}%-20s %-30s %-15s${RESET}\n" "ID" "Chemin local" "Statut"
 printf "  %s\n" "────────────────────────────────────────────────────────────"
 
 for id in "${ids[@]}"; do
-  local_path=$(get_project_path "$id" || true)
+  local_path=$(get_project_path "$id" 2>/dev/null || true)
 
   if [ -z "$local_path" ]; then
     status="${YELLOW}⚠ sans chemin${RESET}"
