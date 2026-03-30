@@ -115,7 +115,12 @@ cmd_status() {
       path="${path/#\~/$HOME}"
       tracker=$(get_project_tracker "$pid")
       local beads_icon tracker_str
-      [ -d "$path/.beads" ] && beads_icon="${GREEN}✔${RESET}" || beads_icon="${YELLOW}✘${RESET}"
+      # Protection : si path vide, ne pas tester /.beads (racine)
+      if [ -n "$path" ] && [ -d "$path/.beads" ]; then
+        beads_icon="${GREEN}✔${RESET}"
+      else
+        beads_icon="${YELLOW}✘${RESET}"
+      fi
       [ "$tracker" = "none" ] && tracker_str="" || tracker_str="  [${BLUE}${tracker}${RESET}]"
       echo -e "  ${beads_icon}  $pid${tracker_str}  ${path}"
     done < <(grep "^## " "$PROJECTS_FILE" | sed 's/^## //')

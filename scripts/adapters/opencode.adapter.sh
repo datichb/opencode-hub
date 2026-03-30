@@ -36,10 +36,14 @@ _build_provider_block() {
 
   case "$provider" in
     anthropic)
+      # Sanitiser la clé API avant injection JSON : échapper \ puis "
+      local safe_api_key
+      safe_api_key="${api_key//\\/\\\\}"
+      safe_api_key="${safe_api_key//\"/\\\"}"
       cat <<JSON
   "provider": {
     "anthropic": {
-      "apiKey": "${api_key}"
+      "apiKey": "${safe_api_key}"
     }
   }
 JSON
@@ -185,5 +189,9 @@ adapter_update() {
 adapter_start() {
   local project_path="$1" prompt="${2:-}"
   cd "$project_path" || { log_error "[opencode] Impossible de naviguer vers $project_path"; exit 1; }
-  [ -n "$prompt" ] && exec opencode --prompt "$prompt" || exec opencode
+  if [ -n "$prompt" ]; then
+    exec opencode --prompt "$prompt"
+  else
+    exec opencode
+  fi
 }

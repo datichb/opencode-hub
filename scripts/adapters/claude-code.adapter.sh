@@ -89,5 +89,9 @@ adapter_start() {
     fi
   fi
 
-  [ -n "$prompt" ] && exec claude "$prompt" || exec claude
+  if [ -n "$prompt" ]; then
+    exec claude "$prompt"
+  else
+    exec claude
+  fi
 }

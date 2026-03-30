@@ -89,7 +89,8 @@ get_project_path() {
     return 1
   fi
   # || true : évite que pipefail propage exit 1 si grep ne matche rien
-  grep -F "${id}=" "$PATHS_FILE" | cut -d'=' -f2- | tr -d ' ' || true
+  # head -1 : protection contre doublons dans paths.local.md
+  grep -F "${id}=" "$PATHS_FILE" | head -1 | cut -d'=' -f2- | tr -d ' ' || true
 }
 
 # Vérifie qu'un projet existe dans projects.md
@@ -114,7 +115,10 @@ normalize_project_id() {
 get_project_tracker() {
   local id="$1"
   local tracker
-  tracker=$(awk "/^## ${id}$/{found=1} found && /^- Tracker :/{print; exit}" "$PROJECTS_FILE" \
+  # -v section : évite l'injection regex via $id (caractères spéciaux dans l'identifiant)
+  tracker=$(awk -v section="## ${id}" '
+    $0 == section {found=1} found && /^- Tracker :/{print; exit}
+  ' "$PROJECTS_FILE" \
     | sed 's/^- Tracker : *//' | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
   echo "${tracker:-none}"
 }
@@ -125,7 +129,10 @@ get_project_tracker() {
 get_project_language() {
   local id="$1"
   local lang
-  lang=$(awk "/^## ${id}$/{found=1} found && /^- Langue :/{print; exit}" "$PROJECTS_FILE" \
+  # -v section : évite l'injection regex via $id (caractères spéciaux dans l'identifiant)
+  lang=$(awk -v section="## ${id}" '
+    $0 == section {found=1} found && /^- Langue :/{print; exit}
+  ' "$PROJECTS_FILE" \
     | sed 's/^- Langue : *//' | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
   echo "${lang:-}"
 }
