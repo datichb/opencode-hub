@@ -185,6 +185,24 @@ cmd_init() {
   log_info "Initialisation de Beads dans : $path"
   (cd "$path" && bd init) || { log_error "Échec de bd init"; exit 1; }
   log_success "Beads initialisé dans $id ($path/.beads)"
+
+  # Propager les labels de projects.md vers bd
+  local labels
+  labels=$(get_project_labels "$id")
+  if [ -n "$labels" ]; then
+    log_info "Propagation des labels vers Beads…"
+    local IFS=','
+    for label in $labels; do
+      # Trim espaces autour du label
+      label=$(echo "$label" | sed 's/^ *//;s/ *$//')
+      [ -z "$label" ] && continue
+      if (cd "$path" && bd label add "$label") 2>/dev/null; then
+        log_success "  Label ajouté : $label"
+      else
+        log_warn "  Échec ajout label : $label"
+      fi
+    done
+  fi
 }
 
 # ══════════════════════════════════════════

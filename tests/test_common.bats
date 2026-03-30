@@ -1,8 +1,8 @@
 #!/usr/bin/env bats
 # Tests unitaires pour scripts/common.sh
-# Fonctions testées : get_project_language, get_project_tracker, project_exists,
-#                     normalize_project_id, api_keys_entry_exists, get_project_api_*,
-#                     get_project_path, path_exists
+# Fonctions testées : get_project_language, get_project_tracker, get_project_labels,
+#                     project_exists, normalize_project_id, api_keys_entry_exists,
+#                     get_project_api_*, get_project_path, path_exists
 
 setup() {
   TEST_DIR="$(mktemp -d)"
@@ -41,6 +41,17 @@ setup() {
 - Stack : Test
 - Board Beads : PROJ-NO-TRACKER
 - Labels : test
+
+## PROJ-MULTI-LABELS
+- Nom : Labels multiples
+- Stack : Test
+- Board Beads : PROJ-MULTI-LABELS
+- Labels : feature,fix,front,back
+
+## PROJ-NO-LABELS
+- Nom : Sans Labels
+- Stack : Test
+- Board Beads : PROJ-NO-LABELS
 PROJEOF
 }
 
@@ -96,6 +107,32 @@ EOF
   run get_project_tracker "PROJ-NO-TRACKER"
   [ "$status" -eq 0 ]
   [ "$output" = "none" ]
+}
+
+# ── get_project_labels ────────────────────────────────────────────────────────
+
+@test "get_project_labels : retourne le label unique d'un projet" {
+  run get_project_labels "PROJ-FR"
+  [ "$status" -eq 0 ]
+  [ "$output" = "test" ]
+}
+
+@test "get_project_labels : retourne la liste séparée par virgules" {
+  run get_project_labels "PROJ-MULTI-LABELS"
+  [ "$status" -eq 0 ]
+  [ "$output" = "feature,fix,front,back" ]
+}
+
+@test "get_project_labels : retourne une chaîne vide quand le champ est absent" {
+  run get_project_labels "PROJ-NO-LABELS"
+  [ "$status" -eq 0 ]
+  [ "$output" = "" ]
+}
+
+@test "get_project_labels : retourne une chaîne vide pour un projet inexistant" {
+  run get_project_labels "INEXISTANT"
+  [ "$status" -eq 0 ]
+  [ "$output" = "" ]
 }
 
 # ── project_exists ────────────────────────────────────────────────────────────

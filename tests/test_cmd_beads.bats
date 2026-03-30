@@ -77,6 +77,57 @@ setup() {
     echo "$path"
   }
 
+  # Mock de bd — enregistre les appels dans BD_CALLS_LOG
+  BD_CALLS_LOG="$TEST_DIR/bd_calls.log"
+  export BD_CALLS_LOG
+  : > "$BD_CALLS_LOG"
+  bd() {
+    local _oifs="${IFS-}" ; IFS=' '
+    echo "bd $*" >> "$BD_CALLS_LOG"
+    IFS="$_oifs"
+    # bd init → créer .beads/ dans le répertoire courant
+    if [ "$1" = "init" ]; then
+      mkdir -p .beads
+    fi
+    return 0
+  }
+  export -f bd
+
+  # Fonctions guard simplifiées
+  _require_bd() { return 0; }
+  require_project_id() { [ -z "${1:-}" ] && { log_error "PROJECT_ID requis"; exit 1; }; return 0; }
+
+  cmd_init() {
+    require_project_id "$1"
+    _require_bd
+    local id
+    id=$(normalize_project_id "$1")
+    local path
+    path=$(_resolve_project_path "$id")
+    if [ -d "$path/.beads" ]; then
+      log_warn "Beads déjà initialisé dans $id ($path/.beads)"
+      exit 0
+    fi
+    log_info "Initialisation de Beads dans : $path"
+    (cd "$path" && bd init) || { log_error "Échec de bd init"; exit 1; }
+    log_success "Beads initialisé dans $id ($path/.beads)"
+    local labels
+    labels=$(get_project_labels "$id")
+    if [ -n "$labels" ]; then
+      log_info "Propagation des labels vers Beads…"
+      local IFS=','
+      for label in $labels; do
+        label=$(echo "$label" | sed 's/^ *//;s/ *$//')
+        [ -z "$label" ] && continue
+        if (cd "$path" && bd label add "$label") 2>/dev/null; then
+          log_success "  Label ajouté : $label"
+        else
+          log_warn "  Échec ajout label : $label"
+        fi
+      done
+    fi
+  }
+
   # ── Données de test ───────────────────────────────────────────────────────
 
   cat > "$PROJECTS_FILE" <<'PROJEOF'
@@ -227,4 +278,38 @@ EOF
   run _resolve_project_path "PROJ-FULL"
   [ "$status" -ne 0 ]
   echo "$output" | grep -qi "introuvable"
+}
+
+# ── cmd_init — propagation des labels ─────────────────────────────────────────
+
+@test "cmd_init : appelle bd init et propage les labels du projet" {
+  # Nettoyer le log bd et le .beads potentiel
+  : > "$BD_CALLS_LOG"
+  rm -rf "$TEST_DIR/fake-project/.beads"
+  run cmd_init "PROJ-FULL"
+  [ "$status" -eq 0 ]
+  # bd init a été appelé
+  grep -q "bd init" "$BD_CALLS_LOG"
+  # Les labels feature,fix ont été propagés
+  grep -q "bd label add feature" "$BD_CALLS_LOG"
+  grep -q "bd label add fix" "$BD_CALLS_LOG"
+}
+
+@test "cmd_init : ne propage rien si aucun label configuré" {
+  : > "$BD_CALLS_LOG"
+  rm -rf "$TEST_DIR/fake-project/.beads"
+  run cmd_init "PROJ-NO-LABELS"
+  [ "$status" -eq 0 ]
+  # bd init appelé, mais pas bd label add
+  grep -q "bd init" "$BD_CALLS_LOG"
+  ! grep -q "bd label add" "$BD_CALLS_LOG"
+}
+
+@test "cmd_init : exit si .beads existe déjà" {
+  # .beads existe déjà (créé par un test précédent ou manuellement)
+  mkdir -p "$TEST_DIR/fake-project/.beads"
+  run cmd_init "PROJ-FULL"
+  # exit 0 avec un warning
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -qi "déjà initialisé"
 }
