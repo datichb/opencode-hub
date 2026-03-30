@@ -37,7 +37,7 @@ Skills de standards de développement. Partagés entre les agents développeurs 
 | `developer/dev-standards-frontend.md` | developer-frontend, developer-fullstack, reviewer | Séparation logique/présentation, performance, bundle, lazy loading |
 | `developer/dev-standards-frontend-a11y.md` | developer-frontend, developer-fullstack, reviewer | WCAG 2.1 A/AA, sémantique HTML, ARIA, contrastes |
 | `developer/dev-standards-vuejs.md` | developer-frontend, developer-fullstack | Composition API, `<script setup>`, Pinia, composables, Vue Router |
-| `developer/dev-standards-testing.md` | developer-frontend, developer-backend, developer-fullstack, developer-api, qa-engineer | Stratégie de tests, coverage, TDD, Vitest, pytest, PHPUnit |
+| `developer/dev-standards-testing.md` | developer-frontend, developer-backend, developer-fullstack, developer-api, developer-data, qa-engineer | Stratégie de tests, coverage, TDD, Vitest, pytest, PHPUnit |
 | `developer/dev-standards-git.md` | Tous les developer-*, reviewer | Conventional Commits, branches, PR, messages de commit |
 | `developer/dev-standards-data.md` | developer-data | Pipelines de données, ETL, ML, dbt, Airflow, qualité des données |
 | `developer/dev-standards-devops.md` | developer-devops | Docker, CI/CD, scripts shell (`set -euo pipefail`) |
@@ -135,7 +135,7 @@ Skills de posture transverse. Injectables dans tout agent nécessitant une postu
 
 | Fichier | Agents qui l'utilisent | Contenu |
 |---------|----------------------|---------|
-| `posture/expert-posture.md` | auditor, auditor-security, auditor-performance, auditor-accessibility, auditor-ecodesign, auditor-architecture, auditor-privacy, auditor-observability, ux-designer, ui-designer, planner | Exploration systématique avant de répondre (annonce des artefacts consultés, identification des zones d'incertitude), recommandation contraire argumentée (format ⚠️ avec problème/alternative/pourquoi/trade-offs, formulation à la première personne), pause de confirmation avant toute action à risque élevé (format 🛑 avec question binaire explicite) |
+| `posture/expert-posture.md` | auditor, auditor-security, auditor-performance, auditor-accessibility, auditor-ecodesign, auditor-architecture, auditor-privacy, auditor-observability, ux-designer, ui-designer, planner, documentarian | Exploration systématique avant de répondre (annonce des artefacts consultés, identification des zones d'incertitude), recommandation contraire argumentée (format ⚠️ avec problème/alternative/pourquoi/trade-offs, formulation à la première personne), pause de confirmation avant toute action à risque élevé (format 🛑 avec question binaire explicite) |
 
 ---
 
@@ -148,7 +148,7 @@ planner               → developer/dev-beads, planning/planner, posture/expert-
 reviewer              → dev-standards-universal, dev-standards-security,
                          dev-standards-backend,
                          dev-standards-frontend, dev-standards-frontend-a11y,
-                         dev-standards-vuejs, dev-standards-testing,
+                         dev-standards-testing,
                          dev-standards-git, reviewer/review-protocol
 qa-engineer           → dev-standards-universal, dev-standards-testing,
                          dev-standards-git, qa/qa-protocol
@@ -176,7 +176,7 @@ developer-fullstack   → dev-standards-universal, dev-standards-security,
                          dev-standards-backend, dev-standards-testing,
                          dev-standards-git, dev-beads
 developer-data        → dev-standards-universal, dev-standards-security,
-                         dev-standards-data,
+                         dev-standards-data, dev-standards-testing,
                          dev-standards-git, dev-beads
 developer-devops      → dev-standards-universal, dev-standards-security,
                          dev-standards-devops,
@@ -193,5 +193,5 @@ developer-platform    → dev-standards-universal, dev-standards-security,
 documentarian         → dev-standards-git, dev-beads,
                          documentarian/doc-protocol, documentarian/doc-standards,
                          documentarian/doc-adr, documentarian/doc-api,
-                         documentarian/doc-changelog
+                         documentarian/doc-changelog, posture/expert-posture
 ```

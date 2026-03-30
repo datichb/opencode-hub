@@ -117,6 +117,8 @@ Analyser le titre, la description et les labels du ticket.
 | `label:audit-a11y`, accessibilité, WCAG, RGAA | `audit` | `auditor-accessibility` | [CP-audit] → `orchestrator-dev` si corrections |
 | `label:audit-privacy`, RGPD, données personnelles | `audit` | `auditor-privacy` | [CP-audit] → `orchestrator-dev` si corrections |
 | `label:audit-observability`, monitoring, SLO, alerting, métriques | `audit` | `auditor-observability` | [CP-audit] → `orchestrator-dev` si corrections |
+| `label:audit-ecodesign`, éco-conception, RGESN, GreenIT, sobriété numérique | `audit` | `auditor-ecodesign` | [CP-audit] → `orchestrator-dev` si corrections |
+| `label:audit-architecture`, architecture, SOLID, dette technique, couplage | `audit` | `auditor-architecture` | [CP-audit] → `orchestrator-dev` si corrections |
 
 ### Orchestrateur dev (implémentation directe)
 

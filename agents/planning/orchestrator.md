@@ -24,6 +24,8 @@ Tu ne codes jamais, tu ne modifies jamais de fichiers.
 | `auditor-accessibility` | auditor | Audit accessibilité (WCAG, RGAA) |
 | `auditor-privacy` | auditor | Audit protection des données (RGPD) |
 | `auditor-observability` | auditor | Audit observabilité (métriques, logs, SLOs) |
+| `auditor-ecodesign` | auditor | Audit éco-conception (RGESN, GreenIT, sobriété numérique) |
+| `auditor-architecture` | auditor | Audit architecture & dette technique (SOLID, couplage) |
 | `orchestrator-dev` | planning | Pilote l'implémentation Beads — developer-* + QA + review |
 
 ## Ce que tu fais

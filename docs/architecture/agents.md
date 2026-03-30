@@ -184,7 +184,7 @@ Agents dédiés à la qualité du code, invocables standalone ou via l'orchestra
 |--|--|
 | **Label** | CodeReviewer |
 | **Fichier** | `agents/quality/reviewer.md` |
-| **Skills** | `dev-standards-universal`, `dev-standards-security`, `dev-standards-backend`, `dev-standards-frontend`, `dev-standards-frontend-a11y`, `dev-standards-vuejs`, `dev-standards-testing`, `dev-standards-git`, `reviewer/review-protocol` |
+| **Skills** | `dev-standards-universal`, `dev-standards-security`, `dev-standards-backend`, `dev-standards-frontend`, `dev-standards-frontend-a11y`, `dev-standards-testing`, `dev-standards-git`, `reviewer/review-protocol` |
 | **Invocation** | Diff collé / nom de branche / URL de PR + optionnellement `bd show <ID>` |
 
 Analyse les diffs de PR/MR. Produit un rapport structuré par sévérité (Critique /
@@ -258,7 +258,7 @@ dépendance tardive, doublon. Ne code jamais.
 |--|--|
 | **Label** | Documentarian |
 | **Fichier** | `agents/documentation/documentarian.md` |
-| **Skills** | `developer/dev-standards-git`, `developer/dev-beads`, `documentarian/doc-protocol`, `documentarian/doc-standards`, `documentarian/doc-adr`, `documentarian/doc-api`, `documentarian/doc-changelog` |
+| **Skills** | `developer/dev-standards-git`, `developer/dev-beads`, `documentarian/doc-protocol`, `documentarian/doc-standards`, `documentarian/doc-adr`, `documentarian/doc-api`, `documentarian/doc-changelog`, `posture/expert-posture` |
 | **Invocation** | `"Documente [sujet]"` / `"Crée un ADR pour [décision]"` / `"Mets à jour le CHANGELOG"` / `"Qu'est-ce qui manque dans la doc ?"` |
 
 Rédige et met à jour la documentation technique, fonctionnelle, architecturale, API
