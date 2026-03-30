@@ -96,21 +96,21 @@ _set_project_tracker() {
     *) log_error "Tracker invalide : $new_tracker (jira | gitlab | none)"; exit 1 ;;
   esac
   # Tente de remplacer une ligne "- Tracker : *" existante dans le bloc du projet
-  if perl -i -0pe "
-    s{(^## \Q${id}\E\$.*?)(- Tracker : \S+)}{\${1}- Tracker : ${new_tracker}}ms
-  " "$PROJECTS_FILE" 2>/dev/null && grep -q "- Tracker : ${new_tracker}" "$PROJECTS_FILE"; then
+  if perl -i -0777pe "
+    s{(^## \Q${id}\E\n.*?)(- Tracker : \S+)}{\${1}- Tracker : ${new_tracker}}ms
+  " "$PROJECTS_FILE" 2>/dev/null && grep -q -- "- Tracker : ${new_tracker}" "$PROJECTS_FILE"; then
     return 0
   fi
   # Si le champ n'existe pas encore, l'ajouter après "- Labels :"
-  if perl -i -0pe "
-    s{(^## \Q${id}\E\$.*?- Labels : [^\n]+\n)}{\${1}- Tracker : ${new_tracker}\n}ms
-  " "$PROJECTS_FILE" 2>/dev/null && grep -q "- Tracker : ${new_tracker}" "$PROJECTS_FILE"; then
+  if perl -i -0777pe "
+    s{(^## \Q${id}\E\n.*?- Labels : [^\n]+\n)}{\${1}- Tracker : ${new_tracker}\n}ms
+  " "$PROJECTS_FILE" 2>/dev/null && grep -q -- "- Tracker : ${new_tracker}" "$PROJECTS_FILE"; then
     return 0
   fi
   # Fallback : si "- Labels :" absent, ajouter après le dernier champ "- " du bloc projet
-  if perl -i -0pe "
-    s{(^## \Q${id}\E\$.*?- [^\n]+\n)}{\${1}- Tracker : ${new_tracker}\n}ms
-  " "$PROJECTS_FILE" 2>/dev/null && grep -q "- Tracker : ${new_tracker}" "$PROJECTS_FILE"; then
+  if perl -i -0777pe "
+    s{(^## \Q${id}\E\n.*?- [^\n]+\n)}{\${1}- Tracker : ${new_tracker}\n}ms
+  " "$PROJECTS_FILE" 2>/dev/null && grep -q -- "- Tracker : ${new_tracker}" "$PROJECTS_FILE"; then
     return 0
   fi
   log_error "Impossible d'insérer le champ Tracker dans le bloc $id de projects.md"

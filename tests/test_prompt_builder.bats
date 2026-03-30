@@ -141,3 +141,33 @@ EOF
   run build_agent_content "$TEST_DIR/agents/inexistant.md" "opencode"
   [ "$status" -ne 0 ]
 }
+
+# ── build_dev_bootstrap_prompt ────────────────────────────────────────────────
+
+@test "build_dev_bootstrap_prompt : JSON array valide — prompt avec tickets" {
+  # Mocker bd pour retourner un JSON array valide
+  bd() { echo '[{"id":"T-1","title":"Fix bug","status":"ready"}]'; }
+  export -f bd
+  run build_dev_bootstrap_prompt "$TEST_DIR"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q "tickets délégués"
+  echo "$output" | grep -q "T-1"
+}
+
+@test "build_dev_bootstrap_prompt : sortie non-JSON — fallback prompt sans tickets" {
+  # Mocker bd pour retourner du texte d'erreur (pas un JSON array)
+  bd() { echo "Error: database not found"; return 1; }
+  export -f bd
+  run build_dev_bootstrap_prompt "$TEST_DIR"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q "Aucun ticket"
+}
+
+@test "build_dev_bootstrap_prompt : sortie vide — fallback prompt sans tickets" {
+  # Mocker bd pour retourner une chaîne vide
+  bd() { echo ""; }
+  export -f bd
+  run build_dev_bootstrap_prompt "$TEST_DIR"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q "Aucun ticket"
+}
