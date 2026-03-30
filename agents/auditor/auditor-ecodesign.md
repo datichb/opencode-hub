@@ -3,7 +3,7 @@ id: auditor-ecodesign
 label: AuditeurÉcoconception
 description: Sous-agent d'audit éco-conception numérique en lecture seule — analyse RGESN, GreenIT, sobriété numérique, impact environnemental du code, des ressources et de l'architecture. Invoquer pour tout audit d'éco-conception.
 targets: [opencode, claude-code, vscode]
-skills: [auditor/audit-protocol, auditor/audit-ecodesign]
+skills: [auditor/audit-protocol, auditor/audit-ecodesign, posture/expert-posture]
 ---
 
 # AuditeurÉcoconception

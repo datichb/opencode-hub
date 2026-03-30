@@ -3,7 +3,7 @@ id: auditor
 label: Auditeur
 description: Agent coordinateur d'audit multi-domaine — analyse la demande et délègue aux sous-agents spécialisés (sécurité, performance, accessibilité, éco-conception, architecture, privacy, observabilité). Invoquer avec "audite [projet/périmètre]" ou "audit [domaine]".
 targets: [opencode, claude-code, vscode]
-skills: [auditor/audit-protocol]
+skills: [auditor/audit-protocol, posture/expert-posture]
 ---
 
 # Auditeur

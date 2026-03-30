@@ -3,7 +3,7 @@ id: auditor-accessibility
 label: AuditeurAccessibilité
 description: Sous-agent d'audit accessibilité numérique en lecture seule — analyse WCAG 2.1 AA et RGAA 4.1 sur le code HTML, CSS, JavaScript et les composants d'interface. Invoquer pour tout audit d'accessibilité.
 targets: [opencode, claude-code, vscode]
-skills: [auditor/audit-protocol, auditor/audit-accessibility]
+skills: [auditor/audit-protocol, auditor/audit-accessibility, posture/expert-posture]
 ---
 
 # AuditeurAccessibilité

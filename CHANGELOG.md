@@ -11,6 +11,15 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 
 ### Added
 
+- Skill `posture/expert-posture` : posture transverse injectable dans les agents experts —
+  exploration systématique des artefacts avant de répondre (annonce de ce qui a été consulté,
+  identification des zones d'incertitude), recommandation contraire argumentée au format ⚠️
+  (problème / alternative / pourquoi / trade-offs, formulation à la première personne),
+  pause de confirmation 🛑 avant toute action irréversible ou structurellement impactante —
+  injecté dans 11 agents : `auditor`, `auditor-security`, `auditor-performance`,
+  `auditor-accessibility`, `auditor-ecodesign`, `auditor-architecture`, `auditor-privacy`,
+  `auditor-observability`, `ux-designer`, `ui-designer`, `planner`
+
 - Skill `developer/dev-standards-security` : pratiques de sécurité préventives
   (secrets/config, validation des inputs, injections SQL/shell/LDAP, auth/autorisation,
   logs sans données sensibles, audit des dépendances) — injecté dans tous les developer-* et reviewer

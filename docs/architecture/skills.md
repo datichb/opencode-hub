@@ -129,12 +129,22 @@ Skills de design. Utilisés par les agents `ux-designer` et `ui-designer`.
 
 ---
 
+## Domaine — `posture/`
+
+Skills de posture transverse. Injectables dans tout agent nécessitant une posture d'expert.
+
+| Fichier | Agents qui l'utilisent | Contenu |
+|---------|----------------------|---------|
+| `posture/expert-posture.md` | auditor, auditor-security, auditor-performance, auditor-accessibility, auditor-ecodesign, auditor-architecture, auditor-privacy, auditor-observability, ux-designer, ui-designer, planner | Exploration systématique avant de répondre (annonce des artefacts consultés, identification des zones d'incertitude), recommandation contraire argumentée (format ⚠️ avec problème/alternative/pourquoi/trade-offs, formulation à la première personne), pause de confirmation avant toute action à risque élevé (format 🛑 avec question binaire explicite) |
+
+---
+
 ## Matrice de dépendances agents ↔ skills
 
 ```
 orchestrator          → orchestrator/orchestrator-protocol
 orchestrator-dev      → orchestrator/orchestrator-dev-protocol
-planner               → developer/dev-beads, planning/planner
+planner               → developer/dev-beads, planning/planner, posture/expert-posture
 reviewer              → dev-standards-universal, dev-standards-security,
                          dev-standards-backend,
                          dev-standards-frontend, dev-standards-frontend-a11y,
@@ -143,16 +153,16 @@ reviewer              → dev-standards-universal, dev-standards-security,
 qa-engineer           → dev-standards-universal, dev-standards-testing,
                          dev-standards-git, qa/qa-protocol
 debugger              → debugger/debug-protocol
-auditor               → auditor/audit-protocol
-auditor-security      → auditor/audit-protocol, auditor/audit-security
-auditor-performance   → auditor/audit-protocol, auditor/audit-performance
-auditor-accessibility → auditor/audit-protocol, auditor/audit-accessibility
-auditor-ecodesign     → auditor/audit-protocol, auditor/audit-ecodesign
-auditor-architecture  → auditor/audit-protocol, auditor/audit-architecture
-auditor-privacy       → auditor/audit-protocol, auditor/audit-privacy
-auditor-observability → auditor/audit-protocol, auditor/audit-observability
-ux-designer           → designer/ux-protocol, developer/dev-beads
-ui-designer           → designer/ui-protocol, developer/dev-beads
+auditor               → auditor/audit-protocol, posture/expert-posture
+auditor-security      → auditor/audit-protocol, auditor/audit-security, posture/expert-posture
+auditor-performance   → auditor/audit-protocol, auditor/audit-performance, posture/expert-posture
+auditor-accessibility → auditor/audit-protocol, auditor/audit-accessibility, posture/expert-posture
+auditor-ecodesign     → auditor/audit-protocol, auditor/audit-ecodesign, posture/expert-posture
+auditor-architecture  → auditor/audit-protocol, auditor/audit-architecture, posture/expert-posture
+auditor-privacy       → auditor/audit-protocol, auditor/audit-privacy, posture/expert-posture
+auditor-observability → auditor/audit-protocol, auditor/audit-observability, posture/expert-posture
+ux-designer           → designer/ux-protocol, developer/dev-beads, posture/expert-posture
+ui-designer           → designer/ui-protocol, developer/dev-beads, posture/expert-posture
 developer-frontend    → dev-standards-universal, dev-standards-security,
                          dev-standards-frontend,
                          dev-standards-frontend-a11y, dev-standards-vuejs,
