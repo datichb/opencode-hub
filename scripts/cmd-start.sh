@@ -80,7 +80,39 @@ if [ ! -d "$PROJECT_PATH/.beads" ]; then
     log_error "--dev requiert Beads initialisé dans ce projet"
     log_error "Lancez d'abord : ./oc.sh beads init $PROJECT_ID"
     exit 1
+  elif command -v bd &>/dev/null; then
+    echo ""
+    log_warn "Beads non initialisé dans ce projet (aucun .beads/ trouvé)"
+    read -rp "  Initialiser Beads maintenant ? [Y/n] : " _init_beads
+    if [[ "${_init_beads:-Y}" =~ ^[Yy]$ ]]; then
+      if (cd "$PROJECT_PATH" && bd init); then
+        log_success "Beads initialisé dans $PROJECT_PATH"
+        # Propager les labels depuis projects.md
+        _start_labels=$(get_project_labels "$PROJECT_ID")
+        if [ -n "$_start_labels" ]; then
+          log_info "Propagation des labels vers Beads…"
+          _saved_IFS="$IFS"
+          IFS=','
+          for _lbl in $_start_labels; do
+            IFS="$_saved_IFS"
+            _lbl=$(echo "$_lbl" | sed 's/^ *//;s/ *$//')
+            [ -z "$_lbl" ] && continue
+            if (cd "$PROJECT_PATH" && bd label add "$_lbl") 2>/dev/null; then
+              log_success "  Label ajouté : $_lbl"
+            else
+              log_warn "  Échec ajout label : $_lbl"
+            fi
+          done
+          IFS="$_saved_IFS"
+        fi
+      else
+        log_warn "Échec de bd init — initialiser plus tard : ./oc.sh beads init $PROJECT_ID"
+      fi
+    else
+      log_info "Initialiser plus tard : ./oc.sh beads init $PROJECT_ID"
+    fi
   else
+    echo ""
     log_warn "Beads non initialisé dans ce projet (aucun .beads/ trouvé)"
     log_warn "Pour utiliser les tickets : ./oc.sh beads init $PROJECT_ID"
   fi
@@ -112,5 +144,9 @@ if [ "$DEV_MODE" = true ]; then
     log_info "Mode --dev : bootstrap tickets ai-delegated activé"
   fi
 fi
+
+# ── Confirmation avant lancement ──────────────────────
+echo ""
+read -rp "  Appuyer sur Entrée pour lancer $default_target…" _
 
 adapter_start "$PROJECT_PATH" "$PROMPT" "$PROJECT_ID"
