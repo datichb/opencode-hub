@@ -52,10 +52,105 @@ _list_all_skills() {
 }
 
 ##
-# Lit une touche depuis /dev/tty (mode raw déjà actif).
-# Gère les séquences ESC (flèches, SS3). Résultat dans $KEY.
-# Retourne 1 si ESC seul (annulation).
+# Sélecteur générique avec navigation flèches + espace.
+# Compatible bash 3.2 (macOS). Résultat dans $_PICK_RESULT (CSV).
+#
+# Interface (dynamic scoping bash — les variables sont partagées avec le caller) :
+#   _pick_items[]     — tableau des éléments à afficher
+#   _pick_checked[]   — tableau booléen de sélection (0/1)
+#   _pick_cursor      — index courant du curseur
+#   _pick_total       — nombre total d'éléments
+#   _pick_render_fn   — nom de la fonction de rendu (appelée à chaque frame)
+#   _pick_allow_zero  — "1" pour activer la touche 0 (tout décocher)
+#
+# @param {string} $1 — sélection courante (CSV)
+# @param {string} $2 — valeur à retourner si annulation (par défaut: $1)
 ##
+_pick_from_list() {
+  local current_csv="${1:-}"
+  local cancel_value="${2:-$current_csv}"
+
+  # Rien à choisir
+  if [ "$_pick_total" -eq 0 ]; then
+    _PICK_RESULT="$current_csv"
+    return
+  fi
+
+  _pick_cursor=0
+
+  # Sauvegarde état terminal et passage en mode raw
+  local old_stty
+  old_stty=$(stty -g </dev/tty 2>/dev/null)
+  trap '[ -n "$old_stty" ] && stty "$old_stty" </dev/tty 2>/dev/null' EXIT INT TERM
+  stty -echo -icanon min 1 time 0 </dev/tty 2>/dev/null
+
+  local _picker_cancelled=0
+
+  while true; do
+    # Appeler la fonction de rendu (accède aux variables partagées)
+    "$_pick_render_fn"
+
+    # Lecture d'une touche
+    local key
+    if ! _read_key; then
+      _picker_cancelled=1
+      break
+    fi
+    key="$KEY"
+
+    case "$key" in
+      $'\x1b[A'|$'\x1bOA')  # flèche haut
+        [ "$_pick_cursor" -gt 0 ] && _pick_cursor=$((_pick_cursor - 1))
+        ;;
+      $'\x1b[B'|$'\x1bOB')  # flèche bas
+        [ "$_pick_cursor" -lt $((_pick_total - 1)) ] && _pick_cursor=$((_pick_cursor + 1))
+        ;;
+      " ")  # espace — toggle
+        if [ "${_pick_checked[$_pick_cursor]}" = "1" ]; then
+          _pick_checked[$_pick_cursor]="0"
+        else
+          _pick_checked[$_pick_cursor]="1"
+        fi
+        ;;
+      ""| $'\n'| $'\r')  # entrée — valider
+        break
+        ;;
+      "0")
+        if [ "${_pick_allow_zero:-0}" = "1" ]; then
+          local _z=0
+          while [ "$_z" -lt "$_pick_total" ]; do _pick_checked[$_z]="0"; _z=$((_z+1)); done
+        fi
+        ;;
+    esac
+  done
+
+  # Restaurer le terminal
+  trap - EXIT INT TERM
+  [ -n "$old_stty" ] && stty "$old_stty" </dev/tty 2>/dev/null
+
+  # Annulation par ESC
+  if [ "$_picker_cancelled" = "1" ]; then
+    printf "\033[2J\033[H"
+    _PICK_RESULT="$cancel_value"
+    return
+  fi
+
+  printf "\033[2J\033[H"
+
+  # Reconstruire le CSV final
+  local chosen=()
+  local _r=0
+  while [ "$_r" -lt "$_pick_total" ]; do
+    [ "${_pick_checked[$_r]}" = "1" ] && chosen+=("${_pick_items[$_r]}")
+    _r=$((_r + 1))
+  done
+
+  if [ ${#chosen[@]} -eq 0 ]; then
+    _PICK_RESULT=""
+  else
+    _PICK_RESULT=$(printf '%s\n' "${chosen[@]}" | tr '\n' ',' | sed 's/,$//')
+  fi
+}
 _read_key() {
   local byte1 byte2 byte3
   IFS= read -rsn1 byte1 </dev/tty
@@ -78,19 +173,16 @@ _read_key() {
 }
 
 ##
-# Rendu d'une page du sélecteur de skills (compatible bash 3.2).
-# Variables utilisées depuis _pick_skills : all_skills, checked, cursor, page_size, total, total_pages
-##
-##
 # Rendu du sélecteur de skills (compatible bash 3.2).
-# Variables utilisées depuis _pick_skills (dynamic scoping bash) :
-#   all_skills, checked, cursor, page_size, total
+# Utilise les variables partagées de _pick_from_list :
+#   _pick_items, _pick_checked, _pick_cursor, _pick_total
 ##
 _render_skills_page() {
-  local win_start=$(( cursor - page_size / 2 ))
+  local page_size=10
+  local win_start=$(( _pick_cursor - page_size / 2 ))
   [ "$win_start" -lt 0 ] && win_start=0
   local win_end=$(( win_start + page_size ))
-  [ "$win_end" -gt "$total" ] && win_end=$total
+  [ "$win_end" -gt "$_pick_total" ] && win_end=$_pick_total
   # Réajuster win_start si on est proche de la fin
   win_start=$(( win_end - page_size ))
   [ "$win_start" -lt 0 ] && win_start=0
@@ -98,26 +190,26 @@ _render_skills_page() {
   printf "\033[2J\033[H"  # clear screen
 
   # ── En-tête ──────────────────────────────────────────────────────────────
-  echo -e "${BOLD}Sélection des skills${RESET}  ($((cursor+1))/$total)"
+  echo -e "${BOLD}Sélection des skills${RESET}  ($((_pick_cursor+1))/$_pick_total)"
   echo -e "  \033[0;34m↑↓\033[0m naviguer   \033[0;34mespace\033[0m cocher/décocher   \033[0;34mentrée\033[0m valider   \033[0;34mESC\033[0m annuler   \033[0;34m0\033[0m tout vider"
   echo ""
 
   # ── Liste (fenêtre glissante) ─────────────────────────────────────────────
   local i=$win_start
   while [ "$i" -lt "$win_end" ]; do
-    local skill="${all_skills[$i]}"
+    local skill="${_pick_items[$i]}"
     local num=$((i + 1))
 
     local check_icon="   "
     local check_color=""
     local check_reset=""
-    if [ "${checked[$i]}" = "1" ]; then
+    if [ "${_pick_checked[$i]}" = "1" ]; then
       check_icon="[x]"
       check_color="$GREEN"
       check_reset="$RESET"
     fi
 
-    if [ "$i" -eq "$cursor" ]; then
+    if [ "$i" -eq "$_pick_cursor" ]; then
       printf "  \033[1m> ${check_color}%-3s${check_reset}\033[1m %3d. %-50s\033[0m\n" \
         "$check_icon" "$num" "$skill"
     else
@@ -132,7 +224,7 @@ _render_skills_page() {
   printf "  \033[0;34m%s\033[0m\n" "────────────────────────────────────────────────────────────"
 
   # ── Panneau description du skill sous le curseur ──────────────────────────
-  local cur_skill="${all_skills[$cursor]}"
+  local cur_skill="${_pick_items[$_pick_cursor]}"
   local cur_desc=""
   local skill_file="$HUB_DIR/skills/${cur_skill}.md"
   [ -f "$skill_file" ] && cur_desc=$(grep '^description:' "$skill_file" | head -1 | sed 's/^description:[[:space:]]*//')
@@ -149,139 +241,112 @@ _render_skills_page() {
   echo ""
   local count=0
   local v
-  for v in "${checked[@]}"; do [ "$v" = "1" ] && count=$((count+1)); done
+  for v in "${_pick_checked[@]}"; do [ "$v" = "1" ] && count=$((count+1)); done
   echo -e "  ${BOLD}$count skill(s) sélectionné(s)${RESET}"
+  echo ""
+}
+
+##
+# Rendu du sélecteur de cibles (compatible bash 3.2).
+# Utilise les variables partagées de _pick_from_list :
+#   _pick_items, _pick_checked, _pick_cursor, _pick_total
+##
+_render_targets_page() {
+  printf "\033[2J\033[H"
+  echo -e "${BOLD}Sélection des cibles${RESET}"
+  echo -e "  \033[0;34m↑↓\033[0m naviguer   \033[0;34mespace\033[0m cocher/décocher   \033[0;34mentrée\033[0m valider   \033[0;34mESC\033[0m annuler"
+  echo ""
+
+  local j=0
+  while [ "$j" -lt "$_pick_total" ]; do
+    local check_icon="   "
+    local check_color="" check_reset=""
+    if [ "${_pick_checked[$j]}" = "1" ]; then
+      check_icon="[x]"
+      check_color="$GREEN"
+      check_reset="$RESET"
+    fi
+    if [ "$j" -eq "$_pick_cursor" ]; then
+      printf "  \033[1m> ${check_color}%-3s${check_reset}\033[1m  %s\033[0m\n" \
+        "$check_icon" "${_pick_items[$j]}"
+    else
+      printf "    ${check_color}%-3s${check_reset}  %s\n" \
+        "$check_icon" "${_pick_items[$j]}"
+    fi
+    j=$((j + 1))
+  done
+
+  echo ""
+  local count=0
+  local v
+  for v in "${_pick_checked[@]}"; do [ "$v" = "1" ] && count=$((count+1)); done
+  echo -e "  ${BOLD}$count cible(s) sélectionnée(s)${RESET}"
   echo ""
 }
 
 ##
 # Menu interactif de sélection de skills avec navigation flèches + espace.
 # Compatible bash 3.2 (macOS). Résultat dans $PICKED_SKILLS (CSV).
-# Appeler directement (pas dans une sous-shell).
+# Wrapper autour de _pick_from_list.
 # @param {string} $1 — sélection courante (CSV de noms de skills)
 ##
 _pick_skills() {
   local current_csv="${1:-}"
-  local page_size=10
 
-  # Charger tous les skills
-  local all_skills=()
+  # Charger tous les skills dans _pick_items
+  _pick_items=()
   while IFS= read -r s; do
-    all_skills+=("$s")
+    _pick_items+=("$s")
   done < <(_list_all_skills)
 
-  if [ ${#all_skills[@]} -eq 0 ]; then
+  if [ ${#_pick_items[@]} -eq 0 ]; then
     log_warn "Aucun skill disponible."
     PICKED_SKILLS="$current_csv"
     return
   fi
 
-  local total=${#all_skills[@]}
+  _pick_total=${#_pick_items[@]}
 
   # Nettoyer current_csv : retirer guillemets et espaces superflus
   local clean_csv
   clean_csv=$(echo "$current_csv" | tr -d '"' | tr ',' '\n' | sed 's/^ *//;s/ *$//' | grep -v '^$' | tr '\n' ',' | sed 's/,$//')
 
-  # Tableau booléen de sélection (bash 3.2 : pas d'array associatif)
-  local checked=()
+  # Initialiser le tableau de sélection
+  _pick_checked=()
   local i=0
-  while [ "$i" -lt "$total" ]; do
-    local skill="${all_skills[$i]}"
-    if echo ",$clean_csv," | grep -qF ",$skill,"; then
-      checked+=("1")
+  while [ "$i" -lt "$_pick_total" ]; do
+    if echo ",$clean_csv," | grep -qF ",${_pick_items[$i]},"; then
+      _pick_checked+=("1")
     else
-      checked+=("0")
+      _pick_checked+=("0")
     fi
     i=$((i + 1))
   done
 
-  local cursor=0
+  _pick_render_fn="_render_skills_page"
+  _pick_allow_zero=1
+  _PICK_RESULT=""
 
-  # Sauvegarde état terminal et passage en mode raw
-  local old_stty
-  old_stty=$(stty -g </dev/tty 2>/dev/null)
-  # Restauration garantie même en cas d'interruption (Ctrl-C, set -e, etc.)
-  trap '[ -n "$old_stty" ] && stty "$old_stty" </dev/tty 2>/dev/null' EXIT INT TERM
-  stty -echo -icanon min 1 time 0 </dev/tty 2>/dev/null
+  _pick_from_list "$current_csv" "$current_csv"
 
-  local _picker_cancelled=0
-
-  while true; do
-    _render_skills_page
-
-    # Lecture d'une touche
-    local key
-    if ! _read_key; then
-      # ESC seul → annuler le sélecteur
-      _picker_cancelled=1
-      break
-    fi
-    key="$KEY"
-
-    case "$key" in
-      $'\x1b[A'|$'\x1bOA')  # flèche haut
-        [ "$cursor" -gt 0 ] && cursor=$((cursor - 1))
-        ;;
-      $'\x1b[B'|$'\x1bOB')  # flèche bas
-        [ "$cursor" -lt $((total - 1)) ] && cursor=$((cursor + 1))
-        ;;
-      " ")  # espace — toggle
-        if [ "${checked[$cursor]}" = "1" ]; then
-          checked[$cursor]="0"
-        else
-          checked[$cursor]="1"
-        fi
-        ;;
-      ""| $'\n'| $'\r')  # entrée — valider
-        break
-        ;;
-      "0")
-        i=0
-        while [ "$i" -lt "$total" ]; do checked[$i]="0"; i=$((i+1)); done
-        ;;
-    esac
-  done
-
-  # Restaurer le terminal et désarmer le trap
-  trap - EXIT INT TERM
-  [ -n "$old_stty" ] && stty "$old_stty" </dev/tty 2>/dev/null
-
-  # Annulation par ESC : conserver la sélection courante
-  if [ "$_picker_cancelled" = "1" ]; then
-    printf "\033[2J\033[H"
+  if [ "$_PICK_RESULT" = "$current_csv" ] && [ -n "$current_csv" ]; then
     log_warn "Sélection annulée (ESC) — skills inchangés."
-    PICKED_SKILLS="$current_csv"
-    return
   fi
-
-  printf "\033[2J\033[H"  # clear après sortie
-
-  # Reconstruire le CSV final
-  local chosen=()
-  i=0
-  while [ "$i" -lt "$total" ]; do
-    [ "${checked[$i]}" = "1" ] && chosen+=("${all_skills[$i]}")
-    i=$((i + 1))
-  done
-
-  # Protection bash 3.2 : tableau vide → chaîne vide (pas de crash avec set -u)
-  if [ ${#chosen[@]} -eq 0 ]; then
-    PICKED_SKILLS=""
-  else
-    PICKED_SKILLS=$(printf '%s\n' "${chosen[@]}" | tr '\n' ',' | sed 's/,$//')
-  fi
+  PICKED_SKILLS="$_PICK_RESULT"
 }
 
 ##
 # Sélection interactive de cibles (targets) avec navigation flèches + espace.
 # Compatible bash 3.2 (macOS). Résultat dans $PICKED_TARGETS (CSV).
-# Appeler directement (pas dans une sous-shell).
+# Wrapper autour de _pick_from_list.
 # @param {string} $1 — sélection courante (CSV de cibles)
 ##
 _pick_targets() {
   local current_csv="${1:-opencode, claude-code, vscode}"
-  local available=("opencode" "claude-code" "vscode")
-  local total=${#available[@]}
+
+  # Initialiser _pick_items avec les cibles disponibles
+  _pick_items=("opencode" "claude-code" "vscode")
+  _pick_total=${#_pick_items[@]}
 
   # Nettoyer le CSV courant
   local clean_csv
@@ -289,103 +354,28 @@ _pick_targets() {
     | sed 's/^ *//;s/ *$//' | grep -v '^$' | tr '\n' ',' | sed 's/,$//')
 
   # Initialiser le tableau de sélection
-  local checked=()
+  _pick_checked=()
   local i=0
-  while [ "$i" -lt "$total" ]; do
-    if echo ",$clean_csv," | grep -qF ",${available[$i]},"; then
-      checked+=("1")
+  while [ "$i" -lt "$_pick_total" ]; do
+    if echo ",$clean_csv," | grep -qF ",${_pick_items[$i]},"; then
+      _pick_checked+=("1")
     else
-      checked+=("0")
+      _pick_checked+=("0")
     fi
     i=$((i + 1))
   done
 
-  local cursor=0
+  _pick_render_fn="_render_targets_page"
+  _pick_allow_zero=0
+  _PICK_RESULT=""
 
-  # Sauvegarde + raw mode
-  local old_stty
-  old_stty=$(stty -g </dev/tty 2>/dev/null)
-  trap '[ -n "$old_stty" ] && stty "$old_stty" </dev/tty 2>/dev/null' EXIT INT TERM
-  stty -echo -icanon min 1 time 0 </dev/tty 2>/dev/null
+  _pick_from_list "$current_csv" "$current_csv"
 
-  local _cancelled=0
-
-  while true; do
-    # ── Rendu ────────────────────────────────────────────────────────────────
-    printf "\033[2J\033[H"
-    echo -e "${BOLD}Sélection des cibles${RESET}"
-    echo -e "  \033[0;34m↑↓\033[0m naviguer   \033[0;34mespace\033[0m cocher/décocher   \033[0;34mentrée\033[0m valider   \033[0;34mESC\033[0m annuler"
-    echo ""
-
-    local j=0
-    while [ "$j" -lt "$total" ]; do
-      local check_icon="   "
-      local check_color="" check_reset=""
-      if [ "${checked[$j]}" = "1" ]; then
-        check_icon="[x]"
-        check_color="$GREEN"
-        check_reset="$RESET"
-      fi
-      if [ "$j" -eq "$cursor" ]; then
-        printf "  \033[1m> ${check_color}%-3s${check_reset}\033[1m  %s\033[0m\n" \
-          "$check_icon" "${available[$j]}"
-      else
-        printf "    ${check_color}%-3s${check_reset}  %s\n" \
-          "$check_icon" "${available[$j]}"
-      fi
-      j=$((j + 1))
-    done
-
-    echo ""
-    local count=0
-    local v
-    for v in "${checked[@]}"; do [ "$v" = "1" ] && count=$((count+1)); done
-    echo -e "  ${BOLD}$count cible(s) sélectionnée(s)${RESET}"
-    echo ""
-
-    # ── Lecture touche ────────────────────────────────────────────────────────
-    local key
-    if ! _read_key; then
-      _cancelled=1; break
-    fi
-    key="$KEY"
-
-    case "$key" in
-      $'\x1b[A'|$'\x1bOA') [ "$cursor" -gt 0 ] && cursor=$((cursor - 1)) ;;
-      $'\x1b[B'|$'\x1bOB') [ "$cursor" -lt $((total - 1)) ] && cursor=$((cursor + 1)) ;;
-      " ")
-        if [ "${checked[$cursor]}" = "1" ]; then
-          checked[$cursor]="0"
-        else
-          checked[$cursor]="1"
-        fi
-        ;;
-      ""|$'\n'|$'\r') break ;;
-    esac
-  done
-
-  trap - EXIT INT TERM
-  [ -n "$old_stty" ] && stty "$old_stty" </dev/tty 2>/dev/null
-  printf "\033[2J\033[H"
-
-  if [ "$_cancelled" = "1" ]; then
-    PICKED_TARGETS="$current_csv"
-    return
-  fi
-
-  # Reconstruire le CSV final
-  local chosen=()
-  i=0
-  while [ "$i" -lt "$total" ]; do
-    [ "${checked[$i]}" = "1" ] && chosen+=("${available[$i]}")
-    i=$((i + 1))
-  done
-
-  if [ ${#chosen[@]} -eq 0 ]; then
-    # Aucune cible cochée → garder la sélection courante
+  # Aucune cible cochée → garder la sélection courante
+  if [ -z "$_PICK_RESULT" ]; then
     PICKED_TARGETS="$current_csv"
   else
-    PICKED_TARGETS=$(printf '%s\n' "${chosen[@]}" | tr '\n' ',' | sed 's/,$//')
+    PICKED_TARGETS="$_PICK_RESULT"
   fi
 }
 
