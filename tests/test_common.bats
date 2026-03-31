@@ -1,7 +1,8 @@
 #!/usr/bin/env bats
 # Tests unitaires pour scripts/common.sh
-# Fonctions testées : get_project_language, get_project_tracker, get_project_labels,
-#                     project_exists, normalize_project_id, api_keys_entry_exists,
+# Fonctions testées : _get_project_field, get_project_language, get_project_tracker,
+#                     get_project_labels, project_exists, normalize_project_id,
+#                     resolve_project_path, api_keys_entry_exists,
 #                     get_project_api_*, get_project_path, path_exists
 
 setup() {
@@ -358,4 +359,78 @@ EOF
   printf 'PROJ-FR=/home/user/projets/proj-fr\n' > "$PATHS_FILE"
   run path_exists "PROJ-ABSENT"
   [ "$status" -ne 0 ]
+}
+
+# ── _get_project_field (parser interne) ───────────────────────────────────────
+
+@test "_get_project_field : retourne la valeur brute d'un champ existant" {
+  run _get_project_field "PROJ-EN" "Langue"
+  [ "$status" -eq 0 ]
+  [ "$output" = "english" ]
+}
+
+@test "_get_project_field : retourne une chaîne vide pour un champ absent" {
+  run _get_project_field "PROJ-FR" "Langue"
+  [ "$status" -eq 0 ]
+  [ "$output" = "" ]
+}
+
+@test "_get_project_field : retourne une chaîne vide pour un projet inexistant" {
+  run _get_project_field "INEXISTANT" "Tracker"
+  [ "$status" -eq 0 ]
+  [ "$output" = "" ]
+}
+
+@test "_get_project_field : ne lit pas un champ d'un autre projet" {
+  # PROJ-EN a Langue, PROJ-FR n'en a pas — vérifier l'isolation
+  run _get_project_field "PROJ-FR" "Langue"
+  [ "$status" -eq 0 ]
+  [ "$output" = "" ]
+}
+
+@test "_get_project_field : retourne Labels avec virgules intactes" {
+  run _get_project_field "PROJ-MULTI-LABELS" "Labels"
+  [ "$status" -eq 0 ]
+  [ "$output" = "feature,fix,front,back" ]
+}
+
+# ── resolve_project_path ──────────────────────────────────────────────────────
+
+@test "resolve_project_path : retourne le chemin d'un projet valide" {
+  local project_dir="$TEST_DIR/my-project"
+  mkdir -p "$project_dir"
+  printf 'PROJ-FR=%s\n' "$project_dir" > "$PATHS_FILE"
+  run resolve_project_path "PROJ-FR"
+  [ "$status" -eq 0 ]
+  [ "$output" = "$project_dir" ]
+}
+
+@test "resolve_project_path : normalise l'ID en majuscules" {
+  local project_dir="$TEST_DIR/my-project"
+  mkdir -p "$project_dir"
+  printf 'PROJ-FR=%s\n' "$project_dir" > "$PATHS_FILE"
+  run resolve_project_path "proj-fr"
+  [ "$status" -eq 0 ]
+  [ "$output" = "$project_dir" ]
+}
+
+@test "resolve_project_path : exit 1 si le projet n'existe pas" {
+  run resolve_project_path "INEXISTANT"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"introuvable"* ]]
+}
+
+@test "resolve_project_path : exit 1 si le chemin est vide" {
+  # PROJ-NO-LABELS existe dans projects.md mais n'a pas d'entrée dans paths.local.md
+  printf '' > "$PATHS_FILE"
+  run resolve_project_path "PROJ-NO-LABELS"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Aucun chemin"* ]]
+}
+
+@test "resolve_project_path : exit 1 si le dossier n'existe pas sur le disque" {
+  printf 'PROJ-FR=/tmp/dossier-inexistant-%s\n' "$$" > "$PATHS_FILE"
+  run resolve_project_path "PROJ-FR"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Dossier introuvable"* ]]
 }
