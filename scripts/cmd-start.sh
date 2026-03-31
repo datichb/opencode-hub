@@ -147,6 +147,6 @@ fi
 
 # ── Confirmation avant lancement ──────────────────────
 echo ""
-read -rp "  Appuyer sur Entrée pour lancer $default_target…" _
+read -rp "  Appuyer sur Entrée pour lancer ${default_target}…" _
 
 adapter_start "$PROJECT_PATH" "$PROMPT" "$PROJECT_ID"

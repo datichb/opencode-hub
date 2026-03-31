@@ -1,0 +1,127 @@
+#!/usr/bin/env bats
+# Tests pour scripts/cmd-init.sh — bd init + propagation labels
+# cmd-init.sh est un script top-level (non sourceable) — testé via exécution directe.
+# Les entrées interactives sont fournies via stdin.
+
+setup() {
+  TEST_DIR="$(mktemp -d)"
+
+  export PROJECTS_FILE="$TEST_DIR/projects.md"
+  export PATHS_FILE="$TEST_DIR/paths.local.md"
+  export API_KEYS_FILE="$TEST_DIR/api-keys.local.md"
+
+  CMD_INIT="$BATS_TEST_DIRNAME/../scripts/cmd-init.sh"
+
+  # Projects vide (ensure_projects_file le crée si absent)
+  cat > "$PROJECTS_FILE" <<'PROJEOF'
+# Registre de test
+PROJEOF
+
+  : > "$PATHS_FILE"
+
+  # Créer un répertoire projet cible
+  mkdir -p "$TEST_DIR/fake-project"
+
+  # ── Mock bd dans le PATH ─────────────────────────────────────────────────────
+  BD_CALLS_LOG="$TEST_DIR/bd_calls.log"
+  export BD_CALLS_LOG
+  : > "$BD_CALLS_LOG"
+
+  mkdir -p "$TEST_DIR/bin"
+  cat > "$TEST_DIR/bin/bd" <<'BDEOF'
+#!/bin/bash
+echo "bd $*" >> "$BD_CALLS_LOG"
+if [ "${1:-}" = "init" ]; then
+  mkdir -p .beads
+fi
+exit 0
+BDEOF
+  chmod +x "$TEST_DIR/bin/bd"
+
+  # Mock brew (non disponible en CI)
+  cat > "$TEST_DIR/bin/brew" <<'BREWEOF'
+#!/bin/bash
+exit 0
+BREWEOF
+  chmod +x "$TEST_DIR/bin/brew"
+
+  export PATH="$TEST_DIR/bin:$PATH"
+}
+
+teardown() {
+  rm -rf "$TEST_DIR"
+}
+
+# Exécute cmd-init.sh avec des entrées piped
+# Utilise un heredoc pour fournir les réponses interactives
+_run_init() {
+  run bash "$CMD_INIT" "$@"
+}
+
+# ── bd init + propagation labels intégrée ────────────────────────────────────
+
+@test "cmd-init : propose bd init et propage les labels" {
+  # Entrées: PROJECT_ID=NEWPROJ, PATH=fake-project, Nom, Stack, Labels, Tracker=1(none), init beads=Y, select agents=n, deploy=n
+  run bash -c '
+    printf "Mon Projet\nNode.js\nfeature,fix,back\n1\nY\nn\nn\n" | bash "$1" NEWPROJ "$2"
+  ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
+  [ "$status" -eq 0 ]
+
+  # bd init a été appelé
+  grep -q "bd init" "$BD_CALLS_LOG"
+  # Les labels ont été propagés
+  grep -q "bd label add feature" "$BD_CALLS_LOG"
+  grep -q "bd label add fix" "$BD_CALLS_LOG"
+  grep -q "bd label add back" "$BD_CALLS_LOG"
+}
+
+@test "cmd-init : ne propose pas bd init si .beads existe déjà" {
+  mkdir -p "$TEST_DIR/fake-project/.beads"
+  # Entrées: Nom, Stack, Labels, Tracker=1(none), select agents=n, deploy=n
+  run bash -c '
+    printf "Mon Projet\nNode.js\nfeature\n1\nn\nn\n" | bash "$1" NEWPROJ2 "$2"
+  ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
+  [ "$status" -eq 0 ]
+
+  # bd init ne doit PAS avoir été appelé
+  ! grep -q "bd init" "$BD_CALLS_LOG"
+}
+
+@test "cmd-init : respecte le refus de bd init (n)" {
+  # Entrées: Nom, Stack, Labels, Tracker=1(none), init beads=n, select agents=n, deploy=n
+  run bash -c '
+    printf "Mon Projet\nNode.js\nfeature\n1\nn\nn\nn\n" | bash "$1" NEWPROJ3 "$2"
+  ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
+  [ "$status" -eq 0 ]
+
+  # bd init ne doit PAS avoir été appelé
+  ! grep -q "bd init" "$BD_CALLS_LOG"
+}
+
+@test "cmd-init : ne propose pas bd init si bd absent du PATH" {
+  # Supprimer le mock bd du PATH
+  rm -f "$TEST_DIR/bin/bd"
+  # Entrées: Nom, Stack, Labels, Tracker=1(none), select agents=n, deploy=n
+  # Pas de question bd init car bd n'est pas disponible
+  # Mais la question "Installer Beads maintenant ?" est posée — répondre n
+  run bash -c '
+    printf "Mon Projet\nNode.js\nfeature\n1\nn\nn\nn\n" | bash "$1" NEWPROJ4 "$2"
+  ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
+  [ "$status" -eq 0 ]
+
+  # Aucun appel bd
+  [ ! -s "$BD_CALLS_LOG" ]
+}
+
+@test "cmd-init : propage les labels avec espaces (trim)" {
+  # Entrées: Nom, Stack, Labels avec espaces, Tracker=1, init beads=Y, select agents=n, deploy=n
+  run bash -c '
+    printf "Mon Projet\nNode.js\n feature , fix , back \n1\nY\nn\nn\n" | bash "$1" NEWPROJ5 "$2"
+  ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
+  [ "$status" -eq 0 ]
+
+  # Les labels doivent être trimés
+  grep -q "bd label add feature" "$BD_CALLS_LOG"
+  grep -q "bd label add fix" "$BD_CALLS_LOG"
+  grep -q "bd label add back" "$BD_CALLS_LOG"
+}

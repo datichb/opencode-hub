@@ -1,0 +1,165 @@
+#!/usr/bin/env bats
+# Tests pour scripts/cmd-start.sh — gate exec + bd init interactif
+# cmd-start.sh est un script top-level (non sourceable) — testé via exécution directe.
+# adapter_start fait exec → on mock l'outil cible (opencode) comme un script PATH.
+
+setup() {
+  TEST_DIR="$(mktemp -d)"
+
+  export PROJECTS_FILE="$TEST_DIR/projects.md"
+  export PATHS_FILE="$TEST_DIR/paths.local.md"
+  export API_KEYS_FILE="$TEST_DIR/api-keys.local.md"
+
+  CMD_START="$BATS_TEST_DIRNAME/../scripts/cmd-start.sh"
+
+  # ── Données de test ──────────────────────────────────────────────────────────
+  cat > "$PROJECTS_FILE" <<'PROJEOF'
+# Registre de test
+
+## TEST-PROJ
+- Nom : Projet Test
+- Stack : Node.js
+- Board Beads : TEST-PROJ
+- Tracker : none
+- Labels : feature,fix
+- Agents : all
+PROJEOF
+
+  mkdir -p "$TEST_DIR/fake-project"
+  cat > "$PATHS_FILE" <<EOF
+TEST-PROJ=$TEST_DIR/fake-project
+EOF
+
+  : > "$API_KEYS_FILE"
+
+  # ── Mock opencode dans le PATH (cible par défaut) ────────────────────────────
+  OPENCODE_LOG="$TEST_DIR/opencode_calls.log"
+  export OPENCODE_LOG
+  : > "$OPENCODE_LOG"
+
+  mkdir -p "$TEST_DIR/bin"
+  cat > "$TEST_DIR/bin/opencode" <<'OCEOF'
+#!/bin/bash
+echo "opencode $*" >> "$OPENCODE_LOG"
+exit 0
+OCEOF
+  chmod +x "$TEST_DIR/bin/opencode"
+
+  # ── Mock bd dans le PATH ─────────────────────────────────────────────────────
+  BD_CALLS_LOG="$TEST_DIR/bd_calls.log"
+  export BD_CALLS_LOG
+  : > "$BD_CALLS_LOG"
+
+  cat > "$TEST_DIR/bin/bd" <<'BDEOF'
+#!/bin/bash
+echo "bd $*" >> "$BD_CALLS_LOG"
+if [ "${1:-}" = "init" ]; then
+  mkdir -p .beads
+fi
+exit 0
+BDEOF
+  chmod +x "$TEST_DIR/bin/bd"
+
+  # Mock jq pour que get_default_target fonctionne sans hub.json
+  # (common.sh retourne "opencode" si jq absent ou hub.json absent)
+  # On s'assure que le mock opencode est trouvé par adapter_validate
+  export PATH="$TEST_DIR/bin:$PATH"
+}
+
+teardown() {
+  rm -rf "$TEST_DIR"
+}
+
+# ── Gate : confirmation avant lancement ──────────────────────────────────────
+
+@test "cmd-start : affiche la confirmation avant lancement" {
+  # .beads existe → pas de question bd init ; juste Enter pour le gate
+  mkdir -p "$TEST_DIR/fake-project/.beads"
+  run bash -c '
+    printf "\n" | bash "$1" TEST-PROJ
+  ' _ "$CMD_START"
+  [ "$status" -eq 0 ]
+
+  # Le message de gate doit apparaître
+  [[ "$output" == *"Appuyer sur Entrée pour lancer"* ]]
+  # opencode a été appelé
+  [ -s "$OPENCODE_LOG" ]
+}
+
+@test "cmd-start : lance opencode après la confirmation" {
+  mkdir -p "$TEST_DIR/fake-project/.beads"
+  mkdir -p "$TEST_DIR/fake-project/.opencode/agents"
+  run bash -c '
+    printf "\n" | bash "$1" TEST-PROJ
+  ' _ "$CMD_START"
+  [ "$status" -eq 0 ]
+
+  # opencode a été lancé (via exec → notre mock)
+  grep -q "opencode" "$OPENCODE_LOG"
+}
+
+# ── Beads init interactif ────────────────────────────────────────────────────
+
+@test "cmd-start : propose bd init si .beads absent et bd disponible" {
+  # Pas de .beads → question "Initialiser Beads maintenant ?" → Y, puis Enter gate
+  run bash -c '
+    printf "Y\n\n" | bash "$1" TEST-PROJ
+  ' _ "$CMD_START"
+  [ "$status" -eq 0 ]
+
+  # bd init a été appelé
+  grep -q "bd init" "$BD_CALLS_LOG"
+  # Les labels ont été propagés
+  grep -q "bd label add feature" "$BD_CALLS_LOG"
+  grep -q "bd label add fix" "$BD_CALLS_LOG"
+}
+
+@test "cmd-start : respecte le refus de bd init (n)" {
+  # Pas de .beads → question → n, puis Enter gate
+  run bash -c '
+    printf "n\n\n" | bash "$1" TEST-PROJ
+  ' _ "$CMD_START"
+  [ "$status" -eq 0 ]
+
+  # bd init ne doit PAS avoir été appelé
+  ! grep -q "bd init" "$BD_CALLS_LOG"
+  # Mais opencode doit quand même être lancé
+  [ -s "$OPENCODE_LOG" ]
+}
+
+@test "cmd-start : warning passif si .beads absent et bd indisponible" {
+  # Retirer le mock bd et restreindre le PATH pour exclure le vrai bd (/opt/homebrew/bin)
+  rm -f "$TEST_DIR/bin/bd"
+  run bash -c '
+    export PATH="'"$TEST_DIR/bin"':/usr/bin:/bin"
+    printf "\n" | bash "$1" TEST-PROJ
+  ' _ "$CMD_START"
+  [ "$status" -eq 0 ]
+
+  # Message de warning passif
+  [[ "$output" == *"Beads non initialisé"* ]]
+  # Pas de question bd init
+  [[ "$output" != *"Initialiser Beads maintenant"* ]]
+}
+
+@test "cmd-start : propage les labels après bd init" {
+  # Pas de .beads → Y → Enter gate
+  run bash -c '
+    printf "Y\n\n" | bash "$1" TEST-PROJ
+  ' _ "$CMD_START"
+  [ "$status" -eq 0 ]
+
+  # Vérifier les appels bd
+  grep -q "bd init" "$BD_CALLS_LOG"
+  grep -q "bd label add feature" "$BD_CALLS_LOG"
+  grep -q "bd label add fix" "$BD_CALLS_LOG"
+}
+
+@test "cmd-start : --dev exit si .beads absent" {
+  # --dev requiert .beads — doit exit 1
+  run bash -c '
+    printf "\n" | bash "$1" TEST-PROJ --dev
+  ' _ "$CMD_START"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"requiert Beads"* ]]
+}
