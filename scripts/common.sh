@@ -112,51 +112,44 @@ normalize_project_id() {
   echo "$1" | tr '[:lower:]' '[:upper:]'
 }
 
-# Retourne le provider de tracker d'un projet (jira|gitlab|none)
-# Lit le champ "Tracker :" dans projects.md
-get_project_tracker() {
-  local id="$1"
-  local tracker
+# Lit un champ "- <field> : <value>" dans le bloc d'un projet de projects.md
+# Usage interne — utiliser les fonctions publiques ci-dessous
+# @param $1 — PROJECT_ID
+# @param $2 — nom du champ (ex: "Tracker", "Langue", "Labels")
+_get_project_field() {
+  local id="$1" field="$2"
   # -v section : évite l'injection regex via $id (caractères spéciaux dans l'identifiant)
-  tracker=$(awk -v section="## ${id}" '
+  awk -v section="## ${id}" -v field="$field" '
     $0 == section {found=1; next}
     found && /^## /{exit}
-    found && /^- Tracker :/{print; exit}
+    found && $0 ~ "^- " field " :" {print; exit}
   ' "$PROJECTS_FILE" \
-    | sed 's/^- Tracker : *//' | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
-  echo "${tracker:-none}"
+    | sed "s/^- ${field} : *//"
+}
+
+# Retourne le provider de tracker d'un projet (jira|gitlab|none)
+get_project_tracker() {
+  local raw
+  raw=$(_get_project_field "$1" "Tracker")
+  raw=$(echo "$raw" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
+  echo "${raw:-none}"
 }
 
 # Retourne la langue de travail d'un projet (ex: "english", "spanish")
-# Lit le champ "Langue :" dans projects.md
 # Retourne une chaîne vide si le champ est absent (comportement par défaut : français)
 get_project_language() {
-  local id="$1"
-  local lang
-  # -v section : évite l'injection regex via $id (caractères spéciaux dans l'identifiant)
-  lang=$(awk -v section="## ${id}" '
-    $0 == section {found=1; next}
-    found && /^## /{exit}
-    found && /^- Langue :/{print; exit}
-  ' "$PROJECTS_FILE" \
-    | sed 's/^- Langue : *//' | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
-  echo "${lang:-}"
+  local raw
+  raw=$(_get_project_field "$1" "Langue")
+  raw=$(echo "$raw" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
+  echo "${raw:-}"
 }
 
 # Retourne la liste des labels d'un projet (ex: "feature,fix,front,back")
-# Lit le champ "Labels :" dans projects.md
 # Retourne une chaîne vide si le champ est absent
 get_project_labels() {
-  local id="$1"
-  local labels
-  # -v section : évite l'injection regex via $id (caractères spéciaux dans l'identifiant)
-  labels=$(awk -v section="## ${id}" '
-    $0 == section {found=1; next}
-    found && /^## /{exit}
-    found && /^- Labels :/{print; exit}
-  ' "$PROJECTS_FILE" \
-    | sed 's/^- Labels : *//')
-  echo "${labels:-}"
+  local raw
+  raw=$(_get_project_field "$1" "Labels")
+  echo "${raw:-}"
 }
 
 # Detect OS
