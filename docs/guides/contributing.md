@@ -143,25 +143,15 @@ skills: [chemin/vers/mon-skill]
 
 Un adapter traduit les agents du format hub vers le format d'un outil cible.
 
-### Structure d'un adapter
+Le contrat complet (6 fonctions obligatoires, paramètres, fonctions utilitaires
+disponibles et exemple minimal) est documenté dans
+[docs/architecture/adapters.md](../architecture/adapters.md).
 
-```bash
-# scripts/adapters/<cible>.adapter.sh
-# Doit implémenter les fonctions suivantes :
+### Étapes rapides
 
-adapter_validate()     # Vérifie que l'outil cible est installé et accessible
-adapter_deploy()       # Génère les fichiers dans le projet cible
-adapter_install()      # Installe l'outil cible (appelé par oc install)
-adapter_update()       # Met à jour l'outil cible (appelé par oc update)
-adapter_start()        # Lance l'agent dans le projet (appelé par oc start)
-adapter_needs_node()   # return 0 si Node.js est requis, return 1 sinon
-```
-
-Voir `scripts/adapters/opencode.adapter.sh` comme référence.
-
-### Enregistrer l'adapter
-
-Ajouter la cible dans `config/hub.json` et dans `scripts/lib/adapter-manager.sh`.
+1. Créer `scripts/adapters/<cible>.adapter.sh` avec les 6 fonctions du contrat
+2. Ajouter la cible dans `config/hub.json`
+3. Tester avec `oc deploy <cible>` puis `oc agent list`
 
 ---
 
