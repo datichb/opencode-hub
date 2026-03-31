@@ -95,7 +95,8 @@ get_project_path() {
   fi
   # || true : évite que pipefail propage exit 1 si grep ne matche rien
   # head -1 : protection contre doublons dans paths.local.md
-  grep -F "${id}=" "$PATHS_FILE" | head -1 | cut -d'=' -f2- | tr -d ' ' || true
+  # ^ : ancrage en début de ligne pour éviter les faux positifs (PROJ vs PROJ-FULL)
+  grep "^${id}=" "$PATHS_FILE" | head -1 | cut -d'=' -f2- | tr -d ' ' || true
 }
 
 # Vérifie qu'un projet existe dans projects.md
@@ -107,9 +108,10 @@ project_exists() {
 }
 
 # Vérifie qu'un chemin existe dans paths.local.md
+# ^ : ancrage en début de ligne pour éviter les faux positifs (PROJ vs PROJ-FULL)
 path_exists() {
   local id="$1"
-  grep -qF "${id}=" "$PATHS_FILE" 2>/dev/null
+  grep -q "^${id}=" "$PATHS_FILE" 2>/dev/null
 }
 
 # Normalise un PROJECT_ID en majuscules

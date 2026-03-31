@@ -347,6 +347,13 @@ EOF
   [ "$status" -ne 0 ]
 }
 
+@test "get_project_path : ne matche pas un préfixe de PROJECT_ID (sous-chaîne)" {
+  printf 'PROJ-FULL=/home/user/projets/proj-full\n' > "$PATHS_FILE"
+  run get_project_path "PROJ"
+  [ "$status" -eq 0 ]
+  [ "$output" = "" ]
+}
+
 # ── path_exists ───────────────────────────────────────────────────────────────
 
 @test "path_exists : retourne 0 si l'entrée existe" {
@@ -358,6 +365,12 @@ EOF
 @test "path_exists : retourne non-zero si l'entrée est absente" {
   printf 'PROJ-FR=/home/user/projets/proj-fr\n' > "$PATHS_FILE"
   run path_exists "PROJ-ABSENT"
+  [ "$status" -ne 0 ]
+}
+
+@test "path_exists : ne matche pas un préfixe de PROJECT_ID (sous-chaîne)" {
+  printf 'PROJ-FULL=/home/user/projets/proj-full\n' > "$PATHS_FILE"
+  run path_exists "PROJ"
   [ "$status" -ne 0 ]
 }
 
