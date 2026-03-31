@@ -1,11 +1,5 @@
 #!/bin/bash
 set -euo pipefail
-source "$(cd "$(dirname "$0")" && pwd)/common.sh"
-
-SUBCMD="${1:-}"
-# NOTE : pour la sous-commande "tracker", $2 vaut la sous-sous-commande (setup/status/switch),
-# pas le PROJECT_ID. Le PROJECT_ID est alors $3. Voir le dispatch ci-dessous.
-PROJECT_ID="${2:-}"
 
 # ── Aide interne ──────────────────────────
 _beads_usage() {
@@ -25,11 +19,6 @@ _beads_usage() {
   echo "  tracker setup  <PROJECT_ID>  Configure le tracker du projet (interactif)"
   echo "  tracker switch <PROJECT_ID>  Change le tracker d'un projet"
   echo ""
-}
-
-# ── Résoudre le chemin du projet (délègue à common.sh) ──
-_resolve_project_path() {
-  resolve_project_path "$1"
 }
 
 # ── Vérifier que bd est disponible ────────
@@ -125,7 +114,7 @@ cmd_status() {
 
   id=$(normalize_project_id "$id")
   local path
-  path=$(_resolve_project_path "$id")
+  path=$(resolve_project_path "$id")
 
   if [ -d "$path/.beads" ]; then
     log_success "Beads initialisé dans $id ($path/.beads)"
@@ -153,7 +142,7 @@ cmd_init() {
   local id
   id=$(normalize_project_id "$1")
   local path
-  path=$(_resolve_project_path "$id")
+  path=$(resolve_project_path "$id")
 
   if [ -d "$path/.beads" ]; then
     log_warn "Beads déjà initialisé dans $id ($path/.beads)"
@@ -193,7 +182,7 @@ cmd_list() {
   local id
   id=$(normalize_project_id "$1")
   local path
-  path=$(_resolve_project_path "$id")
+  path=$(resolve_project_path "$id")
   _require_beads_init "$path" "$id"
 
   log_title "Tickets ouverts — $id"
@@ -210,7 +199,7 @@ cmd_open() {
   local id
   id=$(normalize_project_id "$1")
   local path
-  path=$(_resolve_project_path "$id")
+  path=$(resolve_project_path "$id")
 
   log_info "Répertoire du projet $id : $path"
   if ! command -v bd &>/dev/null; then
@@ -235,7 +224,7 @@ cmd_sync() {
   local extra_flags=("$@")   # --pull-only, --push-only, --dry-run, etc.
 
   local path
-  path=$(_resolve_project_path "$id")
+  path=$(resolve_project_path "$id")
   _require_beads_init "$path" "$id"
 
   local tracker
@@ -260,7 +249,7 @@ cmd_tracker_status() {
   local id
   id=$(normalize_project_id "$1")
   local path
-  path=$(_resolve_project_path "$id")
+  path=$(resolve_project_path "$id")
   _require_beads_init "$path" "$id"
 
   local tracker
@@ -279,7 +268,7 @@ cmd_tracker_setup() {
   local id
   id=$(normalize_project_id "$1")
   local path
-  path=$(_resolve_project_path "$id")
+  path=$(resolve_project_path "$id")
   _require_beads_init "$path" "$id"
 
   local tracker
@@ -324,7 +313,7 @@ cmd_tracker_switch() {
   local id
   id=$(normalize_project_id "$1")
   local path
-  path=$(_resolve_project_path "$id")
+  path=$(resolve_project_path "$id")
 
   local current
   current=$(get_project_tracker "$id")
@@ -424,32 +413,41 @@ _setup_gitlab() {
   log_info "Synchroniser        : ./oc.sh beads sync $id --pull-only --dry-run"
 }
 
-# ── Dispatch ──────────────────────────────
-case "$SUBCMD" in
-  status)  cmd_status  "$PROJECT_ID" ;;
-  init)    cmd_init    "$PROJECT_ID" ;;
-  list)    cmd_list    "$PROJECT_ID" ;;
-  open)    cmd_open    "$PROJECT_ID" ;;
-  sync)    cmd_sync    "$PROJECT_ID" "${@:3}" ;;
-  tracker)
-    TRACKER_SUBCMD="${2:-}"
-    TRACKER_PROJECT="${3:-}"
-    case "$TRACKER_SUBCMD" in
-      status) cmd_tracker_status "$TRACKER_PROJECT" ;;
-      setup)  cmd_tracker_setup  "$TRACKER_PROJECT" ;;
-      switch) cmd_tracker_switch "$TRACKER_PROJECT" ;;
-      ""|--help|-h)
-        echo ""
-        echo -e "${BOLD}Usage :${RESET} ./oc.sh beads tracker <status|setup|switch> <PROJECT_ID>"
-        ;;
-      *) log_error "Sous-commande tracker inconnue : $TRACKER_SUBCMD"; exit 1 ;;
-    esac
-    ;;
-  ""|--help|-h) _beads_usage ;;
-  *)
-    log_error "Sous-commande inconnue : $SUBCMD"
-    _beads_usage
-    exit 1
-    ;;
-esac
+# ── Dispatch (exécuté seulement si le script est lancé directement) ────────
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  source "$(cd "$(dirname "$0")" && pwd)/common.sh"
+
+  SUBCMD="${1:-}"
+  # NOTE : pour la sous-commande "tracker", $2 vaut la sous-sous-commande (setup/status/switch),
+  # pas le PROJECT_ID. Le PROJECT_ID est alors $3. Voir le dispatch ci-dessous.
+  PROJECT_ID="${2:-}"
+
+  case "$SUBCMD" in
+    status)  cmd_status  "$PROJECT_ID" ;;
+    init)    cmd_init    "$PROJECT_ID" ;;
+    list)    cmd_list    "$PROJECT_ID" ;;
+    open)    cmd_open    "$PROJECT_ID" ;;
+    sync)    cmd_sync    "$PROJECT_ID" "${@:3}" ;;
+    tracker)
+      TRACKER_SUBCMD="${2:-}"
+      TRACKER_PROJECT="${3:-}"
+      case "$TRACKER_SUBCMD" in
+        status) cmd_tracker_status "$TRACKER_PROJECT" ;;
+        setup)  cmd_tracker_setup  "$TRACKER_PROJECT" ;;
+        switch) cmd_tracker_switch "$TRACKER_PROJECT" ;;
+        ""|--help|-h)
+          echo ""
+          echo -e "${BOLD}Usage :${RESET} ./oc.sh beads tracker <status|setup|switch> <PROJECT_ID>"
+          ;;
+        *) log_error "Sous-commande tracker inconnue : $TRACKER_SUBCMD"; exit 1 ;;
+      esac
+      ;;
+    ""|--help|-h) _beads_usage ;;
+    *)
+      log_error "Sous-commande inconnue : $SUBCMD"
+      _beads_usage
+      exit 1
+      ;;
+  esac
+fi
 

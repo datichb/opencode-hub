@@ -1,10 +1,10 @@
 #!/usr/bin/env bats
 # Tests unitaires pour scripts/cmd-beads.sh
-# Fonctions testées : _set_project_tracker, _resolve_tracker, _resolve_project_path
+# Fonctions testées : _set_project_tracker, _resolve_tracker, cmd_init
 #
-# Stratégie : cmd-beads.sh ne peut pas être sourcé directement (top-level dispatch
-# + re-source de common.sh). Les fonctions à tester sont redéfinies ici après
-# source de common.sh, en copie fidèle du code source.
+# Grâce au guard BASH_SOURCE, cmd-beads.sh peut être sourcé directement :
+# il n'exécute le dispatch que lorsqu'il est lancé en tant que script principal.
+# On source common.sh puis cmd-beads.sh pour obtenir les vraies fonctions.
 
 setup() {
   TEST_DIR="$(mktemp -d)"
@@ -16,66 +16,8 @@ setup() {
   PROJECTS_FILE="$TEST_DIR/projects.md"
   PATHS_FILE="$TEST_DIR/paths.local.md"
 
-  # ── Redéfinir les fonctions de cmd-beads.sh testables ─────────────────────
-
-  _resolve_tracker() {
-    local id="$1"
-    local tracker
-    tracker=$(get_project_tracker "$id")
-    tracker=$(echo "$tracker" | tr '[:upper:]' '[:lower:]')
-    if [ "$tracker" = "none" ] || [ -z "$tracker" ]; then
-      log_error "Aucun tracker configuré pour $id"
-      log_info  "Configurer : ./oc.sh beads tracker setup $id"
-      exit 1
-    fi
-    echo "$tracker"
-  }
-
-  _set_project_tracker() {
-    local id="$1" new_tracker="$2"
-    case "$new_tracker" in
-      jira|gitlab|none) ;;
-      *) log_error "Tracker invalide : $new_tracker (jira | gitlab | none)"; exit 1 ;;
-    esac
-    if perl -i -0777pe "
-      s{(^## \Q${id}\E\n.*?)(- Tracker : \S+)}{\${1}- Tracker : ${new_tracker}}ms
-    " "$PROJECTS_FILE" 2>/dev/null && grep -q -- "- Tracker : ${new_tracker}" "$PROJECTS_FILE"; then
-      return 0
-    fi
-    if perl -i -0777pe "
-      s{(^## \Q${id}\E\n.*?- Labels : [^\n]+\n)}{\${1}- Tracker : ${new_tracker}\n}ms
-    " "$PROJECTS_FILE" 2>/dev/null && grep -q -- "- Tracker : ${new_tracker}" "$PROJECTS_FILE"; then
-      return 0
-    fi
-    if perl -i -0777pe "
-      s{(^## \Q${id}\E\n.*?- [^\n]+\n)}{\${1}- Tracker : ${new_tracker}\n}ms
-    " "$PROJECTS_FILE" 2>/dev/null && grep -q -- "- Tracker : ${new_tracker}" "$PROJECTS_FILE"; then
-      return 0
-    fi
-    log_error "Impossible d'insérer le champ Tracker dans le bloc $id de projects.md"
-    return 1
-  }
-
-  _resolve_project_path() {
-    local id="$1"
-    id=$(normalize_project_id "$id")
-    if ! project_exists "$id"; then
-      log_error "Projet $id introuvable → ./oc.sh list"
-      exit 1
-    fi
-    local path
-    path=$(get_project_path "$id")
-    path="${path/#\~/$HOME}"
-    if [ -z "$path" ]; then
-      log_error "Aucun chemin local pour $id → ./oc.sh init $id"
-      exit 1
-    fi
-    if [ ! -d "$path" ]; then
-      log_error "Dossier introuvable : $path"
-      exit 1
-    fi
-    echo "$path"
-  }
+  # Sourcer cmd-beads.sh (le dispatch ne s'exécute pas grâce au guard BASH_SOURCE)
+  source "$BATS_TEST_DIRNAME/../scripts/cmd-beads.sh"
 
   # Mock de bd — enregistre les appels dans BD_CALLS_LOG
   BD_CALLS_LOG="$TEST_DIR/bd_calls.log"
@@ -96,37 +38,6 @@ setup() {
   # Fonctions guard simplifiées
   _require_bd() { return 0; }
   require_project_id() { [ -z "${1:-}" ] && { log_error "PROJECT_ID requis"; exit 1; }; return 0; }
-
-  cmd_init() {
-    require_project_id "$1"
-    _require_bd
-    local id
-    id=$(normalize_project_id "$1")
-    local path
-    path=$(_resolve_project_path "$id")
-    if [ -d "$path/.beads" ]; then
-      log_warn "Beads déjà initialisé dans $id ($path/.beads)"
-      exit 0
-    fi
-    log_info "Initialisation de Beads dans : $path"
-    (cd "$path" && bd init) || { log_error "Échec de bd init"; exit 1; }
-    log_success "Beads initialisé dans $id ($path/.beads)"
-    local labels
-    labels=$(get_project_labels "$id")
-    if [ -n "$labels" ]; then
-      log_info "Propagation des labels vers Beads…"
-      local IFS=','
-      for label in $labels; do
-        label=$(echo "$label" | sed 's/^ *//;s/ *$//')
-        [ -z "$label" ] && continue
-        if (cd "$path" && bd label add "$label") 2>/dev/null; then
-          log_success "  Label ajouté : $label"
-        else
-          log_warn "  Échec ajout label : $label"
-        fi
-      done
-    fi
-  }
 
   # ── Données de test ───────────────────────────────────────────────────────
 
@@ -248,34 +159,34 @@ teardown() {
   echo "$block" | grep -q -- "- Tracker : none"
 }
 
-# ── _resolve_project_path ─────────────────────────────────────────────────────
+# ── resolve_project_path ──────────────────────────────────────────────────────
 
-@test "_resolve_project_path : retourne le chemin d'un projet valide" {
-  run _resolve_project_path "PROJ-FULL"
+@test "resolve_project_path : retourne le chemin d'un projet valide" {
+  run resolve_project_path "PROJ-FULL"
   [ "$status" -eq 0 ]
   [ "$output" = "$TEST_DIR/fake-project" ]
 }
 
-@test "_resolve_project_path : exit si le projet n'existe pas" {
-  run _resolve_project_path "INEXISTANT"
+@test "resolve_project_path : exit si le projet n'existe pas" {
+  run resolve_project_path "INEXISTANT"
   [ "$status" -ne 0 ]
   echo "$output" | grep -qi "introuvable"
 }
 
-@test "_resolve_project_path : exit si le chemin est vide" {
+@test "resolve_project_path : exit si le chemin est vide" {
   # Écraser paths avec un projet sans chemin
   cat > "$PATHS_FILE" <<EOF
 PROJ-NO-TRACKER=
 EOF
-  run _resolve_project_path "PROJ-NO-TRACKER"
+  run resolve_project_path "PROJ-NO-TRACKER"
   [ "$status" -ne 0 ]
 }
 
-@test "_resolve_project_path : exit si le dossier n'existe pas sur le disque" {
+@test "resolve_project_path : exit si le dossier n'existe pas sur le disque" {
   cat > "$PATHS_FILE" <<EOF
 PROJ-FULL=$TEST_DIR/dossier-inexistant
 EOF
-  run _resolve_project_path "PROJ-FULL"
+  run resolve_project_path "PROJ-FULL"
   [ "$status" -ne 0 ]
   echo "$output" | grep -qi "introuvable"
 }
