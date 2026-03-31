@@ -2,6 +2,10 @@
 # Assemble le contenu d'un agent canonique (agents/) avec ses skills injectés.
 # Usage : source ce fichier, puis appeler build_agent_content <agent_file> [target]
 
+# Guard contre le double sourcing
+[[ -n "${_PROMPT_BUILDER_LOADED:-}" ]] && return 0
+_PROMPT_BUILDER_LOADED=1
+
 # Retourne la version du hub depuis config/hub.json
 get_hub_version() {
   if command -v jq &>/dev/null && [ -f "$HUB_CONFIG" ]; then
