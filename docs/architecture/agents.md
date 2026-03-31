@@ -91,7 +91,7 @@ Ne route jamais directement vers les `developer-*` — délègue toujours à `or
 | **Invocation** | `"Implémente les tickets [IDs]"` / `"Workflow dev sur [feature]"` |
 
 Tech lead IA spécialisé dans le pilotage de l'implémentation. Prend en charge une
-liste de tickets Beads prêts à implémenter, route vers les 8 agents `developer-*`,
+liste de tickets Beads prêts à implémenter, route vers les 9 agents `developer-*`,
 supervise le QA optionnel et la review. Trois modes : `manuel` (défaut), `semi-auto`,
 `auto`. Invocable standalone ou depuis l'`orchestrator`.
 

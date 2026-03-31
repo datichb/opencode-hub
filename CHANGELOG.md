@@ -173,10 +173,10 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 - Skill `auditor/audit-observability` : méthode RED complète, grille des 5 questions, format
   de rapport par pilier (métriques → logs → traces → SLOs → alerting → dashboards)
 - Agent `orchestrator-dev` (famille planning/) : tech lead IA d'implémentation — pilote le
-  workflow Beads ticket par ticket, route vers 8 agents developer-*, supervise QA optionnel
+  workflow Beads ticket par ticket, route vers 9 agents developer-*, supervise QA optionnel
   et review, 3 modes (manuel/semi-auto/auto), invocable standalone ou depuis l'orchestrator
 - Skill `orchestrator/orchestrator-dev-protocol` : workflow Beads d'implémentation, matrice
-  de routing developer-* (8 signaux → 8 agents), format checkpoints CP-1/CP-QA/CP-2/CP-3,
+  de routing developer-* (9 signaux → 9 agents), format checkpoints CP-1/CP-QA/CP-2/CP-3,
   3 modes de workflow, format compte rendu d'étape et récap global
 
 ### Changed

@@ -1,6 +1,6 @@
 ---
 name: orchestrator-dev-protocol
-description: Protocole de l'orchestrateur développement — pilote le workflow Beads ticket par ticket, route vers les agents developer-* et developer-platform, gère les étapes QA et review. Trois modes disponibles : manuel (défaut), semi-auto, auto. Invocable standalone ou depuis l'orchestrateur feature.
+description: Protocole de l'orchestrateur développement — pilote le workflow Beads ticket par ticket, route vers les 9 agents developer-*, gère les étapes QA et review. Trois modes disponibles : manuel (défaut), semi-auto, auto. Invocable standalone ou depuis l'orchestrateur feature.
 ---
 
 # Skill — Protocole Orchestrateur Dev
@@ -57,6 +57,7 @@ En cas d'ambiguïté, choisir `developer-fullstack` et l'indiquer dans le compte
 | mobile, React Native, Flutter, Swift, Kotlin, iOS, Android | `developer-mobile` |
 | API, REST, GraphQL, webhook, intégration tierce, SDK, endpoint | `developer-api` |
 | infra as code, Terraform, Pulumi, K8s, Helm, GitOps, platform | `developer-platform` |
+| sécurité, hardening, CORS, headers HTTP, JWT, rate limiting, audit sécurité | `developer-security` |
 
 **Règle de priorité :** labels Beads en priorité → titre → description.
 
