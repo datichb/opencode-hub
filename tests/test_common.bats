@@ -407,6 +407,94 @@ EOF
   [ "$output" = "feature,fix,front,back" ]
 }
 
+# ── get_project_agents ────────────────────────────────────────────────────────
+
+@test "get_project_agents : retourne all quand le champ Agents est absent" {
+  run get_project_agents "PROJ-FR"
+  [ "$status" -eq 0 ]
+  [ "$output" = "all" ]
+}
+
+@test "get_project_agents : retourne all quand le champ Agents vaut all" {
+  cat > "$PROJECTS_FILE" <<'EOF'
+## PROJ-ALL
+- Nom : Avec All
+- Stack : Test
+- Labels : test
+- Agents : all
+EOF
+  run get_project_agents "PROJ-ALL"
+  [ "$status" -eq 0 ]
+  [ "$output" = "all" ]
+}
+
+@test "get_project_agents : retourne le CSV quand des agents sont listés" {
+  cat > "$PROJECTS_FILE" <<'EOF'
+## PROJ-SOME
+- Nom : Agents partiels
+- Stack : Test
+- Labels : test
+- Agents : reviewer,debugger,planner
+EOF
+  run get_project_agents "PROJ-SOME"
+  [ "$status" -eq 0 ]
+  [ "$output" = "reviewer,debugger,planner" ]
+}
+
+@test "get_project_agents : retourne all pour un projet inexistant" {
+  run get_project_agents "INEXISTANT"
+  [ "$status" -eq 0 ]
+  [ "$output" = "all" ]
+}
+
+# ── should_deploy_agent ──────────────────────────────────────────────────────
+
+@test "should_deploy_agent : retourne 0 si project_id vide" {
+  run should_deploy_agent "" "reviewer"
+  [ "$status" -eq 0 ]
+}
+
+@test "should_deploy_agent : retourne 0 si agents=all" {
+  run should_deploy_agent "PROJ-FR" "reviewer"
+  [ "$status" -eq 0 ]
+}
+
+@test "should_deploy_agent : retourne 0 si l'agent est dans le CSV" {
+  cat > "$PROJECTS_FILE" <<'EOF'
+## PROJ-FILTER
+- Nom : Filtré
+- Stack : Test
+- Labels : test
+- Agents : reviewer,debugger,planner
+EOF
+  run should_deploy_agent "PROJ-FILTER" "debugger"
+  [ "$status" -eq 0 ]
+}
+
+@test "should_deploy_agent : retourne non-zero si l'agent n'est pas dans le CSV" {
+  cat > "$PROJECTS_FILE" <<'EOF'
+## PROJ-FILTER
+- Nom : Filtré
+- Stack : Test
+- Labels : test
+- Agents : reviewer,debugger,planner
+EOF
+  run should_deploy_agent "PROJ-FILTER" "orchestrator"
+  [ "$status" -ne 0 ]
+}
+
+@test "should_deploy_agent : pas de faux positif sur sous-chaîne (review vs reviewer)" {
+  cat > "$PROJECTS_FILE" <<'EOF'
+## PROJ-SUBSTR
+- Nom : Sous-chaîne
+- Stack : Test
+- Labels : test
+- Agents : reviewer,debugger
+EOF
+  run should_deploy_agent "PROJ-SUBSTR" "review"
+  [ "$status" -ne 0 ]
+}
+
 # ── resolve_project_path ──────────────────────────────────────────────────────
 
 @test "resolve_project_path : retourne le chemin d'un projet valide" {
@@ -446,4 +534,61 @@ EOF
   run resolve_project_path "PROJ-FR"
   [ "$status" -eq 1 ]
   [[ "$output" == *"Dossier introuvable"* ]]
+}
+
+# ── _set_project_agents (lib/agent-picker.sh) ─────────────────────────────────
+
+@test "_set_project_agents : remplace un champ Agents existant" {
+  source "$BATS_TEST_DIRNAME/../scripts/lib/agent-picker.sh"
+  cat > "$PROJECTS_FILE" <<'EOF'
+## PROJ-SET
+- Nom : Test Set
+- Stack : Test
+- Labels : test
+- Agents : all
+EOF
+  run _set_project_agents "PROJ-SET" "reviewer,debugger"
+  [ "$status" -eq 0 ]
+  run grep -- "- Agents : reviewer,debugger" "$PROJECTS_FILE"
+  [ "$status" -eq 0 ]
+}
+
+@test "_set_project_agents : ajoute après Labels si Agents absent" {
+  source "$BATS_TEST_DIRNAME/../scripts/lib/agent-picker.sh"
+  cat > "$PROJECTS_FILE" <<'EOF'
+## PROJ-NO-AGENTS
+- Nom : Sans Agents
+- Stack : Test
+- Labels : test
+EOF
+  run _set_project_agents "PROJ-NO-AGENTS" "planner,orchestrator"
+  [ "$status" -eq 0 ]
+  run grep -- "- Agents : planner,orchestrator" "$PROJECTS_FILE"
+  [ "$status" -eq 0 ]
+}
+
+@test "_set_project_agents : ne modifie pas les autres projets" {
+  source "$BATS_TEST_DIRNAME/../scripts/lib/agent-picker.sh"
+  cat > "$PROJECTS_FILE" <<'EOF'
+## PROJ-A
+- Nom : Projet A
+- Stack : Test
+- Labels : test
+- Agents : all
+
+## PROJ-B
+- Nom : Projet B
+- Stack : Test
+- Labels : test
+- Agents : all
+EOF
+  _set_project_agents "PROJ-A" "reviewer"
+  # PROJ-A modifié
+  run bash -c "awk '/^## PROJ-A$/,/^$/{print}' '$PROJECTS_FILE' | grep 'Agents'"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"reviewer"* ]]
+  # PROJ-B inchangé
+  run bash -c "awk '/^## PROJ-B$/,/^$/{print}' '$PROJECTS_FILE' | grep 'Agents'"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"all"* ]]
 }

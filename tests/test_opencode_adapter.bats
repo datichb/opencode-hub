@@ -160,3 +160,96 @@ teardown() {
   run jq . "$DEPLOY_DIR/opencode.json"
   [ "$status" -eq 0 ]
 }
+
+# ── Filtrage par should_deploy_agent ─────────────────────────────────────────
+
+@test "adapter_deploy : ne déploie pas un agent filtré par should_deploy_agent" {
+  # Créer un agent de test supportant opencode
+  local family_dir="$AGENTS_DIR/quality"
+  mkdir -p "$family_dir"
+  cat > "$family_dir/reviewer.md" <<'AGENTEOF'
+---
+id: reviewer
+label: Reviewer
+description: Code reviewer
+targets: [opencode, claude-code, vscode]
+skills: []
+---
+
+# Reviewer
+Contenu de test.
+AGENTEOF
+
+  cat > "$family_dir/debugger.md" <<'AGENTEOF'
+---
+id: debugger
+label: Debugger
+description: Debugger agent
+targets: [opencode, claude-code, vscode]
+skills: []
+---
+
+# Debugger
+Contenu de test.
+AGENTEOF
+
+  # Configurer un projects.md qui n'autorise que reviewer
+  cat > "$PROJECTS_FILE" <<'EOF'
+## PROJ-FILTER
+- Nom : Filtré
+- Stack : Test
+- Labels : test
+- Agents : reviewer
+EOF
+
+  adapter_deploy "$DEPLOY_DIR" "PROJ-FILTER"
+
+  # reviewer doit être déployé
+  [ -f "$DEPLOY_DIR/.opencode/agents/reviewer.md" ]
+  # debugger ne doit PAS être déployé
+  [ ! -f "$DEPLOY_DIR/.opencode/agents/debugger.md" ]
+}
+
+@test "adapter_deploy : déploie tous les agents quand agents=all" {
+  # Créer deux agents de test
+  local family_dir="$AGENTS_DIR/quality"
+  mkdir -p "$family_dir"
+  cat > "$family_dir/reviewer.md" <<'AGENTEOF'
+---
+id: reviewer
+label: Reviewer
+description: Code reviewer
+targets: [opencode]
+skills: []
+---
+
+# Reviewer
+AGENTEOF
+
+  cat > "$family_dir/debugger.md" <<'AGENTEOF'
+---
+id: debugger
+label: Debugger
+description: Debugger agent
+targets: [opencode]
+skills: []
+---
+
+# Debugger
+AGENTEOF
+
+  # Configurer un projects.md avec agents=all
+  cat > "$PROJECTS_FILE" <<'EOF'
+## PROJ-ALL
+- Nom : Tous
+- Stack : Test
+- Labels : test
+- Agents : all
+EOF
+
+  adapter_deploy "$DEPLOY_DIR" "PROJ-ALL"
+
+  # Les deux doivent être déployés
+  [ -f "$DEPLOY_DIR/.opencode/agents/reviewer.md" ]
+  [ -f "$DEPLOY_DIR/.opencode/agents/debugger.md" ]
+}
