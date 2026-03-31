@@ -66,45 +66,38 @@ teardown() {
 # ── adapter_deploy ────────────────────────────────────────────────────────────
 
 @test "claude-code adapter_deploy : crée le dossier .claude/agents/" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
   [ -d "$DEPLOY_DIR/.claude/agents" ]
 }
 
 @test "claude-code adapter_deploy : génère le fichier agent avec le bon nom" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
   [ -f "$DEPLOY_DIR/.claude/agents/test-agent.md" ]
 }
 
 @test "claude-code adapter_deploy : ne génère pas un agent qui ne supporte pas claude-code" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
   [ ! -f "$DEPLOY_DIR/.claude/agents/opencode-only.md" ]
 }
 
 @test "claude-code adapter_deploy : fichier généré contient le frontmatter name" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
   grep -q "^name: TestAgent" "$DEPLOY_DIR/.claude/agents/test-agent.md"
 }
 
 @test "claude-code adapter_deploy : fichier généré contient la description" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
   grep -q "Un agent de test pour bats" "$DEPLOY_DIR/.claude/agents/test-agent.md"
 }
 
 @test "claude-code adapter_deploy : fichier généré contient le corps de l'agent" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
   grep -q "Ceci est le corps" "$DEPLOY_DIR/.claude/agents/test-agent.md"
 }
 
 @test "claude-code adapter_deploy : avec langue, le contenu inclut l'instruction de langue" {
-  PROJECT_ID="PROJ-EN"
   get_project_language() { echo "english"; }
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" "PROJ-EN"
   # Le build_agent_content doit injecter une instruction de langue
   grep -qi "english" "$DEPLOY_DIR/.claude/agents/test-agent.md"
 }

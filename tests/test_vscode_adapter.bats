@@ -102,87 +102,74 @@ teardown() {
 # ── adapter_deploy : structure des dossiers ──────────────────────────────────
 
 @test "vscode adapter_deploy : crée le dossier .github/" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
   [ -d "$DEPLOY_DIR/.github" ]
 }
 
 @test "vscode adapter_deploy : crée le dossier .vscode/prompts/" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
   [ -d "$DEPLOY_DIR/.vscode/prompts" ]
 }
 
 # ── copilot-instructions.md ──────────────────────────────────────────────────
 
 @test "vscode adapter_deploy : génère copilot-instructions.md" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
   [ -f "$DEPLOY_DIR/.github/copilot-instructions.md" ]
 }
 
 @test "vscode adapter_deploy : copilot-instructions.md contient le header généré" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
   # build_generated_header produit un commentaire HTML
   grep -q "<!-- " "$DEPLOY_DIR/.github/copilot-instructions.md"
 }
 
 @test "vscode adapter_deploy : copilot-instructions.md contient le contenu du skill global" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
   grep -q "Respecter les conventions de code" "$DEPLOY_DIR/.github/copilot-instructions.md"
 }
 
 @test "vscode adapter_deploy : copilot-instructions.md ne contient pas le frontmatter du skill" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
   ! grep -q "^id: dev-standards" "$DEPLOY_DIR/.github/copilot-instructions.md"
 }
 
 # ── Fichiers prompt par agent ────────────────────────────────────────────────
 
 @test "vscode adapter_deploy : génère le prompt pour un agent supportant vscode" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
   [ -f "$DEPLOY_DIR/.vscode/prompts/test-agent.prompt.md" ]
 }
 
 @test "vscode adapter_deploy : ne génère pas de prompt pour un agent ne supportant pas vscode" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
   [ ! -f "$DEPLOY_DIR/.vscode/prompts/opencode-only.prompt.md" ]
 }
 
 @test "vscode adapter_deploy : génère le prompt pour un agent multi-cible incluant vscode" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
   [ -f "$DEPLOY_DIR/.vscode/prompts/multi-target.prompt.md" ]
 }
 
 # ── Frontmatter du prompt ────────────────────────────────────────────────────
 
 @test "vscode adapter_deploy : prompt contient mode: agent dans le frontmatter" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
   grep -q "^mode: agent" "$DEPLOY_DIR/.vscode/prompts/test-agent.prompt.md"
 }
 
 @test "vscode adapter_deploy : prompt contient la description dans le frontmatter" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
   grep -q "description:.*Un agent de test pour bats" "$DEPLOY_DIR/.vscode/prompts/test-agent.prompt.md"
 }
 
 @test "vscode adapter_deploy : prompt contient le corps de l'agent" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
   grep -q "Ceci est le corps" "$DEPLOY_DIR/.vscode/prompts/test-agent.prompt.md"
 }
 
 @test "vscode adapter_deploy : apostrophe dans description est échappée" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
   # Le substitution bash ${//\'/\'\'} produit \'\' (backslash-escaped)
   # Vérifier que l'apostrophe brute n'apparaît pas non-échappée dans la valeur YAML
   local desc_line
@@ -196,8 +183,7 @@ teardown() {
 # ── Langue du projet ─────────────────────────────────────────────────────────
 
 @test "vscode adapter_deploy : avec langue, le contenu inclut l'instruction de langue" {
-  PROJECT_ID="PROJ-EN"
   get_project_language() { echo "english"; }
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" "PROJ-EN"
   grep -qi "english" "$DEPLOY_DIR/.vscode/prompts/test-agent.prompt.md"
 }

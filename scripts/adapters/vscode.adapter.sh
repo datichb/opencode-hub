@@ -30,6 +30,7 @@ adapter_needs_node() { return 1; }
 
 adapter_deploy() {
   local deploy_dir="${1:-$HUB_DIR}"
+  local project_id="${2:-}"
   local github_dir="$deploy_dir/.github"
   local prompts_dir="$deploy_dir/.vscode/prompts"
   mkdir -p "$github_dir" "$prompts_dir"
@@ -50,10 +51,10 @@ adapter_deploy() {
   log_success "[vscode] copilot-instructions.md"
 
   # Prompt par agent supportant vscode
-  # Lire la langue du projet si PROJECT_ID est défini (ADR-005)
+  # Lire la langue du projet si project_id est défini (ADR-005)
   local lang=""
-  if [ -n "${PROJECT_ID:-}" ]; then
-    lang=$(get_project_language "$PROJECT_ID")
+  if [ -n "$project_id" ]; then
+    lang=$(get_project_language "$project_id")
   fi
 
   local deployed=0

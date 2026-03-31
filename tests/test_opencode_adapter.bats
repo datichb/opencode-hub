@@ -106,8 +106,7 @@ teardown() {
 # ── Génération opencode.json via adapter_deploy ───────────────────────────────
 
 @test "adapter_deploy : génère opencode.json sans clé API (contenu minimal)" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
 
   [ -f "$DEPLOY_DIR/opencode.json" ]
   run grep '"$schema"' "$DEPLOY_DIR/opencode.json"
@@ -117,8 +116,7 @@ teardown() {
 }
 
 @test "adapter_deploy : opencode.json sans clé API est du JSON valide" {
-  PROJECT_ID=""
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" ""
 
   command -v jq &>/dev/null || skip "jq non disponible"
   run jq . "$DEPLOY_DIR/opencode.json"
@@ -127,8 +125,7 @@ teardown() {
 
 @test "adapter_deploy : injecte le bloc anthropic dans opencode.json" {
   printf '[PROJ-ANT]\nmodel=claude-opus-4-5\nprovider=anthropic\napi_key=sk-ant-inject\n' > "$API_KEYS_FILE"
-  PROJECT_ID="PROJ-ANT"
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" "PROJ-ANT"
 
   [ -f "$DEPLOY_DIR/opencode.json" ]
   run grep 'sk-ant-inject' "$DEPLOY_DIR/opencode.json"
@@ -137,8 +134,7 @@ teardown() {
 
 @test "adapter_deploy : opencode.json avec clé anthropic est du JSON valide" {
   printf '[PROJ-ANT]\nmodel=claude-opus-4-5\nprovider=anthropic\napi_key=sk-ant-inject\n' > "$API_KEYS_FILE"
-  PROJECT_ID="PROJ-ANT"
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" "PROJ-ANT"
 
   command -v jq &>/dev/null || skip "jq non disponible"
   run jq . "$DEPLOY_DIR/opencode.json"
@@ -147,20 +143,18 @@ teardown() {
 
 @test "adapter_deploy : ajoute opencode.json au .gitignore avant l'écriture" {
   printf '[PROJ-ANT]\nmodel=claude-opus-4-5\nprovider=anthropic\napi_key=sk-ant-gitignore\n' > "$API_KEYS_FILE"
-  PROJECT_ID="PROJ-ANT"
 
   # Mock _gitignore_opencode_json pour vérifier l'appel
   gitignore_called=false
   _gitignore_opencode_json() { gitignore_called=true; }
 
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" "PROJ-ANT"
   [ "$gitignore_called" = "true" ]
 }
 
 @test "adapter_deploy : opencode.json avec litellm + base_url est du JSON valide" {
   printf '[PROJ-LIT]\nmodel=claude-sonnet-4-5\nprovider=litellm\napi_key=sk-bRf-lit\nbase_url=https://api.mammouth.ai/v1\n' > "$API_KEYS_FILE"
-  PROJECT_ID="PROJ-LIT"
-  adapter_deploy "$DEPLOY_DIR"
+  adapter_deploy "$DEPLOY_DIR" "PROJ-LIT"
 
   command -v jq &>/dev/null || skip "jq non disponible"
   run jq . "$DEPLOY_DIR/opencode.json"

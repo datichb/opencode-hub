@@ -11,14 +11,15 @@ adapter_needs_node() { return 0; }
 
 adapter_deploy() {
   local deploy_dir="${1:-$HUB_DIR}"
+  local project_id="${2:-}"
   local out_dir="$deploy_dir/.claude/agents"
   mkdir -p "$out_dir"
   [ -d "$CANONICAL_AGENTS_DIR" ] || { log_error "[claude-code] Dossier agents/ introuvable"; return 1; }
 
-  # Lire la langue du projet si PROJECT_ID est défini (ADR-005)
+  # Lire la langue du projet si project_id est défini (ADR-005)
   local lang=""
-  if [ -n "${PROJECT_ID:-}" ]; then
-    lang=$(get_project_language "$PROJECT_ID")
+  if [ -n "$project_id" ]; then
+    lang=$(get_project_language "$project_id")
   fi
 
   local deployed=0
@@ -70,15 +71,15 @@ adapter_update() {
 }
 
 adapter_start() {
-  local project_path="$1" prompt="${2:-}"
+  local project_path="$1" prompt="${2:-}" project_id="${3:-}"
   command -v claude &>/dev/null || { log_error "[claude-code] Non installé → oc install (puis sélectionner Claude Code)"; exit 1; }
   cd "$project_path" || { log_error "[claude-code] Impossible de naviguer vers $project_path"; exit 1; }
 
   # Injecter ANTHROPIC_API_KEY si une clé anthropic est configurée pour ce projet
-  if [ -n "${PROJECT_ID:-}" ] && api_keys_entry_exists "${PROJECT_ID}"; then
-    local provider; provider=$(get_project_api_provider "${PROJECT_ID}")
+  if [ -n "$project_id" ] && api_keys_entry_exists "$project_id"; then
+    local provider; provider=$(get_project_api_provider "$project_id")
     if [ "$provider" = "anthropic" ]; then
-      local api_key; api_key=$(get_project_api_key "${PROJECT_ID}")
+      local api_key; api_key=$(get_project_api_key "$project_id")
       if [ -n "$api_key" ]; then
         export ANTHROPIC_API_KEY="$api_key"
         log_info "[claude-code] Clé API anthropic injectée (ANTHROPIC_API_KEY)"

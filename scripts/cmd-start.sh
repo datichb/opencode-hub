@@ -113,4 +113,4 @@ if [ "$DEV_MODE" = true ]; then
   fi
 fi
 
-adapter_start "$PROJECT_PATH" "$PROMPT"
+adapter_start "$PROJECT_PATH" "$PROMPT" "$PROJECT_ID"

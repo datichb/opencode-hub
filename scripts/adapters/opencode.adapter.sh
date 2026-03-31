@@ -4,15 +4,16 @@
 source "$HUB_DIR/scripts/lib/prompt-builder.sh"
 
 # Modèle résolu par priorité :
-#   1. api-keys.local.md (clé project-level) si PROJECT_ID défini
+#   1. api-keys.local.md (clé project-level) si project_id défini
 #   2. variable d'env OPENCODE_MODEL
 #   3. config/hub.json → opencode.model
 #   4. fallback : claude-sonnet-4-5
 _get_opencode_model() {
+  local project_id="${1:-}"
   local model=""
   # Niveau 1 : configuration projet (api-keys.local.md)
-  if [ -n "${PROJECT_ID:-}" ]; then
-    model=$(get_project_api_model "$PROJECT_ID")
+  if [ -n "$project_id" ]; then
+    model=$(get_project_api_model "$project_id")
   fi
   # Niveau 2 : variable d'environnement
   [ -z "$model" ] && model="${OPENCODE_MODEL:-}"
@@ -89,14 +90,15 @@ adapter_needs_node() { return 0; }
 
 adapter_deploy() {
   local deploy_dir="${1:-$HUB_DIR}"
+  local project_id="${2:-}"
   local out_dir="$deploy_dir/.opencode/agents"
   mkdir -p "$out_dir"
   [ -d "$CANONICAL_AGENTS_DIR" ] || { log_error "[opencode] Dossier agents/ introuvable"; return 1; }
 
-  # Lire la langue du projet si PROJECT_ID est défini (ADR-005)
+  # Lire la langue du projet si project_id est défini (ADR-005)
   local lang=""
-  if [ -n "${PROJECT_ID:-}" ]; then
-    lang=$(get_project_language "$PROJECT_ID")
+  if [ -n "$project_id" ]; then
+    lang=$(get_project_language "$project_id")
   fi
 
   local deployed=0
@@ -114,25 +116,25 @@ adapter_deploy() {
 
   # Générer opencode.json à la racine du projet
   local config_file="$deploy_dir/opencode.json"
-  local model; model=$(_get_opencode_model)
+  local model; model=$(_get_opencode_model "$project_id")
   local provider_block=""
   local has_api_key=false
 
   # Construire le bloc provider si une clé est configurée pour ce projet
-  if [ -n "${PROJECT_ID:-}" ] && api_keys_entry_exists "${PROJECT_ID}"; then
-    provider_block=$(_build_provider_block "${PROJECT_ID}")
+  if [ -n "$project_id" ] && api_keys_entry_exists "$project_id"; then
+    provider_block=$(_build_provider_block "$project_id")
     [ -n "$provider_block" ] && has_api_key=true
   fi
 
-  # Régénérer si : fichier absent, clé API à injecter, ou PROJECT_ID défini sans clé
+  # Régénérer si : fichier absent, clé API à injecter, ou project_id défini sans clé
   # (ce dernier cas couvre le retrait de clé après oc config unset)
   local should_write=false
   if [ ! -f "$config_file" ]; then
     should_write=true
   elif [ "$has_api_key" = true ]; then
     should_write=true
-  elif [ -n "${PROJECT_ID:-}" ]; then
-    # PROJECT_ID défini mais sans clé : régénérer pour retirer un ancien bloc provider
+  elif [ -n "$project_id" ]; then
+    # project_id défini mais sans clé : régénérer pour retirer un ancien bloc provider
     should_write=true
   fi
 
@@ -156,7 +158,7 @@ adapter_deploy() {
       echo '}'
     } > "$config_file"
     if [ "$has_api_key" = true ]; then
-      log_success "[opencode] opencode.json créé avec clé API (modèle : $model, provider : $(get_project_api_provider "${PROJECT_ID}"))"
+      log_success "[opencode] opencode.json créé avec clé API (modèle : $model, provider : $(get_project_api_provider "$project_id"))"
       # Protéger les permissions du fichier (contient une clé)
       chmod 600 "$config_file"
     else
