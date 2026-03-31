@@ -67,14 +67,38 @@ EOF
 
   log_success "Projet $PROJECT_ID ajouté dans projects.md"
 
+  # ── Vérifier Beads (bd) ─────────────────────────────────────────────────────
+  if ! command -v bd &>/dev/null; then
+    echo ""
+    log_warn "Beads (bd) n'est pas installé — nécessaire pour la gestion des tickets"
+    read -rp "  Installer Beads maintenant ? [Y/n] : " install_bd
+    if [[ "${install_bd:-Y}" =~ ^[Yy]$ ]]; then
+      if command -v brew &>/dev/null; then
+        brew install bd && log_success "Beads installé" \
+          || log_warn "Échec de l'installation — installer manuellement : brew install bd"
+      else
+        log_warn "Homebrew non disponible — installer manuellement"
+        log_info "  macOS  : brew install bd"
+        log_info "  Linux  : voir https://beads.sh/install"
+      fi
+    else
+      log_info "Installer plus tard : ./oc.sh install"
+    fi
+  fi
+
   # Proposer la configuration du tracker si non-none
   if [ "$PROJECT_TRACKER" != "none" ]; then
-    echo ""
-    read -rp "  Configurer $PROJECT_TRACKER maintenant ? [Y/n] : " setup_now
-    if [[ "${setup_now:-Y}" =~ ^[Yy]$ ]]; then
-      bash "$SCRIPTS_DIR/cmd-beads.sh" tracker setup "$PROJECT_ID"
+    if command -v bd &>/dev/null; then
+      echo ""
+      read -rp "  Configurer $PROJECT_TRACKER maintenant ? [Y/n] : " setup_now
+      if [[ "${setup_now:-Y}" =~ ^[Yy]$ ]]; then
+        bash "$SCRIPTS_DIR/cmd-beads.sh" tracker setup "$PROJECT_ID"
+      else
+        log_info "Configurer plus tard : ./oc.sh beads tracker setup $PROJECT_ID"
+      fi
     else
-      log_info "Configurer plus tard : ./oc.sh beads tracker setup $PROJECT_ID"
+      echo ""
+      log_info "Configurer le tracker plus tard (bd requis) : ./oc.sh beads tracker setup $PROJECT_ID"
     fi
   fi
 fi
