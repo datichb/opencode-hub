@@ -14,6 +14,16 @@ load_adapter() {
 
   # shellcheck source=/dev/null
   source "$adapter_file"
+
+  # Vérifier que les 6 fonctions du contrat adapter sont définies
+  local required_fns=(adapter_validate adapter_needs_node adapter_deploy adapter_install adapter_update adapter_start)
+  local fn
+  for fn in "${required_fns[@]}"; do
+    if ! declare -F "$fn" &>/dev/null; then
+      log_error "Contrat adapter invalide : ${target}.adapter.sh ne définit pas ${fn}()"
+      exit 1
+    fi
+  done
 }
 
 # Retourne la cible par défaut depuis config/hub.json (ou 'opencode')
