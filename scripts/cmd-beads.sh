@@ -27,31 +27,9 @@ _beads_usage() {
   echo ""
 }
 
-# ── Résoudre le chemin du projet ──────────
+# ── Résoudre le chemin du projet (délègue à common.sh) ──
 _resolve_project_path() {
-  local id="$1"
-  id=$(normalize_project_id "$id")
-
-  if ! project_exists "$id"; then
-    log_error "Projet $id introuvable → ./oc.sh list"
-    exit 1
-  fi
-
-  local path
-  path=$(get_project_path "$id")
-  path="${path/#\~/$HOME}"
-
-  if [ -z "$path" ]; then
-    log_error "Aucun chemin local pour $id → ./oc.sh init $id"
-    exit 1
-  fi
-
-  if [ ! -d "$path" ]; then
-    log_error "Dossier introuvable : $path"
-    exit 1
-  fi
-
-  echo "$path"
+  resolve_project_path "$1"
 }
 
 # ── Vérifier que bd est disponible ────────

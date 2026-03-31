@@ -39,24 +39,8 @@ fi
 
 PROJECT_ID=$(normalize_project_id "$PROJECT_ID")
 
-# ── Validations ───────────────────────────
-if ! project_exists "$PROJECT_ID"; then
-  log_error "Projet $PROJECT_ID introuvable → ./oc.sh list"
-  exit 1
-fi
-
-PROJECT_PATH=$(get_project_path "$PROJECT_ID")
-PROJECT_PATH="${PROJECT_PATH/#\~/$HOME}"
-
-if [ -z "$PROJECT_PATH" ]; then
-  log_error "Aucun chemin local pour $PROJECT_ID → ./oc.sh init $PROJECT_ID"
-  exit 1
-fi
-
-if [ ! -d "$PROJECT_PATH" ]; then
-  log_error "Dossier introuvable : $PROJECT_PATH"
-  exit 1
-fi
+# ── Validation + résolution du chemin ─────
+PROJECT_PATH=$(resolve_project_path "$PROJECT_ID")
 
 # ── Lancement via adaptateur ─────────────
 log_info "Projet   : $PROJECT_ID"

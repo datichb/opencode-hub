@@ -14,9 +14,7 @@ _cmd_deploy_check() {
   local deploy_dir="$HUB_DIR"
   if [ -n "$project_id" ]; then
     project_id=$(normalize_project_id "$project_id")
-    project_exists "$project_id" || { log_error "Projet $project_id introuvable → oc list"; exit 1; }
-    deploy_dir=$(get_project_path "$project_id")
-    deploy_dir="${deploy_dir/#\~/$HOME}"
+    deploy_dir=$(resolve_project_path "$project_id")
   fi
 
   # Résoudre les cibles à vérifier
@@ -176,13 +174,7 @@ fi
 # Résoudre le dossier de déploiement
 if [ -n "$PROJECT_ID" ]; then
   PROJECT_ID=$(normalize_project_id "$PROJECT_ID")
-  if ! project_exists "$PROJECT_ID"; then
-    log_error "Projet $PROJECT_ID introuvable → oc list"
-    exit 1
-  fi
-  deploy_dir=$(get_project_path "$PROJECT_ID")
-  deploy_dir="${deploy_dir/#\~/$HOME}"
-  [ -d "$deploy_dir" ] || { log_error "Dossier introuvable : $deploy_dir"; exit 1; }
+  deploy_dir=$(resolve_project_path "$PROJECT_ID")
   log_info "Projet cible : $PROJECT_ID ($deploy_dir)"
 else
   deploy_dir="$HUB_DIR"

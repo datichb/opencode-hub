@@ -112,6 +112,36 @@ normalize_project_id() {
   echo "$1" | tr '[:lower:]' '[:upper:]'
 }
 
+# Résout le chemin local d'un projet : normalise l'ID, vérifie l'existence,
+# lit paths.local.md, expand ~, vérifie le dossier. Imprime le chemin sur stdout.
+# Exit 1 avec message d'erreur si une étape échoue.
+# @param $1 — PROJECT_ID (sera normalisé en majuscules)
+resolve_project_path() {
+  local id
+  id=$(normalize_project_id "$1")
+
+  if ! project_exists "$id"; then
+    log_error "Projet $id introuvable → ./oc.sh list"
+    exit 1
+  fi
+
+  local path
+  path=$(get_project_path "$id")
+  path="${path/#\~/$HOME}"
+
+  if [ -z "$path" ]; then
+    log_error "Aucun chemin local pour $id → ./oc.sh init $id"
+    exit 1
+  fi
+
+  if [ ! -d "$path" ]; then
+    log_error "Dossier introuvable : $path"
+    exit 1
+  fi
+
+  echo "$path"
+}
+
 # Lit un champ "- <field> : <value>" dans le bloc d'un projet de projects.md
 # Usage interne — utiliser les fonctions publiques ci-dessous
 # @param $1 — PROJECT_ID
