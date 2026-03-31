@@ -20,7 +20,7 @@ _get_opencode_model() {
   if [ -z "$model" ] && command -v jq &>/dev/null && [ -f "$HUB_DIR/config/hub.json" ]; then
     model=$(jq -r '.opencode.model // empty' "$HUB_DIR/config/hub.json" 2>/dev/null)
   fi
-  echo "${model:-claude-sonnet-4-5}"
+  echo "${model:-$DEFAULT_MODEL}"
 }
 
 # Génère le bloc JSON "provider" selon le provider configuré

@@ -19,6 +19,11 @@ ADAPTERS_DIR="$HUB_DIR/scripts/adapters"
 EXTERNAL_SKILLS_DIR="$HUB_DIR/skills/external"
 
 # ─────────────────────────────────────────
+# DEFAULTS
+# ─────────────────────────────────────────
+DEFAULT_MODEL="claude-sonnet-4-5"
+
+# ─────────────────────────────────────────
 # COLORS
 # ─────────────────────────────────────────
 RED='\033[0;31m'

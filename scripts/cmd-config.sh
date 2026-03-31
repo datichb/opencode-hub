@@ -112,7 +112,7 @@ cmd_set() {
 
   # Modèle
   if [ -z "$flag_model" ]; then
-    local default_model="${cur_model:-claude-sonnet-4-5}"
+    local default_model="${cur_model:-$DEFAULT_MODEL}"
     read -rp "  Modèle [${default_model}] : " flag_model
     flag_model="${flag_model:-$default_model}"
   fi

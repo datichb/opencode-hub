@@ -193,7 +193,7 @@ refactor: <restructuration>
 Règles obligatoires pour tous les scripts shell :
 
 ```bash
-#!/usr/bin/env bash
+#!/bin/bash
 set -euo pipefail
 
 # ✅ Les variables locales sont déclarées dans des fonctions
