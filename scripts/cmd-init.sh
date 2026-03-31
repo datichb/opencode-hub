@@ -84,7 +84,13 @@ if path_exists "$PROJECT_ID"; then
   log_warn "Chemin déjà enregistré pour $PROJECT_ID"
 else
   if [ ! -d "$PROJECT_PATH" ]; then
-    log_warn "Le dossier $PROJECT_PATH n'existe pas encore"
+    read -rp "  Le dossier $PROJECT_PATH n'existe pas. Le créer ? [Y/n] : " create_dir
+    if [[ "${create_dir:-Y}" =~ ^[Yy]$ ]]; then
+      mkdir -p "$PROJECT_PATH"
+      log_success "Dossier créé : $PROJECT_PATH"
+    else
+      log_warn "Le dossier $PROJECT_PATH n'existe pas encore — le déploiement sera impossible tant qu'il ne sera pas créé"
+    fi
   fi
   echo "${PROJECT_ID}=${PROJECT_PATH}" >> "$PATHS_FILE"
   log_success "Chemin enregistré dans paths.local.md"
