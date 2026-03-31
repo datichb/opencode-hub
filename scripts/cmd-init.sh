@@ -88,6 +88,40 @@ EOF
     fi
   fi
 
+  # ── Proposer bd init + propagation labels dans le projet ──────────────────
+  if command -v bd &>/dev/null && [ -d "$PROJECT_PATH" ] && [ ! -d "$PROJECT_PATH/.beads" ]; then
+    echo ""
+    read -rp "  Initialiser Beads dans le projet ? [Y/n] : " init_beads
+    if [[ "${init_beads:-Y}" =~ ^[Yy]$ ]]; then
+      if (cd "$PROJECT_PATH" && bd init); then
+        log_success "Beads initialisé dans $PROJECT_PATH"
+        # Propager les labels vers Beads
+        _init_labels="${PROJECT_LABELS:-}"
+        if [ -n "$_init_labels" ]; then
+          log_info "Propagation des labels vers Beads…"
+          _saved_IFS="$IFS"
+          IFS=','
+          for _lbl in $_init_labels; do
+            IFS="$_saved_IFS"
+            # Trim espaces autour du label
+            _lbl=$(echo "$_lbl" | sed 's/^ *//;s/ *$//')
+            [ -z "$_lbl" ] && continue
+            if (cd "$PROJECT_PATH" && bd label add "$_lbl") 2>/dev/null; then
+              log_success "  Label ajouté : $_lbl"
+            else
+              log_warn "  Échec ajout label : $_lbl"
+            fi
+          done
+          IFS="$_saved_IFS"
+        fi
+      else
+        log_warn "Échec de bd init — initialiser plus tard : ./oc.sh beads init $PROJECT_ID"
+      fi
+    else
+      log_info "Initialiser plus tard : ./oc.sh beads init $PROJECT_ID"
+    fi
+  fi
+
   # Proposer la configuration du tracker si non-none
   if [ "$PROJECT_TRACKER" != "none" ]; then
     if command -v bd &>/dev/null; then
