@@ -258,6 +258,13 @@ case "$SUBCOMMAND" in
     ;;
   *)
     log_error "Sous-commande inconnue : $SUBCOMMAND"
+    echo ""
+    echo -e "${BOLD}Usage :${RESET} ./oc.sh config <sous-commande> [options]"
+    echo ""
+    echo "  set <PROJECT_ID> [--model m] [--provider p] [--api-key k] [--base-url u]"
+    echo "  get <PROJECT_ID>"
+    echo "  list"
+    echo "  unset <PROJECT_ID>"
     exit 1
     ;;
 esac
