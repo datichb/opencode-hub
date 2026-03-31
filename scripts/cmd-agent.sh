@@ -4,6 +4,7 @@
 set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 source "$LIB_DIR/tui-picker.sh"
+source "$LIB_DIR/agent-picker.sh"
 
 # EXTERNAL_SKILLS_DIR est défini dans common.sh
 
@@ -694,6 +695,66 @@ cmd_keytest() {
   echo -e "${GREEN}Terminal restauré.${RESET}"
 }
 
+# ── SELECT ───────────────────────────────────────────────────────────────────
+
+##
+# Sélectionne les agents à déployer pour un projet donné.
+# Lance le picker interactif et écrit le résultat dans projects.md.
+# @param {string} $1 — PROJECT_ID
+##
+cmd_select() {
+  local raw_id="${1:-}"
+  if [ -z "$raw_id" ]; then
+    log_error "Usage : oc agent select <PROJECT_ID>"
+    exit 1
+  fi
+
+  local id
+  id=$(normalize_project_id "$raw_id")
+  if ! project_exists "$id"; then
+    log_error "Projet $id introuvable → ./oc.sh list"
+    exit 1
+  fi
+
+  local current
+  current=$(get_project_agents "$id")
+  log_title "Sélection des agents — $id"
+  log_info "Sélection actuelle : ${current}"
+  echo ""
+
+  PICKED_AGENTS=""
+  _pick_agents "$current"
+
+  if [ "$PICKED_AGENTS" = "$current" ]; then
+    log_info "Aucune modification."
+    return
+  fi
+
+  _set_project_agents "$id" "$PICKED_AGENTS"
+
+  echo ""
+  if [ "$PICKED_AGENTS" = "all" ]; then
+    log_success "Tous les agents seront déployés pour $id"
+  elif [ -z "$PICKED_AGENTS" ]; then
+    log_warn "Aucun agent sélectionné pour $id — le déploiement ne générera rien"
+  else
+    # Compter les agents sélectionnés
+    local count
+    count=$(echo "$PICKED_AGENTS" | tr ',' '\n' | wc -l | tr -d ' ')
+    log_success "$count agent(s) sélectionné(s) pour $id"
+  fi
+
+  # Proposer un redéploiement immédiat
+  echo ""
+  read -rp "Redéployer maintenant ? [Y/n] : " redeploy </dev/tty
+  redeploy="${redeploy:-Y}"
+  if [[ "$redeploy" =~ ^[Yy]$ ]]; then
+    exec "$HUB_DIR/oc.sh" deploy all "$id"
+  else
+    log_info "Déployer plus tard : ./oc.sh deploy all $id"
+  fi
+}
+
 # ── DISPATCH ─────────────────────────────────────────────────────────────────
 
 SUBCOMMAND="${1:-}"
@@ -704,20 +765,23 @@ case "$SUBCOMMAND" in
   info)    cmd_info "$@" ;;
   create)  cmd_create ;;
   edit)    cmd_edit "$@" ;;
+  select)  cmd_select "$@" ;;
   keytest) cmd_keytest ;;
   *)
     echo -e "${BOLD}oc agent — Gestion des agents canoniques${RESET}"
     echo ""
-    echo "  list              Lister les agents disponibles"
-    echo "  info <agent-id>   Afficher le détail d'un agent"
-    echo "  create            Créer un nouvel agent (interactif)"
-    echo "  edit <agent-id>   Modifier les skills et métadonnées d'un agent"
-    echo "  keytest           Diagnostic clavier — affiche les octets reçus"
+    echo "  list                  Lister les agents disponibles"
+    echo "  info <agent-id>       Afficher le détail d'un agent"
+    echo "  create                Créer un nouvel agent (interactif)"
+    echo "  edit <agent-id>       Modifier les skills et métadonnées d'un agent"
+    echo "  select <PROJECT_ID>   Choisir les agents à déployer pour un projet"
+    echo "  keytest               Diagnostic clavier — affiche les octets reçus"
     echo ""
     echo -e "${BOLD}Exemples :${RESET}"
     echo "  ./oc.sh agent list"
     echo "  ./oc.sh agent create"
     echo "  ./oc.sh agent edit developer"
+    echo "  ./oc.sh agent select MY-PROJECT"
     echo "  ./oc.sh agent info planner"
     echo "  ./oc.sh agent keytest"
     echo ""
