@@ -53,6 +53,9 @@ _cmd_deploy_check() {
 
       local agent_id; agent_id=$(get_agent_id "$agent_file")
 
+      # Filtrer les agents non sélectionnés pour ce projet
+      should_deploy_agent "$project_id" "$agent_id" || continue
+
       # Nom du fichier généré selon la cible
       local gen_file=""
       case "$tgt" in

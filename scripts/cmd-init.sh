@@ -63,6 +63,7 @@ else
 - Board Beads : $PROJECT_ID
 - Tracker : ${PROJECT_TRACKER}
 - Labels : ${PROJECT_LABELS:-feature,fix}
+- Agents : all
 EOF
 
   log_success "Projet $PROJECT_ID ajouté dans projects.md"

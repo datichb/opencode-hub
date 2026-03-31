@@ -63,6 +63,7 @@ adapter_deploy() {
     agent_supports_target "$agent_file" "vscode" || { log_warn "[vscode] Ignoré : $(basename "$agent_file")"; continue; }
 
     local agent_id; agent_id=$(get_agent_id "$agent_file")
+    should_deploy_agent "$project_id" "$agent_id" || { log_info "[vscode] Filtré : $agent_id"; continue; }
     local description; description=$(extract_frontmatter_value "$agent_file" "description")
 
     log_info "[vscode] Génération prompt : $agent_id"

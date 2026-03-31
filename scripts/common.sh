@@ -189,6 +189,26 @@ get_project_labels() {
   echo "${raw:-}"
 }
 
+# Retourne la liste CSV des agents sélectionnés pour un projet
+# Retourne "all" si le champ est absent ou vide (= déployer tous les agents)
+get_project_agents() {
+  local raw
+  raw=$(_get_project_field "$1" "Agents")
+  echo "${raw:-all}"
+}
+
+# Vérifie si un agent doit être déployé pour un project_id donné
+# Retourne 0 si oui, 1 si non
+# Si project_id vide ou agents=all → toujours déployer
+should_deploy_agent() {
+  local project_id="$1" agent_id="$2"
+  [ -z "$project_id" ] && return 0
+  local agents_csv
+  agents_csv=$(get_project_agents "$project_id")
+  [ -z "$agents_csv" ] || [ "$agents_csv" = "all" ] && return 0
+  echo ",$agents_csv," | grep -qF ",$agent_id,"
+}
+
 # Detect OS
 detect_os() {
   case "$(uname -s)" in

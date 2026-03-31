@@ -108,6 +108,7 @@ adapter_deploy() {
     agent_supports_target "$agent_file" "opencode" || { log_warn "[opencode] Ignoré : $(basename "$agent_file")"; continue; }
 
     local agent_id; agent_id=$(get_agent_id "$agent_file")
+    should_deploy_agent "$project_id" "$agent_id" || { log_info "[opencode] Filtré : $agent_id"; continue; }
     log_info "[opencode] Génération : $agent_id"
     build_agent_content "$agent_file" "opencode" "$lang" > "$out_dir/${agent_id}.md"
     log_success "[opencode] $agent_id"

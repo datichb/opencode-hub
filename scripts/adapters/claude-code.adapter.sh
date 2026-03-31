@@ -29,6 +29,7 @@ adapter_deploy() {
     agent_supports_target "$agent_file" "claude-code" || { log_warn "[claude-code] Ignoré : $(basename "$agent_file")"; continue; }
 
     local agent_id; agent_id=$(get_agent_id "$agent_file")
+    should_deploy_agent "$project_id" "$agent_id" || { log_info "[claude-code] Filtré : $agent_id"; continue; }
     local label; label=$(extract_frontmatter_value "$agent_file" "label"); label="${label:-$agent_id}"
     local description; description=$(extract_frontmatter_value "$agent_file" "description")
 
