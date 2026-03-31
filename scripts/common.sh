@@ -159,22 +159,6 @@ get_project_labels() {
   echo "${labels:-}"
 }
 
-# Retourne la langue de travail d'un projet (ex: "english", "spanish")
-# Lit le champ "Langue :" dans projects.md
-# Retourne une chaîne vide si le champ est absent (comportement par défaut : français)
-get_project_language() {
-  local id="$1"
-  local lang
-  # -v section : évite l'injection regex via $id (caractères spéciaux dans l'identifiant)
-  lang=$(awk -v section="## ${id}" '
-    $0 == section {found=1; next}
-    found && /^## /{exit}
-    found && /^- Langue :/{print; exit}
-  ' "$PROJECTS_FILE" \
-    | sed 's/^- Langue : *//' | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
-  echo "${lang:-}"
-}
-
 # Detect OS
 detect_os() {
   case "$(uname -s)" in

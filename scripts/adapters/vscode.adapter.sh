@@ -45,7 +45,7 @@ adapter_deploy() {
     while IFS= read -r skill_name; do
       [ -z "$skill_name" ] && continue
       local sf="$SKILLS_DIR/${skill_name}.md"
-      [ -f "$sf" ] && { get_skill_content "$sf"; echo ""; } || log_warn "[vscode] Skill global introuvable : $skill_name"
+      [ -f "$sf" ] && { strip_frontmatter "$sf"; echo ""; } || log_warn "[vscode] Skill global introuvable : $skill_name"
     done < <(_get_vscode_global_skills)
   } > "$github_dir/copilot-instructions.md"
   log_success "[vscode] copilot-instructions.md"

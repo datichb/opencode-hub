@@ -45,16 +45,6 @@ strip_frontmatter() {
   fi
 }
 
-# Retourne le corps d'un fichier Markdown en ignorant le bloc frontmatter
-get_agent_body() {
-  strip_frontmatter "$1"
-}
-
-# Retourne le contenu d'un skill en ignorant son frontmatter
-get_skill_content() {
-  strip_frontmatter "$1"
-}
-
 # Vérifie si un agent supporte une cible donnée (via frontmatter targets)
 agent_supports_target() {
   extract_frontmatter_list "$1" "targets" | grep -q "^${2}$"
@@ -87,7 +77,7 @@ build_agent_content() {
     echo "> **Langue de travail : ${lang}.** Rédige toutes tes réponses, rapports et commentaires en ${lang}, quelle que soit la langue des instructions ci-dessous."
     echo ""
   fi
-  get_agent_body "$agent_file"
+  strip_frontmatter "$agent_file"
 
   local skills=()
   while IFS= read -r skill; do
@@ -102,7 +92,7 @@ build_agent_content() {
       [ -z "$skill" ] && continue
       local skill_file="$SKILLS_DIR/${skill}.md"
       if [ -f "$skill_file" ]; then
-        get_skill_content "$skill_file"
+        strip_frontmatter "$skill_file"
         echo ""
       else
         log_warn "Skill introuvable : ${skill}.md" >&2
