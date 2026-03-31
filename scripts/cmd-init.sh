@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
+source "$LIB_DIR/agent-picker.sh"
 
 # S'assurer que projects.md existe avant toute opération
 ensure_projects_file
@@ -101,6 +102,23 @@ EOF
       echo ""
       log_info "Configurer le tracker plus tard (bd requis) : ./oc.sh beads tracker setup $PROJECT_ID"
     fi
+  fi
+
+  # ── Sélection des agents à déployer ───────────────────────────────────────
+  echo ""
+  read -rp "  Sélectionner les agents à déployer ? [y/N] : " select_agents
+  if [[ "$select_agents" =~ ^[Yy]$ ]]; then
+    PICKED_AGENTS=""
+    _pick_agents "all"
+    if [ -n "$PICKED_AGENTS" ] && [ "$PICKED_AGENTS" != "all" ]; then
+      _set_project_agents "$PROJECT_ID" "$PICKED_AGENTS"
+      _agent_count=$(echo "$PICKED_AGENTS" | tr ',' '\n' | wc -l | tr -d ' ')
+      log_success "$_agent_count agent(s) sélectionné(s) pour $PROJECT_ID"
+    else
+      log_info "Tous les agents seront déployés (par défaut)"
+    fi
+  else
+    log_info "Tous les agents seront déployés (par défaut)"
   fi
 fi
 
