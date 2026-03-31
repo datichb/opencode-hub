@@ -3,6 +3,7 @@
 # Usage : ./oc.sh agent <commande> [args]
 set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
+source "$LIB_DIR/tui-picker.sh"
 
 # EXTERNAL_SKILLS_DIR est défini dans common.sh
 
@@ -49,127 +50,6 @@ _list_all_skills() {
           echo "external/$name"
         done
   fi
-}
-
-##
-# Sélecteur générique avec navigation flèches + espace.
-# Compatible bash 3.2 (macOS). Résultat dans $_PICK_RESULT (CSV).
-#
-# Interface (dynamic scoping bash — les variables sont partagées avec le caller) :
-#   _pick_items[]     — tableau des éléments à afficher
-#   _pick_checked[]   — tableau booléen de sélection (0/1)
-#   _pick_cursor      — index courant du curseur
-#   _pick_total       — nombre total d'éléments
-#   _pick_render_fn   — nom de la fonction de rendu (appelée à chaque frame)
-#   _pick_allow_zero  — "1" pour activer la touche 0 (tout décocher)
-#
-# @param {string} $1 — sélection courante (CSV)
-# @param {string} $2 — valeur à retourner si annulation (par défaut: $1)
-##
-_pick_from_list() {
-  local current_csv="${1:-}"
-  local cancel_value="${2:-$current_csv}"
-
-  # Rien à choisir
-  if [ "$_pick_total" -eq 0 ]; then
-    _PICK_RESULT="$current_csv"
-    return
-  fi
-
-  _pick_cursor=0
-
-  # Sauvegarde état terminal et passage en mode raw
-  local old_stty
-  old_stty=$(stty -g </dev/tty 2>/dev/null)
-  trap '[ -n "$old_stty" ] && stty "$old_stty" </dev/tty 2>/dev/null' EXIT INT TERM
-  stty -echo -icanon min 1 time 0 </dev/tty 2>/dev/null
-
-  local _picker_cancelled=0
-
-  while true; do
-    # Appeler la fonction de rendu (accède aux variables partagées)
-    "$_pick_render_fn"
-
-    # Lecture d'une touche
-    local key
-    if ! _read_key; then
-      _picker_cancelled=1
-      break
-    fi
-    key="$KEY"
-
-    case "$key" in
-      $'\x1b[A'|$'\x1bOA')  # flèche haut
-        [ "$_pick_cursor" -gt 0 ] && _pick_cursor=$((_pick_cursor - 1))
-        ;;
-      $'\x1b[B'|$'\x1bOB')  # flèche bas
-        [ "$_pick_cursor" -lt $((_pick_total - 1)) ] && _pick_cursor=$((_pick_cursor + 1))
-        ;;
-      " ")  # espace — toggle
-        if [ "${_pick_checked[$_pick_cursor]}" = "1" ]; then
-          _pick_checked[$_pick_cursor]="0"
-        else
-          _pick_checked[$_pick_cursor]="1"
-        fi
-        ;;
-      ""| $'\n'| $'\r')  # entrée — valider
-        break
-        ;;
-      "0")
-        if [ "${_pick_allow_zero:-0}" = "1" ]; then
-          local _z=0
-          while [ "$_z" -lt "$_pick_total" ]; do _pick_checked[$_z]="0"; _z=$((_z+1)); done
-        fi
-        ;;
-    esac
-  done
-
-  # Restaurer le terminal
-  trap - EXIT INT TERM
-  [ -n "$old_stty" ] && stty "$old_stty" </dev/tty 2>/dev/null
-
-  # Annulation par ESC
-  if [ "$_picker_cancelled" = "1" ]; then
-    printf "\033[2J\033[H"
-    _PICK_RESULT="$cancel_value"
-    return
-  fi
-
-  printf "\033[2J\033[H"
-
-  # Reconstruire le CSV final
-  local chosen=()
-  local _r=0
-  while [ "$_r" -lt "$_pick_total" ]; do
-    [ "${_pick_checked[$_r]}" = "1" ] && chosen+=("${_pick_items[$_r]}")
-    _r=$((_r + 1))
-  done
-
-  if [ ${#chosen[@]} -eq 0 ]; then
-    _PICK_RESULT=""
-  else
-    _PICK_RESULT=$(printf '%s\n' "${chosen[@]}" | tr '\n' ',' | sed 's/,$//')
-  fi
-}
-_read_key() {
-  local byte1 byte2 byte3
-  IFS= read -rsn1 byte1 </dev/tty
-  KEY="$byte1"
-
-  if [ "$byte1" = $'\x1b' ]; then
-    IFS= read -rsn1 -t 1 byte2 </dev/tty || byte2=""
-    if [ "$byte2" = "[" ] || [ "$byte2" = "O" ]; then
-      IFS= read -rsn1 -t 1 byte3 </dev/tty || byte3=""
-      KEY="${byte1}${byte2}${byte3}"
-    elif [ -z "$byte2" ]; then
-      # ESC seul
-      KEY=$'\x1b'
-      return 1
-    else
-      KEY="${byte1}${byte2}"
-    fi
-  fi
-  return 0
 }
 
 ##
