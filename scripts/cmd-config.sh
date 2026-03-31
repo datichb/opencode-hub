@@ -38,12 +38,25 @@ _remove_section() {
 _write_section() {
   local id="$1" model="$2" provider="$3" api_key="$4" base_url="$5"
   _ensure_api_keys_file
-  # Supprimer l'entrée existante si présente
-  if api_keys_entry_exists "$id"; then
-    _remove_section "$id"
-  fi
-  # Construire la nouvelle entrée dans un tmpfile, puis l'appendre atomiquement
+  # Construire le contenu complet (fichier existant sans la section + nouvelle entrée)
   local tmp; tmp=$(mktemp)
+  # Retirer l'ancienne section si elle existe (via awk → tmpfile)
+  if api_keys_entry_exists "$id"; then
+    awk -v section="[${id}]" '
+      BEGIN { skip=0; pending_blank=0 }
+      /^$/ { if (!skip) { pending_blank=1 }; next }
+      $0 == section { pending_blank=0; skip=1; next }
+      skip && /^\[/ { skip=0 }
+      !skip {
+        if (pending_blank) { print ""; pending_blank=0 }
+        print
+      }
+      skip { next }
+    ' "$API_KEYS_FILE" > "$tmp"
+  else
+    cp "$API_KEYS_FILE" "$tmp"
+  fi
+  # Ajouter la nouvelle entrée
   {
     echo ""
     echo "[${id}]"
@@ -51,9 +64,9 @@ _write_section() {
     echo "provider=${provider}"
     echo "api_key=${api_key}"
     [ -n "$base_url" ] && echo "base_url=${base_url}"
-  } > "$tmp"
-  cat "$tmp" >> "$API_KEYS_FILE"
-  rm -f "$tmp"
+  } >> "$tmp"
+  # Remplacement atomique
+  mv "$tmp" "$API_KEYS_FILE"
 }
 
 # Affiche la configuration d'un projet (masque la clé)
