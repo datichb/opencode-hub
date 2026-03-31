@@ -4,10 +4,10 @@
 # PATHS
 # ─────────────────────────────────────────
 HUB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PROJECTS_FILE="$HUB_DIR/projects/projects.md"
+PROJECTS_FILE="${PROJECTS_FILE:-$HUB_DIR/projects/projects.md}"
 PROJECTS_EXAMPLE_FILE="$HUB_DIR/projects/projects.example.md"
-PATHS_FILE="$HUB_DIR/projects/paths.local.md"
-API_KEYS_FILE="$HUB_DIR/projects/api-keys.local.md"
+PATHS_FILE="${PATHS_FILE:-$HUB_DIR/projects/paths.local.md}"
+API_KEYS_FILE="${API_KEYS_FILE:-$HUB_DIR/projects/api-keys.local.md}"
 SKILLS_DIR="$HUB_DIR/skills"
 SCRIPTS_DIR="$HUB_DIR/scripts"
 
