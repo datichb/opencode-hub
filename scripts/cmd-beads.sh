@@ -163,7 +163,7 @@ cmd_init() {
       # Trim espaces autour du label
       label=$(echo "$label" | sed 's/^ *//;s/ *$//')
       [ -z "$label" ] && continue
-      if (cd "$path" && bd label add "$label") 2>/dev/null; then
+      if (cd "$path" && bd label add "$label"); then
         log_success "  Label ajouté : $label"
       else
         log_warn "  Échec ajout label : $label"

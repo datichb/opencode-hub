@@ -96,7 +96,7 @@ EOF
       if (cd "$PROJECT_PATH" && bd init); then
         log_success "Beads initialisé dans $PROJECT_PATH"
         # Propager les labels vers Beads
-        _init_labels="${PROJECT_LABELS:-}"
+        _init_labels="${PROJECT_LABELS:-feature,fix}"
         if [ -n "$_init_labels" ]; then
           log_info "Propagation des labels vers Beads…"
           _saved_IFS="$IFS"
@@ -106,7 +106,7 @@ EOF
             # Trim espaces autour du label
             _lbl=$(echo "$_lbl" | sed 's/^ *//;s/ *$//')
             [ -z "$_lbl" ] && continue
-            if (cd "$PROJECT_PATH" && bd label add "$_lbl") 2>/dev/null; then
+            if (cd "$PROJECT_PATH" && bd label add "$_lbl"); then
               log_success "  Label ajouté : $_lbl"
             else
               log_warn "  Échec ajout label : $_lbl"

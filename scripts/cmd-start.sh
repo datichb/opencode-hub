@@ -97,7 +97,7 @@ if [ ! -d "$PROJECT_PATH/.beads" ]; then
             IFS="$_saved_IFS"
             _lbl=$(echo "$_lbl" | sed 's/^ *//;s/ *$//')
             [ -z "$_lbl" ] && continue
-            if (cd "$PROJECT_PATH" && bd label add "$_lbl") 2>/dev/null; then
+            if (cd "$PROJECT_PATH" && bd label add "$_lbl"); then
               log_success "  Label ajouté : $_lbl"
             else
               log_warn "  Échec ajout label : $_lbl"
