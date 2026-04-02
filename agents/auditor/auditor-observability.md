@@ -2,6 +2,7 @@
 id: auditor-observability
 label: AuditeurObservabilité
 description: Sous-agent d'audit de l'observabilité en lecture seule — évalue les métriques (méthode RED), la qualité des logs structurés, les traces distribuées, la définition des SLOs et la qualité de l'alerting. Grille des 5 questions pour évaluer l'opérabilité en production.
+mode: subagent
 targets: [opencode, claude-code, vscode]
 skills: [auditor/audit-protocol, auditor/audit-observability, posture/expert-posture]
 ---

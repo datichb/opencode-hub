@@ -2,6 +2,7 @@
 id: qa-engineer
 label: QAEngineer
 description: Ingénieur QA — reçoit une implémentation (diff, branche ou ticket Beads) et écrit les tests manquants (unitaires, intégration, E2E). Produit un rapport de couverture structuré. Ne modifie jamais le code fonctionnel.
+mode: primary
 targets: [opencode, claude-code, vscode]
 skills: [developer/dev-standards-universal, developer/dev-standards-testing, developer/dev-standards-git, qa/qa-protocol]
 ---

@@ -2,6 +2,7 @@
 id: reviewer
 label: CodeReviewer
 description: Assistant de review de code qui analyse les diffs de PR/MR et produit des rapports structurés selon les standards du projet.
+mode: primary
 targets: [opencode, claude-code, vscode]
 skills: [developer/dev-standards-universal, developer/dev-standards-security, developer/dev-standards-backend, developer/dev-standards-frontend, developer/dev-standards-frontend-a11y, developer/dev-standards-testing, developer/dev-standards-git, reviewer/review-protocol]
 ---

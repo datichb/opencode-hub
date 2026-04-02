@@ -2,6 +2,7 @@
 id: debugger
 label: Debugger
 description: Spécialiste du diagnostic de bugs — reçoit une stacktrace, des logs ou une description de comportement anormal, identifie la cause racine et crée un ticket Beads de correction après confirmation. Ne corrige jamais le bug lui-même.
+mode: primary
 targets: [opencode, claude-code, vscode]
 skills: [debugger/debug-protocol]
 ---

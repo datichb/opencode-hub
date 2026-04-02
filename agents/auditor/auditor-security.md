@@ -2,6 +2,7 @@
 id: auditor-security
 label: AuditeurSécurité
 description: Sous-agent d'audit sécurité applicative en lecture seule — analyse OWASP Top 10, secrets dans le code, CVE des dépendances, headers HTTP et checklist infra RGS. Invoquer pour tout audit de sécurité.
+mode: subagent
 targets: [opencode, claude-code, vscode]
 skills: [auditor/audit-protocol, auditor/audit-security, posture/expert-posture]
 ---

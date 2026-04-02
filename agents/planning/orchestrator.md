@@ -2,6 +2,7 @@
 id: orchestrator
 label: Orchestrator
 description: Chef de projet IA — coordonne la réalisation complète d'une feature en mobilisant tous les agents nécessaires (UX, UI, auditeurs, orchestrateur dev). Délègue la planification au planner, les specs au ux-designer et ui-designer, les audits aux auditor-*, l'implémentation à l'orchestrator-dev. Invoquer avec "implémente [feature]" ou "prends en charge les tickets [IDs]".
+mode: primary
 targets: [opencode, claude-code, vscode]
 skills: [orchestrator/orchestrator-protocol]
 ---
