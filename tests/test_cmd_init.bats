@@ -45,6 +45,30 @@ exit 0
 BREWEOF
   chmod +x "$TEST_DIR/bin/brew"
 
+  # ── Mock git — intercepte remote, délègue le reste au vrai git ───────────────
+  GIT_CALLS_LOG="$TEST_DIR/git_calls.log"
+  export GIT_CALLS_LOG
+  : > "$GIT_CALLS_LOG"
+
+  REAL_GIT="$(command -v git)"
+  export REAL_GIT
+  cat > "$TEST_DIR/bin/git" <<'GITEOF'
+#!/bin/bash
+echo "git $*" >> "$GIT_CALLS_LOG"
+if [ "${1:-}" = "remote" ]; then
+  # Simuler aucun remote configuré par défaut
+  if [ "${2:-}" = "get-url" ]; then
+    exit 1
+  elif [ "${2:-}" = "add" ]; then
+    exit 0
+  fi
+  exit 0
+fi
+# Déléguer au vrai git pour le reste
+exec "$REAL_GIT" "$@"
+GITEOF
+  chmod +x "$TEST_DIR/bin/git"
+
   export PATH="$TEST_DIR/bin:$PATH"
 }
 
@@ -124,4 +148,48 @@ _run_init() {
   grep -q "bd label add feature" "$BD_CALLS_LOG"
   grep -q "bd label add fix" "$BD_CALLS_LOG"
   grep -q "bd label add back" "$BD_CALLS_LOG"
+}
+
+# ── Labels par défaut ────────────────────────────────────────────────────────
+
+@test "cmd-init : propage les labels par défaut si saisie vide" {
+  # L'utilisateur ne saisit rien pour les labels → default feature,fix
+  # Entrées: Nom, Stack, Labels=(vide), Tracker=1, init beads=Y, upstream=n, select agents=n, deploy=n
+  run bash -c '
+    printf "Mon Projet\nNode.js\n\n1\nY\nn\nn\nn\n" | bash "$1" NEWPROJ6 "$2"
+  ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
+  [ "$status" -eq 0 ]
+
+  # bd init a été appelé
+  grep -q "bd init" "$BD_CALLS_LOG"
+  # Les labels par défaut (feature,fix) doivent être propagés
+  grep -q "bd label add feature" "$BD_CALLS_LOG"
+  grep -q "bd label add fix" "$BD_CALLS_LOG"
+}
+
+# ── Proposition upstream git ─────────────────────────────────────────────────
+
+@test "cmd-init : propose git remote add upstream après bd init" {
+  # Entrées: Nom, Stack, Labels, Tracker=1, init beads=Y, upstream=Y, URL, select agents=n, deploy=n
+  run bash -c '
+    printf "Mon Projet\nNode.js\nfeature\n1\nY\nY\nhttps://github.com/test/repo.git\nn\nn\n" | bash "$1" NEWPROJ7 "$2"
+  ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
+  [ "$status" -eq 0 ]
+
+  # git remote add upstream a été appelé avec l'URL
+  grep -q "git remote add upstream https://github.com/test/repo.git" "$GIT_CALLS_LOG"
+  [[ "$output" == *"Remote upstream configuré"* ]]
+}
+
+@test "cmd-init : respecte le refus de configurer upstream (n)" {
+  # Entrées: Nom, Stack, Labels, Tracker=1, init beads=Y, upstream=n, select agents=n, deploy=n
+  : > "$GIT_CALLS_LOG"
+  run bash -c '
+    printf "Mon Projet\nNode.js\nfeature\n1\nY\nn\nn\nn\n" | bash "$1" NEWPROJ8 "$2"
+  ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
+  [ "$status" -eq 0 ]
+
+  # git remote add ne doit PAS avoir été appelé
+  ! grep -q "git remote add upstream" "$GIT_CALLS_LOG"
+  [[ "$output" == *"Configurer plus tard"* ]]
 }

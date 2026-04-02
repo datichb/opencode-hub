@@ -60,6 +60,28 @@ exit 0
 BDEOF
   chmod +x "$TEST_DIR/bin/bd"
 
+  # ── Mock git — intercepte remote, délègue le reste au vrai git ───────────────
+  GIT_CALLS_LOG="$TEST_DIR/git_calls.log"
+  export GIT_CALLS_LOG
+  : > "$GIT_CALLS_LOG"
+
+  REAL_GIT="$(command -v git)"
+  export REAL_GIT
+  cat > "$TEST_DIR/bin/git" <<'GITEOF'
+#!/bin/bash
+echo "git $*" >> "$GIT_CALLS_LOG"
+if [ "${1:-}" = "remote" ]; then
+  if [ "${2:-}" = "get-url" ]; then
+    exit 1
+  elif [ "${2:-}" = "add" ]; then
+    exit 0
+  fi
+  exit 0
+fi
+exec "$REAL_GIT" "$@"
+GITEOF
+  chmod +x "$TEST_DIR/bin/git"
+
   # Mock jq pour que get_default_target fonctionne sans hub.json
   # (common.sh retourne "opencode" si jq absent ou hub.json absent)
   # On s'assure que le mock opencode est trouvé par adapter_validate
@@ -127,7 +149,7 @@ teardown() {
   [ -s "$OPENCODE_LOG" ]
 }
 
-@test "cmd-start : warning passif si .beads absent et bd indisponible" {
+@test "cmd-start : avertissement passif si .beads absent et bd indisponible" {
   # Retirer le mock bd et restreindre le PATH pour exclure le vrai bd (/opt/homebrew/bin)
   rm -f "$TEST_DIR/bin/bd"
   run bash -c '
@@ -136,7 +158,7 @@ teardown() {
   ' _ "$CMD_START"
   [ "$status" -eq 0 ]
 
-  # Message de warning passif
+  # Message d'avertissement passif
   [[ "$output" == *"Beads non initialisé"* ]]
   # Pas de question bd init
   [[ "$output" != *"Initialiser Beads maintenant"* ]]
@@ -154,6 +176,35 @@ teardown() {
   grep -q "bd label add feature" "$BD_CALLS_LOG"
   grep -q "bd label add fix" "$BD_CALLS_LOG"
 }
+
+# ── Proposition upstream git ──────────────────────────────────────────────────
+
+@test "cmd-start : propose git remote add upstream après bd init" {
+  # Pas de .beads → Y(bd init), Y(upstream), URL, Enter(gate)
+  run bash -c '
+    printf "Y\nY\nhttps://github.com/test/repo.git\n\n" | bash "$1" TEST-PROJ
+  ' _ "$CMD_START"
+  [ "$status" -eq 0 ]
+
+  # git remote add upstream a été appelé avec l'URL
+  grep -q "git remote add upstream https://github.com/test/repo.git" "$GIT_CALLS_LOG"
+  [[ "$output" == *"Remote upstream configuré"* ]]
+}
+
+@test "cmd-start : respecte le refus de configurer upstream (n)" {
+  # Pas de .beads → Y(bd init), n(upstream), Enter(gate)
+  : > "$GIT_CALLS_LOG"
+  run bash -c '
+    printf "Y\nn\n\n" | bash "$1" TEST-PROJ
+  ' _ "$CMD_START"
+  [ "$status" -eq 0 ]
+
+  # git remote add ne doit PAS avoir été appelé
+  ! grep -q "git remote add upstream" "$GIT_CALLS_LOG"
+  [[ "$output" == *"Configurer plus tard"* ]]
+}
+
+# ── Mode --dev ───────────────────────────────────────────────────────────────
 
 @test "cmd-start : --dev exit si .beads absent" {
   # --dev requiert .beads — doit exit 1

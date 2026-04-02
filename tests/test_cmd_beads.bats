@@ -35,6 +35,25 @@ setup() {
   }
   export -f bd
 
+  # Mock git — intercepte remote, enregistre les appels, délègue le reste
+  GIT_CALLS_LOG="$TEST_DIR/git_calls.log"
+  export GIT_CALLS_LOG
+  : > "$GIT_CALLS_LOG"
+  REAL_GIT="$(command -v git)"
+  git() {
+    echo "git $*" >> "$GIT_CALLS_LOG"
+    if [ "${1:-}" = "remote" ]; then
+      if [ "${2:-}" = "get-url" ]; then
+        return 1  # Simuler aucun remote configuré
+      elif [ "${2:-}" = "add" ]; then
+        return 0
+      fi
+      return 0
+    fi
+    "$REAL_GIT" "$@"
+  }
+  export -f git
+
   # Fonctions guard simplifiées
   _require_bd() { return 0; }
   require_project_id() { [ -z "${1:-}" ] && { log_error "PROJECT_ID requis"; exit 1; }; return 0; }
@@ -223,4 +242,49 @@ EOF
   # exit 0 avec un warning
   [ "$status" -eq 0 ]
   echo "$output" | grep -qi "déjà initialisé"
+}
+
+# ── cmd_init — proposition upstream git ──────────────────────────────────────
+
+@test "cmd_init : propose upstream et avertit URL vide si stdin vide" {
+  # run fournit /dev/null comme stdin → read retourne vide
+  # _setup_upstream vide → default Y → URL vide → avertissement
+  : > "$BD_CALLS_LOG"
+  : > "$GIT_CALLS_LOG"
+  rm -rf "$TEST_DIR/fake-project/.beads"
+  run cmd_init "PROJ-FULL"
+  [ "$status" -eq 0 ]
+
+  # git remote get-url upstream a été testé
+  grep -q "git remote get-url upstream" "$GIT_CALLS_LOG"
+  # URL vide → avertissement
+  [[ "$output" == *"URL vide"* ]]
+}
+
+@test "cmd_init : configure upstream si URL fournie via stdin" {
+  : > "$BD_CALLS_LOG"
+  : > "$GIT_CALLS_LOG"
+  rm -rf "$TEST_DIR/fake-project/.beads"
+  # Fournir Y + URL via fichier stdin
+  printf "Y\nhttps://github.com/test/repo.git\n" > "$TEST_DIR/stdin_upstream.txt"
+  run cmd_init "PROJ-FULL" < "$TEST_DIR/stdin_upstream.txt"
+  [ "$status" -eq 0 ]
+
+  # git remote add upstream a été appelé avec l'URL
+  grep -q "git remote add upstream https://github.com/test/repo.git" "$GIT_CALLS_LOG"
+  [[ "$output" == *"Remote upstream configuré"* ]]
+}
+
+@test "cmd_init : respecte le refus de configurer upstream" {
+  : > "$BD_CALLS_LOG"
+  : > "$GIT_CALLS_LOG"
+  rm -rf "$TEST_DIR/fake-project/.beads"
+  # Fournir n via fichier stdin → pas de question URL
+  printf "n\n" > "$TEST_DIR/stdin_refuse.txt"
+  run cmd_init "PROJ-FULL" < "$TEST_DIR/stdin_refuse.txt"
+  [ "$status" -eq 0 ]
+
+  # git remote add ne doit PAS avoir été appelé
+  ! grep -q "git remote add upstream" "$GIT_CALLS_LOG"
+  [[ "$output" == *"Configurer plus tard"* ]]
 }
