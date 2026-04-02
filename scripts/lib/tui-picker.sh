@@ -38,13 +38,15 @@ _read_key() {
 # Compatible bash 3.2 (macOS). Résultat dans $_PICK_RESULT (CSV).
 #
 # Interface (dynamic scoping bash — les variables sont partagées avec le caller) :
-#   _pick_items[]     — tableau des éléments à afficher
-#   _pick_checked[]   — tableau booléen de sélection (0/1)
-#   _pick_cursor      — index courant du curseur
-#   _pick_total       — nombre total d'éléments
-#   _pick_render_fn   — nom de la fonction de rendu (appelée à chaque frame)
-#   _pick_allow_zero  — "1" pour activer la touche 0 (tout décocher)
-#   _pick_allow_star  — "1" pour activer la touche * (tout cocher)
+#   _pick_items[]          — tableau des éléments à afficher
+#   _pick_checked[]        — tableau booléen de sélection (0/1)
+#   _pick_cursor           — index courant du curseur
+#   _pick_total            — nombre total d'éléments
+#   _pick_render_fn        — nom de la fonction de rendu (appelée à chaque frame)
+#   _pick_allow_zero       — "1" pour activer la touche 0 (tout décocher)
+#   _pick_allow_star       — "1" pour activer la touche * (tout cocher)
+#   _pick_allow_family_toggle — "1" pour activer la touche c (toggle catégorie courante)
+#   _pick_families[]       — tableau parallèle des familles (requis si family_toggle actif)
 #
 # @param {string} $1 — sélection courante (CSV)
 # @param {string} $2 — valeur à retourner si annulation (par défaut: $1)
@@ -108,6 +110,31 @@ _pick_from_list() {
         if [ "${_pick_allow_star:-0}" = "1" ]; then
           local _s=0
           while [ "$_s" -lt "$_pick_total" ]; do _pick_checked[$_s]="1"; _s=$((_s+1)); done
+        fi
+        ;;
+      "c")
+        if [ "${_pick_allow_family_toggle:-0}" = "1" ] && [ -n "${_pick_families[*]+x}" ]; then
+          local _cur_family="${_pick_families[$_pick_cursor]}"
+          # Vérifier si tous les agents de la famille sont cochés
+          local _all_fam_checked=1
+          local _fi=0
+          while [ "$_fi" -lt "$_pick_total" ]; do
+            if [ "${_pick_families[$_fi]}" = "$_cur_family" ] && [ "${_pick_checked[$_fi]}" != "1" ]; then
+              _all_fam_checked=0
+              break
+            fi
+            _fi=$((_fi+1))
+          done
+          # Cocher tous si incomplet, sinon décocher tous
+          local _new_state="1"
+          [ "$_all_fam_checked" = "1" ] && _new_state="0"
+          local _fi2=0
+          while [ "$_fi2" -lt "$_pick_total" ]; do
+            if [ "${_pick_families[$_fi2]}" = "$_cur_family" ]; then
+              _pick_checked[$_fi2]="$_new_state"
+            fi
+            _fi2=$((_fi2+1))
+          done
         fi
         ;;
     esac
