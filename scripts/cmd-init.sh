@@ -2,6 +2,7 @@
 set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 source "$LIB_DIR/agent-picker.sh"
+source "$LIB_DIR/target-picker.sh"
 
 # S'assurer que projects.md existe avant toute opération
 ensure_projects_file
@@ -172,6 +173,23 @@ EOF
     fi
   else
     log_info "Tous les agents seront déployés (par défaut)"
+  fi
+
+  # ── Sélection des cibles de déploiement ───────────────────────────────────
+  echo ""
+  read -rp "  Sélectionner les cibles de déploiement ? [y/N] : " select_targets
+  if [[ "$select_targets" =~ ^[Yy]$ ]]; then
+    PICKED_TARGETS=""
+    _pick_project_targets "all"
+    if [ -n "$PICKED_TARGETS" ] && [ "$PICKED_TARGETS" != "all" ]; then
+      _set_project_targets "$PROJECT_ID" "$PICKED_TARGETS"
+      _target_count=$(echo "$PICKED_TARGETS" | tr ',' '\n' | grep -v '^$' | wc -l | tr -d ' ')
+      log_success "$_target_count cible(s) sélectionnée(s) pour $PROJECT_ID"
+    else
+      log_info "Toutes les cibles actives seront utilisées (par défaut)"
+    fi
+  else
+    log_info "Toutes les cibles actives seront utilisées (par défaut)"
   fi
 fi
 

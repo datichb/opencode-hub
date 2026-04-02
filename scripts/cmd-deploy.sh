@@ -167,12 +167,32 @@ fi
 
 log_title "Déploiement des agents"
 
-# Résoudre les cibles
-if [ -z "$TARGET" ] || [ "$TARGET" = "all" ]; then
+# Résoudre les cibles : CLI > projet > global (hub.json)
+if [ -n "$TARGET" ] && [ "$TARGET" != "all" ]; then
+  # Cible explicite passée en argument CLI → priorité maximale
+  targets=("$TARGET")
+elif [ -n "$PROJECT_ID" ]; then
+  # Vérifier si le projet a des cibles configurées
+  _proj_id_norm=$(normalize_project_id "$PROJECT_ID")
+  _proj_targets=$(get_project_targets "$_proj_id_norm")
+  if [ -n "$_proj_targets" ] && [ "$_proj_targets" != "all" ]; then
+    # Cibles du projet → override des cibles globales
+    targets=()
+    while IFS=',' read -ra _t; do
+      for _tgt in "${_t[@]}"; do
+        _tgt=$(echo "$_tgt" | sed 's/^ *//;s/ *$//')
+        [ -n "$_tgt" ] && targets+=("$_tgt")
+      done
+    done <<< "$_proj_targets"
+  else
+    # Fallback : cibles actives globales de hub.json
+    targets=()
+    while IFS= read -r t; do targets+=("$t"); done < <(get_active_targets)
+  fi
+else
+  # Pas de projet spécifié → cibles actives globales
   targets=()
   while IFS= read -r t; do targets+=("$t"); done < <(get_active_targets)
-else
-  targets=("$TARGET")
 fi
 
 # Résoudre le dossier de déploiement

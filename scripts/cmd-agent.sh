@@ -5,6 +5,7 @@ set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 source "$LIB_DIR/tui-picker.sh"
 source "$LIB_DIR/agent-picker.sh"
+source "$LIB_DIR/target-picker.sh"
 
 # EXTERNAL_SKILLS_DIR est défini dans common.sh
 
@@ -124,44 +125,6 @@ _render_skills_page() {
   local v
   for v in "${_pick_checked[@]}"; do [ "$v" = "1" ] && count=$((count+1)); done
   echo -e "  ${BOLD}$count skill(s) sélectionné(s)${RESET}"
-  echo ""
-}
-
-##
-# Rendu du sélecteur de cibles (compatible bash 3.2).
-# Utilise les variables partagées de _pick_from_list :
-#   _pick_items, _pick_checked, _pick_cursor, _pick_total
-##
-_render_targets_page() {
-  printf "\033[2J\033[H"
-  echo -e "${BOLD}Sélection des cibles${RESET}"
-  echo -e "  \033[0;34m↑↓\033[0m naviguer   \033[0;34mespace\033[0m cocher/décocher   \033[0;34mentrée\033[0m valider   \033[0;34mESC\033[0m annuler"
-  echo ""
-
-  local j=0
-  while [ "$j" -lt "$_pick_total" ]; do
-    local check_icon="   "
-    local check_color="" check_reset=""
-    if [ "${_pick_checked[$j]}" = "1" ]; then
-      check_icon="[x]"
-      check_color="$GREEN"
-      check_reset="$RESET"
-    fi
-    if [ "$j" -eq "$_pick_cursor" ]; then
-      printf "  \033[1m> ${check_color}%-3s${check_reset}\033[1m  %s\033[0m\n" \
-        "$check_icon" "${_pick_items[$j]}"
-    else
-      printf "    ${check_color}%-3s${check_reset}  %s\n" \
-        "$check_icon" "${_pick_items[$j]}"
-    fi
-    j=$((j + 1))
-  done
-
-  echo ""
-  local count=0
-  local v
-  for v in "${_pick_checked[@]}"; do [ "$v" = "1" ] && count=$((count+1)); done
-  echo -e "  ${BOLD}$count cible(s) sélectionnée(s)${RESET}"
   echo ""
 }
 
@@ -385,8 +348,9 @@ cmd_create() {
 
   # ── 4. Cibles ─────────────────────────────────────────────────────────────
   PICKED_TARGETS=""
-  _pick_targets "opencode, claude-code, vscode"
+  _pick_project_targets "opencode,claude-code,vscode"
   local targets_csv="$PICKED_TARGETS"
+  [ "$targets_csv" = "all" ] && targets_csv="opencode,claude-code,vscode"
 
   # ── 5. Skills ─────────────────────────────────────────────────────────────
   PICKED_SKILLS=""
@@ -575,8 +539,9 @@ cmd_edit() {
   local new_targets="$cur_targets"
   if [[ "$edit_targets" =~ ^[Yy]$ ]]; then
     PICKED_TARGETS=""
-    _pick_targets "$cur_targets"
+    _pick_project_targets "$cur_targets"
     new_targets="$PICKED_TARGETS"
+    [ "$new_targets" = "all" ] && new_targets="opencode,claude-code,vscode"
   fi
 
   # Skills (toujours proposé)
@@ -755,6 +720,122 @@ cmd_select() {
   fi
 }
 
+##
+# Gère les overrides de mode (primary/subagent) pour un projet donné.
+# Affiche le mode effectif de chaque agent et permet de les basculer.
+# @param {string} $1 — PROJECT_ID
+##
+cmd_mode() {
+  local raw_id="${1:-}"
+  if [ -z "$raw_id" ]; then
+    log_error "Usage : oc agent mode <PROJECT_ID>"
+    exit 1
+  fi
+
+  local id
+  id=$(normalize_project_id "$raw_id")
+  if ! project_exists "$id"; then
+    log_error "Projet $id introuvable → ./oc.sh list"
+    exit 1
+  fi
+
+  log_title "Modes des agents — $id"
+  echo -e "  Les modes en vert \033[0;32m(primary)\033[0m sont visibles via Tab dans OpenCode."
+  echo -e "  Les modes en jaune \033[0;33m(subagent)\033[0m sont invocables uniquement par d'autres agents."
+  echo ""
+
+  # Charger la liste des agents et leurs modes effectifs
+  _list_all_agents_grouped
+  local total=${#_pick_items[@]}
+
+  # Récupérer les overrides du projet
+  local current_modes
+  current_modes=$(get_project_modes "$id")
+
+  # Construire les modes effectifs pour l'affichage
+  # (override projet > frontmatter)
+  local _effective_modes=()
+  local _m=0
+  while [ "$_m" -lt "$total" ]; do
+    local _aid="${_pick_items[$_m]}"
+    local _fmode="${_pick_modes[$_m]:-primary}"
+    # Chercher override projet
+    local _override=""
+    if [ -n "$current_modes" ]; then
+      _override=$(printf '%s\n' "$current_modes" | tr ',' '\n' | grep "^${_aid}:" | head -1 | cut -d: -f2)
+    fi
+    _effective_modes+=("${_override:-$_fmode}")
+    _m=$((_m + 1))
+  done
+
+  # Afficher la liste actuelle
+  local prev_family=""
+  local _i=0
+  while [ "$_i" -lt "$total" ]; do
+    local cur_family="${_pick_families[$_i]}"
+    if [ "$cur_family" != "$prev_family" ]; then
+      printf "\n  \033[0;34m── %s ──\033[0m\n" "$cur_family"
+      prev_family="$cur_family"
+    fi
+    local _aid="${_pick_items[$_i]}"
+    local _emode="${_effective_modes[$_i]}"
+    local _fmode="${_pick_modes[$_i]:-primary}"
+    local _mcolor
+    [ "$_emode" = "subagent" ] && _mcolor="\033[0;33m" || _mcolor="\033[0;32m"
+    # Indiquer si l'override diffère du frontmatter
+    local _override_marker=""
+    if [ -n "$(printf '%s\n' "${current_modes:-}" | tr ',' '\n' | grep "^${_aid}:")" ]; then
+      _override_marker=" \033[2m(override, défaut: ${_fmode})\033[0m"
+    fi
+    printf "    ${_mcolor}%-10s\033[0m  %s%s\n" "$_emode" "$_aid" "$_override_marker"
+    _i=$((_i + 1))
+  done
+  echo ""
+
+  # Proposer la modification
+  read -rp "  Modifier les modes pour ce projet ? [y/N] : " do_edit </dev/tty
+  [[ ! "$do_edit" =~ ^[Yy]$ ]] && { log_info "Aucune modification."; return; }
+
+  echo ""
+  echo -e "  Format : \033[1magent-id:mode\033[0m séparés par des virgules"
+  echo -e "  Modes disponibles : \033[0;32mprimary\033[0m  \033[0;33msubagent\033[0m  \033[0;36mall\033[0m"
+  echo -e "  Laisser vide pour supprimer tous les overrides et revenir aux valeurs par défaut."
+  echo ""
+  if [ -n "$current_modes" ]; then
+    echo -e "  Overrides actuels : \033[1m$current_modes\033[0m"
+  fi
+  echo ""
+  read -rp "  Nouveaux overrides : " new_modes </dev/tty
+
+  if [ -z "$new_modes" ] && [ -z "$current_modes" ]; then
+    log_info "Aucune modification."
+    return
+  fi
+
+  if [ "$new_modes" = "$current_modes" ]; then
+    log_info "Aucune modification."
+    return
+  fi
+
+  _set_project_modes "$id" "$new_modes"
+  echo ""
+  if [ -z "$new_modes" ]; then
+    log_success "Overrides supprimés pour $id — modes frontmatter utilisés par défaut"
+  else
+    log_success "Overrides mis à jour pour $id : $new_modes"
+  fi
+
+  # Proposer un redéploiement immédiat
+  echo ""
+  read -rp "Redéployer maintenant ? [Y/n] : " redeploy </dev/tty
+  redeploy="${redeploy:-Y}"
+  if [[ "$redeploy" =~ ^[Yy]$ ]]; then
+    exec "$HUB_DIR/oc.sh" deploy all "$id"
+  else
+    log_info "Déployer plus tard : ./oc.sh deploy all $id"
+  fi
+}
+
 # ── DISPATCH ─────────────────────────────────────────────────────────────────
 
 SUBCOMMAND="${1:-}"
@@ -766,6 +847,7 @@ case "$SUBCOMMAND" in
   create)  cmd_create ;;
   edit)    cmd_edit "$@" ;;
   select)  cmd_select "$@" ;;
+  mode)    cmd_mode "$@" ;;
   keytest) cmd_keytest ;;
   *)
     echo -e "${BOLD}oc agent — Gestion des agents canoniques${RESET}"
@@ -775,6 +857,7 @@ case "$SUBCOMMAND" in
     echo "  create                Créer un nouvel agent (interactif)"
     echo "  edit <agent-id>       Modifier les skills et métadonnées d'un agent"
     echo "  select <PROJECT_ID>   Choisir les agents à déployer pour un projet"
+    echo "  mode <PROJECT_ID>     Afficher / overrider les modes primary/subagent"
     echo "  keytest               Diagnostic clavier — affiche les octets reçus"
     echo ""
     echo -e "${BOLD}Exemples :${RESET}"
@@ -782,6 +865,7 @@ case "$SUBCOMMAND" in
     echo "  ./oc.sh agent create"
     echo "  ./oc.sh agent edit developer"
     echo "  ./oc.sh agent select MY-PROJECT"
+    echo "  ./oc.sh agent mode MY-PROJECT"
     echo "  ./oc.sh agent info planner"
     echo "  ./oc.sh agent keytest"
     echo ""

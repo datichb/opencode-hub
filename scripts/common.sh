@@ -197,6 +197,87 @@ get_project_agents() {
   echo "${raw:-all}"
 }
 
+# Retourne la liste CSV des cibles sélectionnées pour un projet
+# Retourne "" si le champ est absent (= utiliser les active_targets de hub.json)
+get_project_targets() {
+  local raw
+  raw=$(_get_project_field "$1" "Targets")
+  echo "${raw:-}"
+}
+
+# Retourne la liste CSV des overrides de mode pour un projet
+# Format : "agent-id:mode,agent-id:mode,..."
+# Retourne "" si le champ est absent (= utiliser les modes du frontmatter agent)
+get_project_modes() {
+  local raw
+  raw=$(_get_project_field "$1" "Modes")
+  echo "${raw:-}"
+}
+
+# Met à jour le champ "- Modes :" dans le bloc d'un projet dans projects.md
+# @param $1 — PROJECT_ID
+# @param $2 — valeur CSV "agent-id:mode,..." (ou "" pour supprimer)
+_set_project_modes() {
+  local id="$1" new_modes="$2"
+  if [ -z "$new_modes" ]; then
+    # Supprimer le champ si valeur vide
+    perl -i -0777pe "
+      s{(^## \Q${id}\E\n.*?)- Modes : [^\n]+\n}{\$1}ms
+    " "$PROJECTS_FILE" 2>/dev/null
+    return 0
+  fi
+  # Remplacer si existant
+  if perl -i -0777pe "
+    s{(^## \Q${id}\E\n.*?)(- Modes : [^\n]+)}{\${1}- Modes : ${new_modes}}ms
+  " "$PROJECTS_FILE" 2>/dev/null && grep -q -- "- Modes : ${new_modes}" "$PROJECTS_FILE"; then
+    return 0
+  fi
+  # Insérer après "- Targets :" si présent
+  if perl -i -0777pe "
+    s{(^## \Q${id}\E\n.*?- Targets : [^\n]+\n)}{\${1}- Modes : ${new_modes}\n}ms
+  " "$PROJECTS_FILE" 2>/dev/null && grep -q -- "- Modes : ${new_modes}" "$PROJECTS_FILE"; then
+    return 0
+  fi
+  # Fallback : insérer après "- Agents :"
+  if perl -i -0777pe "
+    s{(^## \Q${id}\E\n.*?- Agents : [^\n]+\n)}{\${1}- Modes : ${new_modes}\n}ms
+  " "$PROJECTS_FILE" 2>/dev/null && grep -q -- "- Modes : ${new_modes}" "$PROJECTS_FILE"; then
+    return 0
+  fi
+  log_error "Impossible d'insérer le champ Modes dans le bloc $id de projects.md"
+  return 1
+}
+
+# Retourne le mode effectif d'un agent pour un projet donné
+# Priorité : override projet > frontmatter agent > "primary" (défaut)
+# @param $1 — agent_file (chemin vers le .md canonique)
+# @param $2 — project_id (peut être vide)
+get_effective_agent_mode() {
+  local agent_file="$1" project_id="${2:-}"
+  local agent_id
+  agent_id=$(get_agent_id "$agent_file" 2>/dev/null || basename "$agent_file" .md)
+
+  # Chercher un override dans le projet
+  if [ -n "$project_id" ]; then
+    local modes_csv
+    modes_csv=$(get_project_modes "$project_id")
+    if [ -n "$modes_csv" ]; then
+      # Chercher "agent-id:mode" dans le CSV
+      local override
+      override=$(printf '%s\n' "$modes_csv" | tr ',' '\n' | grep "^${agent_id}:" | head -1 | cut -d: -f2)
+      if [ -n "$override" ]; then
+        echo "$override"
+        return
+      fi
+    fi
+  fi
+
+  # Fallback : lire le frontmatter agent (inline pour éviter dépendance prompt-builder)
+  local mode
+  mode=$(grep '^mode:' "$agent_file" 2>/dev/null | head -1 | sed 's/^mode:[[:space:]]*//')
+  echo "${mode:-primary}"
+}
+
 # Vérifie si un agent doit être déployé pour un project_id donné
 # Retourne 0 si oui, 1 si non
 # Si project_id vide ou agents=all → toujours déployer

@@ -21,6 +21,7 @@ case "$COMMAND" in
   config)          bash "$SCRIPTS_DIR/cmd-config.sh" "${@:2}" ;;
   skills)          bash "$SCRIPTS_DIR/cmd-skills.sh" "${@:2}" ;;
   agent)           bash "$SCRIPTS_DIR/cmd-agent.sh" "${@:2}" ;;
+  target)          bash "$SCRIPTS_DIR/cmd-target.sh" "${@:2}" ;;
   update)          bash "$SCRIPTS_DIR/cmd-update.sh" ;;
   beads)           bash "$SCRIPTS_DIR/cmd-beads.sh" "${@:2}" ;;
   version|--version) bash "$SCRIPTS_DIR/cmd-version.sh" ;;
