@@ -13,6 +13,7 @@ ses cibles et ses skills.
 id: <identifiant-unique>
 label: <NomAffiché>
 description: <Description courte — visible dans les outils IA>
+mode: primary         # primary (défaut) | subagent
 targets: [opencode, claude-code, vscode]
 skills: [chemin/vers/skill, ...]
 ---
@@ -27,8 +28,22 @@ skills: [chemin/vers/skill, ...]
 | `id` | Identifiant unique, utilisé par les adapters et `oc agent` |
 | `label` | Nom affiché dans l'outil cible |
 | `description` | Phrase courte décrivant le rôle — apparaît dans les listes d'agents |
+| `mode` | `primary` (défaut) ou `subagent` — contrôle la visibilité dans les outils cibles |
 | `targets` | Cibles supportées : `opencode`, `claude-code`, `vscode` |
 | `skills` | Chemins relatifs à `skills/` — injectés dans l'ordre de déclaration |
+
+### Modes primary / subagent
+
+Le champ `mode:` contrôle comment un agent est exposé dans chaque outil cible :
+
+| Mode | OpenCode | Claude Code | VS Code |
+|------|----------|-------------|---------|
+| `primary` | Visible dans le Tab picker | Présent dans `.claude/agents/` | Présent dans `.vscode/prompts/` |
+| `subagent` | Listé dans `opencode.json` avec `"mode": "subagent"` — invocable par d'autres agents, invisible dans le Tab picker | Présent dans `.claude/agents/` avec description orientée délégation | **Non déployé** — VS Code Copilot n'a pas de mécanisme d'invocation inter-agents |
+
+Le mode effectif suit une priorité : **override projet** (`- Modes :` dans `projects.md`) > **frontmatter agent** > **`primary`** (défaut).
+
+Pour modifier les modes d'un projet sans toucher aux frontmatter : `oc agent mode <PROJECT_ID>`.
 
 ---
 
@@ -309,3 +324,5 @@ Principe directeur : **explorer → adapter ou proposer → attendre si nécessa
 - **Agents qui lisent les tickets** : tous peuvent faire `bd show <ID>` pour contextualiser leur travail
 - **Agents coordinateurs** : orchestrator, orchestrator-dev, auditor — ne codent jamais, pilotent d'autres agents
 - **Agents de découverte** : onboarder — lecture seule, explore et rapporte, ne pilote pas d'autres agents
+- **Agents `primary`** : orchestrator, orchestrator-dev, planner, auditor, ui-designer, ux-designer, documentarian, onboarder, debugger, qa-engineer, reviewer — visibles directement par l'utilisateur
+- **Agents `subagent`** : tous les `developer-*` et `auditor-*` (sauf `auditor` lui-même) — invocables par des agents coordinateurs

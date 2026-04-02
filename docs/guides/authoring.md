@@ -148,6 +148,7 @@ Ce skill définit... Il complète <autre-skill> si applicable.
 
 - [ ] La `description` tient en une phrase sans "et" abusif
 - [ ] La famille est correcte (placement dans le bon sous-dossier)
+- [ ] Le champ `mode:` est défini : `primary` pour un agent invocable directement, `subagent` pour un spécialiste délégué
 - [ ] Les skills injectés sont cohérents avec le type d'agent (voir tableau ci-dessus)
 - [ ] Le corps contient : identité + ce qu'il fait + ce qu'il NE fait PAS + workflow
 - [ ] Les limites explicites pointent vers le bon agent alternatif si applicable
@@ -175,6 +176,7 @@ id: developer-security                    # ← kebab-case, unique
 label: DeveloperSecurity                  # ← PascalCase, affiché dans l'outil
 description: Assistant de développement   # ← une phrase, orientée usage
   sécurité applicative — [...]
+mode: subagent                            # ← subagent : invocable uniquement via orchestrator-dev
 targets: [opencode, claude-code, vscode]  # ← toujours les 3
 skills:                                   # ← du plus générique au plus spécifique
   - developer/dev-standards-universal     #   standards communs à tous les devs

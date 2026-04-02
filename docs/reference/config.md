@@ -93,6 +93,9 @@ le sien. Créé automatiquement depuis `projects/projects.example.md` au premier
 - Tracker : jira | gitlab | none
 - Labels : label1, label2, label3
 - Langue : english        # optionnel — si absent : agents en français par défaut
+- Agents : all            # optionnel — all (défaut) ou liste CSV d'agent-ids
+- Targets : opencode,vscode  # optionnel — override de active_targets du hub.json
+- Modes : agent-id:mode,agent-id:mode  # optionnel — override des modes primary/subagent par agent
 ```
 
 ### Exemple
@@ -112,6 +115,9 @@ le sien. Créé automatiquement depuis `projects/projects.example.md` au premier
 - Tracker : none
 - Labels : feature, fix, api
 - Langue : english
+- Agents : orchestrator,orchestrator-dev,developer-backend,developer-api
+- Targets : opencode,claude-code
+- Modes : developer-backend:primary,developer-api:primary
 ```
 
 ### Règles
@@ -119,6 +125,9 @@ le sien. Créé automatiquement depuis `projects/projects.example.md` au premier
 - `PROJECT_ID` : lettres, chiffres, `-` et `_` uniquement — pas d'espaces ni de slashes
 - `Tracker` : `jira`, `gitlab` ou `none`
 - `Langue` : optionnel — valeur libre (ex: `english`, `spanish`) — si absent, les agents s'expriment en français
+- `Agents` : optionnel — `all` ou CSV d'identifiants d'agents — filtré au déploiement
+- `Targets` : optionnel — CSV de cibles (`opencode`, `claude-code`, `vscode`) — surcharge `active_targets` de `hub.json`
+- `Modes` : optionnel — CSV de paires `agent-id:mode` — surcharge le frontmatter des agents. Modes : `primary`, `subagent`. Laisser vide pour revenir aux valeurs frontmatter.
 - Ce fichier est **local** — ne jamais le committer
 
 ---
@@ -261,9 +270,17 @@ défini (pour retirer un ancien bloc provider), ou si le fichier est absent** ; 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "claude-sonnet-4-5"
+  "model": "claude-sonnet-4-5",
+  "agent": {
+    "auditor-security": { "mode": "subagent" },
+    "developer-backend": { "mode": "subagent" }
+  }
 }
 ```
+
+Le bloc `"agent":` liste uniquement les agents dont le mode effectif est `subagent`.
+Les agents `primary` sont absents — OpenCode les considère visibles par défaut.
+Si tous les agents sont `primary`, le bloc `"agent":` est omis.
 
 ### Contenu avec clé Anthropic
 

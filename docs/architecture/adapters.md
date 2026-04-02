@@ -54,7 +54,9 @@ Un adapter a accès aux fonctions de `common.sh` et `prompt-builder.sh` :
 | `strip_frontmatter file` | Retourne le corps sans le frontmatter |
 | `agent_supports_target file target` | Vérifie si un agent supporte la cible |
 | `get_agent_id file` | Retourne l'`id` du frontmatter |
-| `build_agent_content file [lang]` | Assemble le contenu complet (header + skills + corps) |
+| `get_agent_mode file` | Retourne le `mode` du frontmatter (`primary` par défaut) |
+| `get_effective_agent_mode file project_id` | Mode effectif : override projet > frontmatter > `primary` |
+| `build_agent_content file [target] [lang]` | Assemble le contenu complet (header + skills + corps) |
 | `get_project_language project_id` | Retourne la langue du projet (ou vide) |
 | `get_project_api_provider project_id` | Retourne le provider API (anthropic, litellm, etc.) |
 | `get_project_api_key project_id` | Retourne la clé API |
@@ -123,6 +125,13 @@ adapter_start() {
 
 | Cible | Fichier | Node requis | Spécificités |
 |-------|---------|-------------|--------------|
-| opencode | `opencode.adapter.sh` | Oui | Génère `opencode.json` + `.opencode/agents/*.md`, injecte les clés API |
-| claude-code | `claude-code.adapter.sh` | Oui | Génère `.claude/agents/*.md` |
-| vscode | `vscode.adapter.sh` | Non | Génère `.github/copilot-instructions.md` + `.vscode/prompts/*.prompt.md` |
+| opencode | `opencode.adapter.sh` | Oui | Génère `opencode.json` (avec bloc `"agent":` pour les subagents) + `.opencode/agents/*.md`, injecte les clés API |
+| claude-code | `claude-code.adapter.sh` | Oui | Génère `.claude/agents/*.md` — les subagents reçoivent une description préfixée pour orienter Claude vers la délégation |
+| vscode | `vscode.adapter.sh` | Non | Génère `.github/copilot-instructions.md` + `.vscode/prompts/*.prompt.md` — les agents `subagent` sont **exclus** (Copilot Chat n'a pas de mécanisme d'invocation inter-agents)
+
+### Comportement par mode selon la cible
+
+| Mode agent | opencode | claude-code | vscode |
+|-----------|----------|-------------|--------|
+| `primary` | Déployé normalement, absent du bloc `"agent":` | Déployé normalement | Déployé normalement |
+| `subagent` | Déployé normalement, listé dans `"agent": { "mode": "subagent" }` | Déployé avec description préfixée `"Sous-agent interne — invoquer uniquement via un agent coordinateur…"` | **Non déployé** |
