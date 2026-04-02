@@ -12,25 +12,36 @@ _AGENT_PICKER_LOADED=1
 source "$LIB_DIR/tui-picker.sh"
 
 # ── Données internes ─────────────────────────────────────────────────────────
-# Tableau parallèle à _pick_items[] : contient la famille de chaque agent.
-# Utilisé par _render_agents_page pour insérer les séparateurs visuels.
+# Tableaux parallèles à _pick_items[] :
+#   _pick_families[]     — famille/catégorie de chaque agent (pour séparateurs visuels)
+#   _pick_descriptions[] — description de chaque agent (précalculée, évite I/O au rendu)
+#   _pick_modes[]        — mode de déploiement de chaque agent (primary|subagent|all)
 _pick_families=()
+_pick_descriptions=()
+_pick_modes=()
 
 ##
 # Liste tous les agents groupés par famille.
-# Remplit les tableaux globaux _pick_items[] et _pick_families[].
+# Remplit les tableaux globaux _pick_items[], _pick_families[], _pick_descriptions[] et _pick_modes[].
 ##
 _list_all_agents_grouped() {
   _pick_items=()
   _pick_families=()
+  _pick_descriptions=()
+  _pick_modes=()
   while IFS= read -r agent_file; do
     [ -f "$agent_file" ] || continue
-    local agent_id family
+    local agent_id family agent_desc agent_mode
     agent_id=$(grep '^id:' "$agent_file" 2>/dev/null | head -1 | sed 's/^id:[[:space:]]*//')
     family=$(basename "$(dirname "$agent_file")")
+    agent_desc=$(grep '^description:' "$agent_file" 2>/dev/null | head -1 | sed 's/^description:[[:space:]]*//')
+    agent_mode=$(grep '^mode:' "$agent_file" 2>/dev/null | head -1 | sed 's/^mode:[[:space:]]*//')
+    agent_mode="${agent_mode:-primary}"
     [ -z "$agent_id" ] && continue
     _pick_items+=("$agent_id")
     _pick_families+=("$family")
+    _pick_descriptions+=("$agent_desc")
+    _pick_modes+=("$agent_mode")
   done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
 }
 
@@ -55,7 +66,7 @@ _render_agents_page() {
 
   # ── En-tête ──────────────────────────────────────────────────────────────
   echo -e "${BOLD}Sélection des agents${RESET}  ($((_pick_cursor+1))/$_pick_total)"
-  echo -e "  \033[0;34m↑↓\033[0m naviguer   \033[0;34mespace\033[0m cocher/décocher   \033[0;34mentrée\033[0m valider   \033[0;34mESC\033[0m annuler   \033[0;34m*\033[0m tout cocher   \033[0;34m0\033[0m tout vider"
+  echo -e "  \033[0;34m↑↓\033[0m naviguer   \033[0;34mespace\033[0m cocher/décocher   \033[0;34mc\033[0m catégorie   \033[0;34m*\033[0m tout cocher   \033[0;34m0\033[0m tout vider   \033[0;34mentrée\033[0m valider   \033[0;34mESC\033[0m annuler"
   echo ""
 
   # ── Liste (fenêtre glissante) avec séparateurs de famille ─────────────────
@@ -96,19 +107,25 @@ _render_agents_page() {
 
   # ── Panneau description de l'agent sous le curseur ────────────────────────
   local cur_agent="${_pick_items[$_pick_cursor]}"
-  local cur_desc=""
-  # Chercher la description dans le fichier agent
-  while IFS= read -r af; do
-    [ -f "$af" ] || continue
-    local fid; fid=$(grep '^id:' "$af" 2>/dev/null | head -1 | sed 's/^id:[[:space:]]*//')
-    if [ "$fid" = "$cur_agent" ]; then
-      cur_desc=$(grep '^description:' "$af" 2>/dev/null | head -1 | sed 's/^description:[[:space:]]*//')
-      break
-    fi
-  done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
+  local cur_desc="${_pick_descriptions[$_pick_cursor]}"
+  local cur_mode="${_pick_modes[$_pick_cursor]:-primary}"
+
+  # Couleur et label selon le mode
+  local mode_label mode_color
+  if [ "$cur_mode" = "subagent" ]; then
+    mode_label="subagent"
+    mode_color="\033[0;33m"   # jaune
+  elif [ "$cur_mode" = "all" ]; then
+    mode_label="primary+subagent"
+    mode_color="\033[0;36m"   # cyan
+  else
+    mode_label="primary"
+    mode_color="\033[0;32m"   # vert
+  fi
 
   echo ""
-  printf "  \033[1m%s\033[0m  [%s]\n" "$cur_agent" "${_pick_families[$_pick_cursor]}"
+  printf "  \033[1m%s\033[0m  [%s]  ${mode_color}(%s)\033[0m\n" \
+    "$cur_agent" "${_pick_families[$_pick_cursor]}" "$mode_label"
   if [ -n "$cur_desc" ]; then
     printf "  %s\n" "$cur_desc"
   else
@@ -170,6 +187,7 @@ _pick_agents() {
   _pick_render_fn="_render_agents_page"
   _pick_allow_zero=1
   _pick_allow_star=1
+  _pick_allow_family_toggle=1
   _PICK_RESULT=""
 
   _pick_from_list "$current_csv" "$current_csv"
