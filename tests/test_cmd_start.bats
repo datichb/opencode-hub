@@ -101,9 +101,9 @@ teardown() {
 # ── Beads init interactif ────────────────────────────────────────────────────
 
 @test "cmd-start : propose bd init si .beads absent et bd disponible" {
-  # Pas de .beads → question "Initialiser Beads maintenant ?" → Y, puis Enter gate
+  # Pas de .beads → Y(bd init), n(upstream), Enter(gate)
   run bash -c '
-    printf "Y\n\n" | bash "$1" TEST-PROJ
+    printf "Y\nn\n\n" | bash "$1" TEST-PROJ
   ' _ "$CMD_START"
   [ "$status" -eq 0 ]
 
@@ -143,9 +143,9 @@ teardown() {
 }
 
 @test "cmd-start : propage les labels après bd init" {
-  # Pas de .beads → Y → Enter gate
+  # Pas de .beads → Y(bd init), n(upstream), Enter(gate)
   run bash -c '
-    printf "Y\n\n" | bash "$1" TEST-PROJ
+    printf "Y\nn\n\n" | bash "$1" TEST-PROJ
   ' _ "$CMD_START"
   [ "$status" -eq 0 ]
 

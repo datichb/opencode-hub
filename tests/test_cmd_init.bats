@@ -61,9 +61,9 @@ _run_init() {
 # ── bd init + propagation labels intégrée ────────────────────────────────────
 
 @test "cmd-init : propose bd init et propage les labels" {
-  # Entrées: PROJECT_ID=NEWPROJ, PATH=fake-project, Nom, Stack, Labels, Tracker=1(none), init beads=Y, select agents=n, deploy=n
+  # Entrées: Nom, Stack, Labels, Tracker=1(none), init beads=Y, upstream=n, select agents=n, deploy=n
   run bash -c '
-    printf "Mon Projet\nNode.js\nfeature,fix,back\n1\nY\nn\nn\n" | bash "$1" NEWPROJ "$2"
+    printf "Mon Projet\nNode.js\nfeature,fix,back\n1\nY\nn\nn\nn\n" | bash "$1" NEWPROJ "$2"
   ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
   [ "$status" -eq 0 ]
 
@@ -114,9 +114,9 @@ _run_init() {
 }
 
 @test "cmd-init : propage les labels avec espaces (trim)" {
-  # Entrées: Nom, Stack, Labels avec espaces, Tracker=1, init beads=Y, select agents=n, deploy=n
+  # Entrées: Nom, Stack, Labels avec espaces, Tracker=1, init beads=Y, upstream=n, select agents=n, deploy=n
   run bash -c '
-    printf "Mon Projet\nNode.js\n feature , fix , back \n1\nY\nn\nn\n" | bash "$1" NEWPROJ5 "$2"
+    printf "Mon Projet\nNode.js\n feature , fix , back \n1\nY\nn\nn\nn\n" | bash "$1" NEWPROJ5 "$2"
   ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
   [ "$status" -eq 0 ]
 

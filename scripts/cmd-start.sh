@@ -87,6 +87,25 @@ if [ ! -d "$PROJECT_PATH/.beads" ]; then
     if [[ "${_init_beads:-Y}" =~ ^[Yy]$ ]]; then
       if (cd "$PROJECT_PATH" && bd init); then
         log_success "Beads initialisé dans $PROJECT_PATH"
+        # Proposer de configurer l'upstream git si absent
+        if ! (cd "$PROJECT_PATH" && git remote get-url upstream) &>/dev/null; then
+          echo ""
+          read -rp "  Configurer l'upstream Git (git remote add upstream) ? [Y/n] : " _setup_upstream
+          if [[ "${_setup_upstream:-Y}" =~ ^[Yy]$ ]]; then
+            read -rp "  URL du remote upstream : " _upstream_url
+            if [ -n "$_upstream_url" ]; then
+              if (cd "$PROJECT_PATH" && git remote add upstream "$_upstream_url"); then
+                log_success "Remote upstream configuré : $_upstream_url"
+              else
+                log_warn "Échec de la configuration upstream — configurer manuellement"
+              fi
+            else
+              log_warn "URL vide — configurer plus tard : git remote add upstream <url>"
+            fi
+          else
+            log_info "Configurer plus tard : git remote add upstream <url>"
+          fi
+        fi
         # Propager les labels depuis projects.md
         _start_labels=$(get_project_labels "$PROJECT_ID")
         if [ -n "$_start_labels" ]; then

@@ -153,6 +153,26 @@ cmd_init() {
   (cd "$path" && bd init) || { log_error "Échec de bd init"; exit 1; }
   log_success "Beads initialisé dans $id ($path/.beads)"
 
+  # Proposer de configurer l'upstream git si absent
+  if ! (cd "$path" && git remote get-url upstream) &>/dev/null; then
+    echo ""
+    read -rp "  Configurer l'upstream Git (git remote add upstream) ? [Y/n] : " _setup_upstream
+    if [[ "${_setup_upstream:-Y}" =~ ^[Yy]$ ]]; then
+      read -rp "  URL du remote upstream : " _upstream_url
+      if [ -n "$_upstream_url" ]; then
+        if (cd "$path" && git remote add upstream "$_upstream_url"); then
+          log_success "Remote upstream configuré : $_upstream_url"
+        else
+          log_warn "Échec de la configuration upstream — configurer manuellement"
+        fi
+      else
+        log_warn "URL vide — configurer plus tard : git remote add upstream <url>"
+      fi
+    else
+      log_info "Configurer plus tard : git remote add upstream <url>"
+    fi
+  fi
+
   # Propager les labels de projects.md vers bd
   local labels
   labels=$(get_project_labels "$id")
