@@ -53,6 +53,15 @@ agent_supports_target() {
   extract_frontmatter_list "$1" "targets" | grep -q "^${2}$"
 }
 
+# Retourne le mode de déploiement d'un agent (frontmatter mode:)
+# Valeurs possibles : "primary" | "subagent" | "all"
+# Fallback : "primary" si le champ est absent
+get_agent_mode() {
+  local mode
+  mode=$(extract_frontmatter_value "$1" "mode")
+  echo "${mode:-primary}"
+}
+
 # Retourne l'identifiant d'un agent (frontmatter id, ou nom de fichier sans extension)
 get_agent_id() {
   local id

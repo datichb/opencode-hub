@@ -102,6 +102,9 @@ adapter_deploy() {
   fi
 
   local deployed=0
+  # Tableau associatif : agent_id → mode effectif (pour générer opencode.json)
+  local _agent_modes_keys=()
+  local _agent_modes_vals=()
 
   while IFS= read -r agent_file; do
     [ -f "$agent_file" ] || continue
@@ -113,6 +116,12 @@ adapter_deploy() {
     build_agent_content "$agent_file" "opencode" "$lang" > "$out_dir/${agent_id}.md"
     log_success "[opencode] $agent_id"
     deployed=$((deployed + 1))
+
+    # Résoudre le mode effectif (override projet > frontmatter > "primary")
+    local eff_mode
+    eff_mode=$(get_effective_agent_mode "$agent_file" "$project_id")
+    _agent_modes_keys+=("$agent_id")
+    _agent_modes_vals+=("$eff_mode")
   done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
 
   # Générer opencode.json à la racine du projet
@@ -127,43 +136,67 @@ adapter_deploy() {
     [ -n "$provider_block" ] && has_api_key=true
   fi
 
-  # Régénérer si : fichier absent, clé API à injecter, ou project_id défini sans clé
-  # (ce dernier cas couvre le retrait de clé après oc config unset)
+  # Construire le bloc "agent": pour les agents dont le mode n'est pas "primary"
+  # (primary = comportement par défaut d'OpenCode, pas besoin de l'écrire)
+  local agent_block=""
+  local _ai=0
+  while [ "$_ai" -lt "${#_agent_modes_keys[@]}" ]; do
+    local _aid="${_agent_modes_keys[$_ai]}"
+    local _amode="${_agent_modes_vals[$_ai]}"
+    if [ "$_amode" != "primary" ]; then
+      if [ -n "$agent_block" ]; then
+        agent_block="${agent_block},"$'\n'
+      fi
+      agent_block="${agent_block}    \"${_aid}\": { \"mode\": \"${_amode}\" }"
+    fi
+    _ai=$((_ai + 1))
+  done
+
+  # Régénérer si : fichier absent, clé API à injecter, ou project_id défini
   local should_write=false
   if [ ! -f "$config_file" ]; then
     should_write=true
   elif [ "$has_api_key" = true ]; then
     should_write=true
   elif [ -n "$project_id" ]; then
-    # project_id défini mais sans clé : régénérer pour retirer un ancien bloc provider
     should_write=true
   fi
 
   if [ "$should_write" = true ]; then
     if [ "$has_api_key" = true ]; then
-      # Protéger le fichier avant l'écriture : gitignore d'abord pour éviter
-      # toute fenêtre où opencode.json existe avec une clé sans être ignoré
       _gitignore_opencode_json "$deploy_dir"
     fi
-    # Écriture safe : pas de printf avec interpolation pour éviter que % dans la clé
-    # soit interprété comme spécificateur de format
     {
       echo '{'
       echo '  "$schema": "https://opencode.ai/config.json",'
       if [ "$has_api_key" = true ]; then
         echo "  \"model\": \"${model}\","
         printf '%s' "$provider_block"
+        if [ -n "$agent_block" ]; then
+          printf ',\n  "agent": {\n%s\n  }' "$agent_block"
+        fi
       else
-        echo "  \"model\": \"${model}\""
+        if [ -n "$agent_block" ]; then
+          echo "  \"model\": \"${model}\","
+          printf '  "agent": {\n%s\n  }' "$agent_block"
+        else
+          echo "  \"model\": \"${model}\""
+        fi
       fi
+      echo ""
       echo '}'
     } > "$config_file"
     if [ "$has_api_key" = true ]; then
       log_success "[opencode] opencode.json créé avec clé API (modèle : $model, provider : $(get_project_api_provider "$project_id"))"
-      # Protéger les permissions du fichier (contient une clé)
       chmod 600 "$config_file"
     else
-      log_success "[opencode] opencode.json créé (modèle : $model)"
+      local subagent_count=0
+      local _si=0
+      while [ "$_si" -lt "${#_agent_modes_vals[@]}" ]; do
+        [ "${_agent_modes_vals[$_si]}" != "primary" ] && subagent_count=$((subagent_count + 1))
+        _si=$((_si + 1))
+      done
+      log_success "[opencode] opencode.json créé (modèle : $model, $subagent_count agent(s) en mode subagent)"
     fi
   else
     log_info "[opencode] opencode.json existant conservé"
