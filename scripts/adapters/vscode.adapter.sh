@@ -58,12 +58,23 @@ adapter_deploy() {
   fi
 
   local deployed=0
+  local skipped_subagents=0
   while IFS= read -r agent_file; do
     [ -f "$agent_file" ] || continue
     agent_supports_target "$agent_file" "vscode" || { log_warn "[vscode] Ignoré : $(basename "$agent_file")"; continue; }
 
     local agent_id; agent_id=$(get_agent_id "$agent_file")
     should_deploy_agent "$project_id" "$agent_id" || { log_info "[vscode] Filtré : $agent_id"; continue; }
+
+    # Exclure les subagents : Copilot Chat n'a pas de mécanisme d'invocation inter-agents,
+    # les subagents n'y sont pas fonctionnellement utiles et encombrent le picker /.
+    local eff_mode; eff_mode=$(get_effective_agent_mode "$agent_file" "$project_id")
+    if [ "$eff_mode" = "subagent" ]; then
+      log_info "[vscode] Ignoré (subagent) : $agent_id"
+      skipped_subagents=$((skipped_subagents + 1))
+      continue
+    fi
+
     local description; description=$(extract_frontmatter_value "$agent_file" "description")
 
     log_info "[vscode] Génération prompt : $agent_id"
@@ -81,7 +92,7 @@ adapter_deploy() {
   done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
 
   echo ""
-  log_success "[vscode] $deployed prompt(s) → .vscode/prompts/"
+  log_success "[vscode] $deployed prompt(s) → .vscode/prompts/ (${skipped_subagents} subagent(s) exclus)"
   log_info "→ Committer .github/copilot-instructions.md et .vscode/prompts/ dans le repo projet"
 }
 

@@ -33,19 +33,27 @@ adapter_deploy() {
     local label; label=$(extract_frontmatter_value "$agent_file" "label"); label="${label:-$agent_id}"
     local description; description=$(extract_frontmatter_value "$agent_file" "description")
 
+    # Résoudre le mode effectif pour orienter la description vers la délégation
+    local eff_mode; eff_mode=$(get_effective_agent_mode "$agent_file" "$project_id")
+    local cc_description="$description"
+    if [ "$eff_mode" = "subagent" ]; then
+      # Préfixer la description pour signaler à Claude Code qu'il doit déléguer via un agent primaire
+      cc_description="Sous-agent interne — invoquer uniquement via un agent coordinateur, ne pas appeler directement. ${description}"
+    fi
+
     log_info "[claude-code] Génération : $agent_id"
     {
       echo "---"
       echo "name: ${label}"
-      if [ -n "$description" ]; then
+      if [ -n "$cc_description" ]; then
         echo "description: >-"
-        echo "  ${description}"
+        echo "  ${cc_description}"
       fi
       echo "---"
       echo ""
       build_agent_content "$agent_file" "claude-code" "$lang"
     } > "$out_dir/${agent_id}.md"
-    log_success "[claude-code] $agent_id"
+    log_success "[claude-code] $agent_id${eff_mode:+ ($eff_mode)}"
     deployed=$((deployed + 1))
   done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
 
