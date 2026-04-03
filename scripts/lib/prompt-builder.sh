@@ -153,3 +153,37 @@ Commence par le ticket le plus prioritaire.
 EOF
   fi
 }
+
+# Construit le prompt de bootstrap pour le mode --onboard (oc start --onboard)
+# Déclenche l'agent onboarder en lecture seule sur le projet
+build_onboard_bootstrap_prompt() {
+  local project_path="$1"
+  local project_id="${2:-}"
+
+  local project_info=""
+  if [ -n "$project_id" ]; then
+    project_info="Projet : ${project_id}
+Chemin : ${project_path}"
+  else
+    project_info="Chemin : ${project_path}"
+  fi
+
+  cat <<EOF
+Tu es l'Onboarder. Effectue une exploration complète du projet pour produire un rapport de contexte.
+
+${project_info}
+
+Workflow :
+1. Annoncer ce qui va être exploré
+2. ÉTAPE 1 — Détecter la stack (racine du projet)
+3. ÉTAPE 2 — Explorer adaptativement selon le profil détecté
+4. ÉTAPE 3 — Lire les tickets Beads (bd list -s open) + ADRs si disponibles
+5. ÉTAPE 4 — Produire le rapport de contexte structuré
+
+Règles :
+- Lecture seule — tu ne modifies aucun fichier du projet
+- Rapport honnête : signaler les points critiques (🔴), importants (🟠), améliorations (🟡)
+- Lister les zones d'ombre non résolues
+- Proposer la mise à jour du champ Stack dans projects.md si absent
+EOF
+}
