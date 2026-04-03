@@ -73,14 +73,9 @@ PROJECT_ID=$(normalize_project_id "$PROJECT_ID")
 # ── Validation + résolution du chemin ─────
 PROJECT_PATH=$(resolve_project_path "$PROJECT_ID")
 
-# ── Lancement via adaptateur ─────────────
-log_info "Projet   : $PROJECT_ID"
-log_info "Dossier  : $PROJECT_PATH"
-
+# ── Résolution de la cible ────────────────
 source "$LIB_DIR/adapter-manager.sh"
 default_target=$(get_default_target)
-log_info "Cible    : $default_target"
-echo ""
 
 load_adapter "$default_target"
 adapter_validate || { log_error "Cible '$default_target' non disponible → oc install (puis sélectionner $default_target)"; exit 1; }
@@ -93,18 +88,30 @@ case "$default_target" in
   *)           agents_dir="" ;;
 esac
 
-  if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ]; then
-  log_warn "Agents non déployés dans ce projet pour la cible $default_target"
+# ── Bloc contextuel ───────────────────────────────────────────────────────────
+_SEP="────────────────────────────────────────────────────────"
+echo ""
+echo -e "${BOLD}── ${PROJECT_ID} ${_SEP:0:$(( 52 - ${#PROJECT_ID} ))}${RESET}"
+printf "  %-10s %s\n" "Projet"  "$PROJECT_ID"
+printf "  %-10s %s\n" "Chemin"  "$PROJECT_PATH"
+printf "  %-10s %s\n" "Cible"   "$default_target"
+
+# Avertissements dans le bloc contextuel
+if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ]; then
+  echo ""
+  log_warn "Agents non déployés pour $default_target"
   log_warn "Lancez d'abord : ./oc.sh deploy $default_target $PROJECT_ID"
 fi
 
-# ── Suggestion onboarder si les agents sont déployés ──
+# Suggestion onboarder si les agents sont déployés
 if [ -n "$agents_dir" ] && [ -d "$agents_dir" ] && [ "$ONBOARD_MODE" = false ]; then
   echo ""
-  echo -e "  ${BLUE}→${RESET} Nouveau sur ce projet ? Invoque l'agent ${BOLD}onboarder${RESET}"
+  echo -e "  ${BLUE}→${RESET} Nouveau sur ce projet ? Invoke l'agent ${BOLD}onboarder${RESET}"
   echo -e "    \"Onboarde-toi sur ce projet\""
   echo -e "  ${BLUE}→${RESET} Ou lance directement : ${BOLD}./oc.sh start --onboard $PROJECT_ID${RESET}"
 fi
+
+echo -e "${_SEP}"
 
 # ── Vérifier que Beads est initialisé dans le projet ───
 if [ ! -d "$PROJECT_PATH/.beads" ]; then
@@ -171,6 +178,7 @@ if [ "$DEV_MODE" = true ]; then
   # Sync non-bloquant : pull les derniers tickets avant injection
   _tracker=$(get_project_tracker "$PROJECT_ID")
   if [ "$_tracker" != "none" ]; then
+    echo ""
     log_info "Sync $_tracker --pull-only avant démarrage…"
     if (cd "$PROJECT_PATH" && bd "$_tracker" sync --pull-only) 2>/dev/null; then
       log_success "Sync $_tracker terminé"
@@ -184,12 +192,13 @@ if [ "$DEV_MODE" = true ]; then
   else
     source "$LIB_DIR/prompt-builder.sh"
     PROMPT=$(build_dev_bootstrap_prompt "$PROJECT_PATH" "$DEV_LABEL" "$DEV_ASSIGNEE")
+    echo ""
     if [ -n "$DEV_ASSIGNEE" ]; then
-      log_info "Mode --dev : bootstrap tickets assignés à '${DEV_ASSIGNEE}' activé"
+      log_info "Mode --dev  tickets assignés à '${DEV_ASSIGNEE}'"
     elif [ -n "$DEV_LABEL" ]; then
-      log_info "Mode --dev : bootstrap tickets label '${DEV_LABEL}' activé"
+      log_info "Mode --dev  tickets label '${DEV_LABEL}'"
     else
-      log_info "Mode --dev : bootstrap tickets ai-delegated activé"
+      log_info "Mode --dev  tickets ai-delegated"
     fi
   fi
 fi
@@ -201,11 +210,12 @@ if [ "$ONBOARD_MODE" = true ]; then
   else
     source "$LIB_DIR/prompt-builder.sh"
     PROMPT=$(build_onboard_bootstrap_prompt "$PROJECT_PATH" "$PROJECT_ID")
-    log_info "Mode --onboard : prompt de découverte projet activé"
+    echo ""
+    log_info "Mode --onboard  découverte projet activée"
   fi
 fi
 
-# ── Confirmation avant lancement ──────────────────────
+# ── Confirmation avant lancement ──────────────────────────────────────────────
 echo ""
 read -rp "  Appuyer sur Entrée pour lancer ${default_target}…" _
 
