@@ -836,19 +836,163 @@ cmd_mode() {
   fi
 }
 
+# ── VALIDATE ─────────────────────────────────────────────────────────────────
+
+##
+# Valide la cohérence de tous les agents canoniques (ou d'un seul si agent-id fourni).
+# Vérifie : champs requis, skills existants, targets valides, mode valide, unicité des id.
+# @param {string} [$1] — agent-id optionnel (valide uniquement cet agent si fourni)
+##
+cmd_validate() {
+  local filter_id="${1:-}"
+  local count_ok=0 count_err=0 count_warn=0
+
+  # Collecter tous les fichiers agents
+  local agent_files=()
+  while IFS= read -r f; do
+    agent_files+=("$f")
+  done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
+
+  # Pour détecter les doublons d'id
+  local seen_ids=""
+
+  local f
+  for f in "${agent_files[@]}"; do
+    [ -f "$f" ] || continue
+
+    local agent_id label description targets_raw skills_raw mode_raw
+    agent_id=$(grep    '^id:'          "$f" 2>/dev/null | head -1 | sed 's/^id:[[:space:]]*//')
+    label=$(grep       '^label:'       "$f" 2>/dev/null | head -1 | sed 's/^label:[[:space:]]*//')
+    description=$(grep '^description:' "$f" 2>/dev/null | head -1 | sed 's/^description:[[:space:]]*//')
+    targets_raw=$(grep '^targets:'     "$f" 2>/dev/null | head -1 | sed 's/^targets:[[:space:]]*//')
+    skills_raw=$(grep  '^skills:'      "$f" 2>/dev/null | head -1 | sed 's/^skills:[[:space:]]*//')
+    mode_raw=$(grep    '^mode:'        "$f" 2>/dev/null | head -1 | sed 's/^mode:[[:space:]]*//')
+
+    # Filtrer par agent-id si demandé
+    if [ -n "$filter_id" ] && [ "$agent_id" != "$filter_id" ]; then
+      continue
+    fi
+
+    local display_id="${agent_id:-$(basename "$f" .md)}"
+    local issues=""   # accumule les messages d'erreur/avertissement pour cet agent
+    local has_err=0 has_warn=0
+
+    # ── Champs requis ──────────────────────────────────────────────────────
+    for field_name in id label description targets skills; do
+      local val
+      case "$field_name" in
+        id)          val="$agent_id" ;;
+        label)       val="$label" ;;
+        description) val="$description" ;;
+        targets)     val="$targets_raw" ;;
+        skills)      val="$skills_raw" ;;
+      esac
+      if [ -z "$val" ]; then
+        issues="${issues}    champ manquant : ${field_name}\n"
+        has_warn=1
+      fi
+    done
+
+    # ── Unicité de l'id ────────────────────────────────────────────────────
+    if [ -n "$agent_id" ]; then
+      if printf '%s\n' $seen_ids | grep -qx "$agent_id" 2>/dev/null; then
+        issues="${issues}    id dupliqué : ${agent_id}\n"
+        has_err=1
+      else
+        seen_ids="$seen_ids $agent_id"
+      fi
+    fi
+
+    # ── Mode valide ────────────────────────────────────────────────────────
+    if [ -n "$mode_raw" ]; then
+      case "$mode_raw" in
+        primary|subagent|all) ;;
+        *) issues="${issues}    mode invalide : ${mode_raw} (attendu : primary|subagent|all)\n"
+           has_err=1 ;;
+      esac
+    fi
+
+    # ── Targets valides ────────────────────────────────────────────────────
+    if [ -n "$targets_raw" ]; then
+      # Normaliser : retirer [ ] et virgules → liste mots
+      local targets_clean
+      targets_clean=$(printf '%s' "$targets_raw" | tr -d '[]' | tr ',' ' ')
+      local t
+      for t in $targets_clean; do
+        case "$t" in
+          opencode|claude-code|vscode) ;;
+          *) issues="${issues}    target invalide : ${t} (attendu : opencode|claude-code|vscode)\n"
+             has_err=1 ;;
+        esac
+      done
+    fi
+
+    # ── Skills existants ───────────────────────────────────────────────────
+    if [ -n "$skills_raw" ]; then
+      local skills_clean
+      skills_clean=$(printf '%s' "$skills_raw" | tr -d '[]' | tr ',' ' ')
+      local sk
+      for sk in $skills_clean; do
+        local found=0
+        # Skill local
+        if [ -f "$HUB_DIR/skills/${sk}.md" ]; then
+          found=1
+        fi
+        # Skill externe (external/<name>)
+        if [ $found -eq 0 ] && [ -d "$EXTERNAL_SKILLS_DIR" ]; then
+          local ext_name="${sk#external/}"
+          if [ -f "$EXTERNAL_SKILLS_DIR/${ext_name}.md" ]; then
+            found=1
+          fi
+        fi
+        if [ $found -eq 0 ]; then
+          issues="${issues}    skill introuvable : ${sk}\n"
+          has_err=1
+        fi
+      done
+    fi
+
+    # ── Affichage résultat pour cet agent ──────────────────────────────────
+    if [ $has_err -eq 1 ]; then
+      echo -e "  ${RED}✘${RESET}  ${BOLD}${display_id}${RESET}"
+      printf '%b' "$issues"
+      count_err=$(( count_err + 1 ))
+    elif [ $has_warn -eq 1 ]; then
+      echo -e "  ${YELLOW}⚠${RESET}  ${BOLD}${display_id}${RESET}"
+      printf '%b' "$issues"
+      count_warn=$(( count_warn + 1 ))
+    else
+      echo -e "  ${GREEN}✔${RESET}  ${display_id}"
+      count_ok=$(( count_ok + 1 ))
+    fi
+  done
+
+  # ── Résumé ─────────────────────────────────────────────────────────────────
+  echo ""
+  local summary="${BOLD}Résumé :${RESET}  ${GREEN}${count_ok} ok${RESET}"
+  [ $count_err  -gt 0 ] && summary="${summary}  ${RED}${count_err} erreur(s)${RESET}"
+  [ $count_warn -gt 0 ] && summary="${summary}  ${YELLOW}${count_warn} avertissement(s)${RESET}"
+  echo -e "$summary"
+  echo ""
+
+  [ $count_err -gt 0 ] && exit 1
+  return 0
+}
+
 # ── DISPATCH ─────────────────────────────────────────────────────────────────
 
 SUBCOMMAND="${1:-}"
 shift 2>/dev/null || true
 
 case "$SUBCOMMAND" in
-  list)    cmd_list ;;
-  info)    cmd_info "$@" ;;
-  create)  cmd_create ;;
-  edit)    cmd_edit "$@" ;;
-  select)  cmd_select "$@" ;;
-  mode)    cmd_mode "$@" ;;
-  keytest) cmd_keytest ;;
+  list)     cmd_list ;;
+  info)     cmd_info "$@" ;;
+  create)   cmd_create ;;
+  edit)     cmd_edit "$@" ;;
+  select)   cmd_select "$@" ;;
+  mode)     cmd_mode "$@" ;;
+  validate) cmd_validate "$@" ;;
+  keytest)  cmd_keytest ;;
   *)
     echo -e "${BOLD}oc agent — Gestion des agents canoniques${RESET}"
     echo ""
@@ -858,6 +1002,7 @@ case "$SUBCOMMAND" in
     echo "  edit <agent-id>       Modifier les skills et métadonnées d'un agent"
     echo "  select <PROJECT_ID>   Choisir les agents à déployer pour un projet"
     echo "  mode <PROJECT_ID>     Afficher / overrider les modes primary/subagent"
+    echo "  validate [agent-id]   Valider la cohérence de tous les agents (ou d'un seul)"
     echo "  keytest               Diagnostic clavier — affiche les octets reçus"
     echo ""
     echo -e "${BOLD}Exemples :${RESET}"
@@ -867,6 +1012,8 @@ case "$SUBCOMMAND" in
     echo "  ./oc.sh agent select MY-PROJECT"
     echo "  ./oc.sh agent mode MY-PROJECT"
     echo "  ./oc.sh agent info planner"
+    echo "  ./oc.sh agent validate"
+    echo "  ./oc.sh agent validate planner"
     echo "  ./oc.sh agent keytest"
     echo ""
     ;;
