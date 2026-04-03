@@ -150,13 +150,29 @@ oc start MON-APP --dev --assignee alice         # filtre par assignee
 oc start MON-APP --onboard                      # prompt de découverte projet
 ```
 
-> Avertit automatiquement si les agents ne sont pas déployés ou si `.beads/` est absent.
+**Rendu au lancement :**
+
+```
+── MON-APP ──────────────────────────────────────────────
+  Projet     MON-APP
+  Chemin     /Users/alice/workspace/mon-app
+  Cible      opencode
+
+  → Nouveau sur ce projet ? Invoke l'agent onboarder
+    "Onboarde-toi sur ce projet"
+  → Ou lance directement : ./oc.sh start --onboard MON-APP
+────────────────────────────────────────────────────────
+
+  Appuyer sur Entrée pour lancer opencode…
+```
+
+> Avertit dans le bloc contextuel si les agents ne sont pas déployés ou si `.beads/` est absent.
 
 ---
 
 ## `oc init`
 
-Enregistre un projet dans le hub.
+Enregistre un projet dans le hub. Guide l'utilisateur en **4 étapes numérotées** et affiche un récapitulatif coloré à la fin.
 
 ```bash
 oc init [PROJECT_ID] [chemin]
@@ -169,14 +185,35 @@ oc init [PROJECT_ID] [chemin]
 | `[PROJECT_ID]` | Identifiant unique du projet (lettres, chiffres, `-`, `_`) |
 | `[chemin]` | Chemin absolu ou `~`-expansé vers le répertoire du projet |
 
+**Wizard interactif :**
+
+| Étape | Contenu |
+|-------|---------|
+| 1 — Informations projet | PROJECT_ID, chemin, nom, stack, labels, tracker |
+| 2 — Beads & tracker | `bd init`, upstream Git, configuration tracker |
+| 3 — Agents & cibles | Sélection des agents et des cibles de déploiement |
+| 4 — Déploiement | Proposition de déploiement immédiat |
+
+**Récapitulatif final :**
+
+```
+┌─ MON-APP initialisé ──────────────────────────────┐
+│  Chemin       /Users/alice/workspace/mon-app       │
+│  Nom          Mon Application                      │
+│  Stack        Vue 3 + Laravel                      │
+│  Tracker      jira                                 │
+│  Beads        ✔ initialisé                         │
+│                                                    │
+│  Prochain → ./oc.sh start MON-APP                  │
+└────────────────────────────────────────────────────┘
+```
+
 **Exemples :**
 
 ```bash
-oc init                              # mode interactif
-oc init MON-APP ~/workspace/mon-app  # enregistrement direct
+oc init                              # mode interactif complet
+oc init MON-APP ~/workspace/mon-app  # pré-remplit ID et chemin (questions restantes interactives)
 ```
-
-> Propose de déployer les agents immédiatement après l'enregistrement.
 
 ---
 
