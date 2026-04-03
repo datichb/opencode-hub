@@ -4,6 +4,7 @@
 set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 source "$LIB_DIR/adapter-manager.sh"
+source "$LIB_DIR/spinner.sh"
 
 # ── Mode --check ─────────────────────────────────────────────────────────────
 # Vérifie si les fichiers générés sont à jour par rapport aux sources.
@@ -323,7 +324,12 @@ for target in "${targets[@]}"; do
   log_info "── Cible : $target"
   load_adapter "$target"
   adapter_validate || { log_error "Cible $target non disponible — déploiement ignoré"; echo ""; continue; }
-  adapter_deploy "$deploy_dir" "$PROJECT_ID"
+  _spinner_start "Déploiement vers $target…"
+  if adapter_deploy "$deploy_dir" "$PROJECT_ID"; then
+    _spinner_stop "Déployé → $target"
+  else
+    _spinner_stop "Échec du déploiement → $target" 1
+  fi
   echo ""
 done
 
