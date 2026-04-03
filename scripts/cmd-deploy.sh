@@ -1,6 +1,6 @@
 #!/bin/bash
 # Déploie les agents canoniques vers les cibles configurées.
-# Usage : oc deploy [target] [PROJECT_ID] [--check]
+# Usage : oc deploy [target] [PROJECT_ID] [--check] [--diff]
 set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 source "$LIB_DIR/adapter-manager.sh"
@@ -145,13 +145,120 @@ _cmd_deploy_check() {
   fi
 }
 
-# ── Dispatch : --check ou déploiement normal ──────────────────────────────────
-# Analyser les arguments pour détecter --check (peut être en 1ère ou 2ème position)
+# ── Mode --diff ───────────────────────────────────────────────────────────────
+# Compare le contenu qui serait généré avec les fichiers déployés actuels.
+# Affiche le diff complet pour les agents modifiés, "(inchangé)" pour les autres,
+# "(nouveau)" si pas encore déployé.
+# Propose ensuite d'appliquer le déploiement si des différences sont trouvées.
+_cmd_deploy_diff() {
+  local target="${1:-all}" project_id="${2:-}"
+
+  # Résoudre le dossier de déploiement
+  local deploy_dir="$HUB_DIR"
+  if [ -n "$project_id" ]; then
+    project_id=$(normalize_project_id "$project_id")
+    deploy_dir=$(resolve_project_path "$project_id")
+  fi
+
+  # Résoudre les cibles
+  local targets=()
+  if [ -z "$target" ] || [ "$target" = "all" ]; then
+    while IFS= read -r t; do targets+=("$t"); done < <(get_active_targets)
+  else
+    targets=("$target")
+  fi
+
+  source "$LIB_DIR/prompt-builder.sh"
+
+  log_title "Diff des agents (sources → déployés)"
+  local changed_count=0
+  local new_count=0
+  local same_count=0
+
+  for tgt in "${targets[@]}"; do
+    log_info "── Cible : $tgt"
+    echo ""
+
+    local gen_dir=""
+    case "$tgt" in
+      opencode)    gen_dir="$deploy_dir/.opencode/agents" ;;
+      claude-code) gen_dir="$deploy_dir/.claude/agents" ;;
+      vscode)      gen_dir="$deploy_dir/.vscode/prompts" ;;
+      *)           log_warn "Cible inconnue pour --diff : $tgt"; continue ;;
+    esac
+
+    # Langue du projet si disponible
+    local lang=""
+    [ -n "$project_id" ] && lang=$(get_project_language "$project_id" 2>/dev/null || true)
+
+    while IFS= read -r agent_file; do
+      [ -f "$agent_file" ] || continue
+      agent_supports_target "$agent_file" "$tgt" || continue
+
+      local agent_id; agent_id=$(get_agent_id "$agent_file")
+      should_deploy_agent "$project_id" "$agent_id" || continue
+
+      local gen_file=""
+      case "$tgt" in
+        opencode)    gen_file="$gen_dir/${agent_id}.md" ;;
+        claude-code) gen_file="$gen_dir/${agent_id}.md" ;;
+        vscode)      gen_file="$gen_dir/${agent_id}.prompt.md" ;;
+      esac
+
+      # Générer le contenu cible dans un fichier temporaire
+      local tmpfile; tmpfile=$(mktemp /tmp/oc-diff-XXXXXX.md)
+      if ! build_agent_content "$agent_file" "$tgt" "$lang" > "$tmpfile" 2>/dev/null; then
+        rm -f "$tmpfile"
+        log_warn "  Génération échouée pour $agent_id — ignoré"
+        continue
+      fi
+
+      if [ ! -f "$gen_file" ]; then
+        echo -e "  ${GREEN}+ $agent_id${RESET}  (nouveau)"
+        new_count=$((new_count + 1))
+      elif diff -q "$gen_file" "$tmpfile" > /dev/null 2>&1; then
+        echo -e "  ${BLUE}= $agent_id${RESET}  (inchangé)"
+        same_count=$((same_count + 1))
+      else
+        echo -e "  ${YELLOW}~ $agent_id${RESET}  (modifié)"
+        diff --unified=3 "$gen_file" "$tmpfile" 2>/dev/null | tail -n +3 \
+          | sed 's/^+/    \x1b[32m+\x1b[0m/;s/^-/    \x1b[31m-\x1b[0m/;s/^ /    /' || true
+        changed_count=$((changed_count + 1))
+      fi
+      rm -f "$tmpfile"
+    done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
+    echo ""
+  done
+
+  # ── Résumé ─────────────────────────────────────────────────────────────────
+  echo -e "Résumé : ${GREEN}${new_count} nouveau(x)${RESET}  ${YELLOW}${changed_count} modifié(s)${RESET}  ${BLUE}${same_count} inchangé(s)${RESET}"
+  echo ""
+
+  local total_changes=$(( new_count + changed_count ))
+  if [ "$total_changes" -eq 0 ]; then
+    log_info "Aucun changement détecté."
+    return 0
+  fi
+
+  read -rp "  Appliquer le déploiement ? [Y/n] : " apply_answer
+  apply_answer="${apply_answer:-Y}"
+  if [[ "$apply_answer" =~ ^[Yy]$ ]]; then
+    bash "$HUB_DIR/oc.sh" deploy "${target:-all}" ${project_id:+"$project_id"}
+  else
+    log_info "Déploiement annulé."
+  fi
+}
+
+# ── Dispatch : --check, --diff ou déploiement normal ─────────────────────────
+# Analyser les arguments pour détecter --check / --diff (peut être en 1ère ou 2ème position)
 CHECK_MODE=false
+DIFF_MODE=false
 REMAINING_ARGS=()
 for arg in "$@"; do
   if [ "$arg" = "--check" ]; then
     CHECK_MODE=true
+  elif [ "$arg" = "--diff" ]; then
+    DIFF_MODE=true
   else
     REMAINING_ARGS+=("$arg")
   fi
@@ -162,6 +269,11 @@ PROJECT_ID="${REMAINING_ARGS[1]:-}"
 
 if [ "$CHECK_MODE" = true ]; then
   _cmd_deploy_check "$TARGET" "$PROJECT_ID"
+  exit 0
+fi
+
+if [ "$DIFF_MODE" = true ]; then
+  _cmd_deploy_diff "$TARGET" "$PROJECT_ID"
   exit 0
 fi
 
