@@ -14,6 +14,7 @@ case "$COMMAND" in
   install)         bash "$SCRIPTS_DIR/cmd-install.sh" "${@:2}" ;;
   init)            bash "$SCRIPTS_DIR/cmd-init.sh" "${@:2}" ;;
   list)            bash "$SCRIPTS_DIR/cmd-list.sh" ;;
+  status)          bash "$SCRIPTS_DIR/cmd-status.sh" "${@:2}" ;;
   remove)          bash "$SCRIPTS_DIR/cmd-remove.sh" "${@:2}" ;;
   start)           bash "$SCRIPTS_DIR/cmd-start.sh" "${@:2}" ;;
   deploy)          bash "$SCRIPTS_DIR/cmd-deploy.sh" "${@:2}" ;;
