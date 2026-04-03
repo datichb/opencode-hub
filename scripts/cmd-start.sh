@@ -4,15 +4,23 @@ source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 
 ensure_projects_file
 
-# ── Parsing des arguments (--dev et --onboard sont des flags libres) ───
+# ── Parsing des arguments (--dev, --onboard, --label, --assignee sont des flags libres) ───
 DEV_MODE=false
 ONBOARD_MODE=false
+DEV_LABEL=""
+DEV_ASSIGNEE=""
 ARGS=()
+_prev=""
 for arg in "$@"; do
+  case "$_prev" in
+    --label)    DEV_LABEL="$arg";    _prev=""; continue ;;
+    --assignee) DEV_ASSIGNEE="$arg"; _prev=""; continue ;;
+  esac
   case "$arg" in
-    --dev)     DEV_MODE=true ;;
-    --onboard) ONBOARD_MODE=true ;;
-    *)         ARGS+=("$arg") ;;
+    --dev)      DEV_MODE=true ;;
+    --onboard)  ONBOARD_MODE=true ;;
+    --label|--assignee) _prev="$arg" ;;
+    *)          ARGS+=("$arg") ;;
   esac
 done
 PROJECT_ID="${ARGS[0]:-}"
@@ -21,6 +29,18 @@ PROMPT="${ARGS[1]:-}"
 # --dev et --onboard sont mutuellement exclusifs
 if [ "$DEV_MODE" = true ] && [ "$ONBOARD_MODE" = true ]; then
   log_error "--dev et --onboard sont mutuellement exclusifs"
+  exit 1
+fi
+
+# --label et --assignee nécessitent --dev
+if { [ -n "$DEV_LABEL" ] || [ -n "$DEV_ASSIGNEE" ]; } && [ "$DEV_MODE" = false ]; then
+  log_error "--label et --assignee nécessitent --dev"
+  exit 1
+fi
+
+# --label et --assignee sont mutuellement exclusifs
+if [ -n "$DEV_LABEL" ] && [ -n "$DEV_ASSIGNEE" ]; then
+  log_error "--label et --assignee sont mutuellement exclusifs"
   exit 1
 fi
 
@@ -163,8 +183,14 @@ if [ "$DEV_MODE" = true ]; then
     log_warn "--dev ignoré pour la cible vscode (pas de support prompt)"
   else
     source "$LIB_DIR/prompt-builder.sh"
-    PROMPT=$(build_dev_bootstrap_prompt "$PROJECT_PATH")
-    log_info "Mode --dev : bootstrap tickets ai-delegated activé"
+    PROMPT=$(build_dev_bootstrap_prompt "$PROJECT_PATH" "$DEV_LABEL" "$DEV_ASSIGNEE")
+    if [ -n "$DEV_ASSIGNEE" ]; then
+      log_info "Mode --dev : bootstrap tickets assignés à '${DEV_ASSIGNEE}' activé"
+    elif [ -n "$DEV_LABEL" ]; then
+      log_info "Mode --dev : bootstrap tickets label '${DEV_LABEL}' activé"
+    else
+      log_info "Mode --dev : bootstrap tickets ai-delegated activé"
+    fi
   fi
 fi
 

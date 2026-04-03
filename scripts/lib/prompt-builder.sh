@@ -114,31 +114,46 @@ build_agent_content() {
 }
 
 # Construit le prompt de bootstrap pour le mode --dev (oc start --dev)
-# Interroge bd ready --label ai-delegated dans le répertoire du projet
-# et retourne un prompt contextuel prêt à être injecté dans l'outil IA
+# Interroge bd ready dans le répertoire du projet
+# @param $1 — project_path
+# @param $2 — label (optionnel, défaut : "ai-delegated")
+# @param $3 — assignee (optionnel, si fourni filtre par assignee au lieu du label)
 build_dev_bootstrap_prompt() {
   local project_path="$1"
+  local label="${2:-ai-delegated}"
+  local assignee="${3:-}"
   local tickets
 
-  tickets=$(cd "$project_path" && bd ready --label ai-delegated --json 2>/dev/null) || tickets="[]"
+  if [ -n "$assignee" ]; then
+    tickets=$(cd "$project_path" && bd ready --assignee "$assignee" --json 2>/dev/null) || tickets="[]"
+  else
+    tickets=$(cd "$project_path" && bd ready --label "$label" --json 2>/dev/null) || tickets="[]"
+  fi
   # Valider que la sortie est un JSON array — si bd retourne du texte d'erreur, ignorer
   if [ -z "$tickets" ] || [[ "$tickets" != \[* ]]; then
     tickets="[]"
   fi
 
+  local filter_desc
+  if [ -n "$assignee" ]; then
+    filter_desc="assigné à \"${assignee}\""
+  else
+    filter_desc="label \"${label}\""
+  fi
+
   if [ "$tickets" = "[]" ] || [ "$tickets" = "null" ]; then
-    cat <<'EOF'
-Tu es le Developer. Aucun ticket avec le label "ai-delegated" n'est prêt à implémenter.
+    cat <<EOF
+Tu es le Developer. Aucun ticket avec le ${filter_desc} n'est prêt à implémenter.
 
 Pour déléguer un ticket à l'agent :
-  bd label add <ID> ai-delegated
+  bd label add <ID> ${label}
 
 Pour voir tous les tickets ouverts :
   bd list -s open --json
 EOF
   else
     cat <<EOF
-Tu es le Developer. Voici les tickets délégués à l'agent (label "ai-delegated", statut ready) :
+Tu es le Developer. Voici les tickets délégués à l'agent (${filter_desc}, statut ready) :
 
 ${tickets}
 
