@@ -89,29 +89,26 @@ case "$default_target" in
 esac
 
 # ── Bloc contextuel ───────────────────────────────────────────────────────────
-_SEP="────────────────────────────────────────────────────────"
-echo ""
-echo -e "${BOLD}── ${PROJECT_ID} ${_SEP:0:$(( 52 - ${#PROJECT_ID} ))}${RESET}"
-printf "  %-10s %s\n" "Projet"  "$PROJECT_ID"
-printf "  %-10s %s\n" "Chemin"  "$PROJECT_PATH"
-printf "  %-10s %s\n" "Cible"   "$default_target"
+_intro "${PROJECT_ID}"
+printf "${DIM}│${RESET}  %-10s %s\n" "Chemin"  "$PROJECT_PATH"
+printf "${DIM}│${RESET}  %-10s %s\n" "Cible"   "$default_target"
 
 # Avertissements dans le bloc contextuel
 if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ]; then
-  echo ""
+  echo -e "${DIM}│${RESET}"
   log_warn "Agents non déployés pour $default_target"
   log_warn "Lancez d'abord : ./oc.sh deploy $default_target $PROJECT_ID"
 fi
 
 # Suggestion onboarder si les agents sont déployés
 if [ -n "$agents_dir" ] && [ -d "$agents_dir" ] && [ "$ONBOARD_MODE" = false ]; then
-  echo ""
-  echo -e "  ${BLUE}→${RESET} Nouveau sur ce projet ? Invoke l'agent ${BOLD}onboarder${RESET}"
-  echo -e "    \"Onboarde-toi sur ce projet\""
-  echo -e "  ${BLUE}→${RESET} Ou lance directement : ${BOLD}./oc.sh start --onboard $PROJECT_ID${RESET}"
+  echo -e "${DIM}│${RESET}"
+  echo -e "${DIM}│${RESET}  ${CYAN}→${RESET} Nouveau sur ce projet ? Invoke l'agent ${BOLD}onboarder${RESET}"
+  echo -e "${DIM}│${RESET}    \"Onboarde-toi sur ce projet\""
+  echo -e "${DIM}│${RESET}  ${CYAN}→${RESET} Ou lance directement : ${BOLD}./oc.sh start --onboard $PROJECT_ID${RESET}"
 fi
 
-echo -e "${_SEP}"
+echo -e "${DIM}│${RESET}"
 
 # ── Vérifier que Beads est initialisé dans le projet ───
 if [ ! -d "$PROJECT_PATH/.beads" ]; then
@@ -122,16 +119,16 @@ if [ ! -d "$PROJECT_PATH/.beads" ]; then
   elif command -v bd &>/dev/null; then
     echo ""
     log_warn "Beads non initialisé dans ce projet (aucun .beads/ trouvé)"
-    read -rp "  Initialiser Beads maintenant ? [Y/n] : " _init_beads
+    _prompt _init_beads "Initialiser Beads maintenant ? [Y/n] : "
     if [[ "${_init_beads:-Y}" =~ ^[Yy]$ ]]; then
       if (cd "$PROJECT_PATH" && bd init); then
         log_success "Beads initialisé dans $PROJECT_PATH"
         # Proposer de configurer l'upstream git si absent
         if ! (cd "$PROJECT_PATH" && git remote get-url upstream) &>/dev/null; then
           echo ""
-          read -rp "  Configurer l'upstream Git (git remote add upstream) ? [Y/n] : " _setup_upstream
+          _prompt _setup_upstream "Configurer l'upstream Git (git remote add upstream) ? [Y/n] : "
           if [[ "${_setup_upstream:-Y}" =~ ^[Yy]$ ]]; then
-            read -rp "  URL du remote upstream : " _upstream_url
+            _prompt _upstream_url "URL du remote upstream : "
             if [ -n "$_upstream_url" ]; then
               if (cd "$PROJECT_PATH" && git remote add upstream "$_upstream_url"); then
                 log_success "Remote upstream configuré : $_upstream_url"
@@ -216,7 +213,7 @@ if [ "$ONBOARD_MODE" = true ]; then
 fi
 
 # ── Confirmation avant lancement ──────────────────────────────────────────────
-echo ""
-read -rp "  Appuyer sur Entrée pour lancer ${default_target}…" _
+_outro "Lancement de ${default_target}…"
+IFS= read -rp "" _
 
 adapter_start "$PROJECT_PATH" "$PROMPT" "$PROJECT_ID"
