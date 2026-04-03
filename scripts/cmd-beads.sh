@@ -10,6 +10,8 @@ _beads_usage() {
   echo "  status         [PROJECT_ID]   Vérifie si Beads est initialisé dans le projet"
   echo "  init           <PROJECT_ID>   Initialise .beads/ dans le répertoire du projet"
   echo "  list           <PROJECT_ID>   Liste les tickets ouverts du projet"
+  echo "  create         <PROJECT_ID> [titre] [--label l] [--type t] [--desc d]"
+  echo "                               Crée un ticket dans le projet"
   echo "  open           <PROJECT_ID>   Affiche le chemin pour utiliser bd manuellement"
   echo ""
   echo -e "${BOLD}Synchronisation tracker (Jira / GitLab) :${RESET}"
@@ -427,6 +429,77 @@ _setup_gitlab() {
   log_info "Synchroniser        : ./oc.sh beads sync $id --pull-only --dry-run"
 }
 
+# ══════════════════════════════════════════
+# Sous-commande : create
+# ══════════════════════════════════════════
+cmd_create() {
+  require_project_id "$1"
+  _require_bd
+
+  local id
+  id=$(normalize_project_id "$1")
+  shift  # consommer PROJECT_ID — les args restants sont titre + flags
+
+  local path
+  path=$(resolve_project_path "$id")
+  _require_beads_init "$path" "$id"
+
+  # ── Parser les flags optionnels ────────────────────────────────────────────
+  local title="" label="" type="" desc=""
+  local positional_done=false
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --label) shift; label="${1:-}"; shift ;;
+      --type)  shift; type="${1:-}";  shift ;;
+      --desc)  shift; desc="${1:-}";  shift ;;
+      --*)     log_error "Flag inconnu : $1"; exit 1 ;;
+      *)
+        if [ "$positional_done" = false ]; then
+          title="$1"
+          positional_done=true
+        fi
+        shift
+        ;;
+    esac
+  done
+
+  # ── Mode non-interactif (titre fourni) ─────────────────────────────────────
+  if [ -n "$title" ]; then
+    local bd_args=("create" "$title")
+    [ -n "$label" ] && bd_args+=("--label" "$label")
+    [ -n "$type"  ] && bd_args+=("--type"  "$type")
+    [ -n "$desc"  ] && bd_args+=("--desc"  "$desc")
+
+    log_info "Création du ticket dans $id…"
+    (cd "$path" && bd "${bd_args[@]}") || { log_error "Échec de bd create"; exit 1; }
+    return 0
+  fi
+
+  # ── Mode interactif minimal ────────────────────────────────────────────────
+  log_title "Créer un ticket — $id"
+  echo ""
+
+  read -rp "  Titre : " title
+  [ -z "$title" ] && { log_error "Titre requis"; exit 1; }
+
+  if [ -z "$label" ]; then
+    read -rp "  Label (laisser vide pour ignorer) : " label
+  fi
+
+  if [ -z "$type" ]; then
+    read -rp "  Type (feature|fix|chore, laisser vide pour ignorer) : " type
+  fi
+
+  local bd_args=("create" "$title")
+  [ -n "$label" ] && bd_args+=("--label" "$label")
+  [ -n "$type"  ] && bd_args+=("--type"  "$type")
+  [ -n "$desc"  ] && bd_args+=("--desc"  "$desc")
+
+  echo ""
+  log_info "Création du ticket dans $id…"
+  (cd "$path" && bd "${bd_args[@]}") || { log_error "Échec de bd create"; exit 1; }
+}
+
 # ── Dispatch (exécuté seulement si le script est lancé directement) ────────
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   source "$(cd "$(dirname "$0")" && pwd)/common.sh"
@@ -440,6 +513,7 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     status)  cmd_status  "$PROJECT_ID" ;;
     init)    cmd_init    "$PROJECT_ID" ;;
     list)    cmd_list    "$PROJECT_ID" ;;
+    create)  cmd_create  "$PROJECT_ID" "${@:3}" ;;
     open)    cmd_open    "$PROJECT_ID" ;;
     sync)    cmd_sync    "$PROJECT_ID" "${@:3}" ;;
     tracker)
