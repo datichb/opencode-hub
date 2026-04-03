@@ -45,6 +45,7 @@ Génère les fichiers agents pour une cible dans un projet.
 ```bash
 oc deploy <target> [PROJECT_ID]
 oc deploy --check [target] [PROJECT_ID]
+oc deploy --diff  [target] [PROJECT_ID]
 ```
 
 **Arguments :**
@@ -59,6 +60,7 @@ oc deploy --check [target] [PROJECT_ID]
 | Option | Description |
 |--------|-------------|
 | `--check` | Vérifie si les fichiers sont à jour sans déployer |
+| `--diff` | Compare les sources avec les fichiers déployés ; propose le déploiement si un écart est détecté |
 
 **Exemples :**
 
@@ -69,6 +71,7 @@ oc deploy all MON-APP           # déploie toutes les cibles actives dans MON-AP
 oc deploy --check               # vérifie toutes les cibles actives (hub)
 oc deploy --check opencode      # vérifie OpenCode (hub)
 oc deploy --check all MON-APP   # vérifie toutes les cibles pour MON-APP
+oc deploy --diff all MON-APP    # affiche le diff sources → déployés pour MON-APP
 ```
 
 **Sorties générées :**
@@ -113,7 +116,7 @@ oc sync --dry-run   # vérifie sans déployer
 Lance l'outil par défaut dans le répertoire d'un projet.
 
 ```bash
-oc start [PROJECT_ID] [prompt] [--dev]
+oc start [PROJECT_ID] [prompt] [--dev [--label <label>] [--assignee <user>]] [--onboard]
 ```
 
 **Arguments :**
@@ -127,15 +130,24 @@ oc start [PROJECT_ID] [prompt] [--dev]
 
 | Option | Description |
 |--------|-------------|
-| `--dev` | Mode développement — charge les tickets `ai-delegated` ouverts dans le prompt |
+| `--dev` | Mode développement — charge les tickets `ai-delegated` ouverts dans le prompt de démarrage. Effectue un sync tracker `--pull-only` automatique avant le lancement. |
+| `--dev --label <label>` | Comme `--dev`, mais filtre les tickets ayant le label `<label>` |
+| `--dev --assignee <user>` | Comme `--dev`, mais filtre les tickets assignés à `<user>` |
+| `--onboard` | Injecte un prompt de découverte projet pour onboarder l'agent sur le codebase |
+
+> `--dev` et `--onboard` sont mutuellement exclusifs. `--label` et `--assignee` sont mutuellement exclusifs.
+> Ces options sont ignorées silencieusement pour la cible `vscode` (pas de support prompt).
 
 **Exemples :**
 
 ```bash
-oc start                                    # sélection interactive du projet
-oc start MON-APP                            # lance l'outil dans MON-APP
-oc start MON-APP "explique l'architecture"  # avec prompt de démarrage
-oc start MON-APP --dev                      # charge les tickets ai-delegated
+oc start                                        # sélection interactive du projet
+oc start MON-APP                                # lance l'outil dans MON-APP
+oc start MON-APP "explique l'architecture"      # avec prompt de démarrage
+oc start MON-APP --dev                          # charge les tickets ai-delegated
+oc start MON-APP --dev --label ai-delegated     # filtre par label
+oc start MON-APP --dev --assignee alice         # filtre par assignee
+oc start MON-APP --onboard                      # prompt de découverte projet
 ```
 
 > Avertit automatiquement si les agents ne sont pas déployés ou si `.beads/` est absent.
@@ -176,6 +188,36 @@ Liste les projets enregistrés avec leur statut d'accessibilité.
 oc list
 ```
 
+> Pour un tableau de bord détaillé (Beads, API, agents, tracker), utiliser `oc status`.
+
+---
+
+## `oc status`
+
+Affiche un tableau de bord de l'état de tous les projets enregistrés.
+
+```bash
+oc status
+```
+
+**Pour chaque projet, vérifie :**
+- Chemin local accessible
+- Beads initialisé (`.beads/`)
+- Clé API configurée (provider + modèle)
+- Tracker configuré
+- Agents déployés pour la cible par défaut
+
+**Exemple de sortie :**
+
+```
+  MON-APP
+    ·  Chemin : /Users/alice/workspace/mon-app
+    ✔  Beads initialisé
+    ✔  API configurée (anthropic / claude-sonnet-4-5)
+    ·  Tracker : aucun
+    ✔  Agents déployés (opencode) : 12 fichier(s)
+```
+
 ---
 
 ## `oc remove`
@@ -183,8 +225,23 @@ oc list
 Supprime un projet du registre (avec confirmation).
 
 ```bash
-oc remove <PROJECT_ID>
+oc remove <PROJECT_ID> [--clean]
 ```
+
+**Options :**
+
+| Option | Description |
+|--------|-------------|
+| `--clean` | Supprime également les fichiers agents déployés dans le répertoire du projet (`.opencode/agents/`, `opencode.json`, `.claude/agents/`, `.vscode/prompts/` selon les cibles actives) |
+
+**Exemples :**
+
+```bash
+oc remove MON-APP           # retire du registre uniquement
+oc remove MON-APP --clean   # retire du registre + nettoie les fichiers déployés
+```
+
+> Demande confirmation dans les deux cas. Retire aussi l'entrée de `paths.local.md` et `api-keys.local.md`.
 
 ---
 
@@ -262,6 +319,9 @@ oc agent <sous-commande>
 | `create` | Crée un nouvel agent (workflow interactif) |
 | `edit <id>` | Modifie les skills et métadonnées d'un agent existant |
 | `info <id>` | Affiche le détail complet d'un agent (frontmatter + corps) |
+| `select <PROJECT_ID>` | Choisit les agents à déployer pour un projet |
+| `mode <PROJECT_ID>` | Affiche / overrides les modes `primary`/`subagent` par projet |
+| `validate [agent-id]` | Valide la cohérence des agents (champs requis, skills existants, targets valides, unicité des id) |
 | `keytest` | Diagnostic clavier pour le sélecteur interactif |
 
 ### `oc agent create` — workflow interactif
@@ -274,6 +334,22 @@ oc agent <sous-commande>
 6. **Corps** — si `opencode` est disponible, proposition de génération automatique via `opencode run`
 7. **Prévisualisation** — affichage du fichier `.md` complet avant écriture
 8. **Confirmation** — `Y/n` pour créer le fichier
+
+### `oc agent validate`
+
+```bash
+oc agent validate             # valide tous les agents canoniques
+oc agent validate <agent-id>  # valide uniquement l'agent spécifié
+```
+
+Vérifie pour chaque agent :
+- Champs requis présents (`id`, `label`, `description`, `targets`, `skills`)
+- Unicité de l'`id` sur l'ensemble des agents
+- `mode` valide (`primary` | `subagent` | `all`) si présent
+- Toutes les cibles dans `targets` reconnues (`opencode`, `claude-code`, `vscode`)
+- Tous les skills référencés existent (local ou externe)
+
+Retourne le code 1 si au moins une erreur est détectée.
 
 > `oc agent keytest` affiche les octets bruts reçus pour chaque touche. Utile pour
 > diagnostiquer un terminal où la navigation du sélecteur ne fonctionne pas. Quitter avec `q`.
@@ -314,11 +390,34 @@ oc beads <sous-commande>
 | `status [PROJECT_ID]` | Vérifie Beads sur tous les projets (ou un seul) |
 | `init <PROJECT_ID>` | Initialise `.beads/` dans le projet |
 | `list <PROJECT_ID>` | Liste les tickets ouverts du projet |
+| `create <PROJECT_ID> [titre] [--label <l>] [--type <t>] [--desc <d>]` | Crée un ticket dans le projet |
 | `open <PROJECT_ID>` | Affiche le chemin pour utiliser `bd` manuellement |
 | `sync <PROJECT_ID> [options]` | Synchronise avec un tracker externe |
 | `tracker status <PROJECT_ID>` | Affiche le statut de connexion au tracker |
 | `tracker setup <PROJECT_ID>` | Configure le tracker (interactif) |
 | `tracker switch <PROJECT_ID>` | Change de provider (jira ↔ gitlab ↔ none) |
+
+### `oc beads create`
+
+```bash
+oc beads create <PROJECT_ID> [titre] [--label <label>] [--type <type>] [--desc <description>]
+```
+
+| Argument / Option | Description |
+|-------------------|-------------|
+| `<PROJECT_ID>` | Projet dans lequel créer le ticket |
+| `[titre]` | Titre du ticket — mode interactif si absent |
+| `--label <label>` | Étiquette du ticket |
+| `--type <type>` | Type de ticket (`feature`, `fix`, `chore`, …) |
+| `--desc <description>` | Description longue |
+
+**Exemples :**
+
+```bash
+oc beads create MON-APP                                              # mode interactif
+oc beads create MON-APP "Ajouter la gestion des rôles"              # titre direct
+oc beads create MON-APP "Fix race condition" --type fix --label bug  # avec flags
+```
 
 **Options de `oc beads sync` :**
 
