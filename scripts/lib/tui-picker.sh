@@ -66,7 +66,9 @@ _pick_from_list() {
   # Sauvegarde état terminal et passage en mode raw
   local old_stty
   old_stty=$(stty -g </dev/tty 2>/dev/null)
-  trap '[ -n "$old_stty" ] && stty "$old_stty" </dev/tty 2>/dev/null' EXIT INT TERM
+  # Passer sur l'écran alternatif pour préserver le défilement du terminal parent
+  tput smcup 2>/dev/null || true
+  trap '[ -n "$old_stty" ] && stty "$old_stty" </dev/tty 2>/dev/null; tput rmcup 2>/dev/null || true' EXIT INT TERM
   stty -echo -icanon min 1 time 0 </dev/tty 2>/dev/null
 
   local _picker_cancelled=0
@@ -143,15 +145,14 @@ _pick_from_list() {
   # Restaurer le terminal
   trap - EXIT INT TERM
   [ -n "$old_stty" ] && stty "$old_stty" </dev/tty 2>/dev/null
+  # Revenir sur l'écran principal — le contenu du terminal parent est intact
+  tput rmcup 2>/dev/null || true
 
   # Annulation par ESC
   if [ "$_picker_cancelled" = "1" ]; then
-    printf "\033[2J\033[H"
     _PICK_RESULT="$cancel_value"
     return
   fi
-
-  printf "\033[2J\033[H"
 
   # Reconstruire le CSV final
   local chosen=()
