@@ -48,7 +48,7 @@ if [ "$CLEAN_MODE" = true ]; then
   local_targets=""
   local_targets=$(get_active_targets 2>/dev/null || echo "opencode")
 
-  log_info "Nettoyage des fichiers déployés dans $PROJECT_PATH…"
+  log_info "Nettoyage des fichiers déployés dans ${PROJECT_PATH}…"
 
   while IFS= read -r tgt; do
     case "$tgt" in

@@ -339,7 +339,7 @@ for target in "${targets[@]}"; do
   log_info "── Cible : $target"
   load_adapter "$target"
   adapter_validate || { log_error "Cible $target non disponible — déploiement ignoré"; echo ""; continue; }
-  _spinner_start "Déploiement vers $target…"
+  _spinner_start "Déploiement vers ${target}…"
   if adapter_deploy "$deploy_dir" "$PROJECT_ID"; then
     _spinner_stop "Déployé → $target"
   else

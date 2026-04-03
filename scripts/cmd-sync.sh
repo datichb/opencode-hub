@@ -32,7 +32,12 @@ fi
 
 # Résoudre les cibles actives
 active_targets=()
-while IFS= read -r t; do active_targets+=("$t"); done < <(get_active_targets)
+while IFS= read -r t; do [ -n "$t" ] && active_targets+=("$t"); done < <(get_active_targets)
+
+if [ "${#active_targets[@]}" -eq 0 ]; then
+  log_warn "Aucune cible configurée — vérifier active_targets dans config/hub.json"
+  exit 0
+fi
 
 deployed_count=0
 skipped_count=0

@@ -470,7 +470,7 @@ cmd_create() {
     [ -n "$type"  ] && bd_args+=("--type"  "$type")
     [ -n "$desc"  ] && bd_args+=("--desc"  "$desc")
 
-    log_info "Création du ticket dans $id…"
+    log_info "Création du ticket dans ${id}…"
     (cd "$path" && bd "${bd_args[@]}") || { log_error "Échec de bd create"; exit 1; }
     return 0
   fi
@@ -496,7 +496,7 @@ cmd_create() {
   [ -n "$desc"  ] && bd_args+=("--desc"  "$desc")
 
   echo ""
-  log_info "Création du ticket dans $id…"
+  log_info "Création du ticket dans ${id}…"
   (cd "$path" && bd "${bd_args[@]}") || { log_error "Échec de bd create"; exit 1; }
 }
 

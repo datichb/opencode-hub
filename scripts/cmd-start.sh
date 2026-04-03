@@ -176,7 +176,7 @@ if [ "$DEV_MODE" = true ]; then
   _tracker=$(get_project_tracker "$PROJECT_ID")
   if [ "$_tracker" != "none" ]; then
     echo ""
-    log_info "Sync $_tracker --pull-only avant démarrage…"
+    log_info "Sync ${_tracker} --pull-only avant démarrage…"
     if (cd "$PROJECT_PATH" && bd "$_tracker" sync --pull-only) 2>/dev/null; then
       log_success "Sync $_tracker terminé"
     else
