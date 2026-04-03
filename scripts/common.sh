@@ -26,21 +26,50 @@ DEFAULT_MODEL="claude-sonnet-4-5"
 # ─────────────────────────────────────────
 # COLORS
 # ─────────────────────────────────────────
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
+RED='\033[91m'
+GREEN='\033[92m'
+YELLOW='\033[93m'
+BLUE='\033[94m'
+CYAN='\033[96m'
 BOLD='\033[1m'
+DIM='\033[2m'
 RESET='\033[0m'
 
 # ─────────────────────────────────────────
 # LOGGERS
 # ─────────────────────────────────────────
-log_info()    { echo -e "${BLUE}ℹ${RESET}  $*"; }
-log_success() { echo -e "${GREEN}✔${RESET}  $*"; }
-log_warn()    { echo -e "${YELLOW}⚠${RESET}  $*" >&2; }
-log_error()   { echo -e "${RED}✘${RESET}  $*" >&2; }
+log_info()    { echo -e "${BLUE}◆${RESET}  $*"; }
+log_success() { echo -e "${GREEN}◆${RESET}  $*"; }
+log_warn()    { echo -e "${YELLOW}◆${RESET}  $*" >&2; }
+log_error()   { echo -e "${RED}◆${RESET}  $*" >&2; }
 log_title()   { echo -e "\n${BOLD}$*${RESET}"; }
+
+# ─────────────────────────────────────────
+# TUI HELPERS — style opencode (@clack/prompts)
+# ─────────────────────────────────────────
+
+# Ouvre une commande : titre en gras + ligne de gouttière
+# Usage : _intro "Titre de la commande"
+_intro() {
+  echo ""
+  echo -e "${BOLD}◆  $*${RESET}"
+  echo -e "${DIM}│${RESET}"
+}
+
+# Ferme une commande : ligne de clôture
+# Usage : _outro "Message de fin"
+_outro() {
+  echo -e "${DIM}└${RESET}  $*"
+  echo ""
+}
+
+# Affiche la gouttière + un prompt interactif
+# Usage : _prompt VAR_NAME "Libellé du prompt : "
+_prompt() {
+  local _var="$1" _msg="$2"
+  echo -e "${DIM}│${RESET}"
+  IFS= read -rp "  ${_msg}" "$_var"
+}
 
 # ─────────────────────────────────────────
 # HELPERS
