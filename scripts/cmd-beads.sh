@@ -173,22 +173,16 @@ cmd_init() {
     fi
   fi
 
-  # Propager les labels de projects.md vers bd
+  # Enregistrer les labels de projects.md dans la config bd
   local labels
   labels=$(get_project_labels "$id")
   if [ -n "$labels" ]; then
-    log_info "Propagation des labels vers Beads…"
-    local IFS=','
-    for label in $labels; do
-      # Trim espaces autour du label
-      label=$(echo "$label" | sed 's/^ *//;s/ *$//')
-      [ -z "$label" ] && continue
-      if (cd "$path" && bd label add "$label"); then
-        log_success "  Label ajouté : $label"
-      else
-        log_warn "  Échec ajout label : $label"
-      fi
-    done
+    log_info "Enregistrement des labels dans la config Beads…"
+    if (cd "$path" && bd config set custom.labels "$labels"); then
+      log_success "Labels enregistrés : $labels"
+    else
+      log_warn "Échec enregistrement labels dans Beads"
+    fi
   fi
 }
 

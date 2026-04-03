@@ -115,24 +115,15 @@ EOF
             log_info "Configurer plus tard : git remote add upstream <url>"
           fi
         fi
-        # Propager les labels vers Beads
+        # Enregistrer les labels dans la config Beads
         _init_labels="${PROJECT_LABELS:-feature,fix}"
         if [ -n "$_init_labels" ]; then
-          log_info "Propagation des labels vers Beads…"
-          _saved_IFS="$IFS"
-          IFS=','
-          for _lbl in $_init_labels; do
-            IFS="$_saved_IFS"
-            # Trim espaces autour du label
-            _lbl=$(echo "$_lbl" | sed 's/^ *//;s/ *$//')
-            [ -z "$_lbl" ] && continue
-            if (cd "$PROJECT_PATH" && bd label add "$_lbl"); then
-              log_success "  Label ajouté : $_lbl"
-            else
-              log_warn "  Échec ajout label : $_lbl"
-            fi
-          done
-          IFS="$_saved_IFS"
+          log_info "Enregistrement des labels dans la config Beads…"
+          if (cd "$PROJECT_PATH" && bd config set custom.labels "$_init_labels"); then
+            log_success "Labels enregistrés : $_init_labels"
+          else
+            log_warn "Échec enregistrement labels dans Beads"
+          fi
         fi
       else
         log_warn "Échec de bd init — initialiser plus tard : ./oc.sh beads init $PROJECT_ID"
