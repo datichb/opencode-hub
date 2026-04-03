@@ -22,7 +22,7 @@ _cmd_deploy_check() {
   # Résoudre les cibles à vérifier
   local targets=()
   if [ -z "$target" ] || [ "$target" = "all" ]; then
-    while IFS= read -r t; do targets+=("$t"); done < <(get_active_targets)
+    while IFS= read -r t; do [ -n "$t" ] && targets+=("$t"); done < <(get_active_targets)
   else
     targets=("$target")
   fi
@@ -32,6 +32,11 @@ _cmd_deploy_check() {
   local ok_count=0
 
   source "$LIB_DIR/prompt-builder.sh"
+
+  if [ "${#targets[@]}" -eq 0 ]; then
+    log_warn "Aucune cible configurée — vérifier active_targets dans config/hub.json"
+    return 0
+  fi
 
   for tgt in "${targets[@]}"; do
     log_info "── Cible : $tgt"
@@ -164,7 +169,7 @@ _cmd_deploy_diff() {
   # Résoudre les cibles
   local targets=()
   if [ -z "$target" ] || [ "$target" = "all" ]; then
-    while IFS= read -r t; do targets+=("$t"); done < <(get_active_targets)
+    while IFS= read -r t; do [ -n "$t" ] && targets+=("$t"); done < <(get_active_targets)
   else
     targets=("$target")
   fi
@@ -175,6 +180,11 @@ _cmd_deploy_diff() {
   local changed_count=0
   local new_count=0
   local same_count=0
+
+  if [ "${#targets[@]}" -eq 0 ]; then
+    log_warn "Aucune cible configurée — vérifier active_targets dans config/hub.json"
+    return 0
+  fi
 
   for tgt in "${targets[@]}"; do
     log_info "── Cible : $tgt"
@@ -293,19 +303,19 @@ elif [ -n "$PROJECT_ID" ]; then
     targets=()
     while IFS=',' read -ra _t; do
       for _tgt in "${_t[@]}"; do
-        _tgt=$(echo "$_tgt" | sed 's/^ *//;s/ *$//')
+        _tgt=$(echo "$_tgt" | tr -d '\r' | sed 's/^ *//;s/ *$//')
         [ -n "$_tgt" ] && targets+=("$_tgt")
       done
     done <<< "$_proj_targets"
   else
     # Fallback : cibles actives globales de hub.json
     targets=()
-    while IFS= read -r t; do targets+=("$t"); done < <(get_active_targets)
+    while IFS= read -r t; do [ -n "$t" ] && targets+=("$t"); done < <(get_active_targets)
   fi
 else
   # Pas de projet spécifié → cibles actives globales
   targets=()
-  while IFS= read -r t; do targets+=("$t"); done < <(get_active_targets)
+  while IFS= read -r t; do [ -n "$t" ] && targets+=("$t"); done < <(get_active_targets)
 fi
 
 # Résoudre le dossier de déploiement
@@ -319,6 +329,11 @@ else
 fi
 
 echo ""
+
+if [ "${#targets[@]}" -eq 0 ]; then
+  log_warn "Aucune cible configurée — vérifier active_targets dans config/hub.json"
+  exit 0
+fi
 
 for target in "${targets[@]}"; do
   log_info "── Cible : $target"

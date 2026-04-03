@@ -228,10 +228,11 @@ get_project_agents() {
 
 # Retourne la liste CSV des cibles sélectionnées pour un projet
 # Retourne "" si le champ est absent (= utiliser les active_targets de hub.json)
+# Strip les \r (fichiers CRLF) et les espaces parasites
 get_project_targets() {
   local raw
   raw=$(_get_project_field "$1" "Targets")
-  echo "${raw:-}"
+  echo "${raw:-}" | tr -d '\r' | sed 's/^ *//;s/ *$//'
 }
 
 # Retourne la liste CSV des overrides de mode pour un projet

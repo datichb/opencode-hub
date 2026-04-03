@@ -36,10 +36,13 @@ get_default_target() {
 }
 
 # Retourne les cibles actives depuis config/hub.json (ou 'opencode')
+# Strip les \r (fichiers CRLF) et ignore les lignes vides
 get_active_targets() {
+  local raw
   if [ -f "$HUB_CONFIG" ] && command -v jq &>/dev/null; then
-    jq -r '.active_targets[]?' "$HUB_CONFIG"
+    raw=$(jq -r '.active_targets[]?' "$HUB_CONFIG")
   else
-    echo "opencode"
+    raw="opencode"
   fi
+  echo "$raw" | tr -d '\r' | grep -v '^[[:space:]]*$'
 }
