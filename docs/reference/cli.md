@@ -86,6 +86,8 @@ oc deploy --diff all MON-APP    # affiche le diff sources → déployés pour MO
 - `0` : tout est à jour
 - `1` : au moins un fichier est obsolète ou manquant
 
+> Un spinner animé (`⠋⠙⠹…`) est affiché pendant le déploiement de chaque cible.
+
 ---
 
 ## `oc sync`
@@ -153,20 +155,18 @@ oc start MON-APP --onboard                      # prompt de découverte projet
 **Rendu au lancement :**
 
 ```
-── MON-APP ──────────────────────────────────────────────
-  Projet     MON-APP
-  Chemin     /Users/alice/workspace/mon-app
-  Cible      opencode
-
-  → Nouveau sur ce projet ? Invoke l'agent onboarder
-    "Onboarde-toi sur ce projet"
-  → Ou lance directement : ./oc.sh start --onboard MON-APP
-────────────────────────────────────────────────────────
-
-  Appuyer sur Entrée pour lancer opencode…
+◆  MON-APP
+│  Chemin     /Users/alice/workspace/mon-app
+│  Cible      opencode
+│
+│  → Nouveau sur ce projet ? Invoke l'agent onboarder
+│    "Onboarde-toi sur ce projet"
+│  → Ou lance directement : ./oc.sh start --onboard MON-APP
+│
+└  Lancement de opencode…
 ```
 
-> Avertit dans le bloc contextuel si les agents ne sont pas déployés ou si `.beads/` est absent.
+> Avertit dans le bloc contextuel si les agents ne sont pas déployés (`◆` jaune) ou si `.beads/` est absent.
 
 ---
 
@@ -189,10 +189,28 @@ oc init [PROJECT_ID] [chemin]
 
 | Étape | Contenu |
 |-------|---------|
-| 1 — Informations projet | PROJECT_ID, chemin, nom, stack, labels, tracker |
+| 1 — Informations projet | PROJECT_ID, chemin, vérification/création du dossier, nom, stack, labels, tracker |
 | 2 — Beads & tracker | `bd init`, upstream Git, configuration tracker |
 | 3 — Agents & cibles | Sélection des agents et des cibles de déploiement |
 | 4 — Déploiement | Proposition de déploiement immédiat |
+
+> La création du dossier a lieu en **fin d'étape 1** — Beads est ainsi garanti accessible dès l'étape 2.
+
+**Rendu wizard :**
+
+```
+◆  Initialisation d'un projet
+│
+│
+◇  Étape 1/4 — Informations projet
+│
+│  PROJECT_ID (ex: MON-APP) :
+│  ...
+│
+◇  Étape 2/4 — Beads & tracker
+│
+│  ...
+```
 
 **Récapitulatif final :**
 
@@ -202,10 +220,12 @@ oc init [PROJECT_ID] [chemin]
 │  Nom          Mon Application                      │
 │  Stack        Vue 3 + Laravel                      │
 │  Tracker      jira                                 │
-│  Beads        ✔ initialisé                         │
+│  Beads        ◆ initialisé                         │
 │                                                    │
 │  Prochain → ./oc.sh start MON-APP                  │
 └────────────────────────────────────────────────────┘
+
+└  Projet MON-APP prêt — ./oc.sh start MON-APP
 ```
 
 **Exemples :**
@@ -390,6 +410,8 @@ Retourne le code 1 si au moins une erreur est détectée.
 
 > `oc agent keytest` affiche les octets bruts reçus pour chaque touche. Utile pour
 > diagnostiquer un terminal où la navigation du sélecteur ne fonctionne pas. Quitter avec `q`.
+
+> Le sélecteur interactif (agents, cibles) utilise l'écran alternatif (`smcup`/`rmcup`) — le contenu du terminal parent est intégralement préservé à la fermeture.
 
 ---
 
