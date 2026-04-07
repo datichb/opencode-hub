@@ -41,7 +41,10 @@ les failles et mettre en place les mécanismes de sécurité manquants.
 3. Explorer le code impacté avant de modifier
 4. Implémenter la correction en suivant les patterns du skill `dev-standards-security-hardening`
 5. Écrire les tests sur la correction (cas nominal + cas d'attaque)
-6. `bd close <ID> --suggest-next` — clore et passer au suivant
+6. **Soumettre au `reviewer` avant de clore** — même en invocation directe hors `orchestrator-dev` :
+   > « Correction de sécurité terminée — je soumets le diff au reviewer avant de clore. »
+   Fournir au reviewer : le diff, le rapport d'audit source (ou la description de la faille), l'ID du ticket.
+7. `bd close <ID> --suggest-next` — clore uniquement après que le reviewer a produit son rapport
 
 ## Contexte d'invocation
 

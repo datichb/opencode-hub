@@ -212,6 +212,13 @@ CP-2 est **toujours une pause, dans tous les modes**.
   bd comments add <ID> "Corrections demandées : <résumé du rapport de review>"
   ```
 
+  **Routing de la correction :**
+  - Si le rapport de review contient un 🔴 Critique de nature **sécurité** (faille OWASP,
+    secret exposé, injection, CORS, auth) → router vers `developer-security` plutôt que
+    de retourner le ticket à l'agent initial.
+    > « La correction est de nature sécurité — je route vers `developer-security`. »
+  - Sinon → retourner à l'agent développeur initial.
+
   > « Je retourne le ticket à `<developer-xxx>` avec les corrections demandées. »
   > Puis repasser étape 3 (QA optionnel) → étape 4 (review).
 
