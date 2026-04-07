@@ -491,3 +491,62 @@ get_effective_llm_model() {
   echo "$DEFAULT_MODEL"
 }
 
+# ─────────────────────────────────────────
+# NATIVE AGENTS — désactivation OpenCode
+# ─────────────────────────────────────────
+
+# Lit opencode.disabled_native_agents dans hub.json (tableau JSON → CSV)
+# Retourne "" si le champ est absent ou si le tableau est vide
+get_hub_disabled_native_agents() {
+  [ -f "$HUB_CONFIG" ] || return 0
+  command -v jq &>/dev/null || return 0
+  local arr
+  arr=$(jq -r '(.opencode.disabled_native_agents // []) | @csv' "$HUB_CONFIG" 2>/dev/null \
+    | tr -d '"')
+  echo "${arr:-}"
+}
+
+# Lit "- Disable agents :" dans projects.md pour un projet donné
+# Retourne "" si le champ est absent
+get_project_disabled_native_agents() {
+  local raw
+  raw=$(_get_project_field "$1" "Disable agents")
+  echo "${raw:-}"
+}
+
+# Écrit/met à jour "- Disable agents :" dans le bloc d'un projet dans projects.md
+# Si valeur vide → supprime le champ
+# Insérer après "- Targets :" si présent, sinon après "- Agents :"
+# @param $1 — PROJECT_ID
+# @param $2 — valeur CSV (ou "" pour supprimer)
+_set_project_disabled_native_agents() {
+  local id="$1" new_val="$2"
+  if [ -z "$new_val" ]; then
+    # Supprimer le champ si valeur vide
+    perl -i -0777pe "
+      s{(^## \Q${id}\E\n.*?)- Disable agents : [^\n]+\n}{\$1}ms
+    " "$PROJECTS_FILE" 2>/dev/null
+    return 0
+  fi
+  # Remplacer si existant
+  if perl -i -0777pe "
+    s{(^## \Q${id}\E\n.*?)(- Disable agents : [^\n]+)}{\${1}- Disable agents : ${new_val}}ms
+  " "$PROJECTS_FILE" 2>/dev/null && grep -q -- "- Disable agents : ${new_val}" "$PROJECTS_FILE"; then
+    return 0
+  fi
+  # Insérer après "- Targets :" si présent
+  if perl -i -0777pe "
+    s{(^## \Q${id}\E\n.*?- Targets : [^\n]+\n)}{\${1}- Disable agents : ${new_val}\n}ms
+  " "$PROJECTS_FILE" 2>/dev/null && grep -q -- "- Disable agents : ${new_val}" "$PROJECTS_FILE"; then
+    return 0
+  fi
+  # Fallback : insérer après "- Agents :"
+  if perl -i -0777pe "
+    s{(^## \Q${id}\E\n.*?- Agents : [^\n]+\n)}{\${1}- Disable agents : ${new_val}\n}ms
+  " "$PROJECTS_FILE" 2>/dev/null && grep -q -- "- Disable agents : ${new_val}" "$PROJECTS_FILE"; then
+    return 0
+  fi
+  log_error "Impossible d'insérer le champ 'Disable agents' dans le bloc $id de projects.md"
+  return 1
+}
+

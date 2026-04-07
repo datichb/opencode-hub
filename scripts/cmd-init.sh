@@ -291,6 +291,40 @@ else
   TARGETS_SUMMARY="toutes (par défaut)"
 fi
 
+# ── Agents natifs OpenCode (désactivation) ────────────────────────────────────
+# Proposé uniquement si opencode est une cible active pour ce projet
+_is_opencode_target=false
+if echo ",${PICKED_TARGETS:-}," | grep -qF ",opencode,"; then
+  _is_opencode_target=true
+elif [ -z "${PICKED_TARGETS:-}" ] || [ "${PICKED_TARGETS:-}" = "all" ]; then
+  # Pas de sélection explicite → vérifier les active_targets du hub
+  if command -v jq &>/dev/null && [ -f "$HUB_CONFIG" ] \
+     && jq -e '.active_targets | index("opencode")' "$HUB_CONFIG" &>/dev/null; then
+    _is_opencode_target=true
+  fi
+fi
+
+if [ "$_is_opencode_target" = true ]; then
+  echo ""
+  _hub_disabled=$(get_hub_disabled_native_agents)
+  if [ -n "$_hub_disabled" ]; then
+    echo -e "  Agents natifs désactivés par défaut (hub) : ${BOLD}${_hub_disabled}${RESET}"
+  else
+    echo -e "  ${DIM}Aucun agent natif désactivé au niveau hub${RESET}"
+  fi
+  _prompt disable_native "Surcharger les agents désactivés pour ce projet ? [y/N] : "
+  if [[ "$disable_native" =~ ^[Yy]$ ]]; then
+    PICKED_DISABLED_AGENTS=""
+    _pick_native_agents "${_hub_disabled}"
+    _set_project_disabled_native_agents "$PROJECT_ID" "$PICKED_DISABLED_AGENTS"
+    if [ -n "$PICKED_DISABLED_AGENTS" ]; then
+      log_success "Agents désactivés pour $PROJECT_ID : $PICKED_DISABLED_AGENTS"
+    else
+      log_success "Aucun agent désactivé pour $PROJECT_ID (tous actifs)"
+    fi
+  fi
+fi
+
 # ─────────────────────────────────────────────────────────────────────────────
 # ÉTAPE 4 — Fournisseur LLM (optionnel, surcharge le hub)
 # ─────────────────────────────────────────────────────────────────────────────

@@ -219,6 +219,102 @@ _pick_agents() {
   fi
 }
 
+# ── Agents natifs OpenCode ────────────────────────────────────────────────────
+
+##
+# Rendu du sélecteur d'agents natifs OpenCode (build, plan, general, explore).
+# Affiche la liste plate sans séparateurs de famille.
+# Utilise les variables partagées de _pick_from_list :
+#   _pick_items, _pick_checked, _pick_cursor, _pick_total
+# Plus _pick_descriptions[] (tableau parallèle).
+##
+_render_native_agents_page() {
+  printf "\033[2J\033[H"  # clear screen
+
+  # ── En-tête ────────────────────────────────────────────────────────────────
+  echo -e "${BOLD}Agents natifs OpenCode à désactiver${RESET}  ($((_pick_cursor+1))/$_pick_total)"
+  echo -e "  \033[0;34m↑↓\033[0m naviguer   \033[0;34mespace\033[0m cocher/décocher   \033[0;34m*\033[0m tout cocher   \033[0;34m0\033[0m tout vider   \033[0;34mentrée\033[0m valider   \033[0;34mESC\033[0m annuler"
+  echo ""
+
+  # ── Liste ──────────────────────────────────────────────────────────────────
+  local i=0
+  while [ "$i" -lt "$_pick_total" ]; do
+    local agent="${_pick_items[$i]}"
+
+    local check_icon="   "
+    local check_color=""
+    local check_reset=""
+    if [ "${_pick_checked[$i]}" = "1" ]; then
+      check_icon="[x]"
+      check_color="$GREEN"
+      check_reset="$RESET"
+    fi
+
+    if [ "$i" -eq "$_pick_cursor" ]; then
+      printf "  \033[1m> ${check_color}%-3s${check_reset}\033[1m  %-20s\033[0m  \033[2m%s\033[0m\n" \
+        "$check_icon" "$agent" "${_pick_descriptions[$i]}"
+    else
+      printf "    ${check_color}%-3s${check_reset}  %-20s  \033[2m%s\033[0m\n" \
+        "$check_icon" "$agent" "${_pick_descriptions[$i]}"
+    fi
+    i=$((i + 1))
+  done
+
+  # ── Pied ───────────────────────────────────────────────────────────────────
+  echo ""
+  local count=0
+  local v
+  for v in "${_pick_checked[@]}"; do [ "$v" = "1" ] && count=$((count+1)); done
+  echo -e "  ${BOLD}$count agent(s) à désactiver${RESET}"
+  echo ""
+}
+
+##
+# Sélection interactive des agents natifs OpenCode à désactiver.
+# Compatible bash 3.2 (macOS). Résultat dans $PICKED_DISABLED_AGENTS (CSV ou "").
+# @param {string} $1 — sélection courante (CSV d'agents à désactiver, ou "")
+##
+_pick_native_agents() {
+  local current_csv="${1:-}"
+
+  _pick_items=("build" "plan" "general" "explore")
+  _pick_descriptions=(
+    "Lance des builds/compilations automatiquement"
+    "Génère un plan avant d'exécuter les tâches"
+    "Agent généraliste polyvalent"
+    "Exploration et analyse du code"
+  )
+  _pick_total=4
+
+  # Initialiser le tableau de sélection depuis le CSV courant
+  _pick_checked=()
+  local i=0
+  while [ "$i" -lt "$_pick_total" ]; do
+    if [ -n "$current_csv" ] && echo ",${current_csv}," | grep -qF ",${_pick_items[$i]},"; then
+      _pick_checked+=("1")
+    else
+      _pick_checked+=("0")
+    fi
+    i=$((i + 1))
+  done
+
+  _pick_render_fn="_render_native_agents_page"
+  _pick_allow_zero=1
+  _pick_allow_star=1
+  _pick_allow_family_toggle=0
+  _PICK_RESULT=""
+
+  _pick_from_list "$current_csv" "$current_csv"
+
+  # ESC → garder la sélection courante sans message (champ optionnel)
+  if [ "$_PICK_RESULT" = "$current_csv" ]; then
+    PICKED_DISABLED_AGENTS="$current_csv"
+    return
+  fi
+
+  PICKED_DISABLED_AGENTS="$_PICK_RESULT"
+}
+
 ##
 # Met à jour le champ "- Agents :" dans le bloc d'un projet dans projects.md.
 # Pattern identique à _set_project_tracker dans cmd-beads.sh.

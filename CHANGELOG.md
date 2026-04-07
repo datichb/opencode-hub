@@ -11,6 +11,19 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 
 ### Added
 
+- Désactivation des agents natifs OpenCode (`build`, `plan`, `general`, `explore`) :
+  - `config/hub.json` : nouveau champ `opencode.disabled_native_agents` (tableau JSON) —
+    défaut : `["build", "plan"]`
+  - `projects/projects.md` : nouveau champ optionnel `- Disable agents :` (CSV) — surcharge
+    la valeur hub pour un projet donné ; piloté depuis `oc init` via sélecteur interactif
+  - `scripts/adapters/opencode.adapter.sh` : injection automatique de `"disable": true` dans
+    le bloc `"agent":` de `opencode.json` pour chaque agent désactivé (résolution : projet > hub)
+  - `scripts/common.sh` : fonctions `get_hub_disabled_native_agents`, `get_project_disabled_native_agents`, `_set_project_disabled_native_agents`
+  - `scripts/lib/agent-picker.sh` : nouveau picker `_pick_native_agents` + renderer `_render_native_agents_page`
+  - `scripts/cmd-init.sh` : nouvelle question après le sélecteur de cibles — affiche les agents désactivés par le hub, propose de surcharger par projet si opencode est une cible active
+  - `projects/projects.example.md` : champs `Agents`, `Targets` et `Disable agents` documentés dans le bloc FORMAT
+  - `docs/reference/config.md` : `opencode.disabled_native_agents` documenté, exemple `opencode.json` mis à jour, champ `Disable agents` dans la référence `projects.md`
+
 - Commande `oc audit [PROJECT_ID] [--type <type>]` : lance un audit IA sur un projet
   en invoquant l'agent `auditor` (audit global) ou `auditor-<type>` pour un domaine précis
   (`security`, `accessibility`, `architecture`, `ecodesign`, `observability`, `performance`,

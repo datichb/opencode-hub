@@ -200,6 +200,22 @@ JSON
     _ai=$((_ai + 1))
   done
 
+  # Injecter les agents natifs désactivés (projet > hub)
+  # Si le projet a le champ "- Disable agents :" → utiliser la valeur projet
+  # Sinon → utiliser la valeur de hub.json (.opencode.disabled_native_agents)
+  local disabled_csv=""
+  if [ -n "$project_id" ]; then
+    disabled_csv=$(get_project_disabled_native_agents "$project_id")
+  fi
+  if [ -z "$disabled_csv" ]; then
+    disabled_csv=$(get_hub_disabled_native_agents)
+  fi
+  for agent_name in $(echo "$disabled_csv" | tr ',' ' '); do
+    [ -z "$agent_name" ] && continue
+    [ -n "$agent_block" ] && agent_block="${agent_block},"$'\n'
+    agent_block="${agent_block}    \"${agent_name}\": { \"disable\": true }"
+  done
+
   # Régénérer si : fichier absent, clé API à injecter, ou project_id défini
   local should_write=false
   if [ ! -f "$config_file" ]; then
@@ -244,7 +260,9 @@ JSON
         [ "${_agent_modes_vals[$_si]}" != "primary" ] && subagent_count=$((subagent_count + 1))
         _si=$((_si + 1))
       done
-      log_success "[opencode] opencode.json créé (modèle : $model, $subagent_count agent(s) en mode subagent)"
+      local disabled_count=0
+      [ -n "$disabled_csv" ] && disabled_count=$(echo "$disabled_csv" | tr ',' '\n' | grep -v '^$' | wc -l | tr -d ' ')
+      log_success "[opencode] opencode.json créé (modèle : $model, $subagent_count agent(s) en mode subagent, $disabled_count désactivé(s))"
     fi
   else
     log_info "[opencode] opencode.json existant conservé"

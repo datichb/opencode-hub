@@ -20,7 +20,8 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
     "model": ""
   },
   "opencode": {
-    "model": "claude-sonnet-4-5"
+    "model": "claude-sonnet-4-5",
+    "disabled_native_agents": ["build", "plan"]
   },
   "vscode": {
     "global_skills": [
@@ -44,6 +45,7 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
 | `default_provider.base_url` | string | `""` | URL de base customisée (optionnel pour litellm et autres) |
 | `default_provider.model` | string | `""` | Modèle IA par défaut pour ce provider (si vide : fallback à `opencode.model`) |
 | `opencode.model` | string | — | Modèle IA injecté dans `opencode.json` des projets déployés (si `default_provider.model` est vide) |
+| `opencode.disabled_native_agents` | array | `[]` | Agents natifs OpenCode désactivés par défaut (`build`, `plan`, `general`, `explore`) — surchargeables par projet via `- Disable agents :` dans `projects.md` |
 | `vscode.global_skills` | array | `[]` | Skills injectés dans `copilot-instructions.md` (partagés par tous les agents VS Code) |
 
 ### Cibles disponibles
@@ -138,6 +140,7 @@ le sien. Créé automatiquement depuis `projects/projects.example.md` au premier
 - Agents : all            # optionnel — all (défaut) ou liste CSV d'agent-ids
 - Targets : opencode,vscode  # optionnel — override de active_targets du hub.json
 - Modes : agent-id:mode,agent-id:mode  # optionnel — override des modes primary/subagent par agent
+- Disable agents : plan,build  # optionnel — surcharge hub.json pour ce projet
 ```
 
 ### Exemple
@@ -170,6 +173,7 @@ le sien. Créé automatiquement depuis `projects/projects.example.md` au premier
 - `Agents` : optionnel — `all` ou CSV d'identifiants d'agents — filtré au déploiement
 - `Targets` : optionnel — CSV de cibles (`opencode`, `claude-code`, `vscode`) — surcharge `active_targets` de `hub.json`
 - `Modes` : optionnel — CSV de paires `agent-id:mode` — surcharge le frontmatter des agents. Modes : `primary`, `subagent`. Laisser vide pour revenir aux valeurs frontmatter.
+- `Disable agents` : optionnel — CSV d'agents natifs OpenCode à désactiver (`build`, `plan`, `general`, `explore`) — surcharge `opencode.disabled_native_agents` de `hub.json`. Vide = utiliser le défaut hub.
 - Ce fichier est **local** — ne jamais le committer
 
 ---
@@ -370,14 +374,19 @@ défini (pour retirer un ancien bloc provider), ou si le fichier est absent** ; 
   "model": "claude-sonnet-4-5",
   "agent": {
     "auditor-security": { "mode": "subagent" },
-    "developer-backend": { "mode": "subagent" }
+    "developer-backend": { "mode": "subagent" },
+    "build": { "disable": true },
+    "plan": { "disable": true }
   }
 }
 ```
 
-Le bloc `"agent":` liste uniquement les agents dont le mode effectif est `subagent`.
-Les agents `primary` sont absents — OpenCode les considère visibles par défaut.
-Si tous les agents sont `primary`, le bloc `"agent":` est omis.
+Le bloc `"agent":` liste :
+- les agents dont le mode effectif est `subagent`
+- les agents natifs OpenCode désactivés (`"disable": true`) — définis dans `hub.json → opencode.disabled_native_agents` et surchargeables par projet dans `projects.md` via `- Disable agents :`
+
+Les agents `primary` non désactivés sont absents — OpenCode les considère visibles par défaut.
+Si aucun agent n'a de configuration spéciale, le bloc `"agent":` est omis.
 
 ### Contenu avec clé Anthropic
 
