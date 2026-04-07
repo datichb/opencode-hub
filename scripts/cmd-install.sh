@@ -49,73 +49,7 @@ esac
 
 echo ""
 
-# ── Configurer le provider par défaut ───────────────────
-log_title "Configuration du provider LLM"
-echo ""
-echo "  1. Anthropic (défaut)"
-echo "  2. MammouthAI"
-echo "  3. GitHub Models"
-echo "  4. AWS Bedrock"
-echo "  5. Ollama"
-echo "  6. Ignorer (configurer plus tard)"
-echo ""
-read -rp "Choisir (1-6, défaut: 1) : " provider_choice
-provider_choice="${provider_choice:-1}"
-
-provider_name=""
-case "$provider_choice" in
-  2) provider_name="mammouth" ;;
-  3) provider_name="github-models" ;;
-  4) provider_name="bedrock" ;;
-  5) provider_name="ollama" ;;
-  6) provider_name="" ;; # Ignorer
-  *) provider_name="anthropic" ;;
-esac
-
-if [ -n "$provider_name" ]; then
-  if [ "$provider_name" != "anthropic" ] && [ "$provider_name" != "ollama" ]; then
-    # Demander la clé API pour les providers qui en requirent une
-    read -rsp "Entrer la clé API pour $provider_name (ou laisser vide pour sauter) : " provider_api_key
-    echo ""
-  elif [ "$provider_name" = "ollama" ]; then
-    # Pour ollama, demander l'URL de base (optionnel, a un défaut)
-    read -rp "Entrer l'URL de base pour Ollama (défaut: http://localhost:11434/v1) : " provider_base_url
-    provider_base_url="${provider_base_url:-http://localhost:11434/v1}"
-    provider_api_key="ollama"  # Ollama n'a pas besoin de clé, mais on met une valeur pour indiquer qu'il est configuré
-  else
-    # Anthropic
-    read -rsp "Entrer la clé API Anthropic (ou laisser vide pour sauter) : " provider_api_key
-    echo ""
-  fi
-  
-  # Si une clé API a été fournie (ou pour ollama qui a une valeur par défaut), la sauvegarder dans hub.json
-  if [ -n "${provider_api_key:-}" ]; then
-    # Lire hub.json actuel
-    if [ -f "$HUB_DIR/config/hub.json" ]; then
-      hub_json=$(cat "$HUB_DIR/config/hub.json")
-      # Mettre à jour default_provider
-      hub_json=$(echo "$hub_json" | jq --arg pname "$provider_name" --arg pkey "${provider_api_key}" \
-        '.default_provider.name = $pname | .default_provider.api_key = $pkey')
-      
-      # Si une base_url est définie, l'ajouter
-      if [ -n "${provider_base_url:-}" ]; then
-        hub_json=$(echo "$hub_json" | jq --arg burl "$provider_base_url" \
-          '.default_provider.base_url = $burl')
-      fi
-      
-      echo "$hub_json" > "$HUB_DIR/config/hub.json"
-      log_success "Provider configuré : $provider_name"
-      
-      # Ajouter hub.json au .gitignore s'il contient une clé API
-      if [ ! -f "$HUB_DIR/.gitignore" ] || ! grep -qx "config/hub.json" "$HUB_DIR/.gitignore"; then
-        echo "config/hub.json" >> "$HUB_DIR/.gitignore"
-        log_info "config/hub.json ajouté au .gitignore"
-      fi
-    fi
-  fi
-fi
-
-echo ""
+# ── Vérifier si une cible requiert Node.js ───────────────────────────────────
 needs_node=false
 for target in "${active_targets[@]}"; do
   load_adapter "$target"
@@ -170,8 +104,115 @@ if [ "$_write_hub_json" = true ]; then
   }
 }
 HUBJSON
-  log_success "config/hub.json mis à jour (cibles : ${active_targets[*]})"
+  log_success "config/hub.json créé (cibles : ${active_targets[*]})"
 fi
+
+# ── Fournisseur LLM par défaut ────────────────────────────────────────────────
+# Cette section s'exécute APRÈS l'écriture de hub.json pour ne pas être écrasée
+log_title "Fournisseur LLM"
+echo ""
+log_info "Quel fournisseur d'IA utiliser pour tous vos projets ?"
+echo ""
+
+# Construire le menu dynamiquement depuis providers.json
+_provider_names=()
+if [ -f "$PROVIDERS_FILE" ] && command -v jq &>/dev/null; then
+  while IFS= read -r pname; do
+    _provider_names+=("$pname")
+  done < <(jq -r '.providers | keys[]' "$PROVIDERS_FILE")
+fi
+
+_provider_count="${#_provider_names[@]}"
+if [ "$_provider_count" -gt 0 ]; then
+  _i=1
+  for pname in "${_provider_names[@]}"; do
+    _label=$(get_provider_info "$pname" "label")
+    if [ "$_i" -eq 1 ]; then
+      printf "  %d. %s (recommandé)\n" "$_i" "$_label"
+    else
+      printf "  %d. %s\n" "$_i" "$_label"
+    fi
+    _i=$((_i + 1))
+  done
+  printf "  %d. Ignorer (configurer plus tard via ./oc.sh provider set-default)\n" "$((_provider_count + 1))"
+  echo ""
+  read -rp "Choisir (1-$((_provider_count + 1)), défaut: 1) : " _provider_choice
+  _provider_choice="${_provider_choice:-1}"
+else
+  # Fallback sans providers.json : menu statique
+  echo "  1. Anthropic (recommandé)"
+  echo "  2. MammouthAI"
+  echo "  3. GitHub Models"
+  echo "  4. AWS Bedrock"
+  echo "  5. Ollama (local)"
+  echo "  6. Ignorer (configurer plus tard via ./oc.sh provider set-default)"
+  echo ""
+  read -rp "Choisir (1-6, défaut: 1) : " _provider_choice
+  _provider_choice="${_provider_choice:-1}"
+  _provider_names=("anthropic" "mammouth" "github-models" "bedrock" "ollama")
+  _provider_count=5
+fi
+
+# Résoudre le fournisseur sélectionné
+_selected_provider=""
+if [[ "$_provider_choice" =~ ^[0-9]+$ ]] && [ "$_provider_choice" -ge 1 ] && [ "$_provider_choice" -le "$_provider_count" ]; then
+  _selected_provider="${_provider_names[$((_provider_choice - 1))]}"
+fi
+# Si choix hors plage ou "Ignorer", _selected_provider reste vide
+
+if [ -n "$_selected_provider" ]; then
+  _selected_label=$(get_provider_info "$_selected_provider" "label" 2>/dev/null || echo "$_selected_provider")
+  _requires_api_key=$(get_provider_info "$_selected_provider" "requires_api_key" 2>/dev/null || echo "true")
+  _default_base_url=$(get_provider_info "$_selected_provider" "default_base_url" 2>/dev/null || echo "")
+  _requires_base_url=$(get_provider_info "$_selected_provider" "requires_base_url" 2>/dev/null || echo "false")
+
+  echo ""
+  _provider_api_key=""
+  _provider_base_url="$_default_base_url"
+
+  if [ "$_requires_api_key" = "true" ]; then
+    trap 'stty echo 2>/dev/null; echo ""; exit 130' INT TERM
+    read -rsp "  Clé API ${_selected_label} (laisser vide pour ignorer) : " _provider_api_key
+    stty echo 2>/dev/null
+    trap - INT TERM
+    echo ""
+  fi
+
+  if [ "$_requires_base_url" = "true" ] && [ -n "$_default_base_url" ]; then
+    read -rp "  URL de base [${_default_base_url}] : " _input_base_url
+    _provider_base_url="${_input_base_url:-$_default_base_url}"
+  fi
+
+  # Écrire dans hub.json seulement si une clé est fournie (ou si ollama, pas besoin de clé)
+  _should_save=false
+  [ -n "$_provider_api_key" ] && _should_save=true
+  [ "$_requires_api_key" = "false" ] && _should_save=true
+
+  if [ "$_should_save" = "true" ] && [ -f "$HUB_DIR/config/hub.json" ]; then
+    _hub_json=$(jq \
+      --arg name "$_selected_provider" \
+      --arg key  "$_provider_api_key" \
+      --arg url  "$_provider_base_url" \
+      '.default_provider.name = $name | .default_provider.api_key = $key | .default_provider.base_url = $url' \
+      "$HUB_DIR/config/hub.json")
+    echo "$_hub_json" > "$HUB_DIR/config/hub.json"
+
+    # Protéger hub.json si clé présente
+    if [ -n "$_provider_api_key" ]; then
+      if [ ! -f "$HUB_DIR/.gitignore" ] || ! grep -qx "config/hub.json" "$HUB_DIR/.gitignore"; then
+        echo "config/hub.json" >> "$HUB_DIR/.gitignore"
+      fi
+    fi
+
+    log_success "Fournisseur configuré : ${_selected_label}"
+  else
+    log_info "Fournisseur non configuré — utiliser : ./oc.sh provider set-default"
+  fi
+else
+  log_info "Fournisseur non configuré — utiliser : ./oc.sh provider set-default"
+fi
+
+echo ""
 
 # ── Installer chaque cible sélectionnée ──
 for target in "${active_targets[@]}"; do

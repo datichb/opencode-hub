@@ -258,48 +258,98 @@ else
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ÉTAPE 4 — Configuration du provider (optionnel)
+# ÉTAPE 4 — Fournisseur LLM (optionnel, surcharge le hub)
 # ─────────────────────────────────────────────────────────────────────────────
-_step 4 5 "Configuration du provider LLM (optionnel)"
+_step 4 5 "Fournisseur LLM"
 
-_prompt setup_provider "Configurer un provider LLM spécifique pour ce projet ? [y/N] : "
+# Afficher le fournisseur actuel du hub comme contexte
+_hub_provider_name=$(get_hub_default_provider 2>/dev/null || echo "")
+_hub_provider_label=""
+if [ -n "$_hub_provider_name" ]; then
+  _hub_provider_label=$(get_provider_info "$_hub_provider_name" "label" 2>/dev/null || echo "$_hub_provider_name")
+fi
+
+if [ -n "$_hub_provider_label" ]; then
+  echo -e "  Fournisseur par défaut du hub : ${BOLD}${_hub_provider_label}${RESET}"
+else
+  echo -e "  ${DIM}Aucun fournisseur configuré au niveau hub${RESET}"
+fi
+echo ""
+
+_prompt setup_provider "Utiliser un fournisseur différent pour ce projet ? [y/N] : "
 if [[ "$setup_provider" =~ ^[Yy]$ ]]; then
   echo ""
-  echo "  1. Anthropic"
-  echo "  2. MammouthAI"
-  echo "  3. GitHub Models"
-  echo "  4. AWS Bedrock"
-  echo "  5. Ollama"
-  echo "  6. Ignorer"
+
+  # Menu dynamique depuis providers.json
+  _init_provider_names=()
+  if [ -f "$PROVIDERS_FILE" ] && command -v jq &>/dev/null; then
+    while IFS= read -r pname; do
+      _init_provider_names+=("$pname")
+    done < <(jq -r '.providers | keys[]' "$PROVIDERS_FILE")
+  else
+    _init_provider_names=("anthropic" "mammouth" "github-models" "bedrock" "ollama")
+  fi
+
+  _pi=1
+  for pname in "${_init_provider_names[@]}"; do
+    _plabel=$(get_provider_info "$pname" "label" 2>/dev/null || echo "$pname")
+    printf "  %d. %s\n" "$_pi" "$_plabel"
+    _pi=$((_pi + 1))
+  done
   echo ""
-  _prompt project_provider_choice "Choisir (1-6, défaut: 6) : "
-  project_provider_choice="${project_provider_choice:-6}"
-  
-  project_provider_name=""
-  case "$project_provider_choice" in
-    1) project_provider_name="anthropic" ;;
-    2) project_provider_name="mammouth" ;;
-    3) project_provider_name="github-models" ;;
-    4) project_provider_name="bedrock" ;;
-    5) project_provider_name="ollama" ;;
-    *) project_provider_name="" ;;
-  esac
-  
-  if [ -n "$project_provider_name" ]; then
-    if [ "$project_provider_name" != "ollama" ]; then
-      _prompt project_provider_api_key "Clé API pour $project_provider_name (ou laisser vide pour ignorer) : "
+
+  _prompt _proj_choice "Choisir (1-${#_init_provider_names[@]}) : "
+
+  _proj_provider=""
+  if [[ "$_proj_choice" =~ ^[0-9]+$ ]] && [ "$_proj_choice" -ge 1 ] && [ "$_proj_choice" -le "${#_init_provider_names[@]}" ]; then
+    _proj_provider="${_init_provider_names[$((_proj_choice - 1))]}"
+  fi
+
+  if [ -n "$_proj_provider" ]; then
+    _proj_label=$(get_provider_info "$_proj_provider" "label" 2>/dev/null || echo "$_proj_provider")
+    _proj_requires_key=$(get_provider_info "$_proj_provider" "requires_api_key" 2>/dev/null || echo "true")
+    _proj_default_url=$(get_provider_info "$_proj_provider" "default_base_url" 2>/dev/null || echo "")
+    _proj_requires_url=$(get_provider_info "$_proj_provider" "requires_base_url" 2>/dev/null || echo "false")
+
+    _proj_api_key=""
+    _proj_base_url="$_proj_default_url"
+
+    if [ "$_proj_requires_key" = "true" ]; then
+      echo ""
+      trap 'stty echo 2>/dev/null; echo ""; exit 130' INT TERM
+      read -rsp "  Clé API ${_proj_label} (laisser vide pour ignorer) : " _proj_api_key
+      stty echo 2>/dev/null
+      trap - INT TERM
+      echo ""
+    fi
+
+    if [ "$_proj_requires_url" = "true" ] && [ -n "$_proj_default_url" ]; then
+      echo ""
+      _prompt _proj_url_input "  URL de base [${_proj_default_url}] : "
+      _proj_base_url="${_proj_url_input:-$_proj_default_url}"
+    fi
+
+    _proj_should_save=false
+    [ -n "$_proj_api_key" ] && _proj_should_save=true
+    [ "$_proj_requires_key" = "false" ] && _proj_should_save=true
+
+    if [ "$_proj_should_save" = "true" ]; then
+      bash "$SCRIPTS_DIR/cmd-provider.sh" set "$PROJECT_ID" \
+        "$_proj_provider" "${_proj_api_key}" "${_proj_base_url}" 2>/dev/null \
+        && log_success "Fournisseur configuré pour ${PROJECT_ID} : ${_proj_label}" \
+        || log_warn "Impossible de configurer le fournisseur — réessayer : ./oc.sh provider set ${PROJECT_ID}"
     else
-      _prompt project_provider_base_url "URL de base pour Ollama (défaut: http://localhost:11434/v1) : "
-      project_provider_base_url="${project_provider_base_url:-http://localhost:11434/v1}"
-      project_provider_api_key="dummy"  # Ollama n'a pas besoin de clé réelle
+      log_info "Fournisseur non configuré — le hub sera utilisé par défaut"
     fi
-    
-    if [ -n "${project_provider_api_key:-}" ]; then
-      bash "$SCRIPTS_DIR/cmd-provider.sh" set "$PROJECT_ID" "$project_provider_name" "${project_provider_api_key}" "${project_provider_base_url:-}" 2>/dev/null || log_warn "Impossible de configurer le provider pour ce projet"
-    fi
+  else
+    log_info "Fournisseur non configuré — le hub sera utilisé par défaut"
   fi
 else
-  log_info "Provider du hub sera utilisé par défaut"
+  if [ -n "$_hub_provider_label" ]; then
+    log_info "Fournisseur du hub utilisé : ${_hub_provider_label}"
+  else
+    log_info "Fournisseur non configuré — utiliser : ./oc.sh provider set-default"
+  fi
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
