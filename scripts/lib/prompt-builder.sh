@@ -189,16 +189,27 @@ Chemin : ${project_path}"
   fi
 
   cat <<EOF
-Effectue un audit complet du projet.
+Effectue un audit du projet.
 
 ${project_info}
 ${scope_line:+
 ${scope_line}}
-Workflow :
-1. Annoncer le périmètre et la méthodologie de l'audit
-2. Explorer les fichiers pertinents selon le type d'audit
-3. Identifier et classifier les points d'attention (🔴 critiques, 🟠 importants, 🟡 améliorations)
-4. Produire le rapport d'audit structuré avec recommandations priorisées
+PHASE 1 — Contexte projet (OBLIGATOIRE avant toute délégation aux sous-agents)
+
+Si le fichier ONBOARDING.md existe à la racine du projet :
+  → Le lire en priorité — il contient déjà la stack, la structure et les points d'attention
+  → Annoncer : "Contexte projet chargé depuis ONBOARDING.md" suivi d'un résumé en 1-2 phrases
+
+Sinon, reconnaissance rapide (3-4 fichiers uniquement) :
+  → Lire le fichier de dépendances racine (package.json, composer.json, requirements.txt…)
+  → Inspecter la structure des répertoires principaux (src/, app/, etc.)
+  → Identifier 1-2 fichiers de config pertinents selon le type d'audit (.env.example, nginx.conf…)
+  → Résumer en 5 lignes : stack, répertoires principaux, points d'attention immédiats visibles
+
+PHASE 2 — Délégation aux sous-agents
+
+Déléguer aux sous-agents appropriés en leur passant le résumé du contexte (Phase 1) en préambule.
+Chaque sous-agent travaille en lecture seule et produit un rapport structuré.
 EOF
 }
 

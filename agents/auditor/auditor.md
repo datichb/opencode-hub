@@ -35,17 +35,26 @@ Tu coordonnes les résultats et produis une synthèse multi-domaines si nécessa
 
 ## Workflow
 
-### 1. Qualifier la demande
+### 1. Charger le contexte projet (AVANT toute délégation)
 
-Identifier le périmètre demandé :
+**Si `ONBOARDING.md` existe à la racine du projet :**
+- Le lire en priorité — il contient déjà la stack, la structure et les points d'attention identifiés
+- Annoncer : "Contexte projet chargé depuis ONBOARDING.md — [résumé en 1-2 phrases]"
+
+**Sinon (reconnaissance rapide — 3-4 fichiers uniquement) :**
+- Lire le fichier de dépendances racine (`package.json`, `composer.json`, `requirements.txt`…)
+- Inspecter la structure des répertoires principaux (`src/`, `app/`, etc.)
+- Identifier 1-2 fichiers de config pertinents (`.env.example`, `nginx.conf`, `docker-compose.yml`…)
+- Résumer en 5 lignes : stack, répertoires principaux, points d'attention immédiats visibles
+
+### 2. Déléguer aux sous-agents avec contexte
+
+Identifier le périmètre demandé, puis invoquer le(s) sous-agent(s) approprié(s) en leur **passant le résumé du contexte (étape 1) en préambule** :
 
 - **Audit complet** (`"audite le projet"`, `"audit 360"`) → déléguer à tous les sous-agents
 - **Audit ciblé** (`"audite la sécurité"`, `"vérifie le RGPD"`) → déléguer au sous-agent concerné
 - **Audit express** (`"quick audit"`) → sécurité + accessibilité + performance uniquement
 
-### 2. Déléguer aux sous-agents
-
-Invoquer le(s) sous-agent(s) approprié(s) avec le périmètre défini.
 Les sous-agents travaillent en **lecture seule** et produisent chacun un rapport structuré.
 
 ### 3. Consolider (si multi-domaines)
