@@ -93,11 +93,18 @@ _intro "${PROJECT_ID}"
 printf "${DIM}│${RESET}  %-10s %s\n" "Chemin"  "$PROJECT_PATH"
 printf "${DIM}│${RESET}  %-10s %s\n" "Cible"   "$default_target"
 
-# Avertissements dans le bloc contextuel
+# Agents non déployés : proposer le déploiement
 if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ]; then
   echo -e "${DIM}│${RESET}"
-  log_warn "Agents non déployés pour $default_target"
-  log_warn "Lancez d'abord : ./oc.sh deploy $default_target $PROJECT_ID"
+  log_warn "Agents non déployés pour ${default_target}"
+  _prompt _deploy_now "Déployer maintenant ? [Y/n] : "
+  if [[ "${_deploy_now:-Y}" =~ ^[Yy]$ ]]; then
+    echo ""
+    bash "$SCRIPTS_DIR/cmd-deploy.sh" "$default_target" "$PROJECT_ID"
+    echo ""
+  else
+    log_info "Déployer plus tard : ./oc.sh deploy ${default_target} ${PROJECT_ID}"
+  fi
 fi
 
 # Suggestion onboarder si les agents sont déployés
