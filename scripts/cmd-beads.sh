@@ -155,8 +155,9 @@ cmd_init() {
   (cd "$path" && bd init) || { log_error "Échec de bd init"; exit 1; }
   log_success "Beads initialisé dans $id ($path/.beads)"
 
-  # Proposer de configurer l'upstream git si absent
-  if ! (cd "$path" && git remote get-url upstream) &>/dev/null; then
+  # Proposer de configurer l'upstream git si absent (ni upstream ni origin trouvé)
+  if ! (cd "$path" && git remote get-url upstream) &>/dev/null && \
+     ! (cd "$path" && git remote get-url origin) &>/dev/null; then
     echo ""
     read -rp "  Configurer l'upstream Git (git remote add upstream) ? [Y/n] : " _setup_upstream
     if [[ "${_setup_upstream:-Y}" =~ ^[Yy]$ ]]; then

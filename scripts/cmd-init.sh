@@ -22,6 +22,7 @@ _step() {
 # ── Récapitulatif final ────────────────────────────────────────────────────────
 _summary() {
   local id="$1" path="$2" name="$3" stack="$4" tracker="$5" beads_ok="$6"
+  local git_remote="$7" agents="$8" targets="$9" provider="${10}" deployed="${11}"
   local width=54
   local bar=""
   local i=0
@@ -31,17 +32,24 @@ _summary() {
 
   echo ""
   echo -e "${GREEN}┌─ ${BOLD}${id} initialisé${RESET}${GREEN} ${bar:0:${top_pad}}┐${RESET}"
-  printf "${GREEN}│${RESET}  %-12s %-38s ${GREEN}│${RESET}\n" "Chemin"  "${path:0:38}"
-  [ -n "$name"  ] && printf "${GREEN}│${RESET}  %-12s %-38s ${GREEN}│${RESET}\n" "Nom"    "${name:0:38}"
-  [ -n "$stack" ] && printf "${GREEN}│${RESET}  %-12s %-38s ${GREEN}│${RESET}\n" "Stack"  "${stack:0:38}"
-  printf "${GREEN}│${RESET}  %-12s %-38s ${GREEN}│${RESET}\n" "Tracker" "${tracker}"
+  printf "${GREEN}│${RESET}  %-14s %-36s ${GREEN}│${RESET}\n" "Chemin"    "${path:0:36}"
+  [ -n "$name"  ] && printf "${GREEN}│${RESET}  %-14s %-36s ${GREEN}│${RESET}\n" "Nom"       "${name:0:36}"
+  [ -n "$stack" ] && printf "${GREEN}│${RESET}  %-14s %-36s ${GREEN}│${RESET}\n" "Stack"     "${stack:0:36}"
+  printf "${GREEN}│${RESET}  %-14s %-36s ${GREEN}│${RESET}\n" "Tracker"   "${tracker}"
   if [ "$beads_ok" = "1" ]; then
-    printf "${GREEN}│${RESET}  %-12s %-38s ${GREEN}│${RESET}\n" "Beads" "◆ initialisé"
+    printf "${GREEN}│${RESET}  %-14s %-36s ${GREEN}│${RESET}\n" "Beads"   "◆ initialisé"
   else
-    printf "${GREEN}│${RESET}  %-12s %-38s ${GREEN}│${RESET}\n" "Beads" "non initialisé  (./oc.sh beads init ${id})"
+    printf "${GREEN}│${RESET}  %-14s %-36s ${GREEN}│${RESET}\n" "Beads"   "non initialisé  (oc beads init ${id})"
   fi
+  [ -n "$git_remote" ] && printf "${GREEN}│${RESET}  %-14s %-36s ${GREEN}│${RESET}\n" "Git remote"  "${git_remote:0:36}"
+  [ -n "$agents"     ] && printf "${GREEN}│${RESET}  %-14s %-36s ${GREEN}│${RESET}\n" "Agents"      "${agents:0:36}"
+  [ -n "$targets"    ] && printf "${GREEN}│${RESET}  %-14s %-36s ${GREEN}│${RESET}\n" "Cibles"      "${targets:0:36}"
+  [ -n "$provider"   ] && printf "${GREEN}│${RESET}  %-14s %-36s ${GREEN}│${RESET}\n" "Provider"    "${provider:0:36}"
+  [ -n "$deployed"   ] && printf "${GREEN}│${RESET}  %-14s %-36s ${GREEN}│${RESET}\n" "Déployé"     "${deployed}"
   echo -e "${GREEN}│${RESET}"
   printf "${GREEN}│${RESET}  %-52s ${GREEN}│${RESET}\n" "Prochain → ./oc.sh start ${id}"
+  [ "$deployed" != "oui" ] && \
+  printf "${GREEN}│${RESET}  %-52s ${GREEN}│${RESET}\n" "Déployer  → ./oc.sh deploy all ${id}"
   echo -e "${GREEN}└─${bar}┘${RESET}"
 }
 
@@ -65,6 +73,7 @@ if ! echo "$PROJECT_ID" | grep -qE '^[A-Z0-9_-]+$'; then
   log_info  "Caractères autorisés : lettres, chiffres, tirets (-) et underscores (_). Pas d'espaces ni de slashes."
   exit 1
 fi
+log_info "ID projet : ${BOLD}${PROJECT_ID}${RESET}"
 
 if [ -z "$PROJECT_PATH" ]; then
   _prompt PROJECT_PATH "Chemin local (ex: ~/workspace/mon-app) : "
@@ -72,6 +81,7 @@ fi
 
 # Expand ~ manuellement
 PROJECT_PATH="${PROJECT_PATH/#\~/$HOME}"
+log_info "Chemin : ${BOLD}${PROJECT_PATH}${RESET}"
 
 if project_exists "$PROJECT_ID"; then
   log_warn "Le projet $PROJECT_ID existe déjà dans le registre"
@@ -83,6 +93,9 @@ else
   _prompt PROJECT_NAME   "Nom complet : "
   _prompt PROJECT_STACK  "Stack (ex: Vue 3 + Laravel) : "
   _prompt PROJECT_LABELS "Labels Beads (ex: feature,fix,front,back) : "
+  log_info "Nom : ${BOLD}${PROJECT_NAME:-$PROJECT_ID}${RESET}"
+  [ -n "$PROJECT_STACK" ]  && log_info "Stack : ${BOLD}${PROJECT_STACK}${RESET}"
+  [ -n "$PROJECT_LABELS" ] && log_info "Labels : ${BOLD}${PROJECT_LABELS}${RESET}"
 
   echo -e "${DIM}│${RESET}"
   echo -e "  ${BOLD}Tracker externe (optionnel) :${RESET}"
@@ -96,6 +109,7 @@ else
     3) PROJECT_TRACKER="gitlab" ;;
     *)  PROJECT_TRACKER="none" ;;
   esac
+  log_info "Tracker : ${BOLD}${PROJECT_TRACKER}${RESET}"
 
   # Ajouter dans projects.md
   cat >> "$PROJECTS_FILE" <<EOF
@@ -135,6 +149,7 @@ fi
 _step 2 4 "Beads & tracker"
 
 BEADS_OK=0
+GIT_REMOTE_STATUS=""
 
 # Vérifier que bd est disponible
 if ! command -v bd &>/dev/null; then
@@ -163,8 +178,9 @@ if command -v bd &>/dev/null && [ -d "$PROJECT_PATH" ] && [ ! -d "$PROJECT_PATH/
       log_success "Beads initialisé dans $PROJECT_PATH"
       BEADS_OK=1
 
-      # Proposer de configurer l'upstream git si absent
-      if ! (cd "$PROJECT_PATH" && git remote get-url upstream) &>/dev/null; then
+      # Proposer de configurer l'upstream git si absent (ni upstream ni origin trouvé)
+      if ! (cd "$PROJECT_PATH" && git remote get-url upstream) &>/dev/null && \
+         ! (cd "$PROJECT_PATH" && git remote get-url origin) &>/dev/null; then
         echo ""
         _prompt _setup_upstream "Configurer l'upstream Git (git remote add upstream) ? [Y/n] : "
         if [[ "${_setup_upstream:-Y}" =~ ^[Yy]$ ]]; then
@@ -172,14 +188,24 @@ if command -v bd &>/dev/null && [ -d "$PROJECT_PATH" ] && [ ! -d "$PROJECT_PATH/
           if [ -n "$_upstream_url" ]; then
             if (cd "$PROJECT_PATH" && git remote add upstream "$_upstream_url"); then
               log_success "Remote upstream configuré : $_upstream_url"
+              GIT_REMOTE_STATUS="upstream ajouté ($_upstream_url)"
             else
               log_warn "Échec de la configuration upstream — configurer manuellement"
+              GIT_REMOTE_STATUS="échec de configuration"
             fi
           else
             log_warn "URL vide — configurer plus tard : git remote add upstream <url>"
+            GIT_REMOTE_STATUS="non configuré"
           fi
         else
           log_info "Configurer plus tard : git remote add upstream <url>"
+          GIT_REMOTE_STATUS="ignoré"
+        fi
+      else
+        if (cd "$PROJECT_PATH" && git remote get-url upstream) &>/dev/null; then
+          GIT_REMOTE_STATUS="upstream (existant)"
+        else
+          GIT_REMOTE_STATUS="origin (existant)"
         fi
       fi
 
@@ -227,6 +253,7 @@ fi
 _step 3 4 "Agents & cibles"
 
 _prompt select_agents "Sélectionner les agents à déployer ? [y/N] : "
+AGENTS_SUMMARY=""
 if [[ "$select_agents" =~ ^[Yy]$ ]]; then
   PICKED_AGENTS=""
   _pick_agents "all"
@@ -234,15 +261,19 @@ if [[ "$select_agents" =~ ^[Yy]$ ]]; then
     _set_project_agents "$PROJECT_ID" "$PICKED_AGENTS"
     _agent_count=$(echo "$PICKED_AGENTS" | tr ',' '\n' | wc -l | tr -d ' ')
     log_success "$_agent_count agent(s) sélectionné(s) pour $PROJECT_ID"
+    AGENTS_SUMMARY="${_agent_count} sélectionné(s)"
   else
     log_info "Tous les agents seront déployés (par défaut)"
+    AGENTS_SUMMARY="tous (par défaut)"
   fi
 else
   log_info "Tous les agents seront déployés (par défaut)"
+  AGENTS_SUMMARY="tous (par défaut)"
 fi
 
 echo ""
 _prompt select_targets "Sélectionner les cibles de déploiement ? [y/N] : "
+TARGETS_SUMMARY=""
 if [[ "$select_targets" =~ ^[Yy]$ ]]; then
   PICKED_TARGETS=""
   _pick_project_targets "all"
@@ -250,11 +281,14 @@ if [[ "$select_targets" =~ ^[Yy]$ ]]; then
     _set_project_targets "$PROJECT_ID" "$PICKED_TARGETS"
     _target_count=$(echo "$PICKED_TARGETS" | tr ',' '\n' | grep -v '^$' | wc -l | tr -d ' ')
     log_success "$_target_count cible(s) sélectionnée(s) pour $PROJECT_ID"
+    TARGETS_SUMMARY="${PICKED_TARGETS}"
   else
     log_info "Toutes les cibles actives seront utilisées (par défaut)"
+    TARGETS_SUMMARY="toutes (par défaut)"
   fi
 else
   log_info "Toutes les cibles actives seront utilisées (par défaut)"
+  TARGETS_SUMMARY="toutes (par défaut)"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -277,6 +311,7 @@ fi
 echo ""
 
 _prompt setup_provider "Utiliser un fournisseur différent pour ce projet ? [y/N] : "
+PROVIDER_SUMMARY=""
 if [[ "$setup_provider" =~ ^[Yy]$ ]]; then
   echo ""
 
@@ -337,18 +372,23 @@ if [[ "$setup_provider" =~ ^[Yy]$ ]]; then
       bash "$SCRIPTS_DIR/cmd-provider.sh" set "$PROJECT_ID" \
         "$_proj_provider" "${_proj_api_key}" "${_proj_base_url}" 2>/dev/null \
         && log_success "Fournisseur configuré pour ${PROJECT_ID} : ${_proj_label}" \
-        || log_warn "Impossible de configurer le fournisseur — réessayer : ./oc.sh provider set ${PROJECT_ID}"
+        && PROVIDER_SUMMARY="${_proj_label} (projet)" \
+        || { log_warn "Impossible de configurer le fournisseur — réessayer : ./oc.sh provider set ${PROJECT_ID}"; PROVIDER_SUMMARY="erreur de configuration"; }
     else
       log_info "Fournisseur non configuré — le hub sera utilisé par défaut"
+      PROVIDER_SUMMARY="${_hub_provider_label:-hub par défaut}"
     fi
   else
     log_info "Fournisseur non configuré — le hub sera utilisé par défaut"
+    PROVIDER_SUMMARY="${_hub_provider_label:-hub par défaut}"
   fi
 else
   if [ -n "$_hub_provider_label" ]; then
     log_info "Fournisseur du hub utilisé : ${_hub_provider_label}"
+    PROVIDER_SUMMARY="${_hub_provider_label} (depuis le hub)"
   else
     log_info "Fournisseur non configuré — utiliser : ./oc.sh provider set-default"
+    PROVIDER_SUMMARY="non configuré"
   fi
 fi
 
@@ -359,13 +399,16 @@ _step 5 5 "Déploiement"
 
 if [ -d "$PROJECT_PATH" ]; then
   _prompt deploy_now "Déployer les agents maintenant ? [Y/n] : "
+  DEPLOYED="non"
   if [[ "${deploy_now:-Y}" =~ ^[Yy]$ ]]; then
     bash "$SCRIPTS_DIR/cmd-deploy.sh" all "$PROJECT_ID"
+    DEPLOYED="oui"
   else
     log_info "Déployer plus tard : ./oc.sh deploy all $PROJECT_ID"
   fi
 else
   log_warn "Déploiement impossible — dossier $PROJECT_PATH introuvable"
+  DEPLOYED="impossible (dossier absent)"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -377,5 +420,10 @@ _summary \
   "${PROJECT_NAME:-}" \
   "${PROJECT_STACK:-}" \
   "${PROJECT_TRACKER:-none}" \
-  "$BEADS_OK"
+  "$BEADS_OK" \
+  "${GIT_REMOTE_STATUS:-}" \
+  "${AGENTS_SUMMARY:-}" \
+  "${TARGETS_SUMMARY:-}" \
+  "${PROVIDER_SUMMARY:-}" \
+  "${DEPLOYED:-}"
 _outro "Projet ${PROJECT_ID} prêt — ./oc.sh start ${PROJECT_ID}"
