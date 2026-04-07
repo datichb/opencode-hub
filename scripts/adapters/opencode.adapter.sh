@@ -276,5 +276,9 @@ adapter_start() {
   local args=()
   [ -n "$agent"  ] && args+=(--agent "$agent")
   [ -n "$prompt" ] && args+=(--prompt "$prompt")
-  exec opencode "${args[@]}"
+  if [ ${#args[@]} -gt 0 ]; then
+    exec opencode "${args[@]}"
+  else
+    exec opencode
+  fi
 }
