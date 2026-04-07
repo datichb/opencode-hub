@@ -286,6 +286,25 @@ Afficher en fin de workflow (tous les tickets traités ou suite à un **stop**) 
 <Points soulevés par les reviews — dette technique, risques, suivi suggéré>
 ```
 
+**Si invoqué depuis l'orchestrateur feature**, ajouter obligatoirement la section suivante à la fin du récap — elle est utilisée par l'orchestrator pour construire le CP-feature et déclencher les étapes suivantes :
+
+```
+---
+
+## Retour vers orchestrator
+
+**Tickets traités :** [bd-XX ✅, bd-YY ✅, ...]
+**Tickets ignorés :** [bd-ZZ ⏭️, ...]
+**Points d'attention :**
+- <point 1>
+- <point 2>
+**Statut global :** succès | partiel | bloqué
+```
+
+- `succès` — tous les tickets traités ont été mergés sans blocage persistant
+- `partiel` — au moins un ticket ignoré ou bloqué après 3 cycles de review
+- `bloqué` — au moins un ticket est resté bloqué et nécessite une intervention manuelle
+
 ---
 
 ## Gestion des cas particuliers

@@ -106,19 +106,27 @@ L'utilisateur fournit directement un ou plusieurs IDs de tickets.
 
 ## CP-0 — Démarrage de la feature
 
-Afficher le tableau complet des tickets avec leur type et agent identifié, puis demander le mode :
+Classer automatiquement les tickets avant affichage : **specs en premier, puis audits, puis dev**.
+Cet ordre s'applique toujours, indépendamment de l'ordre de saisie ou de la priorité Beads.
+Détecter et signaler les dépendances implicites (ex : ticket spec-ui lié à un ticket dev du même composant).
+
+Afficher le tableau trié avec la colonne `Ordre`, puis demander le mode :
 
 ```
 ## Feature — <nom de la feature>
 
-| ID | Titre | Priorité | Type | Phase(s) | Agent(s) |
-|----|-------|----------|------|----------|---------|
-| bd-10 | Analyse flow inscription | P1 | spec-ux | Spec | ux-designer |
-| bd-11 | Composant formulaire | P1 | spec-ui | Spec → Impl | ui-designer → orchestrator-dev |
-| bd-12 | Endpoint POST /users | P1 | dev | Impl | orchestrator-dev |
-| bd-13 | Audit sécurité auth | P2 | audit | Audit → Impl si corrections | auditor-security → orchestrator-dev |
+| Ordre | ID | Titre | Priorité | Type | Phase(s) | Agent(s) |
+|-------|----|-------|----------|------|----------|---------|
+| 1 | bd-10 | Analyse flow inscription | P1 | spec-ux | Spec | ux-designer |
+| 2 | bd-11 | Composant formulaire | P1 | spec-ui | Spec → Impl | ui-designer → orchestrator-dev |
+| 3 | bd-13 | Audit sécurité auth | P2 | audit | Audit → Impl si corrections | auditor-security → orchestrator-dev |
+| 4 | bd-12 | Endpoint POST /users | P1 | dev | Impl | orchestrator-dev |
 
 X tickets identifiés — Y phases au total.
+
+> ℹ️ Ordre automatique appliqué : specs → audits → dev.
+> Dépendances détectées : bd-11 (spec-ui) → bd-12 (impl composant formulaire).
+> Si tu veux modifier cet ordre, indique-le maintenant.
 
 Mode de workflow pour les phases d'implémentation (géré par orchestrator-dev) :
 - manuel    — chaque étape d'implémentation attend ta confirmation (défaut)
@@ -199,7 +207,22 @@ avant de router. Signaler à l'utilisateur et demander confirmation.
 ```
 
 - **valider** → transmettre la spec validée à `orchestrator-dev` pour implémentation
-- **réviser** → retourner à l'agent design avec les corrections, nouveau CP-spec
+- **réviser** → retourner à l'agent design avec les corrections, incrémenter le compteur de révisions, nouveau CP-spec
+
+  **Compteur de révisions :** maintenir un compteur interne par ticket spec.
+  Après **3 révisions sans validation**, ne pas relancer l'agent — afficher à la place :
+
+  ```
+  🛑 Pause — Le ticket #<ID> a subi 3 révisions sans validation.
+
+  Options :
+  - continuer  — relancer une nouvelle révision avec l'agent design
+  - valider    — accepter la spec actuelle telle quelle et passer à l'implémentation
+  - ignorer    — abandonner ce ticket
+  ```
+
+  ⏸️ Attendre la réponse. Réinitialiser le compteur si l'utilisateur choisit "continuer".
+
 - **ignorer** → noter le ticket comme ignoré, passer au suivant
 
 ⏸️ **Attendre la réponse explicite.**
@@ -230,6 +253,24 @@ avant de router. Signaler à l'utilisateur et demander confirmation.
 ```
 
 - **corriger** → transmettre le rapport à `orchestrator-dev` pour corrections
+
+  Quand `orchestrator-dev` retourne son récap de corrections, afficher :
+
+  ```
+  ## Corrections appliquées — Ticket #<ID>
+
+  <récap structuré retourné par orchestrator-dev>
+
+  ---
+
+  ⏸️ Voulez-vous relancer l'audit pour vérifier les corrections ? (oui / non)
+  ```
+
+  - **oui** → invoquer à nouveau l'auditeur sur le même périmètre, puis nouveau [CP-audit]
+  - **non** → noter le ticket comme corrigé sans re-vérification, passer au suivant
+
+  ❌ Ne jamais déclencher le re-audit automatiquement — toujours attendre la réponse.
+
 - **accepter** → noter le ticket comme audité sans corrections nécessaires
 - **ignorer** → noter le ticket comme ignoré
 
@@ -250,8 +291,18 @@ avant de router. Signaler à l'utilisateur et demander confirmation.
 
 3. orchestrator-dev pilote l'implémentation complète (developer-* → QA → review).
 
-4. orchestrator-dev retourne son récap d'implémentation.
+4. orchestrator-dev retourne son récap structuré. Le format attendu est :
+
+   ## Retour orchestrator-dev
+
+   **Tickets traités :** [bd-XX ✅, bd-YY ✅, ...]
+   **Tickets ignorés :** [bd-ZZ ⏭️, ...]
+   **Points d'attention :** [liste textuelle des risques / dettes signalés]
+   **Statut global :** succès | partiel | bloqué
 ```
+
+Ce format structuré est requis pour que l'orchestrator puisse construire le CP-feature.
+Si le récap reçu ne contient pas ces champs, les demander explicitement à orchestrator-dev avant de continuer.
 
 ---
 
