@@ -224,6 +224,8 @@ Seuls les tickets portant le label **`ai-delegated`** sont délégués aux agent
 **Tu ne dois JAMAIS :**
 - Ajouter toi-même le label `ai-delegated` sur un ticket sans accord explicite
   de l'utilisateur dans la conversation
+- Ajouter `ai-delegated` sur un ticket bloqué par un ticket non terminé
+- Si l'utilisateur dit "tous", demander confirmation une dernière fois avant d'exécuter
 
 **L'humain gère la délégation :**
 ```bash
@@ -233,3 +235,16 @@ bd label add <ID> ai-delegated
 # Reprendre la main sur un ticket
 bd update <ID> --remove-label ai-delegated
 ```
+
+---
+
+## Commandes non supportées
+
+Les commandes suivantes **n'existent pas dans Beads** et ne doivent jamais être utilisées :
+
+| Commande | Raison |
+|----------|--------|
+| `bd edit` | Non supportée — utiliser `bd update` avec les flags appropriés |
+| `bd delete` | Non supportée — utiliser `bd update -s cancelled` pour annuler un ticket |
+
+En cas de besoin d'annulation : `bd update <ID> -s cancelled` (statut terminal).
