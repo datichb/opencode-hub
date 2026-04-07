@@ -151,8 +151,9 @@ Afficher le ticket :
    - L'ID du ticket (`bd show <ID>`)
    - Le contexte de la feature si disponible (specs UX/UI validées, rapports d'audit)
 
-3. L'agent développeur exécute son workflow Beads complet :
-   `bd claim → implémenter → tester → bd update -s review`
+3. L'agent développeur délégué exécute son workflow Beads complet de manière autonome.
+   (bd claim → implémenter → tester → bd update -s review)
+   orchestrator-dev attend le compte rendu — il n'exécute aucune de ces étapes lui-même.
 
 ---
 
