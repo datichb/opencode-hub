@@ -258,9 +258,54 @@ else
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ÉTAPE 4 — Déploiement
+# ÉTAPE 4 — Configuration du provider (optionnel)
 # ─────────────────────────────────────────────────────────────────────────────
-_step 4 4 "Déploiement"
+_step 4 5 "Configuration du provider LLM (optionnel)"
+
+_prompt setup_provider "Configurer un provider LLM spécifique pour ce projet ? [y/N] : "
+if [[ "$setup_provider" =~ ^[Yy]$ ]]; then
+  echo ""
+  echo "  1. Anthropic"
+  echo "  2. MammouthAI"
+  echo "  3. GitHub Models"
+  echo "  4. AWS Bedrock"
+  echo "  5. Ollama"
+  echo "  6. Ignorer"
+  echo ""
+  _prompt project_provider_choice "Choisir (1-6, défaut: 6) : "
+  project_provider_choice="${project_provider_choice:-6}"
+  
+  project_provider_name=""
+  case "$project_provider_choice" in
+    1) project_provider_name="anthropic" ;;
+    2) project_provider_name="mammouth" ;;
+    3) project_provider_name="github-models" ;;
+    4) project_provider_name="bedrock" ;;
+    5) project_provider_name="ollama" ;;
+    *) project_provider_name="" ;;
+  esac
+  
+  if [ -n "$project_provider_name" ]; then
+    if [ "$project_provider_name" != "ollama" ]; then
+      _prompt project_provider_api_key "Clé API pour $project_provider_name (ou laisser vide pour ignorer) : "
+    else
+      _prompt project_provider_base_url "URL de base pour Ollama (défaut: http://localhost:11434/v1) : "
+      project_provider_base_url="${project_provider_base_url:-http://localhost:11434/v1}"
+      project_provider_api_key="dummy"  # Ollama n'a pas besoin de clé réelle
+    fi
+    
+    if [ -n "${project_provider_api_key:-}" ]; then
+      bash "$SCRIPTS_DIR/cmd-provider.sh" set "$PROJECT_ID" "$project_provider_name" "${project_provider_api_key}" "${project_provider_base_url:-}" 2>/dev/null || log_warn "Impossible de configurer le provider pour ce projet"
+    fi
+  fi
+else
+  log_info "Provider du hub sera utilisé par défaut"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ÉTAPE 5 — Déploiement
+# ─────────────────────────────────────────────────────────────────────────────
+_step 5 5 "Déploiement"
 
 if [ -d "$PROJECT_PATH" ]; then
   _prompt deploy_now "Déployer les agents maintenant ? [Y/n] : "

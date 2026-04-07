@@ -13,6 +13,12 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
   "version": "2.0.0",
   "default_target": "opencode",
   "active_targets": ["opencode"],
+  "default_provider": {
+    "name": "anthropic",
+    "api_key": "",
+    "base_url": "",
+    "model": ""
+  },
   "opencode": {
     "model": "claude-sonnet-4-5"
   },
@@ -32,7 +38,12 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
 | `version` | string | — | Version du hub (lue par `oc version`) |
 | `default_target` | string | `"opencode"` | Cible utilisée par `oc start` |
 | `active_targets` | array | `["opencode"]` | Cibles déployées par `oc deploy all`, `oc sync` et mises à jour par `oc update` |
-| `opencode.model` | string | — | Modèle IA injecté dans `opencode.json` des projets déployés |
+| `default_provider` | object | — | Configuration du provider LLM par défaut pour tous les projets |
+| `default_provider.name` | string | `"anthropic"` | Nom du provider (`anthropic`, `mammouth`, `github-models`, `bedrock`, `ollama`) |
+| `default_provider.api_key` | string | `""` | Clé API du provider (masquée en affichage, auto-ignorée par git si définie) |
+| `default_provider.base_url` | string | `""` | URL de base customisée (optionnel pour litellm et autres) |
+| `default_provider.model` | string | `""` | Modèle IA par défaut pour ce provider (si vide : fallback à `opencode.model`) |
+| `opencode.model` | string | — | Modèle IA injecté dans `opencode.json` des projets déployés (si `default_provider.model` est vide) |
 | `vscode.global_skills` | array | `[]` | Skills injectés dans `copilot-instructions.md` (partagés par tous les agents VS Code) |
 
 ### Cibles disponibles
@@ -50,6 +61,31 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
   "version": "2.0.0",
   "default_target": "opencode",
   "active_targets": ["opencode"],
+  "default_provider": {
+    "name": "anthropic",
+    "api_key": "",
+    "base_url": "",
+    "model": ""
+  },
+  "opencode": {
+    "model": "claude-sonnet-4-5"
+  }
+}
+```
+
+### Exemple avec provider par défaut configuré
+
+```json
+{
+  "version": "2.0.0",
+  "default_target": "opencode",
+  "active_targets": ["opencode"],
+  "default_provider": {
+    "name": "mammouth",
+    "api_key": "sk-xxx...",
+    "base_url": "https://api.mammouth.ai/v1",
+    "model": "claude-opus-4-5"
+  },
   "opencode": {
     "model": "claude-sonnet-4-5"
   }
@@ -63,6 +99,12 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
   "version": "2.0.0",
   "default_target": "opencode",
   "active_targets": ["opencode", "claude-code", "vscode"],
+  "default_provider": {
+    "name": "anthropic",
+    "api_key": "sk-ant-xxx...",
+    "base_url": "",
+    "model": ""
+  },
   "opencode": {
     "model": "claude-sonnet-4-5"
   },
@@ -168,7 +210,7 @@ AUTRE-APP=~/dev/autre-app
 
 ## `projects/api-keys.local.md`
 
-Stocke les clés API et modèles configurés par projet via `oc config`.
+Stocke les clés API et modèles configurés par projet via `oc config` ou `oc provider`.
 **Ignoré par git** — ne jamais committer ce fichier.
 
 ### Format
@@ -181,9 +223,15 @@ api_key=sk-ant-...
 
 [AUTRE-PROJET]
 model=claude-sonnet-4-5
-provider=litellm
+provider=mammouth
 api_key=sk-bRf...
 base_url=https://api.mammouth.ai/v1
+
+[PROJET-GITHUB]
+model=claude-sonnet-4-5
+provider=github-models
+api_key=ghp_xxx...
+base_url=https://models.inference.ai.azure.com
 ```
 
 ### Clés disponibles par section
@@ -191,16 +239,20 @@ base_url=https://api.mammouth.ai/v1
 | Clé | Requis | Description |
 |-----|--------|-------------|
 | `model` | oui | Modèle IA (ex: `claude-opus-4-5`, `claude-haiku-4-5`) |
-| `provider` | oui | `anthropic` ou `litellm` |
+| `provider` | oui | `anthropic`, `mammouth`, `github-models`, `bedrock`, `ollama`, ou `litellm` |
 | `api_key` | oui | Clé API — jamais affichée en clair |
-| `base_url` | non | URL de base (litellm uniquement, ex: `https://api.mammouth.ai/v1`) |
+| `base_url` | non | URL de base (recommandé pour `mammouth`, `github-models`, `bedrock`, `ollama`, et requis pour `litellm` générique) |
 
 ### Providers supportés
 
-| Provider | Usage | `base_url` requis |
-|----------|-------|-------------------|
-| `anthropic` | Clé Anthropic directe | non |
-| `litellm` | Proxy compatible OpenAI (mammouth.ai, etc.) | oui (recommandé) |
+| Provider | Cibles | Requis API Key | Base URL défaut | Description |
+|----------|--------|----------------|-----------------|-------------|
+| `anthropic` | OpenCode, Claude Code | oui | — | API Anthropic directe |
+| `mammouth` | OpenCode | oui | `https://api.mammouth.ai/v1` | Proxy OpenAI-compatible (FR-hosted) |
+| `github-models` | OpenCode | oui | `https://models.inference.ai.azure.com` | GitHub Models API |
+| `bedrock` | OpenCode | oui | — (spécifique AWS) | AWS Bedrock |
+| `ollama` | OpenCode | non | `http://localhost:11434/v1` | LLM local compatible OpenAI |
+| `litellm` | OpenCode | oui | ⚠️ requis | Proxy litellm générique (custom) |
 
 ### Effets lors du déploiement
 
@@ -213,7 +265,7 @@ Lors d'un `oc deploy opencode <PROJECT_ID>`, si une entrée existe pour le proje
 Si `PROJECT_ID` est défini sans clé API (ou après un `oc config unset`), `opencode.json` est
 également régénéré pour retirer tout ancien bloc `provider`.
 
-Pour Claude Code, la clé est injectée comme `ANTHROPIC_API_KEY` au moment du `oc start`.
+Pour Claude Code, la clé est injectée comme `ANTHROPIC_API_KEY` au moment du `oc start` (Anthropic uniquement).
 
 ---
 
@@ -235,9 +287,9 @@ oc config unset <PROJECT_ID>           Supprimer une configuration
 | Option | Description |
 |--------|-------------|
 | `--model <model>` | Modèle IA |
-| `--provider <provider>` | `anthropic` ou `litellm` |
+| `--provider <provider>` | `anthropic`, `mammouth`, `github-models`, `bedrock`, `ollama`, ou `litellm` |
 | `--api-key <key>` | Clé API (si omis : saisie masquée interactive) |
-| `--base-url <url>` | Base URL (litellm uniquement) |
+| `--base-url <url>` | Base URL (optionnel pour la plupart des providers) |
 
 Si appelé sans flags, le flux est interactif avec les valeurs actuelles comme défauts.
 
@@ -250,11 +302,56 @@ Si appelé sans flags, le flux est interactif avec les valeurs actuelles comme d
 # En ligne de commande (hors CI : préférer le flux interactif pour la clé)
 ./oc.sh config set MON-PROJET --model claude-opus-4-5 --provider anthropic
 
+# Avec MammouthAI
+./oc.sh config set MON-PROJET --provider mammouth --api-key sk-xxx
+
 # Vérifier
 ./oc.sh config get MON-PROJET
 
 # Supprimer
 ./oc.sh config unset MON-PROJET
+```
+
+---
+
+## `oc provider` — commande CLI
+
+Gère la configuration des providers LLM au niveau du hub (défaut) et des projets.
+
+### Sous-commandes
+
+```
+oc provider list                          Lister tous les providers disponibles
+oc provider set-default                   Configurer le provider par défaut du hub
+oc provider set <PROJECT_ID> [...]        Configurer un provider pour un projet
+oc provider get <PROJECT_ID>              Afficher la configuration effective d'un projet
+```
+
+### Options de `oc provider set`
+
+```
+oc provider set <PROJECT_ID> [PROVIDER] [API_KEY] [BASE_URL]
+```
+
+Tous les paramètres après `PROJECT_ID` sont optionnels. Si omis, le flux devient interactif.
+
+### Exemple
+
+```sh
+# Lister les providers
+./oc.sh provider list
+
+# Configurer le hub par défaut (interactif)
+./oc.sh provider set-default
+
+# Configurer un projet avec MammouthAI
+./oc.sh provider set MON-PROJET mammouth "sk-xxx" "https://api.mammouth.ai/v1"
+
+# Configurer interactif
+./oc.sh provider set MON-PROJET
+
+# Afficher la configuration effective
+./oc.sh provider get MON-PROJET
 ```
 
 ---
@@ -331,6 +428,7 @@ Le modèle est résolu par priorité :
 Fichiers et dossiers ignorés par git dans le hub lui-même :
 
 ```gitignore
+config/hub.json             # si default_provider.api_key est définie (auto-ajouté)
 projects/projects.md        # registre local des projets
 projects/paths.local.md     # chemins locaux
 projects/api-keys.local.md  # clés API par projet

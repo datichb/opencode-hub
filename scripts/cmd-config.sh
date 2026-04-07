@@ -133,14 +133,14 @@ cmd_set() {
   # Provider
   if [ -z "$flag_provider" ]; then
     local default_provider="${cur_provider:-anthropic}"
-    echo "  Providers disponibles : anthropic / litellm"
+    echo "  Providers disponibles : anthropic / mammouth / github-models / bedrock / ollama / litellm"
     read -rp "  Provider [${default_provider}] : " flag_provider
     flag_provider="${flag_provider:-$default_provider}"
   fi
   # Normaliser
   flag_provider=$(echo "$flag_provider" | tr '[:upper:]' '[:lower:]')
-  if [ "$flag_provider" != "anthropic" ] && [ "$flag_provider" != "litellm" ]; then
-    log_error "Provider non supporté : $flag_provider (anthropic | litellm)"
+  if [ "$flag_provider" != "anthropic" ] && [ "$flag_provider" != "mammouth" ] && [ "$flag_provider" != "github-models" ] && [ "$flag_provider" != "bedrock" ] && [ "$flag_provider" != "ollama" ] && [ "$flag_provider" != "litellm" ]; then
+    log_error "Provider non supporté : $flag_provider (anthropic | mammouth | github-models | bedrock | ollama | litellm)"
     exit 1
   fi
 
@@ -165,8 +165,8 @@ cmd_set() {
     exit 1
   fi
 
-  # Base URL (litellm uniquement)
-  if [ "$flag_provider" = "litellm" ] && [ -z "$flag_base_url" ]; then
+  # Base URL (optionnel pour tous les providers, mais particulièrement utile pour litellm et autres)
+  if [ -z "$flag_base_url" ] && { [ "$flag_provider" = "litellm" ] || [ "$flag_provider" = "mammouth" ] || [ "$flag_provider" = "github-models" ] || [ "$flag_provider" = "bedrock" ] || [ "$flag_provider" = "ollama" ]; }; then
     local default_url="${cur_base_url:-}"
     local prompt_url="  Base URL${default_url:+ [${default_url}]} : "
     read -rp "$prompt_url" flag_base_url

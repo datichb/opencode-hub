@@ -49,7 +49,73 @@ esac
 
 echo ""
 
-# ── Vérifier si une cible requiert Node.js ───────────────────────────────────
+# ── Configurer le provider par défaut ───────────────────
+log_title "Configuration du provider LLM"
+echo ""
+echo "  1. Anthropic (défaut)"
+echo "  2. MammouthAI"
+echo "  3. GitHub Models"
+echo "  4. AWS Bedrock"
+echo "  5. Ollama"
+echo "  6. Ignorer (configurer plus tard)"
+echo ""
+read -rp "Choisir (1-6, défaut: 1) : " provider_choice
+provider_choice="${provider_choice:-1}"
+
+provider_name=""
+case "$provider_choice" in
+  2) provider_name="mammouth" ;;
+  3) provider_name="github-models" ;;
+  4) provider_name="bedrock" ;;
+  5) provider_name="ollama" ;;
+  6) provider_name="" ;; # Ignorer
+  *) provider_name="anthropic" ;;
+esac
+
+if [ -n "$provider_name" ]; then
+  if [ "$provider_name" != "anthropic" ] && [ "$provider_name" != "ollama" ]; then
+    # Demander la clé API pour les providers qui en requirent une
+    read -rsp "Entrer la clé API pour $provider_name (ou laisser vide pour sauter) : " provider_api_key
+    echo ""
+  elif [ "$provider_name" = "ollama" ]; then
+    # Pour ollama, demander l'URL de base (optionnel, a un défaut)
+    read -rp "Entrer l'URL de base pour Ollama (défaut: http://localhost:11434/v1) : " provider_base_url
+    provider_base_url="${provider_base_url:-http://localhost:11434/v1}"
+    provider_api_key="ollama"  # Ollama n'a pas besoin de clé, mais on met une valeur pour indiquer qu'il est configuré
+  else
+    # Anthropic
+    read -rsp "Entrer la clé API Anthropic (ou laisser vide pour sauter) : " provider_api_key
+    echo ""
+  fi
+  
+  # Si une clé API a été fournie (ou pour ollama qui a une valeur par défaut), la sauvegarder dans hub.json
+  if [ -n "${provider_api_key:-}" ]; then
+    # Lire hub.json actuel
+    if [ -f "$HUB_DIR/config/hub.json" ]; then
+      hub_json=$(cat "$HUB_DIR/config/hub.json")
+      # Mettre à jour default_provider
+      hub_json=$(echo "$hub_json" | jq --arg pname "$provider_name" --arg pkey "${provider_api_key}" \
+        '.default_provider.name = $pname | .default_provider.api_key = $pkey')
+      
+      # Si une base_url est définie, l'ajouter
+      if [ -n "${provider_base_url:-}" ]; then
+        hub_json=$(echo "$hub_json" | jq --arg burl "$provider_base_url" \
+          '.default_provider.base_url = $burl')
+      fi
+      
+      echo "$hub_json" > "$HUB_DIR/config/hub.json"
+      log_success "Provider configuré : $provider_name"
+      
+      # Ajouter hub.json au .gitignore s'il contient une clé API
+      if [ ! -f "$HUB_DIR/.gitignore" ] || ! grep -qx "config/hub.json" "$HUB_DIR/.gitignore"; then
+        echo "config/hub.json" >> "$HUB_DIR/.gitignore"
+        log_info "config/hub.json ajouté au .gitignore"
+      fi
+    fi
+  fi
+fi
+
+echo ""
 needs_node=false
 for target in "${active_targets[@]}"; do
   load_adapter "$target"
@@ -87,6 +153,12 @@ if [ "$_write_hub_json" = true ]; then
   "version": "2.0.0",
   "default_target": "${active_targets[0]}",
   "active_targets": [${targets_json}],
+  "default_provider": {
+    "name": "anthropic",
+    "api_key": "",
+    "base_url": "",
+    "model": ""
+  },
   "opencode": {
     "model": "${DEFAULT_MODEL}"
   },

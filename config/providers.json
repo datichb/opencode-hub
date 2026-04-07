@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Catalogue des fournisseurs LLM — définit la structure et les paramètres par défaut",
+  "providers": {
+    "anthropic": {
+      "label": "Anthropic (direct)",
+      "description": "API Anthropic directe pour Claude models",
+      "requires_api_key": true,
+      "requires_base_url": false,
+      "litellm": false,
+      "default_model": "claude-sonnet-4-5",
+      "supported_targets": ["opencode", "claude-code"],
+      "docs_url": "https://docs.anthropic.com/claude/reference/authentication"
+    },
+    "mammouth": {
+      "label": "MammouthAI",
+      "description": "Proxy OpenAI-compatible vers Claude (FR-hosted)",
+      "requires_api_key": true,
+      "requires_base_url": true,
+      "litellm": true,
+      "default_base_url": "https://api.mammouth.ai/v1",
+      "default_model": "claude-sonnet-4-5",
+      "supported_targets": ["opencode"],
+      "docs_url": "https://mammouth.ai/docs"
+    },
+    "github-models": {
+      "label": "GitHub Models",
+      "description": "GitHub Models API (Copilot API compatible)",
+      "requires_api_key": true,
+      "requires_base_url": true,
+      "litellm": true,
+      "default_base_url": "https://models.inference.ai.azure.com",
+      "default_model": "gpt-4o",
+      "supported_targets": ["opencode"],
+      "docs_url": "https://docs.github.com/en/github-models"
+    },
+    "bedrock": {
+      "label": "AWS Bedrock (via litellm)",
+      "description": "AWS Bedrock models via litellm proxy",
+      "requires_api_key": true,
+      "requires_base_url": true,
+      "litellm": true,
+      "default_base_url": "",
+      "default_model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+      "supported_targets": ["opencode"],
+      "docs_url": "https://docs.litellm.ai/docs/providers/bedrock"
+    },
+    "ollama": {
+      "label": "Ollama (local)",
+      "description": "Ollama - LLM local compatible OpenAI",
+      "requires_api_key": false,
+      "requires_base_url": true,
+      "litellm": true,
+      "default_base_url": "http://localhost:11434/v1",
+      "default_model": "llama3.2",
+      "supported_targets": ["opencode"],
+      "docs_url": "https://ollama.ai"
+    }
+  }
+}

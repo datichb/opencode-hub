@@ -94,7 +94,19 @@ adapter_start() {
         log_info "[claude-code] Clé API anthropic injectée (ANTHROPIC_API_KEY)"
       fi
     else
-      log_info "[claude-code] Provider '$provider' — clé API non injectée (Claude Code requiert anthropic)"
+      log_warn "[claude-code] Provider '$provider' configuré pour ce projet — Claude Code ne supporte que anthropic (clé API non injectée)"
+    fi
+  else
+    # Fallback : vérifier le hub default_provider
+    local hub_provider; hub_provider=$(get_hub_default_provider)
+    if [ -n "$hub_provider" ] && [ "$hub_provider" != "anthropic" ]; then
+      log_warn "[claude-code] Provider par défaut du hub : '$hub_provider' — Claude Code ne supporte que anthropic"
+    elif [ -n "$hub_provider" ] && [ "$hub_provider" = "anthropic" ]; then
+      local hub_api_key; hub_api_key=$(get_hub_default_api_key)
+      if [ -n "$hub_api_key" ]; then
+        export ANTHROPIC_API_KEY="$hub_api_key"
+        log_info "[claude-code] Clé API anthropic du hub injectée (ANTHROPIC_API_KEY)"
+      fi
     fi
   fi
 

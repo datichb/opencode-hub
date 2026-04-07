@@ -20,6 +20,7 @@ case "$COMMAND" in
   deploy)          bash "$SCRIPTS_DIR/cmd-deploy.sh" "${@:2}" ;;
   sync)            bash "$SCRIPTS_DIR/cmd-sync.sh" "${@:2}" ;;
   config)          bash "$SCRIPTS_DIR/cmd-config.sh" "${@:2}" ;;
+  provider)        bash "$SCRIPTS_DIR/cmd-provider.sh" "${@:2}" ;;
   skills)          bash "$SCRIPTS_DIR/cmd-skills.sh" "${@:2}" ;;
   agent)           bash "$SCRIPTS_DIR/cmd-agent.sh" "${@:2}" ;;
   target)          bash "$SCRIPTS_DIR/cmd-target.sh" "${@:2}" ;;

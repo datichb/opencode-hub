@@ -6,7 +6,7 @@ source "$HUB_DIR/scripts/lib/prompt-builder.sh"
 # Modèle résolu par priorité :
 #   1. api-keys.local.md (clé project-level) si project_id défini
 #   2. variable d'env OPENCODE_MODEL
-#   3. config/hub.json → opencode.model
+#   3. config/hub.json → default_provider.model ou opencode.model
 #   4. fallback : claude-sonnet-4-5
 _get_opencode_model() {
   local project_id="${1:-}"
@@ -17,9 +17,9 @@ _get_opencode_model() {
   fi
   # Niveau 2 : variable d'environnement
   [ -z "$model" ] && model="${OPENCODE_MODEL:-}"
-  # Niveau 3 : hub.json
+  # Niveau 3 : hub.json (default_provider.model ou opencode.model)
   if [ -z "$model" ] && command -v jq &>/dev/null && [ -f "$HUB_DIR/config/hub.json" ]; then
-    model=$(jq -r '.opencode.model // empty' "$HUB_DIR/config/hub.json" 2>/dev/null)
+    model=$(jq -r '.default_provider.model // .opencode.model // empty' "$HUB_DIR/config/hub.json" 2>/dev/null)
   fi
   echo "${model:-$DEFAULT_MODEL}"
 }
@@ -49,7 +49,8 @@ _build_provider_block() {
   }
 JSON
       ;;
-    litellm)
+    mammouth|github-models|bedrock|ollama|litellm)
+      # Tous les autres providers utilisent le mécanisme OpenAI-compatible via litellm
       base_url=$(get_project_api_base_url "$project_id")
       # Sanitiser les valeurs avant injection JSON : échapper \ puis "
       local safe_api_key safe_base_url
@@ -134,6 +135,53 @@ adapter_deploy() {
   if [ -n "$project_id" ] && api_keys_entry_exists "$project_id"; then
     provider_block=$(_build_provider_block "$project_id")
     [ -n "$provider_block" ] && has_api_key=true
+  else
+    # Fallback : vérifier le hub default_provider
+    local hub_api_key
+    hub_api_key=$(get_hub_default_api_key)
+    if [ -n "$hub_api_key" ]; then
+      # Construire le provider_block basé sur le hub default
+      local hub_provider hub_base_url
+      hub_provider=$(get_hub_default_provider)
+      hub_base_url=$(get_hub_default_base_url)
+      
+      case "$hub_provider" in
+        anthropic)
+          local safe_api_key
+          safe_api_key="${hub_api_key//\\/\\\\}"
+          safe_api_key="${safe_api_key//\"/\\\"}"
+          provider_block=$(cat <<JSON
+  "provider": {
+    "anthropic": {
+      "apiKey": "${safe_api_key}"
+    }
+  }
+JSON
+)
+          has_api_key=true
+          ;;
+        mammouth|github-models|bedrock|ollama|litellm)
+          local safe_api_key safe_base_url
+          safe_api_key="${hub_api_key//\\/\\\\}"
+          safe_api_key="${safe_api_key//\"/\\\"}"
+          safe_base_url="${hub_base_url//\\/\\\\}"
+          safe_base_url="${safe_base_url//\"/\\\"}"
+          provider_block=$(cat <<JSON
+  "provider": {
+    "litellm": {
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "apiKey": "${safe_api_key}"$([ -n "$safe_base_url" ] && echo ",
+        \"baseURL\": \"${safe_base_url}\"")
+      }
+    }
+  }
+JSON
+)
+          has_api_key=true
+          ;;
+      esac
+    fi
   fi
 
   # Construire le bloc "agent": pour les agents dont le mode n'est pas "primary"
