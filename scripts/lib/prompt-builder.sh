@@ -169,6 +169,39 @@ EOF
   fi
 }
 
+# Construit le prompt de bootstrap pour la commande oc audit
+# @param $1 — project_path
+# @param $2 — project_id (optionnel)
+# @param $3 — audit_type (optionnel — vide = audit global)
+build_audit_bootstrap_prompt() {
+  local project_path="$1"
+  local project_id="${2:-}"
+  local audit_type="${3:-}"
+  local scope_line=""
+  [ -n "$audit_type" ] && scope_line="Périmètre : audit ${audit_type} uniquement."
+
+  local project_info=""
+  if [ -n "$project_id" ]; then
+    project_info="Projet : ${project_id}
+Chemin : ${project_path}"
+  else
+    project_info="Chemin : ${project_path}"
+  fi
+
+  cat <<EOF
+Effectue un audit complet du projet.
+
+${project_info}
+${scope_line:+
+${scope_line}}
+Workflow :
+1. Annoncer le périmètre et la méthodologie de l'audit
+2. Explorer les fichiers pertinents selon le type d'audit
+3. Identifier et classifier les points d'attention (🔴 critiques, 🟠 importants, 🟡 améliorations)
+4. Produire le rapport d'audit structuré avec recommandations priorisées
+EOF
+}
+
 # Construit le prompt de bootstrap pour le mode --onboard (oc start --onboard)
 # Déclenche l'agent onboarder en lecture seule sur le projet
 build_onboard_bootstrap_prompt() {

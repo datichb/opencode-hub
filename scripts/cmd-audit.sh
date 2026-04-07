@@ -1,0 +1,229 @@
+#!/bin/bash
+# Lance un audit IA sur un projet via l'agent auditor (+ sous-agents optionnels).
+# Usage : oc audit [PROJECT_ID] [--type <type>]
+set -euo pipefail
+source "$(cd "$(dirname "$0")" && pwd)/common.sh"
+source "$LIB_DIR/adapter-manager.sh"
+source "$LIB_DIR/prompt-builder.sh"
+
+ensure_projects_file
+
+# ── Types d'audit supportés ───────────────────────────────────────────────────
+VALID_AUDIT_TYPES="security accessibility architecture ecodesign observability performance privacy"
+
+# ── Parsing des arguments ─────────────────────────────────────────────────────
+AUDIT_TYPE=""
+ARGS=()
+_prev=""
+for arg in "$@"; do
+  case "$_prev" in
+    --type) AUDIT_TYPE="$arg"; _prev=""; continue ;;
+  esac
+  case "$arg" in
+    --type) _prev="$arg" ;;
+    *)      ARGS+=("$arg") ;;
+  esac
+done
+PROJECT_ID="${ARGS[0]:-}"
+
+# ── Validation --type ─────────────────────────────────────────────────────────
+if [ -n "$AUDIT_TYPE" ]; then
+  valid=false
+  for t in $VALID_AUDIT_TYPES; do
+    [ "$AUDIT_TYPE" = "$t" ] && valid=true && break
+  done
+  if [ "$valid" = false ]; then
+    log_error "Type d'audit invalide : '$AUDIT_TYPE'"
+    log_info  "Types valides : $VALID_AUDIT_TYPES"
+    exit 1
+  fi
+fi
+
+# ── Sélection interactive si pas d'ID ────────────────────────────────────────
+if [ -z "$PROJECT_ID" ]; then
+  ids=()
+  while IFS= read -r line; do ids+=("$line"); done < <(grep "^## " "$PROJECTS_FILE" | sed 's/^## //')
+
+  if [ ${#ids[@]} -eq 0 ]; then
+    log_error "Aucun projet enregistré → ./oc.sh init"
+    exit 1
+  fi
+
+  echo -e "${BOLD}Choisir un projet :${RESET}"
+  echo ""
+  for i in "${!ids[@]}"; do
+    printf "  ${BLUE}%d${RESET}) %s\n" "$((i+1))" "${ids[$i]}"
+  done
+  echo ""
+  read -rp "  Numéro : " choice
+  if ! [[ "$choice" =~ ^[0-9]+$ ]] || [ "$choice" -lt 1 ] || [ "$choice" -gt "${#ids[@]}" ]; then
+    log_error "Choix invalide : $choice (attendu 1-${#ids[@]})"
+    exit 1
+  fi
+  PROJECT_ID="${ids[$((choice-1))]}"
+fi
+
+PROJECT_ID=$(normalize_project_id "$PROJECT_ID")
+
+# ── Validation + résolution du chemin ────────────────────────────────────────
+PROJECT_PATH=$(resolve_project_path "$PROJECT_ID")
+
+# ── Résolution de la cible ────────────────────────────────────────────────────
+default_target=$(get_default_target)
+load_adapter "$default_target"
+adapter_validate || { log_error "Cible '$default_target' non disponible → oc install"; exit 1; }
+
+# ── Bloquer si vscode (pas de support --agent) ────────────────────────────────
+if [ "$default_target" = "vscode" ]; then
+  log_error "La commande 'oc audit' n'est pas supportée pour la cible vscode"
+  log_info  "vscode ne supporte pas le passage d'agent par flag (--agent)"
+  log_info  "Changer de cible : ./oc.sh target opencode  ou  ./oc.sh target claude-code"
+  exit 1
+fi
+
+# ── Agents nécessaires ────────────────────────────────────────────────────────
+REQUIRED_AGENTS=("auditor")
+[ -n "$AUDIT_TYPE" ] && REQUIRED_AGENTS+=("auditor-${AUDIT_TYPE}")
+
+# ── Dossier d'agents déployés selon la cible ─────────────────────────────────
+case "$default_target" in
+  opencode)    agents_dir="$PROJECT_PATH/.opencode/agents" ;;
+  claude-code) agents_dir="$PROJECT_PATH/.claude/agents" ;;
+  *)           agents_dir="" ;;
+esac
+
+# ── Bloc d'intro TUI ─────────────────────────────────────────────────────────
+_intro "oc audit  ${PROJECT_ID}"
+printf "${DIM}│${RESET}  %-12s %s\n" "Chemin"  "$PROJECT_PATH"
+printf "${DIM}│${RESET}  %-12s %s\n" "Cible"   "$default_target"
+if [ -n "$AUDIT_TYPE" ]; then
+  printf "${DIM}│${RESET}  %-12s %s\n" "Type"  "$AUDIT_TYPE"
+fi
+printf "${DIM}│${RESET}  %-12s %s\n" "Agents"  "${REQUIRED_AGENTS[*]}"
+
+# ── Vérifier les agents dans projects.md ─────────────────────────────────────
+agents_csv=$(get_project_agents "$PROJECT_ID")
+
+if [ "$agents_csv" != "all" ]; then
+  missing_in_config=()
+  for agent_id in "${REQUIRED_AGENTS[@]}"; do
+    if ! echo ",$agents_csv," | grep -qF ",$agent_id,"; then
+      missing_in_config+=("$agent_id")
+    fi
+  done
+
+  if [ ${#missing_in_config[@]} -gt 0 ]; then
+    echo -e "${DIM}│${RESET}"
+    log_warn "Agent(s) absent(s) de la sélection projet : ${missing_in_config[*]}"
+    _prompt _add_agents "Ajouter ces agents à la sélection du projet ? [Y/n] : "
+    if [[ "${_add_agents:-Y}" =~ ^[Yy]$ ]]; then
+      source "$LIB_DIR/agent-picker.sh"
+      # Merger les agents manquants dans le CSV existant
+      new_csv="$agents_csv"
+      for agent_id in "${missing_in_config[@]}"; do
+        new_csv="${new_csv},${agent_id}"
+      done
+      # Nettoyer les virgules en début / fin
+      new_csv=$(echo "$new_csv" | sed 's/^,//;s/,$//')
+      _set_project_agents "$PROJECT_ID" "$new_csv"
+      log_success "Agents mis à jour dans projects.md : $new_csv"
+      agents_csv="$new_csv"
+
+      # Proposer le redéploiement
+      echo -e "${DIM}│${RESET}"
+      _prompt _redeploy "Redéployer les agents maintenant ? [Y/n] : "
+      if [[ "${_redeploy:-Y}" =~ ^[Yy]$ ]]; then
+        echo ""
+        bash "$SCRIPTS_DIR/cmd-deploy.sh" "$default_target" "$PROJECT_ID"
+        echo ""
+      else
+        log_info "Redéployer plus tard : ./oc.sh deploy $default_target $PROJECT_ID"
+      fi
+    else
+      # Refus → lister les agents audit physiquement déployés
+      echo -e "${DIM}│${RESET}"
+      log_info "Recherche des agents audit disponibles dans $agents_dir…"
+
+      available_audit_agents=()
+      if [ -d "$agents_dir" ]; then
+        while IFS= read -r f; do
+          agent_name=$(basename "$f" .md)
+          case "$agent_name" in
+            auditor|auditor-*) available_audit_agents+=("$agent_name") ;;
+          esac
+        done < <(find "$agents_dir" -name "*.md" | sort)
+      fi
+
+      if [ ${#available_audit_agents[@]} -eq 0 ]; then
+        log_error "Aucun agent audit déployé dans $agents_dir"
+        log_info  "Déployer les agents : ./oc.sh deploy $default_target $PROJECT_ID"
+        log_info  "Puis ajouter les agents au projet : ./oc.sh agent edit $PROJECT_ID"
+        exit 1
+      fi
+
+      echo -e "${DIM}│${RESET}"
+      log_info "Agents audit disponibles :"
+      for i in "${!available_audit_agents[@]}"; do
+        printf "  ${BLUE}%d${RESET}) %s\n" "$((i+1))" "${available_audit_agents[$i]}"
+      done
+      echo ""
+      read -rp "  Choisir un agent (numéro) : " _choice
+      if ! [[ "$_choice" =~ ^[0-9]+$ ]] || [ "$_choice" -lt 1 ] || [ "$_choice" -gt "${#available_audit_agents[@]}" ]; then
+        log_error "Choix invalide"
+        exit 1
+      fi
+      AUDIT_AGENT="${available_audit_agents[$((choice-1))]}"
+      REQUIRED_AGENTS=("$AUDIT_AGENT")
+      log_info "Agent sélectionné : $AUDIT_AGENT"
+    fi
+  fi
+fi
+
+# ── Vérifier le déploiement physique des agents ───────────────────────────────
+echo -e "${DIM}│${RESET}"
+
+if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ]; then
+  log_warn "Agents non déployés pour ${default_target} (dossier absent : $agents_dir)"
+  _prompt _deploy_now "Déployer maintenant ? [Y/n] : "
+  if [[ "${_deploy_now:-Y}" =~ ^[Yy]$ ]]; then
+    echo ""
+    bash "$SCRIPTS_DIR/cmd-deploy.sh" "$default_target" "$PROJECT_ID"
+    echo ""
+  else
+    log_warn "Déploiement ignoré — l'agent risque d'être introuvable"
+    log_info  "Déployer plus tard : ./oc.sh deploy $default_target $PROJECT_ID"
+  fi
+else
+  # Vérifier chaque agent requis individuellement
+  missing_deployed=()
+  if [ -n "$agents_dir" ] && [ -d "$agents_dir" ]; then
+    for agent_id in "${REQUIRED_AGENTS[@]}"; do
+      [ ! -f "$agents_dir/${agent_id}.md" ] && missing_deployed+=("$agent_id")
+    done
+  fi
+
+  if [ ${#missing_deployed[@]} -gt 0 ]; then
+    log_warn "Agent(s) non déployé(s) : ${missing_deployed[*]}"
+    _prompt _deploy_missing "Redéployer les agents maintenant ? [Y/n] : "
+    if [[ "${_deploy_missing:-Y}" =~ ^[Yy]$ ]]; then
+      echo ""
+      bash "$SCRIPTS_DIR/cmd-deploy.sh" "$default_target" "$PROJECT_ID"
+      echo ""
+    else
+      log_warn "Déploiement ignoré — l'agent risque d'être introuvable"
+    fi
+  fi
+fi
+
+# ── Construire le prompt ──────────────────────────────────────────────────────
+PROMPT=$(build_audit_bootstrap_prompt "$PROJECT_PATH" "$PROJECT_ID" "$AUDIT_TYPE")
+AGENT_NAME="${REQUIRED_AGENTS[0]}"
+
+echo -e "${DIM}│${RESET}"
+log_info "Agent principal : ${AGENT_NAME}"
+
+# ── Confirmation avant lancement ─────────────────────────────────────────────
+_outro "Lancement de l'audit ${default_target}…"
+IFS= read -rp "" _
+
+adapter_start "$PROJECT_PATH" "$PROMPT" "$PROJECT_ID" "$AGENT_NAME"
