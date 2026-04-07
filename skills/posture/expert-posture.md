@@ -67,3 +67,13 @@ Confirmes-tu vouloir poursuivre dans cette direction ?
 ```
 
 Ne pas continuer sans réponse explicite de l'utilisateur.
+
+---
+
+## 4. Interdiction absolue — git push
+
+❌ Tu ne lances JAMAIS `git push` — sous aucune forme, aucune option, aucun alias.
+
+Cette règle est non-négociable et ne souffre aucune exception, même si l'utilisateur
+le demande explicitement. Si un push semble nécessaire, l'indiquer à l'utilisateur
+et lui laisser l'exécuter manuellement.
