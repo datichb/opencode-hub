@@ -170,6 +170,67 @@ oc start MON-APP --onboard                      # prompt de découverte projet
 
 ---
 
+## `oc audit`
+
+Lance un audit IA sur un projet en invoquant l'agent `auditor` (et son sous-agent spécialisé si `--type` est précisé).
+
+```bash
+oc audit [PROJECT_ID] [--type <type>]
+```
+
+**Arguments :**
+
+| Argument | Description |
+|----------|-------------|
+| `[PROJECT_ID]` | ID du projet — sélection interactive si absent |
+
+**Options :**
+
+| Option | Valeurs | Description |
+|--------|---------|-------------|
+| `--type <type>` | `security`, `accessibility`, `architecture`, `ecodesign`, `observability`, `performance`, `privacy` | Cible l'audit sur un domaine précis. Si absent : audit global via `auditor` |
+
+**Comportement :**
+
+1. **Validation** — vérifie que le `--type` est parmi les 7 domaines reconnus (si fourni)
+2. **Résolution projet** — normalise l'ID et résout le chemin local
+3. **Blocage vscode** — `vscode` ne supporte pas le passage d'agent par flag ; exit avec message explicite
+4. **Vérification projects.md** — si le projet a une sélection d'agents restrictive (pas `all`), vérifie que `auditor` (et `auditor-<type>` si précisé) sont inclus :
+   - Si manquants → propose de les ajouter + redéployer
+   - Si refus → affiche les agents audit physiquement déployés et propose un menu de sélection
+5. **Vérification déploiement physique** — si le dossier agents est absent ou si les fichiers manquent, propose `oc deploy`
+6. **Lancement** — construit le prompt de bootstrap et ouvre l'outil avec `--agent auditor` (ou l'agent sélectionné)
+
+**Exemples :**
+
+```bash
+oc audit                          # sélection interactive du projet, audit global
+oc audit MON-APP                  # audit global sur MON-APP
+oc audit MON-APP --type security  # audit sécurité uniquement
+oc audit MON-APP --type privacy   # audit RGPD/privacy uniquement
+```
+
+**Prompt injecté :**
+
+```
+Effectue un audit complet du projet.
+
+Projet : MON-APP
+Chemin : /Users/alice/workspace/mon-app
+Périmètre : audit security uniquement.   ← présent seulement si --type
+
+Workflow :
+1. Annoncer le périmètre et la méthodologie de l'audit
+2. Explorer les fichiers pertinents selon le type d'audit
+3. Identifier et classifier les points d'attention (🔴 critiques, 🟠 importants, 🟡 améliorations)
+4. Produire le rapport d'audit structuré avec recommandations priorisées
+```
+
+> Non supporté pour la cible `vscode` (pas de support `--agent`).
+> Pour un audit complet multi-domaines, invoquer l'agent `auditor` directement sans `--type`.
+
+---
+
 ## `oc init`
 
 Enregistre un projet dans le hub. Guide l'utilisateur en **4 étapes numérotées** et affiche un récapitulatif coloré à la fin.

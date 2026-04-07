@@ -11,7 +11,34 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 
 ### Added
 
-- Commande `oc config` : gestion des clés API et modèles IA par projet — sous-commandes
+- Commande `oc audit [PROJECT_ID] [--type <type>]` : lance un audit IA sur un projet
+  en invoquant l'agent `auditor` (audit global) ou `auditor-<type>` pour un domaine précis
+  (`security`, `accessibility`, `architecture`, `ecodesign`, `observability`, `performance`,
+  `privacy`) — vérifie la présence des agents requis dans `projects.md` et propose l'ajout +
+  redéploiement si manquants ; affiche un menu des agents audit physiquement déployés si l'ajout
+  est refusé ; bloque explicitement pour la cible `vscode` (pas de support `--agent`) ;
+  propose `oc deploy` si le dossier agents est absent ou les fichiers manquants
+- `scripts/cmd-audit.sh` : implémentation complète de la commande
+- `scripts/lib/prompt-builder.sh` : nouvelle fonction `build_audit_bootstrap_prompt(project_path, project_id, audit_type)` —
+  prompt structuré avec périmètre conditionnel selon `--type`
+- `oc.sh` : case `audit)` ajouté dans le dispatcher
+- `docs/reference/cli.md` : section `oc audit` ajoutée
+
+### Changed
+
+- `oc start` : nouveau flag `--agent <nom>` — passe l'agent directement à l'outil au lancement ;
+  `--onboard` force l'agent `onboarder` ; `--dev` force l'agent `orchestrator-dev`
+- `scripts/adapters/opencode.adapter.sh`, `claude-code.adapter.sh` : `adapter_start` accepte
+  le 4e argument `agent_name` et le passe via `--agent` à la CLI cible
+- Agent `onboarder` : ne se présente plus avec "Tu es l'Onboarder" (rôle chargé via `--agent`) ;
+  génère `ONBOARDING.md` à la racine du projet en fin d'exploration ; ajoute `ONBOARDING.md`
+  au `.gitignore` du projet
+- `scripts/lib/prompt-builder.sh` : `build_onboard_bootstrap_prompt` ne contient plus
+  l'auto-présentation de rôle
+- `scripts/cmd-init.sh`, `scripts/cmd-beads.sh` : remote git vérifié sur `origin` OU `upstream`
+  (pas seulement `upstream`) ; confirmations dans le fil du wizard ; récap final enrichi
+
+ — sous-commandes
   `set` (flux interactif avec saisie masquée de la clé), `get`, `list`, `unset` ; stockage
   local dans `projects/api-keys.local.md` (non versionné) au format INI-like ; providers
   supportés : `anthropic` (clé directe) et `litellm` / compatible OpenAI (avec `base_url`)
