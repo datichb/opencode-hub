@@ -143,7 +143,7 @@ build_dev_bootstrap_prompt() {
 
   if [ "$tickets" = "[]" ] || [ "$tickets" = "null" ]; then
     cat <<EOF
-Tu es le Developer. Aucun ticket avec le ${filter_desc} n'est prêt à implémenter.
+Aucun ticket avec le ${filter_desc} n'est prêt à implémenter.
 
 Pour déléguer un ticket à l'agent :
   bd label add <ID> ${label}
@@ -153,7 +153,7 @@ Pour voir tous les tickets ouverts :
 EOF
   else
     cat <<EOF
-Tu es le Developer. Voici les tickets délégués à l'agent (${filter_desc}, statut ready) :
+Voici les tickets délégués à l'agent (${filter_desc}, statut ready) :
 
 ${tickets}
 
@@ -184,7 +184,7 @@ Chemin : ${project_path}"
   fi
 
   cat <<EOF
-Tu es l'Onboarder. Effectue une exploration complète du projet pour produire un rapport de contexte.
+Effectue une exploration complète du projet pour produire un rapport de contexte.
 
 ${project_info}
 
@@ -200,5 +200,8 @@ Règles :
 - Rapport honnête : signaler les points critiques (🔴), importants (🟠), améliorations (🟡)
 - Lister les zones d'ombre non résolues
 - Proposer la mise à jour du champ Stack dans projects.md si absent
+- Après le rapport complet dans la conversation, écrire ONBOARDING.md à la racine du projet
+  (sans les sections Agents recommandés et Commandes utiles)
+- Ajouter ONBOARDING.md au .gitignore du projet (créer le fichier .gitignore s'il n'existe pas)
 EOF
 }
