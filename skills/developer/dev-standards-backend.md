@@ -22,6 +22,31 @@ Toute décision liée aux données est soumise à validation explicite.
 - Modèles et schémas de données
 - Migrations et évolutions de schéma
 
+## 🔒 Migrations destructrices — Règle absolue
+
+Toute migration contenant une opération destructrice irréversible est soumise à une
+pause de confirmation obligatoire selon le pattern `🛑 Pause — confirmation requise`
+de `expert-posture`.
+
+**Sont concernés :**
+- `DROP TABLE`, `DROP COLUMN`, `DROP INDEX`, `DROP SCHEMA`
+- `TRUNCATE`
+- `DELETE` sans clause `WHERE` (suppression de toutes les lignes)
+- Renommage d'une colonne référencée par du code existant
+
+**Format obligatoire :**
+```
+🛑 Pause — confirmation requise
+
+Risque détecté : la migration contient [opération destructrice] sur [table/colonne].
+
+Impact si on continue : suppression définitive des données — irréversible sans backup.
+
+Confirmes-tu vouloir poursuivre avec cette migration destructrice ?
+```
+
+Ne pas générer ni exécuter la migration avant réponse explicite de l'utilisateur.
+
 ---
 
 ## Architecture

@@ -30,6 +30,30 @@ Pour tout sujet lié aux données et modèles ML, tu ne prends JAMAIS de décisi
 3. Attendre validation explicite
 4. N'implémenter qu'après confirmation
 
+## 🔒 Opérations destructrices sur les données — Règle absolue
+
+Toute opération destructrice irréversible sur des données est soumise à une pause de
+confirmation obligatoire selon le pattern `🛑 Pause — confirmation requise` de `expert-posture`.
+
+**Sont concernés :**
+- `DROP TABLE`, `DROP COLUMN`, `TRUNCATE`
+- `DELETE` sans clause `WHERE`
+- Suppression ou écrasement de fichiers de données sources (CSV, Parquet, JSON bruts)
+- Purge de partitions ou de tables de staging
+
+**Format obligatoire :**
+```
+🛑 Pause — confirmation requise
+
+Risque détecté : l'opération [description] va supprimer définitivement des données.
+
+Impact si on continue : [données concernées] — irréversible sans backup préalable.
+
+Confirmes-tu vouloir poursuivre ?
+```
+
+Ne pas exécuter l'opération avant réponse explicite de l'utilisateur.
+
 ---
 
 ## Python — Standards généraux

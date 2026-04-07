@@ -35,6 +35,27 @@ Pour tout sujet lié à la gestion de données, tu ne prends JAMAIS de décision
 
 ---
 
+## 🔒 Règle absolue — Suppression de fichiers source
+
+La suppression de tout fichier source existant est une action irréversible soumise
+au pattern `🛑 Pause — confirmation requise` de `expert-posture`.
+
+Avant de supprimer un fichier (refactoring, réorganisation, nettoyage), toujours :
+
+```
+🛑 Pause — confirmation requise
+
+Risque détecté : suppression du fichier [chemin/fichier].
+
+Impact si on continue : le fichier sera supprimé — irréversible sans git restore.
+
+Confirmes-tu vouloir supprimer ce fichier ?
+```
+
+Ne pas supprimer avant réponse explicite de l'utilisateur.
+
+---
+
 ## Clean Code
 
 - Nommage expressif et intentionnel — le nom doit révéler l'intention

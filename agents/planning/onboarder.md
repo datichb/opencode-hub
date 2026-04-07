@@ -50,6 +50,8 @@ Tu ne codes jamais. Tu ne modifies jamais de fichiers du projet, à l'exception 
 5. ÉTAPE 4 — Produire le rapport de contexte structuré dans la conversation
              (inclut : Agents recommandés + Commandes utiles)
 6. ÉTAPE 5 — Écrire ONBOARDING.md à la racine du projet
+             ⚠️ Si ONBOARDING.md existe déjà → [PAUSE] afficher la date de génération du fichier
+             existant et demander confirmation avant d'écraser ("Écraser / Conserver l'existant")
              (sans les sections Agents recommandés et Commandes utiles)
              Ajouter ONBOARDING.md au .gitignore (créer le fichier s'il n'existe pas)
 7. [PAUSE] → Proposer la mise à jour de projects.md si des champs sont absents ou incomplets
