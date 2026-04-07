@@ -80,7 +80,7 @@ adapter_update() {
 }
 
 adapter_start() {
-  local project_path="$1" prompt="${2:-}" project_id="${3:-}"
+  local project_path="$1" prompt="${2:-}" project_id="${3:-}" agent="${4:-}"
   command -v claude &>/dev/null || { log_error "[claude-code] Non installé → oc install (puis sélectionner Claude Code)"; exit 1; }
   cd "$project_path" || { log_error "[claude-code] Impossible de naviguer vers $project_path"; exit 1; }
 
@@ -110,8 +110,11 @@ adapter_start() {
     fi
   fi
 
-  if [ -n "$prompt" ]; then
-    exec claude "$prompt"
+  local args=()
+  [ -n "$agent"  ] && args+=(--agent "$agent")
+  [ -n "$prompt" ] && args+=("$prompt")
+  if [ ${#args[@]} -gt 0 ]; then
+    exec claude "${args[@]}"
   else
     exec claude
   fi

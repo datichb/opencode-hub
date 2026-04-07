@@ -9,17 +9,19 @@ DEV_MODE=false
 ONBOARD_MODE=false
 DEV_LABEL=""
 DEV_ASSIGNEE=""
+AGENT_NAME=""
 ARGS=()
 _prev=""
 for arg in "$@"; do
   case "$_prev" in
     --label)    DEV_LABEL="$arg";    _prev=""; continue ;;
     --assignee) DEV_ASSIGNEE="$arg"; _prev=""; continue ;;
+    --agent)    AGENT_NAME="$arg";   _prev=""; continue ;;
   esac
   case "$arg" in
     --dev)      DEV_MODE=true ;;
     --onboard)  ONBOARD_MODE=true ;;
-    --label|--assignee) _prev="$arg" ;;
+    --label|--assignee|--agent) _prev="$arg" ;;
     *)          ARGS+=("$arg") ;;
   esac
 done
@@ -130,8 +132,9 @@ if [ ! -d "$PROJECT_PATH/.beads" ]; then
     if [[ "${_init_beads:-Y}" =~ ^[Yy]$ ]]; then
       if (cd "$PROJECT_PATH" && bd init); then
         log_success "Beads initialisé dans $PROJECT_PATH"
-        # Proposer de configurer l'upstream git si absent
-        if ! (cd "$PROJECT_PATH" && git remote get-url upstream) &>/dev/null; then
+        # Proposer de configurer l'upstream git si absent (ni upstream ni origin trouvé)
+        if ! (cd "$PROJECT_PATH" && git remote get-url upstream) &>/dev/null && \
+           ! (cd "$PROJECT_PATH" && git remote get-url origin) &>/dev/null; then
           echo ""
           _prompt _setup_upstream "Configurer l'upstream Git (git remote add upstream) ? [Y/n] : "
           if [[ "${_setup_upstream:-Y}" =~ ^[Yy]$ ]]; then
@@ -196,13 +199,14 @@ if [ "$DEV_MODE" = true ]; then
   else
     source "$LIB_DIR/prompt-builder.sh"
     PROMPT=$(build_dev_bootstrap_prompt "$PROJECT_PATH" "$DEV_LABEL" "$DEV_ASSIGNEE")
+    AGENT_NAME="${AGENT_NAME:-orchestrator-dev}"
     echo ""
     if [ -n "$DEV_ASSIGNEE" ]; then
-      log_info "Mode --dev  tickets assignés à '${DEV_ASSIGNEE}'"
+      log_info "Mode --dev  tickets assignés à '${DEV_ASSIGNEE}'  agent: ${AGENT_NAME}"
     elif [ -n "$DEV_LABEL" ]; then
-      log_info "Mode --dev  tickets label '${DEV_LABEL}'"
+      log_info "Mode --dev  tickets label '${DEV_LABEL}'  agent: ${AGENT_NAME}"
     else
-      log_info "Mode --dev  tickets ai-delegated"
+      log_info "Mode --dev  tickets ai-delegated  agent: ${AGENT_NAME}"
     fi
   fi
 fi
@@ -214,8 +218,9 @@ if [ "$ONBOARD_MODE" = true ]; then
   else
     source "$LIB_DIR/prompt-builder.sh"
     PROMPT=$(build_onboard_bootstrap_prompt "$PROJECT_PATH" "$PROJECT_ID")
+    AGENT_NAME="${AGENT_NAME:-onboarder}"
     echo ""
-    log_info "Mode --onboard  découverte projet activée"
+    log_info "Mode --onboard  découverte projet activée  agent: ${AGENT_NAME}"
   fi
 fi
 
@@ -223,4 +228,4 @@ fi
 _outro "Lancement de ${default_target}…"
 IFS= read -rp "" _
 
-adapter_start "$PROJECT_PATH" "$PROMPT" "$PROJECT_ID"
+adapter_start "$PROJECT_PATH" "$PROMPT" "$PROJECT_ID" "${AGENT_NAME:-}"

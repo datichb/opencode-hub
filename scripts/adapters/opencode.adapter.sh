@@ -271,11 +271,10 @@ adapter_update() {
 }
 
 adapter_start() {
-  local project_path="$1" prompt="${2:-}"
+  local project_path="$1" prompt="${2:-}" project_id="${3:-}" agent="${4:-}"
   cd "$project_path" || { log_error "[opencode] Impossible de naviguer vers $project_path"; exit 1; }
-  if [ -n "$prompt" ]; then
-    exec opencode --prompt "$prompt"
-  else
-    exec opencode
-  fi
+  local args=()
+  [ -n "$agent"  ] && args+=(--agent "$agent")
+  [ -n "$prompt" ] && args+=(--prompt "$prompt")
+  exec opencode "${args[@]}"
 }
