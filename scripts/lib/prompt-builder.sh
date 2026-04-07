@@ -204,9 +204,14 @@ EOF
 
 # Construit le prompt de bootstrap pour le mode --onboard (oc start --onboard)
 # Déclenche l'agent onboarder en lecture seule sur le projet
+# @param $1 — project_path
+# @param $2 — project_id (optionnel)
+# @param $3 — hub_dir (optionnel — défaut : $HUB_DIR)
 build_onboard_bootstrap_prompt() {
   local project_path="$1"
   local project_id="${2:-}"
+  local hub_dir="${3:-${HUB_DIR:-}}"
+  local projects_file="${hub_dir:+${hub_dir}/projects/projects.md}"
 
   local project_info=""
   if [ -n "$project_id" ]; then
@@ -216,10 +221,17 @@ Chemin : ${project_path}"
     project_info="Chemin : ${project_path}"
   fi
 
+  local hub_info=""
+  if [ -n "$hub_dir" ] && [ -n "$projects_file" ]; then
+    hub_info="
+Hub : ${hub_dir}
+projects.md : ${projects_file}"
+  fi
+
   cat <<EOF
 Effectue une exploration complète du projet pour produire un rapport de contexte.
 
-${project_info}
+${project_info}${hub_info}
 
 Workflow :
 1. Annoncer ce qui va être exploré
@@ -232,9 +244,10 @@ Règles :
 - Lecture seule — tu ne modifies aucun fichier du projet
 - Rapport honnête : signaler les points critiques (🔴), importants (🟠), améliorations (🟡)
 - Lister les zones d'ombre non résolues
-- Proposer la mise à jour du champ Stack dans projects.md si absent
 - Après le rapport complet dans la conversation, écrire ONBOARDING.md à la racine du projet
   (sans les sections Agents recommandés et Commandes utiles)
 - Ajouter ONBOARDING.md au .gitignore du projet (créer le fichier .gitignore s'il n'existe pas)
+- Si le champ Stack est absent ou incomplet dans projects.md, le mettre à jour
+  (chemin fourni ci-dessus — demander confirmation explicite avant toute écriture)
 EOF
 }

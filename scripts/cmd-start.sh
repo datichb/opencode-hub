@@ -217,7 +217,7 @@ if [ "$ONBOARD_MODE" = true ]; then
     log_warn "--onboard ignoré pour la cible vscode (pas de support prompt)"
   else
     source "$LIB_DIR/prompt-builder.sh"
-    PROMPT=$(build_onboard_bootstrap_prompt "$PROJECT_PATH" "$PROJECT_ID")
+    PROMPT=$(build_onboard_bootstrap_prompt "$PROJECT_PATH" "$PROJECT_ID" "$HUB_DIR")
     AGENT_NAME="${AGENT_NAME:-onboarder}"
     echo ""
     log_info "Mode --onboard  découverte projet activée  agent: ${AGENT_NAME}"
