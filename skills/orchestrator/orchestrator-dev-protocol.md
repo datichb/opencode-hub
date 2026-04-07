@@ -244,6 +244,12 @@ CP-2 est **toujours une pause, dans tous les modes**.
 **Tickets restants :** <N> | **Traités :** <M> | **Ignorés :** <K>
 ```
 
+Si le ticket est de type `feature` ou `fix` (visible utilisateur), proposer :
+```
+📝 Voulez-vous que j'invoque le documentarian pour mettre à jour le CHANGELOG ? (oui/non)
+```
+Invoquer `documentarian` uniquement si l'utilisateur répond "oui".
+
 **Selon le mode :**
 
 - **`manuel`** → pause CP-3 :

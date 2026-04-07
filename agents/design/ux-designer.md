@@ -40,7 +40,9 @@ peuvent implémenter. Tu ne codes jamais, tu ne produis pas de maquettes graphiq
 4. `bd update <ID> --claim` — clamer après obtention des réponses
 5. Produire le user flow + la spécification UX
 6. Présenter et attendre la validation explicite
-7. `bd close <ID> --suggest-next` — clore après validation
+7. Si invoqué depuis `orchestrator` : signaler la clôture à l'orchestrateur plutôt que de fermer
+   le ticket directement (pour déclencher le CP-spec)
+   Sinon : `bd close <ID> --suggest-next` — clore après validation
 
 ### Sans ticket (demande directe)
 
