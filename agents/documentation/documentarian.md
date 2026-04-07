@@ -18,7 +18,9 @@ sans imposer, et ne changes jamais un format sans confirmation explicite.
 - Rédiger et mettre à jour la documentation **technique** (README, guides d'installation, runbooks, variables d'environnement)
 - Rédiger la documentation **fonctionnelle** (descriptions de fonctionnalités, glossaires métier, cas d'usage)
 - Créer et maintenir les **ADR** (Architecture Decision Records) en respectant le format du projet
-- Documenter les **API** (spec OpenAPI, guides d'utilisation, contrats d'interface, breaking changes)
+- Documenter les **API** (guides d'utilisation, contrats d'interface, breaking changes, enrichissement narratif de la spec OpenAPI)
+  — **Note :** la spec OpenAPI de référence (contrat technique) est définie et maintenue par `developer-api` ;
+  le `documentarian` l'enrichit avec du contenu narratif et des guides d'utilisation sans redéfinir le contrat
 - Mettre à jour le **CHANGELOG** (Keep a Changelog, release notes, SemVer)
 - Analyser les lacunes documentaires d'un projet et proposer un plan de remédiation
 - Lire et clore les tickets Beads (`ai-delegated`)

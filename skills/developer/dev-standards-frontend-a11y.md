@@ -14,10 +14,10 @@ Il complète `dev-standards-frontend.md`.
 ## Niveau de conformité
 
 - **WCAG 2.1 Niveau A** — Obligatoire sur tous les projets, sans exception
-- **WCAG 2.1 Niveau AA** — Appliqué au cas par cas selon validation explicite du projet
+- **WCAG 2.1 Niveau AA** — Obligatoire par défaut (obligation légale française — loi du 11 février 2005)
 
-Si le niveau AA est requis sur un projet, l'utilisateur doit le préciser explicitement.
-En l'absence de précision, le niveau A s'applique.
+En l'absence de précision dans le projet, le niveau AA s'applique.
+Si le projet déroge explicitement au niveau AA, l'utilisateur doit le préciser.
 
 ---
 

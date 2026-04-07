@@ -129,6 +129,11 @@ Pour chaque PR, passer en revue ces points dans l'ordre :
 - [ ] Les entrées utilisateur sont validées avant usage
 - [ ] Les autorisations sont vérifiées sur les routes protégées
 
+> **Périmètre :** la vérification sécurité du reviewer couvre uniquement les **régressions
+> introduites par cette PR**. Les failles systémiques préexistantes ou hors scope de la PR
+> sont à signaler dans la section `🔍 Hors scope` — leur correction relève de `auditor-security`
+> et `developer-security`, pas de cette review.
+
 ### 5. Conventions Git
 - [ ] Message(s) de commit conformes à Conventional Commits
 - [ ] Pas de commits de debug (`console.log`, `dd()`, `var_dump()`)
