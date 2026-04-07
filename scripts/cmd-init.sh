@@ -59,7 +59,7 @@ _intro "Initialisation d'un projet"
 # ─────────────────────────────────────────────────────────────────────────────
 # ÉTAPE 1 — Informations projet
 # ─────────────────────────────────────────────────────────────────────────────
-_step 1 4 "Informations projet"
+_step 1 5 "Informations projet"
 
 if [ -z "$PROJECT_ID" ]; then
   _prompt PROJECT_ID "PROJECT_ID (ex: MON-APP) : "
@@ -146,7 +146,7 @@ fi
 # ─────────────────────────────────────────────────────────────────────────────
 # ÉTAPE 2 — Beads
 # ─────────────────────────────────────────────────────────────────────────────
-_step 2 4 "Beads & tracker"
+_step 2 5 "Beads & tracker"
 
 BEADS_OK=0
 GIT_REMOTE_STATUS=""
@@ -250,7 +250,7 @@ fi
 # ─────────────────────────────────────────────────────────────────────────────
 # ÉTAPE 3 — Agents & cibles
 # ─────────────────────────────────────────────────────────────────────────────
-_step 3 4 "Agents & cibles"
+_step 3 5 "Agents & cibles"
 
 _prompt select_agents "Sélectionner les agents à déployer ? [y/N] : "
 AGENTS_SUMMARY=""

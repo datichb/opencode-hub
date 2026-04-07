@@ -233,7 +233,7 @@ Workflow :
 
 ## `oc init`
 
-Enregistre un projet dans le hub. Guide l'utilisateur en **4 étapes numérotées** et affiche un récapitulatif coloré à la fin.
+Enregistre un projet dans le hub. Guide l'utilisateur en **5 étapes numérotées** et affiche un récapitulatif coloré à la fin.
 
 ```bash
 oc init [PROJECT_ID] [chemin]
@@ -252,8 +252,9 @@ oc init [PROJECT_ID] [chemin]
 |-------|---------|
 | 1 — Informations projet | PROJECT_ID, chemin, vérification/création du dossier, nom, stack, labels, tracker |
 | 2 — Beads & tracker | `bd init`, upstream Git, configuration tracker |
-| 3 — Agents & cibles | Sélection des agents et des cibles de déploiement |
-| 4 — Déploiement | Proposition de déploiement immédiat |
+| 3 — Agents & cibles | Sélection des agents, des cibles de déploiement, et des agents natifs OpenCode à désactiver |
+| 4 — Fournisseur LLM | Configuration d'un provider spécifique au projet (surcharge le hub) |
+| 5 — Déploiement | Proposition de déploiement immédiat |
 
 > La création du dossier a lieu en **fin d'étape 1** — Beads est ainsi garanti accessible dès l'étape 2.
 
@@ -263,12 +264,12 @@ oc init [PROJECT_ID] [chemin]
 ◆  Initialisation d'un projet
 │
 │
-◇  Étape 1/4 — Informations projet
+◇  Étape 1/5 — Informations projet
 │
 │  PROJECT_ID (ex: MON-APP) :
 │  ...
 │
-◇  Étape 2/4 — Beads & tracker
+◇  Étape 2/5 — Beads & tracker
 │
 │  ...
 ```
