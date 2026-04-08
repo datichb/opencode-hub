@@ -1,6 +1,6 @@
 ---
 name: audit-protocol
-description: Protocole commun à tous les audits — format de rapport structuré, niveaux de criticité, règles de comportement et conventions de sortie.
+description: Protocole complet d'audit — règles absolues, format de rapport, niveaux de criticité, périmètre d'audit et contextualisation Beads. Injecté dans le coordinateur `auditor`. Les sous-agents utilisent `audit-protocol-light`.
 ---
 
 # Skill — Protocole d'Audit

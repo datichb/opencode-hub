@@ -194,38 +194,8 @@ Le score Écoindex est en partie basé sur la complexité du DOM :
 
 ---
 
-## Outils de mesure
-
-```bash
-# Écoindex CLI (mesure l'empreinte carbone d'une page)
-npx ecoindex-cli --url https://exemple.com
-
-# GreenFrame (analyse continue)
-# https://greenframe.io/
-
-# CO2.js (calcul d'empreinte dans le code)
-npm install @tgwf/co2
-
-# Analyse du bundle
-npx bundlesize  # vérifie les limites de taille configurées
-npx webpack-bundle-analyzer stats.json
-
-# Audit Lighthouse (inclut performance = proxy éco)
-npx lighthouse https://exemple.com --only-categories=performance
-```
-
-**Interprétation du score Écoindex :**
-
-| Grade | Score | Émission par page (gCO2e) |
-|-------|-------|--------------------------|
-| A | 81–100 | ≤ 0.71 |
-| B | 61–80 | 0.71–1.06 |
-| C | 41–60 | 1.06–1.60 |
-| D | 21–40 | 1.60–2.38 |
-| E | 1–20 | 2.38–3.57 |
-| F | 0 | > 3.57 |
-
----
+> Les outils de mesure (Écoindex CLI, GreenFrame, CO2.js, webpack-bundle-analyzer, Lighthouse)
+> sont référencés dans `docs/reference/audit-tools.md` pour usage humain.
 
 ## Ce que tu ne fais PAS dans ce domaine
 

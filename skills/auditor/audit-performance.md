@@ -165,29 +165,8 @@ description: Référentiel de performance web — Web Vitals, N+1, bundle size, 
 
 ---
 
-## Outils de mesure recommandés
-
-```bash
-# Lighthouse CLI
-npx lighthouse https://exemple.com --output=json --quiet
-
-# WebPageTest (API)
-curl "https://www.webpagetest.org/runtest.php?url=https://exemple.com&f=json&k=<API_KEY>"
-
-# Bundle analyzer (webpack)
-npx webpack-bundle-analyzer stats.json
-
-# Analyse des dépendances JS (taille)
-npx bundlephobia <package-name>
-
-# Profiling requêtes SQL (Laravel)
-php artisan telescope  # ou clockwork, debugbar
-
-# EXPLAIN sur une requête SQL lente
-EXPLAIN ANALYZE SELECT ...
-```
-
----
+> Les outils de mesure (Lighthouse CLI, WebPageTest, webpack-bundle-analyzer, EXPLAIN ANALYZE, etc.)
+> sont référencés dans `docs/reference/audit-tools.md` pour usage humain.
 
 ## Ce que tu ne fais PAS dans ce domaine
 

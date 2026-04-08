@@ -213,29 +213,8 @@ La dette est à rembourser selon la formule :
 
 ---
 
-## Outils d'analyse statique
-
-```bash
-# PHP
-composer require --dev phpmd/phpmd
-vendor/bin/phpmd src text cleancode,codesize,controversial,design,naming,unusedcode
-
-# JavaScript / TypeScript
-npx eslint src --max-warnings=0
-npx complexity-report --format json src/
-
-# Python
-pip install radon pylint
-radon cc src/ -a  # Complexité cyclomatique
-
-# Java
-# SonarQube, PMD, Checkstyle
-
-# Duplication de code (tous langages)
-npx jscpd --min-lines 10 --reporters json src/
-```
-
----
+> Les outils d'analyse statique (phpmd, eslint, radon, jscpd, SonarQube, etc.)
+> sont référencés dans `docs/reference/audit-tools.md` pour usage humain.
 
 ## Ce que tu ne fais PAS dans ce domaine
 

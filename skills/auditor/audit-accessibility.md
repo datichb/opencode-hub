@@ -174,34 +174,9 @@ description: Référentiel d'accessibilité numérique — WCAG 2.1 niveau AA et
 
 ---
 
-## Outils de vérification recommandés
-
-```bash
-# Analyse automatique avec axe-core (CLI)
-npx @axe-core/cli https://exemple.com
-
-# WAVE (outil en ligne — pas d'installation)
-# https://wave.webaim.org/
-
-# Lighthouse accessibility audit
-npx lighthouse https://exemple.com --only-categories=accessibility
-
-# Vérification contraste couleur
-# https://webaim.org/resources/contrastchecker/
-
-# Validation HTML W3C
-npx html-validate "**/*.html"
-
-# Test lecteur d'écran
-# macOS : VoiceOver (Cmd+F5)
-# Windows : NVDA (gratuit) ou JAWS
-# Linux : Orca
-```
-
-**Limites des outils automatisés :** les outils couvrent environ 30-40% des critères WCAG.
-Les tests manuels (navigation clavier, lecteur d'écran) sont indispensables pour une conformité réelle.
-
----
+> Les outils de vérification (axe-core CLI, Lighthouse accessibility, html-validate, etc.)
+> sont référencés dans `docs/reference/audit-tools.md` pour usage humain.
+> Les outils automatisés couvrent environ 30-40% des critères WCAG — les tests manuels restent indispensables.
 
 ## Ce que tu ne fais PAS dans ce domaine
 

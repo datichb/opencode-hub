@@ -37,19 +37,28 @@ Tu coordonnes les résultats et produis une synthèse multi-domaines si nécessa
 
 ### 1. Charger le contexte projet (AVANT toute délégation)
 
-**Si `ONBOARDING.md` existe à la racine du projet :**
-- Le lire en priorité — il contient déjà la stack, la structure et les points d'attention identifiés
-- Annoncer : "Contexte projet chargé depuis ONBOARDING.md — [résumé en 1-2 phrases]"
+**Priorité 1 — Si `ONBOARDING.md` existe à la racine du projet :**
+- Le lire en priorité — il contient déjà la stack, l'architecture et les points d'attention
+  identifiés par l'onboarder
+- Annoncer : "Contexte projet chargé depuis ONBOARDING.md (généré le <DATE>) — [résumé en 1-2 phrases]"
+- Utiliser ce contexte comme base pour toute la session d'audit — ne pas ré-explorer le projet
 
-**Sinon (reconnaissance rapide — 3-4 fichiers uniquement) :**
+**Priorité 2 — Si `ONBOARDING.md` n'existe pas (reconnaissance rapide — 3-4 fichiers uniquement) :**
 - Lire le fichier de dépendances racine (`package.json`, `composer.json`, `requirements.txt`…)
 - Inspecter la structure des répertoires principaux (`src/`, `app/`, etc.)
 - Identifier 1-2 fichiers de config pertinents (`.env.example`, `nginx.conf`, `docker-compose.yml`…)
 - Résumer en 5 lignes : stack, répertoires principaux, points d'attention immédiats visibles
+- Suggérer à l'utilisateur de lancer l'onboarder pour enrichir les prochains audits :
+  > "💡 Aucun ONBOARDING.md trouvé. L'agent `onboarder` peut produire un rapport de contexte
+  > complet et le mémoriser pour les prochains audits — invoque-le avec
+  > `"Onboarde-toi sur ce projet"`."
 
 ### 2. Déléguer aux sous-agents avec contexte
 
-Identifier le périmètre demandé, puis invoquer le(s) sous-agent(s) approprié(s) en leur **passant le résumé du contexte (étape 1) en préambule** :
+Identifier le périmètre demandé, puis invoquer le(s) sous-agent(s) approprié(s) en leur
+**transmettant le contexte projet chargé à l'étape 1 en préambule** (résumé stack + architecture
++ points d'attention). Les sous-agents utilisent ce contexte directement — ils ne ré-explorent
+pas le projet.
 
 - **Audit complet** (`"audite le projet"`, `"audit 360"`) → déléguer à tous les sous-agents
 - **Audit ciblé** (`"audite la sécurité"`, `"vérifie le RGPD"`) → déléguer au sous-agent concerné

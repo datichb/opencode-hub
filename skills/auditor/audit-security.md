@@ -122,93 +122,19 @@ Patterns à rechercher dans le code source et l'historique git :
 - Certificats ou clés privées (PEM) committées
 - Fichiers `.env` non exclus du suivi git
 
-**Commandes d'analyse utiles :**
-```bash
-# Rechercher des patterns de secrets dans le code
-grep -r "password\s*=\s*['\"]" --include="*.{js,ts,php,py}" .
-grep -r "AKIA[0-9A-Z]{16}" . # Clés AWS
-git log --all --full-history -- "*.env"  # Historique des .env
-```
-
----
-
-## Checklist infra RGS (à vérifier manuellement)
-
-> ⚠️ Ces points ne peuvent pas être vérifiés par analyse statique du code source.
-> Ils doivent être validés par un audit d'infrastructure ou une revue de configuration système.
-
-### Configuration TLS/SSL
-
-- [ ] **TLS 1.2 minimum** — TLS 1.0 et 1.1 désactivés (RGS v2.0 §4.2)
-- [ ] **TLS 1.3 recommandé** pour les nouveaux déploiements
-- [ ] Suites cryptographiques conformes aux recommandations ANSSI
-  - Acceptées : `TLS_AES_256_GCM_SHA384`, `TLS_CHACHA20_POLY1305_SHA256`, suites ECDHE
-  - Refusées : RC4, DES, 3DES, MD5, SHA-1 sur les signatures
-- [ ] **Perfect Forward Secrecy** activée (suites ECDHE ou DHE uniquement)
-- [ ] Certificat émis par une IGC reconnue (AC de confiance ANSSI ou Letsencrypt pour les usages standard)
-- [ ] Durée de validité du certificat respectée (≤ 1 an recommandé)
-- [ ] OCSP Stapling activé si possible
-
-### Gestion des certificats
-
-- [ ] Processus documenté de renouvellement avant expiration
-- [ ] Alerte de monitoring sur l'expiration (≥ 30 jours à l'avance)
-- [ ] Révocation possible et testée (CRL ou OCSP disponible)
-- [ ] Clés privées stockées de façon sécurisée (HSM ou vault sécurisé)
-
-### Cloisonnement réseau
-
-- [ ] Les serveurs applicatifs ne sont pas directement accessibles depuis Internet (DMZ)
-- [ ] La base de données n'est accessible que depuis les serveurs applicatifs (pas d'accès public)
-- [ ] Les ports non nécessaires sont fermés (firewall applicatif)
-- [ ] Les communications inter-services sont chiffrées (mTLS en microservices)
-- [ ] Un WAF (Web Application Firewall) est en place devant les services exposés
-
-### Authentification forte (RGS niveau 1+)
-
-- [ ] L'authentification des comptes d'administration utilise au moins 2 facteurs
-- [ ] Les comptes de service utilisent des secrets rotatifs ou des identités managées
-- [ ] Les accès SSH sont par clé (pas par mot de passe) et journalisés
-
-### Journalisation et traçabilité
-
-- [ ] Les logs d'accès sont conservés selon la politique de rétention (RGS : 12 mois minimum)
-- [ ] L'horodatage des logs est synchronisé (NTP) et signé si nécessaire
-- [ ] Les logs sont intègres et non modifiables par les comptes applicatifs
+> Les patterns de recherche (`grep`, `git log`) sont référencés dans `docs/reference/audit-tools.md`.
 
 ---
 
 ## Analyse des dépendances
 
-Commandes à exécuter selon l'écosystème :
-
-```bash
-# Node.js / npm
-npm audit --json
-
-# Node.js / yarn
-yarn audit --json
-
-# PHP / Composer
-composer audit
-
-# Python / pip
-pip-audit
-
-# Ruby / Bundler
-bundle audit
-
-# Java / Maven
-mvn dependency-check:check
-
-# Rust / Cargo
-cargo audit
-```
-
 Signaler toute dépendance avec :
 - CVE de sévérité **Critical** ou **High** non corrigée
 - Dépendance abandonnée (dernière release > 2 ans, pas de mainteneur actif)
 - Dépendance non épinglée à une version exacte (risque de supply chain)
+
+> Les commandes d'analyse (`npm audit`, `composer audit`, `pip-audit`, etc.) sont
+> référencées dans `docs/reference/audit-tools.md` pour usage humain.
 
 ---
 
