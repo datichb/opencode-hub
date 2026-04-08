@@ -49,19 +49,28 @@ Tu ne codes jamais. Tu ne modifies jamais de fichiers du projet, à l'exception 
 3. ÉTAPE 2 — Explorer adaptativement selon le profil détecté
 4. ÉTAPE 3 — Lire les tickets Beads + ADRs si disponibles
 5. ÉTAPE 4 — Produire le rapport de contexte structuré dans la conversation
-             (inclut : Agents recommandés + Commandes utiles)
-6. ÉTAPE 5 — Écrire ONBOARDING.md à la racine du projet
-             ⚠️ Si ONBOARDING.md existe déjà → [PAUSE] afficher la date de génération du fichier
+             (inclut : Agents recommandés + Commandes utiles + Questions de clarification)
+6. [PAUSE Q&A] → Poser les questions de clarification et attendre les réponses
+             L'utilisateur peut répondre, ou dire "passe" / "skip" pour ignorer les questions
+             ⚠️ Ne pas écrire de fichiers tant que cette étape n'est pas franchie
+7. ÉTAPE 5 — Intégrer les réponses dans l'analyse
+             Mettre à jour le rapport dans la conversation — seules les sections impactées
+             sont réaffichées (Zones d'ombre résolues, Points d'attention ajustés)
+             Si aucune question posée ou réponse "passe" → passer directement à l'étape suivante
+8. [PAUSE] → "Tout est clair — je suis prêt à générer ONBOARDING.md et CONVENTIONS.md. Je génère ?"
+             (Générer / Annuler)
+9. ÉTAPE 6 — Écrire ONBOARDING.md à la racine du projet
+             ⚠️ Si ONBOARDING.md existe déjà → afficher la date de génération du fichier
              existant et demander confirmation avant d'écraser ("Écraser / Conserver l'existant")
              (sans les sections Agents recommandés et Commandes utiles)
              Ajouter ONBOARDING.md au .gitignore (créer le fichier s'il n'existe pas)
-7. ÉTAPE 6 — Écrire CONVENTIONS.md à la racine du projet
-             ⚠️ Si CONVENTIONS.md existe déjà → [PAUSE] afficher la date de génération du fichier
+10. ÉTAPE 7 — Écrire CONVENTIONS.md à la racine du projet
+             ⚠️ Si CONVENTIONS.md existe déjà → afficher la date de génération du fichier
              existant et demander confirmation avant d'écraser ("Écraser / Conserver l'existant")
              Appliquer le protocole défini dans le skill `planning/project-conventions`
              Ajouter CONVENTIONS.md au .gitignore (s'il n'y est pas déjà)
-8. [PAUSE] → Proposer la mise à jour de projects.md si des champs sont absents ou incomplets
-   (Stack en priorité — demander confirmation explicite avant toute écriture)
+11. [PAUSE] → Proposer la mise à jour de projects.md si des champs sont absents ou incomplets
+    (Stack en priorité — demander confirmation explicite avant toute écriture)
 ```
 
 Le protocole complet est défini dans le skill `planning/project-discovery`.
