@@ -7,44 +7,55 @@ Ce guide vous permet d'installer le hub et de lancer votre premier agent en moin
 | Outil | Version minimale | Vérification |
 |-------|-----------------|--------------|
 | Git | 2.x | `git --version` |
-| Node.js | 18+ | `node --version` |
+| curl | — | `curl --version` |
 
-> **Note :** Node.js est requis uniquement si vous ciblez OpenCode ou Claude Code.
-> VS Code / Copilot ne nécessite pas Node.js.
+> Les autres dépendances (`jq`, `Node.js`, `opencode`, `bun`) sont installées automatiquement par le script d'installation.
 >
-> **Beads (`bd`)** est installé automatiquement par `oc install` — pas besoin de l'installer manuellement.
+> **Node.js** est requis uniquement si vous ciblez OpenCode ou Claude Code — VS Code / Copilot ne le nécessite pas.
+>
+> **Beads (`bd`)** est installé automatiquement par `oc install`.
 
 ---
 
-## 1. Cloner le hub
+## 1. Installer le hub
+
+### Option A — One-liner (recommandé)
 
 ```bash
-git clone https://github.com/toi/opencode-hub.git ~/opencode-hub
-chmod +x ~/opencode-hub/oc.sh ~/opencode-hub/scripts/*.sh \
-         ~/opencode-hub/scripts/adapters/*.sh \
-         ~/opencode-hub/scripts/lib/*.sh
+curl -fsSL https://raw.githubusercontent.com/BenjaminDataiche/opencode-hub/main/install.sh | bash
 ```
 
----
+Le script automatise :
+- Clone du repo dans `~/.opencode-hub`
+- Installation des dépendances manquantes (`jq`, `Node.js`, `opencode`, `bun`)
+- Création de l'alias `oc` dans `~/.zshrc` ou `~/.bashrc`
+- Initialisation des fichiers de config locaux
+- Configuration interactive des cibles AI et du provider LLM
 
-## 2. Alias recommandé
-
-Ajouter dans `~/.zshrc` ou `~/.bashrc` :
+Après l'installation, recharger le shell :
 
 ```bash
-alias oc="~/opencode-hub/oc.sh"
 source ~/.zshrc   # ou source ~/.bashrc
 ```
 
+> **Dossier d'installation personnalisé :** `OPENCODE_HUB_DIR=~/tools/oc bash install.sh`
+
 ---
 
-## 3. Installer le hub
+### Option B — Installation manuelle
 
 ```bash
+# 1. Cloner
+git clone https://github.com/BenjaminDataiche/opencode-hub.git ~/.opencode-hub
+
+# 2. Alias shell
+echo 'alias oc="~/.opencode-hub/oc.sh"' >> ~/.zshrc && source ~/.zshrc
+
+# 3. Configurer
 oc install
 ```
 
-Le script interactif vous demande de choisir les cibles à activer :
+`oc install` est interactif et vous demande de choisir les cibles à activer :
 
 | Choix | Cibles configurées |
 |-------|--------------------|
@@ -58,7 +69,7 @@ Le script interactif vous demande de choisir les cibles à activer :
 
 ---
 
-## 4. Enregistrer un projet
+## 2. Enregistrer un projet
 
 ```bash
 oc init MON-APP ~/workspace/mon-app
@@ -73,14 +84,11 @@ Cette commande :
 
 ---
 
-## 5. Déployer les agents
+## 3. Déployer les agents
 
 Si vous n'avez pas déployé lors du `oc init` :
 
 ```bash
-# Déployer sur le hub lui-même (OpenCode)
-oc deploy opencode
-
 # Déployer dans un projet spécifique
 oc deploy opencode MON-APP
 oc deploy all MON-APP   # toutes les cibles actives
@@ -96,7 +104,7 @@ Résultat attendu selon la cible :
 
 ---
 
-## 6. Lancer l'outil
+## 4. Lancer l'outil
 
 ```bash
 oc start MON-APP
@@ -118,7 +126,7 @@ oc start MON-APP --dev
 
 ---
 
-## 7. Vérifier le déploiement
+## 5. Vérifier le déploiement
 
 ```bash
 oc deploy --check opencode MON-APP
@@ -126,7 +134,7 @@ oc deploy --check opencode MON-APP
 
 Affiche pour chaque agent : `✓ À JOUR`, `⚠ OBSOLÈTE` ou `✗ MANQUANT`.
 
-Après un `git pull` sur le hub :
+Après un `git pull` sur le hub (ou `oc update`) :
 
 ```bash
 oc sync            # redéploie sur tous les projets
@@ -160,12 +168,31 @@ Vous pouvez maintenant invoquer n'importe quel agent dans OpenCode :
 
 ---
 
+## Mettre à jour le hub
+
+```bash
+oc update
+```
+
+Met à jour opencode, Beads, et les skills externes. Si des skills sont modifiés, propose de relancer `oc sync`.
+
+Pour mettre à jour les sources du hub lui-même :
+
+```bash
+git -C ~/.opencode-hub pull
+oc sync
+```
+
+---
+
 ## Dépannage
 
 | Symptôme | Solution |
 |----------|----------|
-| `oc: command not found` | Vérifier l'alias dans `.zshrc`/`.bashrc` et `source` le fichier |
+| `oc: command not found` | Relancer `source ~/.zshrc` (ou `~/.bashrc`) après installation |
+| `curl: command not found` | Installer curl, puis relancer le one-liner |
 | `Node.js introuvable` | Relancer `oc install` — propose les installeurs disponibles |
 | Agent absent dans l'outil | Relancer `oc deploy <target> MON-APP` |
 | Agent obsolète (`⚠ OBSOLÈTE`) | `oc deploy <target> MON-APP` pour resynchroniser |
 | `bd: command not found` | Installer Beads : `brew install bd` |
+| Dossier d'install déjà existant | `OPENCODE_HUB_DIR=~/autre-chemin bash install.sh` |

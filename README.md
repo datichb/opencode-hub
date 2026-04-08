@@ -19,23 +19,51 @@ Les outils IA fonctionnent en silo. opencode-hub centralise tout :
 
 ---
 
-## Démarrage rapide
+## Installation
+
+### One-liner (recommandé)
 
 ```bash
-# 1. Cloner et configurer
-git clone https://github.com/toi/opencode-hub.git ~/opencode-hub
-echo 'alias oc="~/opencode-hub/oc.sh"' >> ~/.zshrc && source ~/.zshrc
+curl -fsSL https://raw.githubusercontent.com/BenjaminDataiche/opencode-hub/main/install.sh | bash
+```
 
-# 2. Installer
+Le script automatise tout : clone du repo dans `~/.opencode-hub`, installation des dépendances (`jq`, `Node.js`, `opencode`, `bun`), création de l'alias `oc` dans votre shell, et configuration interactive des cibles AI.
+
+> **Dépendances requises :** `git`, `curl`
+> Les autres dépendances (`jq`, `Node.js`, `opencode`, `bun`) sont installées automatiquement.
+
+Après l'installation, recharger le shell :
+
+```bash
+source ~/.zshrc   # ou source ~/.bashrc
+```
+
+### Installation manuelle
+
+```bash
+git clone https://github.com/BenjaminDataiche/opencode-hub.git ~/.opencode-hub
+echo 'alias oc="~/.opencode-hub/oc.sh"' >> ~/.zshrc && source ~/.zshrc
 oc install
+```
 
-# 3. Enregistrer un projet et déployer
+---
+
+## Démarrage rapide
+
+Une fois installé :
+
+```bash
+# 1. Enregistrer un projet
 oc init MON-APP ~/workspace/mon-app
+
+# 2. Déployer les agents dans le projet
 oc deploy opencode MON-APP
 
-# 4. Lancer
+# 3. Lancer l'outil dans le projet
 oc start MON-APP
 ```
+
+> Guide complet : [docs/guides/getting-started.md](docs/guides/getting-started.md)
 
 ---
 
@@ -46,6 +74,7 @@ oc start MON-APP
 | Document | Description |
 |----------|-------------|
 | [Démarrage rapide](docs/guides/getting-started.md) | Installation complète, premier déploiement |
+| [Providers LLM](docs/guides/providers.md) | Anthropic, MammouthAI, GitHub Models, Bedrock, Ollama |
 | [Workflows](docs/guides/workflows.md) | Feature complète, audit, debug — scénarios illustrés |
 | [Contribuer](docs/guides/contributing.md) | Ajouter un agent, un skill, un adapter |
 
