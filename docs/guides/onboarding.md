@@ -16,7 +16,8 @@ un projet existant : stack, architecture, risques, et agents à prioriser.
 | L'orchestrator détecte un projet inconnu (Mode C) | L'orchestrator te propose d'invoquer l'onboarder — tu peux accepter ou skipper |
 
 L'onboarder est en **lecture seule**. Il n'écrit aucun code, ne modifie aucun
-fichier du projet (sauf `projects.md` sur confirmation explicite).
+fichier du projet (sauf `ONBOARDING.md`, `CONVENTIONS.md` et `projects.md` —
+uniquement après confirmation explicite).
 
 ---
 
@@ -148,7 +149,56 @@ client généré). Redis utilisé pour les sessions et le cache.
 > Ces invocations sont des suggestions — c'est à toi de décider quand et si tu les lances.
 ```
 
-### 4. Proposition de mise à jour `projects.md`
+### 4. Q&A — réponses aux questions de clarification
+
+L'onboarder pose ses questions et **attend les réponses avant d'écrire quoi que ce soit**.
+Tu peux répondre, ou dire `"passe"` / `"skip"` pour ignorer les questions.
+
+```
+1. Les migrations sont en attente depuis la semaine dernière —
+   elles attendent une validation métier, pas un oubli.
+2. Le service OAuth est dans un dépôt privé : github.com/mon-org/auth-service
+3. db.ts est un fichier de dev local non commité — .gitignore le couvre.
+```
+
+### 5. Rapport mis à jour
+
+L'onboarder intègre les réponses et réaffiche uniquement les sections impactées :
+
+```markdown
+### Zones d'ombre — mises à jour
+
+- ~~Logique d'authentification OAuth~~ → dépôt séparé : `github.com/mon-org/auth-service`
+- Pas de README — le setup n'est pas documenté
+
+### Points d'attention — mis à jour
+
+🔴 **Critiques** — inchangés
+🟠 **Importants**
+- 3 migrations en attente intentionnelles (validation métier) — à appliquer après décision
+- ~~Clé de base de données en dur~~ → fichier de dev local non commité, non critique
+- Aucun fichier de test dans `server/services/` (logique métier non testée)
+```
+
+### 6. Confirmation avant génération
+
+```
+Tout est clair — je suis prêt à générer ONBOARDING.md et CONVENTIONS.md.
+Je génère ? (Générer / Annuler)
+```
+
+```
+→ Générer
+```
+
+### 7. Génération des fichiers
+
+L'onboarder écrit les deux fichiers à la racine du projet et les ajoute au `.gitignore` :
+
+- `ONBOARDING.md` — rapport de contexte (sans les sections Agents recommandés et Commandes utiles)
+- `CONVENTIONS.md` — conventions détectées dans la codebase (formatage, nommage, architecture, tests, Git…)
+
+### 8. Proposition de mise à jour `projects.md`
 
 Si le champ `Stack` est absent ou générique dans `projects.md` :
 
@@ -183,7 +233,12 @@ Les invocations suggérées sont des points de départ — adapte-les au context
 
 Les zones d'ombre sont ce que l'onboarder **ne peut pas déterminer** depuis la
 codebase. Ce n'est pas un échec — c'est une information utile. Les questions de
-clarification qui suivent t'aident à combler ces lacunes auprès de l'équipe.
+clarification qui suivent t'aident à combler ces lacunes.
+
+Après avoir reçu tes réponses, l'onboarder met à jour le rapport (sections
+impactées uniquement), puis demande une confirmation explicite avant d'écrire
+`ONBOARDING.md` et `CONVENTIONS.md`. Les fichiers reflètent ainsi l'analyse
+enrichie, pas le premier jet.
 
 ---
 

@@ -231,6 +231,56 @@ Workflow :
 
 ---
 
+## `oc conventions`
+
+Génère ou met à jour le fichier `CONVENTIONS.md` à la racine d'un projet en
+invoquant l'agent `onboarder` en mode conventions.
+
+```bash
+oc conventions [PROJECT_ID] [--force]
+```
+
+**Arguments :**
+
+| Argument | Description |
+|----------|-------------|
+| `[PROJECT_ID]` | ID du projet — sélection interactive si absent |
+
+**Options :**
+
+| Option | Description |
+|--------|-------------|
+| `--force` | Écrase `CONVENTIONS.md` sans demander confirmation s'il existe déjà |
+
+**Comportement :**
+
+1. Résout le projet (interactif si `PROJECT_ID` absent)
+2. Si `CONVENTIONS.md` existe déjà dans le projet → affiche la date de génération et demande confirmation avant d'écraser (sauf `--force`)
+3. Injecte le prompt de bootstrap conventions et ouvre l'outil avec l'agent `onboarder`
+4. L'agent explore la codebase, détecte les conventions réelles (9 catégories) et génère `CONVENTIONS.md`
+5. Ajoute `CONVENTIONS.md` au `.gitignore` du projet s'il n'y est pas déjà
+
+**Exemples :**
+
+```bash
+oc conventions                   # sélection interactive du projet
+oc conventions MON-APP           # génère CONVENTIONS.md pour MON-APP
+oc conventions MON-APP --force   # regénère sans confirmation
+```
+
+**Fichier généré :**
+
+`CONVENTIONS.md` documente les conventions réelles observées dans la codebase :
+formatage, nommage, architecture, tests, Git, gestion d'erreurs, sécurité,
+performance, et conventions spécifiques. Ce fichier est lu par tous les agents
+développeurs et qualité en début de session pour coder en respectant les
+conventions du projet plutôt que les standards génériques.
+
+> `CONVENTIONS.md` est gitignored — il reste local au poste de travail.
+> Pour le régénérer après une évolution du projet : `oc conventions MON-APP --force`.
+
+---
+
 ## `oc init`
 
 Enregistre un projet dans le hub. Guide l'utilisateur en **5 étapes numérotées** et affiche un récapitulatif coloré à la fin.
