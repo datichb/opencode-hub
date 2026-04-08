@@ -250,15 +250,79 @@ Workflow :
 3. ÉTAPE 2 — Explorer adaptativement selon le profil détecté
 4. ÉTAPE 3 — Lire les tickets Beads (bd list -s open) + ADRs si disponibles
 5. ÉTAPE 4 — Produire le rapport de contexte structuré
+6. ÉTAPE 5 — Écrire ONBOARDING.md à la racine du projet
+7. ÉTAPE 6 — Détecter les conventions et écrire CONVENTIONS.md à la racine du projet
 
 Règles :
-- Lecture seule — tu ne modifies aucun fichier du projet
+- Lecture seule — tu ne modifies aucun fichier du projet (sauf ONBOARDING.md, CONVENTIONS.md et .gitignore)
 - Rapport honnête : signaler les points critiques (🔴), importants (🟠), améliorations (🟡)
 - Lister les zones d'ombre non résolues
 - Après le rapport complet dans la conversation, écrire ONBOARDING.md à la racine du projet
   (sans les sections Agents recommandés et Commandes utiles)
-- Ajouter ONBOARDING.md au .gitignore du projet (créer le fichier .gitignore s'il n'existe pas)
+- Ensuite, détecter et écrire CONVENTIONS.md à la racine du projet
+  (linting config, tsconfig, package.json, git log, fichiers représentatifs de la codebase)
+- Ajouter ONBOARDING.md et CONVENTIONS.md au .gitignore du projet
+  (créer le fichier .gitignore s'il n'existe pas)
 - Si le champ Stack est absent ou incomplet dans projects.md, le mettre à jour
   (chemin fourni ci-dessus — demander confirmation explicite avant toute écriture)
+EOF
+}
+
+# Construit le prompt de bootstrap pour la commande oc conventions
+# Déclenche la détection ciblée des conventions du projet → CONVENTIONS.md
+# @param $1 — project_path
+# @param $2 — project_id (optionnel)
+# @param $3 — hub_dir (optionnel)
+build_conventions_bootstrap_prompt() {
+  local project_path="$1"
+  local project_id="${2:-}"
+  local hub_dir="${3:-${HUB_DIR:-}}"
+  local projects_file="${hub_dir:+${hub_dir}/projects/projects.md}"
+
+  local project_info=""
+  if [ -n "$project_id" ]; then
+    project_info="Projet : ${project_id}
+Chemin : ${project_path}"
+  else
+    project_info="Chemin : ${project_path}"
+  fi
+
+  local hub_info=""
+  if [ -n "$hub_dir" ] && [ -n "$projects_file" ]; then
+    hub_info="
+Hub : ${hub_dir}
+projects.md : ${projects_file}"
+  fi
+
+  cat <<EOF
+Détecte et documente les conventions de développement de ce projet dans CONVENTIONS.md.
+
+${project_info}${hub_info}
+
+Workflow :
+1. Annoncer ce qui va être lu
+2. ÉTAPE 1 — Lire les configs linting/formatting
+   (.eslintrc*, eslint.config.*, .prettierrc*, .editorconfig, biome.json, ruff.toml, etc.)
+3. ÉTAPE 2 — Lire la config langage et typage
+   (tsconfig.json, pyproject.toml, go.mod, etc.)
+4. ÉTAPE 3 — Lire les dépendances et libs choisies
+   (package.json, pyproject.toml, Gemfile, etc.)
+5. ÉTAPE 4 — Lire les conventions Git
+   (.commitlintrc*, .husky/, CONTRIBUTING.md, .github/PULL_REQUEST_TEMPLATE.md)
+   + git log --oneline -20 pour observer les conventions réelles
+6. ÉTAPE 5 — Inférer le nommage depuis 5 à 10 fichiers représentatifs de la codebase
+   (composants, services, tests, stores — selon le profil du projet)
+7. ÉTAPE 6 — Lire les configs de test
+   (vitest.config.*, jest.config.*, pytest.ini, playwright.config.*, etc.)
+8. ÉTAPE 7 — Écrire CONVENTIONS.md à la racine du projet
+   ⚠️ Si CONVENTIONS.md existe déjà → afficher la date du fichier existant et demander confirmation
+   avant d'écraser ("Écraser / Conserver l'existant")
+   Ajouter CONVENTIONS.md au .gitignore s'il n'y est pas déjà
+
+Règles :
+- Baser chaque convention sur un fichier réellement lu — ne jamais inventer
+- Signaler les incohérences détectées (ex: config lint ≠ pratique observée dans le code)
+- Section "Zones d'ombre" pour ce qui n'a pas pu être déterminé
+- Ne pas modifier d'autres fichiers du projet
 EOF
 }

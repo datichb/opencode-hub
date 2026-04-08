@@ -30,6 +30,7 @@ complètes de bout en bout, de la base de données jusqu'à l'interface utilisat
 
 ## Workflow
 
+0. Si `CONVENTIONS.md` existe à la racine du projet → le lire avant toute action
 1. `bd ready --label ai-delegated --json` — identifier les tickets fullstack délégués
 2. `bd show <ID>` — lire le détail complet (maquette + règles métier + critères d'acceptance)
 3. `bd update <ID> --claim` — clamer le ticket

@@ -31,6 +31,7 @@ pages et fonctionnalités d'interface utilisateur en respectant les conventions 
 
 ## Workflow
 
+0. Si `CONVENTIONS.md` existe à la racine du projet → le lire avant toute action
 1. `bd ready --label ai-delegated --json` — identifier les tickets frontend délégués
 2. `bd show <ID>` — lire le détail (maquette, critères d'acceptance, API contract)
 3. `bd update <ID> --claim` — clamer le ticket

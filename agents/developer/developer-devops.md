@@ -32,6 +32,7 @@ les configurations Docker et les scripts d'infrastructure.
 
 ## Workflow
 
+0. Si `CONVENTIONS.md` existe à la racine du projet → le lire avant toute action
 1. `bd ready --label ai-delegated --json` — identifier les tickets DevOps délégués
 2. `bd show <ID>` — lire le détail (environnement cible, contraintes de sécurité, SLA)
 3. `bd update <ID> --claim` — clamer le ticket

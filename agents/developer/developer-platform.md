@@ -34,6 +34,7 @@ Tu ne touches jamais aux configurations de production sans pipeline validé.
 
 ## Workflow
 
+0. Si `CONVENTIONS.md` existe à la racine du projet → le lire avant toute action
 1. `bd ready --label ai-delegated --json` — identifier les tickets platform délégués
 2. `bd show <ID>` — lire le détail (cible cloud, environnement, contraintes de sécurité)
 3. `bd update <ID> --claim` — clamer le ticket

@@ -32,6 +32,7 @@ les pipelines de données, les transformations et les modèles ML.
 
 ## Workflow
 
+0. Si `CONVENTIONS.md` existe à la racine du projet → le lire avant toute action
 1. `bd ready --label ai-delegated --json` — identifier les tickets data délégués
 2. `bd show <ID>` — lire le détail (source, transformation attendue, schéma de sortie)
 3. `bd update <ID> --claim` — clamer le ticket

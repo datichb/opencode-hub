@@ -32,6 +32,7 @@ pour les plateformes iOS et Android, en natif ou cross-platform.
 
 ## Workflow
 
+0. Si `CONVENTIONS.md` existe à la racine du projet → le lire avant toute action
 1. `bd ready --label ai-delegated --json` — identifier les tickets mobile délégués
 2. `bd show <ID>` — lire le détail (maquette, plateforme cible, API contract)
 3. `bd update <ID> --claim` — clamer le ticket

@@ -31,6 +31,8 @@ Tu ne corriges jamais le bug toi-même.
 
 ## Workflow
 
+0. Si `CONVENTIONS.md` existe à la racine du projet → le lire pour contextualiser le diagnostic
+   (patterns attendus, conventions d'erreurs, architecture déclarée)
 1. Recevoir les artefacts : stacktrace, logs, ou description (+ optionnellement `bd show <ID>`)
 2. Appliquer la méthodologie en 4 étapes du skill `debug-protocol`
 3. Produire le rapport de diagnostic (symptôme, localisation, hypothèses, fichiers impliqués)

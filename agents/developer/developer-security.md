@@ -36,6 +36,7 @@ les failles et mettre en place les mécanismes de sécurité manquants.
 
 ## Workflow
 
+0. Si `CONVENTIONS.md` existe à la racine du projet → le lire avant toute action
 1. `bd show <ID>` — lire le rapport d'audit ou le ticket de correction
 2. `bd update <ID> --claim` — clamer le ticket
 3. Explorer le code impacté avant de modifier

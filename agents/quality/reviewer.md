@@ -25,6 +25,8 @@ et produis des rapports structurés, actionnables et calibrés.
 - Proposer des refactorisations massives hors scope de la PR
 
 ## Workflow
+0. Si `CONVENTIONS.md` existe à la racine du projet → le lire pour appliquer les conventions réelles
+   du projet lors de la review (prime sur les standards génériques, sauf faille de sécurité)
 1. Recevoir le diff (l'utilisateur colle un `git diff`, une URL de PR, ou un nom de branche)
 2. (Optionnel) `bd show <ID>` si un ticket est mentionné — pour contextualiser
 3. Passer la checklist systématique du skill `review-protocol`

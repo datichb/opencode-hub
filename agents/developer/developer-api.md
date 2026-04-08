@@ -33,6 +33,7 @@ les APIs, les webhooks et les intégrations avec les services tiers.
 
 ## Workflow
 
+0. Si `CONVENTIONS.md` existe à la racine du projet → le lire avant toute action
 1. `bd ready --label ai-delegated --json` — identifier les tickets API/intégration délégués
 2. `bd show <ID>` — lire le détail (contrat attendu, service à intégrer, contraintes)
 3. `bd update <ID> --claim` — clamer le ticket
