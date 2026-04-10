@@ -39,7 +39,7 @@ _list_all_skills() {
       -not -path "*/external/*" \
       -type f 2>/dev/null | sort \
     | while IFS= read -r f; do
-        echo "${f#$HUB_DIR/skills/}" | sed 's/\.md$//'
+        echo "${f#"$HUB_DIR"/skills/}" | sed 's/\.md$//'
       done
 
   # Skills externes
@@ -901,7 +901,7 @@ cmd_validate() {
 
     # ── Unicité de l'id ────────────────────────────────────────────────────
     if [ -n "$agent_id" ]; then
-      if printf '%s\n' $seen_ids | grep -qx "$agent_id" 2>/dev/null; then
+      if printf '%s\n' "$seen_ids" | grep -qx "$agent_id" 2>/dev/null; then
         issues="${issues}    id dupliqué : ${agent_id}\n"
         has_err=1
       else

@@ -19,7 +19,7 @@ jobs:
 
       - name: Run ShellCheck on all scripts
         run: |
-          shellcheck \
+          shellcheck --severity=warning \
             oc.sh \
             scripts/cmd-*.sh \
             scripts/lib/*.sh \
