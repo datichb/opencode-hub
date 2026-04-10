@@ -7,15 +7,42 @@ Supporte **OpenCode** et **Claude Code**.
 
 ---
 
-## Pourquoi opencode-hub ?
+## Comment ça marche
 
-Les outils IA fonctionnent en silo. opencode-hub centralise tout :
+opencode-hub repose sur trois concepts : **agents**, **skills** et **déploiement**.
 
-- Agents et rôles définis **une seule fois**, déployés partout
-- Skills (protocoles, standards) **injectés automatiquement** au déploiement
-- 27 agents spécialisés : orchestrateur, orchestrateur-dev, onboarder, planificateur, documentariste, 2 designers, 9 développeurs, QA, debugger, reviewer, 7 auditeurs
-- Projets enregistrés et lancés via **une commande unique**
-- Workflow Beads intégré pour la **gestion des tâches**
+- Les **agents** définissent les rôles IA (qui fait quoi, comment, dans quel ordre).
+- Les **skills** sont des protocoles injectables (standards de code, checklists, formats de rapport) — déclarés une fois, réutilisés entre plusieurs agents.
+- Le **déploiement** assemble agents + skills et les copie dans vos projets cibles.
+
+```
+opencode-hub/          ← source de vérité (éditer ici, jamais dans les projets)
+├── agents/            ← identité des rôles IA (~40-80 lignes par agent)
+├── skills/            ← protocoles détaillés injectables
+└── scripts/           ← assemblage et déploiement
+
+         oc deploy opencode MON-APP
+opencode-hub  ──────────────────────►  mon-app/.opencode/agents/*.md
+                                   └►  mon-app/opencode.json
+
+         oc deploy claude-code MON-APP
+opencode-hub  ──────────────────────►  mon-app/.claude/agents/*.md
+```
+
+Résultat : 27 agents spécialisés, toujours à jour, disponibles dans tous vos projets
+depuis une source de vérité unique.
+
+---
+
+## Prérequis
+
+| Outil | Usage |
+|-------|-------|
+| `git` | Cloner le hub |
+| `curl` | Télécharger le script d'installation |
+
+> Les autres dépendances (`jq`, `Node.js`, `opencode`, `bun`, `beads`) sont proposées
+> lors de `oc install` — chaque outil demande une **confirmation explicite** avant installation.
 
 ---
 
@@ -27,10 +54,8 @@ Les outils IA fonctionnent en silo. opencode-hub centralise tout :
 curl -fsSL https://raw.githubusercontent.com/datichb/opencode-hub/main/install.sh | bash
 ```
 
-Le script automatise tout : clone du repo dans `~/.opencode-hub`, vérification des dépendances (`jq`, `Node.js`, `opencode`, `bun`) avec **confirmation demandée avant chaque installation**, création de l'alias `oc` dans votre shell, et configuration interactive des cibles AI.
-
-> **Dépendances requises :** `git`, `curl`
-> Les autres dépendances (`jq`, `Node.js`, `opencode`, `bun`) sont proposées à l'installation — chaque outil demande une confirmation explicite.
+Le script automatise tout : clone dans `~/.opencode-hub`, vérification des dépendances
+avec confirmation, création de l'alias `oc`, et configuration interactive des cibles AI.
 
 Après l'installation, recharger le shell :
 
@@ -48,9 +73,29 @@ oc install
 
 ---
 
-## Démarrage rapide
+## Désinstallation
 
-Une fois installé :
+```bash
+oc uninstall
+# ou directement :
+bash ~/.opencode-hub/uninstall.sh
+```
+
+Guide interactif en 4 étapes — tout est optionnel et demande confirmation :
+
+| Étape | Action | Défaut |
+|-------|--------|--------|
+| 1 | Nettoyer les agents déployés dans les projets (`.opencode/agents/`, `opencode.json`, `.claude/agents/`) | `[y/N]` |
+| 2 | Supprimer le hub (`~/.opencode-hub`) | `[y/N]` |
+| 3 | Retirer l'alias `oc` et les exports bun du fichier rc | `[Y/n]` |
+| 4 | Désinstaller opencode, Beads, bun (séparément) | `[y/N]` |
+
+> `jq` et `node` ne sont jamais désinstallés. Un backup `.bak` est créé avant toute
+> modification du fichier rc.
+
+---
+
+## Démarrage rapide
 
 ```bash
 # 1. Enregistrer un projet
@@ -65,13 +110,41 @@ oc start MON-APP
 
 > Guide complet : [docs/guides/getting-started.md](docs/guides/getting-started.md)
 
-### Désinstaller
+---
 
-```bash
-oc uninstall
-```
+## Agents disponibles
 
-Guide interactif en 4 étapes (projets, hub, alias shell, outils) — tout est optionnel et demande confirmation.
+27 agents organisés en 7 familles. Les agents `primary` sont visibles directement
+par l'utilisateur ; les agents `subagent` sont invocables par les coordinateurs.
+
+| Famille | Agents | Description | Usage type |
+|---------|--------|-------------|------------|
+| **Coordinateurs** | `orchestrator`, `orchestrator-dev`, `auditor`, `onboarder` | Pilotent d'autres agents, ne codent jamais | `"Implémente [feature]"` — orchestre tout de la spec au merge |
+| **Développeurs** | `developer-frontend`, `developer-backend`, `developer-fullstack`, `developer-data`, `developer-devops`, `developer-mobile`, `developer-api`, `developer-platform`, `developer-security` | Implémentation par domaine technique | Routés automatiquement par `orchestrator-dev` |
+| **Design** | `ux-designer`, `ui-designer` | Conception UX/UI en amont de l'implémentation, lecture seule | `"Spec UX pour [feature]"` avant de coder |
+| **Qualité** | `reviewer`, `qa-engineer`, `debugger` | Review, tests manquants, diagnostic de bugs | `"Review de ma PR"` / `"Ce bug : [stacktrace]"` |
+| **Audit** | `auditor-security`, `auditor-performance`, `auditor-accessibility`, `auditor-ecodesign`, `auditor-architecture`, `auditor-privacy`, `auditor-observability` | Audit par domaine, lecture seule | Délégués par `auditor` ou invocables directement |
+| **Planification** | `planner`, `onboarder` | Décomposition en tickets Beads, découverte de projet | `"Décompose [feature] en tickets"` |
+| **Documentation** | `documentarian` | README, CHANGELOG, ADR, doc API | `"Documente [sujet]"` |
+
+> Référence complète : [docs/architecture/agents.md](docs/architecture/agents.md)
+
+---
+
+## Workflows disponibles
+
+| Scénario | Point d'entrée | Prompt type |
+|----------|---------------|-------------|
+| Feature de A à Z | `orchestrator` | `"Implémente [feature]"` |
+| Tickets prêts à coder | `orchestrator-dev` | `"Implémente les tickets bd-X à bd-Y"` |
+| Audit avant mise en prod | `auditor` | `"Audite le projet"` |
+| Bug en production | `debugger` | `"Ce bug : [stacktrace]"` |
+| Spec UX/UI standalone | `ux-designer` / `ui-designer` | `"Spec UX pour [feature]"` |
+| Documenter une feature | `documentarian` | `"Documente [sujet]"` |
+| Découvrir un projet existant | `onboarder` | `"Onboarde-toi sur ce projet"` |
+| Planifier sans implémenter | `planner` | `"Décompose [feature] en tickets"` |
+
+> Scénarios détaillés avec diagrammes et prompts réels : [docs/guides/workflows.md](docs/guides/workflows.md)
 
 ---
 
@@ -101,20 +174,6 @@ Guide interactif en 4 étapes (projets, hub, alias shell, outils) — tout est o
 |----------|-------------|
 | [CLI](docs/reference/cli.md) | Toutes les commandes `oc` avec options et exemples |
 | [Configuration](docs/reference/config.md) | hub.json, projects.md, paths.local.md |
-
----
-
-## Agents disponibles
-
-| Famille | Agents |
-|---------|--------|
-| Coordinateurs | `orchestrator`, `orchestrator-dev`, `auditor`, `onboarder` |
-| Développeurs | `developer-frontend`, `developer-backend`, `developer-fullstack`, `developer-data`, `developer-devops`, `developer-mobile`, `developer-api`, `developer-platform`, `developer-security` |
-| Design | `ux-designer`, `ui-designer` |
-| Qualité | `reviewer`, `qa-engineer`, `debugger` |
-| Audit | `auditor-security`, `auditor-performance`, `auditor-accessibility`, `auditor-ecodesign`, `auditor-architecture`, `auditor-privacy`, `auditor-observability` |
-| Planification | `planner` |
-| Documentation | `documentarian` |
 
 ---
 
