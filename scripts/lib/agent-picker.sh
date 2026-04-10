@@ -53,7 +53,11 @@ _list_all_agents_grouped() {
 # Plus _pick_families[] (tableau parallèle).
 ##
 _render_agents_page() {
+  # Variables partagées par dynamic scoping depuis _pick_from_list :
+  # _pick_cursor, _pick_total, _pick_items, _pick_checked, _pick_families
+  # shellcheck disable=SC2154
   local page_size=15
+  # shellcheck disable=SC2154
   local win_start=$(( _pick_cursor - page_size / 2 ))
   [ "$win_start" -lt 0 ] && win_start=0
   local win_end=$(( win_start + page_size ))
@@ -210,6 +214,8 @@ _pick_agents() {
     j=$((j + 1))
   done
 
+  # PICKED_AGENTS est une variable de résultat exportée vers le caller
+  # shellcheck disable=SC2034
   if [ "$all_checked" = "1" ]; then
     PICKED_AGENTS="all"
   elif [ -z "$_PICK_RESULT" ]; then
@@ -229,6 +235,9 @@ _pick_agents() {
 # Plus _pick_descriptions[] (tableau parallèle).
 ##
 _render_native_agents_page() {
+  # Variables partagées par dynamic scoping depuis _pick_from_list :
+  # _pick_cursor, _pick_total, _pick_items, _pick_checked, _pick_descriptions
+  # shellcheck disable=SC2154
   printf "\033[2J\033[H"  # clear screen
 
   # ── En-tête ────────────────────────────────────────────────────────────────
@@ -312,6 +321,8 @@ _pick_native_agents() {
     return
   fi
 
+  # PICKED_DISABLED_AGENTS est une variable de résultat exportée vers le caller
+  # shellcheck disable=SC2034
   PICKED_DISABLED_AGENTS="$_PICK_RESULT"
 }
 

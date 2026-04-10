@@ -159,9 +159,9 @@ cmd_init() {
   if ! (cd "$path" && git remote get-url upstream) &>/dev/null && \
      ! (cd "$path" && git remote get-url origin) &>/dev/null; then
     echo ""
-    read -rp "  Configurer l'upstream Git (git remote add upstream) ? [Y/n] : " _setup_upstream
+    read -rp "  Configurer l'upstream Git (git remote add upstream) ? [Y/n] : " _setup_upstream || true
     if [[ "${_setup_upstream:-Y}" =~ ^[Yy]$ ]]; then
-      read -rp "  URL du remote upstream : " _upstream_url
+      read -rp "  URL du remote upstream : " _upstream_url || true
       if [ -n "$_upstream_url" ]; then
         if (cd "$path" && git remote add upstream "$_upstream_url"); then
           log_success "Remote upstream configuré : $_upstream_url"
@@ -181,7 +181,15 @@ cmd_init() {
   labels=$(get_project_labels "$id")
   if [ -n "$labels" ]; then
     log_info "Enregistrement des labels dans la config Beads…"
-    if (cd "$path" && bd config set custom.labels "$labels"); then
+    local _labels_ok=1
+    while IFS= read -r _lbl; do
+      _lbl=$(printf '%s' "$_lbl" | sed 's/^ *//;s/ *$//')
+      [ -z "$_lbl" ] && continue
+      if ! (cd "$path" && bd label add "$_lbl"); then
+        _labels_ok=0
+      fi
+    done < <(printf '%s\n' "$labels" | tr ',' '\n')
+    if [ "$_labels_ok" = "1" ]; then
       log_success "Labels enregistrés : $labels"
     else
       log_warn "Échec enregistrement labels dans Beads"

@@ -62,7 +62,7 @@ if [ -z "$PROJECT_ID" ]; then
     printf "  ${BLUE}%d${RESET}) %s\n" "$((i+1))" "${ids[$i]}"
   done
   echo ""
-  read -rp "  Numéro : " choice
+  read -rp "  Numéro : " choice || true
   if ! [[ "$choice" =~ ^[0-9]+$ ]] || [ "$choice" -lt 1 ] || [ "$choice" -gt "${#ids[@]}" ]; then
     log_error "Choix invalide : $choice (attendu 1-${#ids[@]})"
     exit 1
@@ -95,8 +95,8 @@ _intro "${PROJECT_ID}"
 printf "${DIM}│${RESET}  %-10s %s\n" "Chemin"  "$PROJECT_PATH"
 printf "${DIM}│${RESET}  %-10s %s\n" "Cible"   "$default_target"
 
-# Agents non déployés : proposer le déploiement
-if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ]; then
+# Agents non déployés : proposer le déploiement (uniquement en mode interactif)
+if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ] && [ -t 0 ]; then
   echo -e "${DIM}│${RESET}"
   log_warn "Agents non déployés pour ${default_target}"
   _prompt _deploy_now "Déployer maintenant ? [Y/n] : "
@@ -156,7 +156,15 @@ if [ ! -d "$PROJECT_PATH/.beads" ]; then
         _start_labels=$(get_project_labels "$PROJECT_ID")
         if [ -n "$_start_labels" ]; then
           log_info "Enregistrement des labels dans la config Beads…"
-          if (cd "$PROJECT_PATH" && bd config set custom.labels "$_start_labels"); then
+          _labels_ok=1
+          while IFS= read -r _lbl; do
+            _lbl=$(printf '%s' "$_lbl" | sed 's/^ *//;s/ *$//')
+            [ -z "$_lbl" ] && continue
+            if ! (cd "$PROJECT_PATH" && bd label add "$_lbl"); then
+              _labels_ok=0
+            fi
+          done < <(printf '%s\n' "$_start_labels" | tr ',' '\n')
+          if [ "$_labels_ok" = "1" ]; then
             log_success "Labels enregistrés : $_start_labels"
           else
             log_warn "Échec enregistrement labels dans Beads"
@@ -225,7 +233,7 @@ if [ "$ONBOARD_MODE" = true ]; then
 fi
 
 # ── Confirmation avant lancement ──────────────────────────────────────────────
-_outro "Lancement de ${default_target}…"
-IFS= read -rp "" _
+_outro "Appuyer sur Entrée pour lancer ${default_target}…"
+IFS= read -rp "" _ || true
 
 adapter_start "$PROJECT_PATH" "$PROMPT" "$PROJECT_ID" "${AGENT_NAME:-}"

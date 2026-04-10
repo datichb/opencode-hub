@@ -55,12 +55,17 @@ _pick_from_list() {
   local current_csv="${1:-}"
   local cancel_value="${2:-$current_csv}"
 
+  # Variables partagées par dynamic scoping depuis les callers (agent-picker, target-picker, cmd-agent)
+  # shellcheck disable=SC2154
+  : "${_pick_total:?_pick_total must be set by caller}" "${_pick_render_fn:?_pick_render_fn must be set by caller}"
+
   # Rien à choisir
   if [ "$_pick_total" -eq 0 ]; then
     _PICK_RESULT="$current_csv"
     return
   fi
 
+  # shellcheck disable=SC2154
   _pick_cursor=0
 
   # Sauvegarde état terminal et passage en mode raw
@@ -73,8 +78,9 @@ _pick_from_list() {
 
   local _picker_cancelled=0
 
-  while true; do
+    while true; do
     # Appeler la fonction de rendu (accède aux variables partagées)
+    # shellcheck disable=SC2154
     "$_pick_render_fn"
 
     # Lecture d'une touche
@@ -158,6 +164,8 @@ _pick_from_list() {
   local chosen=()
   local _r=0
   while [ "$_r" -lt "$_pick_total" ]; do
+    # _pick_items et _pick_checked sont partagés par dynamic scoping
+    # shellcheck disable=SC2154
     [ "${_pick_checked[$_r]}" = "1" ] && chosen+=("${_pick_items[$_r]}")
     _r=$((_r + 1))
   done

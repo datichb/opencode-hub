@@ -20,6 +20,9 @@ _AVAILABLE_TARGETS=("opencode" "claude-code" "vscode")
 #   _pick_items, _pick_checked, _pick_cursor, _pick_total
 ##
 _render_targets_page() {
+  # Variables partagées par dynamic scoping depuis _pick_from_list :
+  # _pick_cursor, _pick_total, _pick_items, _pick_checked — assignées par le caller
+  # shellcheck disable=SC2154
   printf "\033[2J\033[H"
 
   # ── En-tête ────────────────────────────────────────────────────────────────
@@ -37,6 +40,7 @@ _render_targets_page() {
       check_color="$GREEN"
       check_reset="$RESET"
     fi
+    # shellcheck disable=SC2154
     if [ "$j" -eq "$_pick_cursor" ]; then
       printf "  \033[1m> ${check_color}%-3s${check_reset}\033[1m  %s\033[0m\n" \
         "$check_icon" "${_pick_items[$j]}"
@@ -108,6 +112,8 @@ _pick_project_targets() {
   local all_count=${#_AVAILABLE_TARGETS[@]}
   local sel_count
   sel_count=$(printf '%s\n' "$_PICK_RESULT" | tr ',' '\n' | grep -v '^$' | wc -l | tr -d ' ')
+  # PICKED_TARGETS est une variable de résultat exportée vers le caller
+  # shellcheck disable=SC2034
   if [ "$sel_count" -eq "$all_count" ]; then
     PICKED_TARGETS="all"
   else

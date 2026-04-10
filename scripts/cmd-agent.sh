@@ -60,7 +60,11 @@ _list_all_skills() {
 #   _pick_items, _pick_checked, _pick_cursor, _pick_total
 ##
 _render_skills_page() {
+  # Variables partagées par dynamic scoping depuis _pick_from_list (tui-picker.sh) :
+  # _pick_cursor, _pick_total, _pick_items, _pick_checked sont assignées par le caller.
+  # shellcheck disable=SC2154
   local page_size=10
+  # shellcheck disable=SC2154
   local win_start=$(( _pick_cursor - page_size / 2 ))
   [ "$win_start" -lt 0 ] && win_start=0
   local win_end=$(( win_start + page_size ))
@@ -771,6 +775,8 @@ cmd_mode() {
   # Afficher la liste actuelle
   local prev_family=""
   local _i=0
+  # _pick_families/_pick_items/_pick_modes sont peuplés par _list_all_agents_grouped (agent-picker.sh)
+  # shellcheck disable=SC2154
   while [ "$_i" -lt "$total" ]; do
     local cur_family="${_pick_families[$_i]}"
     if [ "$cur_family" != "$prev_family" ]; then

@@ -213,7 +213,15 @@ if command -v bd &>/dev/null && [ -d "$PROJECT_PATH" ] && [ ! -d "$PROJECT_PATH/
       _init_labels="${PROJECT_LABELS:-feature,fix}"
       if [ -n "$_init_labels" ]; then
         log_info "Enregistrement des labels dans la config Beads…"
-        if (cd "$PROJECT_PATH" && bd config set custom.labels "$_init_labels"); then
+        _labels_ok=1
+        while IFS= read -r _lbl; do
+          _lbl=$(printf '%s' "$_lbl" | sed 's/^ *//;s/ *$//')
+          [ -z "$_lbl" ] && continue
+          if ! (cd "$PROJECT_PATH" && bd label add "$_lbl"); then
+            _labels_ok=0
+          fi
+        done < <(printf '%s\n' "$_init_labels" | tr ',' '\n')
+        if [ "$_labels_ok" = "1" ]; then
           log_success "Labels enregistrés : $_init_labels"
         else
           log_warn "Échec enregistrement labels dans Beads"
@@ -254,6 +262,7 @@ _step 3 5 "Agents & cibles"
 
 _prompt select_agents "Sélectionner les agents à déployer ? [y/N] : "
 AGENTS_SUMMARY=""
+# shellcheck disable=SC2154
 if [[ "$select_agents" =~ ^[Yy]$ ]]; then
   PICKED_AGENTS=""
   _pick_agents "all"
@@ -274,6 +283,7 @@ fi
 echo ""
 _prompt select_targets "Sélectionner les cibles de déploiement ? [y/N] : "
 TARGETS_SUMMARY=""
+# shellcheck disable=SC2154
 if [[ "$select_targets" =~ ^[Yy]$ ]]; then
   PICKED_TARGETS=""
   _pick_project_targets "all"
@@ -313,6 +323,7 @@ if [ "$_is_opencode_target" = true ]; then
     echo -e "  ${DIM}Aucun agent natif désactivé au niveau hub${RESET}"
   fi
   _prompt disable_native "Surcharger les agents désactivés pour ce projet ? [y/N] : "
+  # shellcheck disable=SC2154
   if [[ "$disable_native" =~ ^[Yy]$ ]]; then
     PICKED_DISABLED_AGENTS=""
     _pick_native_agents "${_hub_disabled}"
@@ -346,6 +357,7 @@ echo ""
 
 _prompt setup_provider "Utiliser un fournisseur différent pour ce projet ? [y/N] : "
 PROVIDER_SUMMARY=""
+# shellcheck disable=SC2154
 if [[ "$setup_provider" =~ ^[Yy]$ ]]; then
   echo ""
 
@@ -370,6 +382,7 @@ if [[ "$setup_provider" =~ ^[Yy]$ ]]; then
   _prompt _proj_choice "Choisir (1-${#_init_provider_names[@]}) : "
 
   _proj_provider=""
+  # shellcheck disable=SC2154
   if [[ "$_proj_choice" =~ ^[0-9]+$ ]] && [ "$_proj_choice" -ge 1 ] && [ "$_proj_choice" -le "${#_init_provider_names[@]}" ]; then
     _proj_provider="${_init_provider_names[$((_proj_choice - 1))]}"
   fi

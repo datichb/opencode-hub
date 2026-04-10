@@ -65,10 +65,11 @@ _outro() {
 
 # Affiche la gouttière + un prompt interactif
 # Usage : _prompt VAR_NAME "Libellé du prompt : "
+# Tolère l'EOF (stdin pipe) sans échouer — compatible set -e.
 _prompt() {
   local _var="$1" _msg="$2"
   echo -e "${DIM}│${RESET}"
-  IFS= read -rp "  ${_msg}" "$_var"
+  IFS= read -rp "  ${_msg}" "$_var" || true
 }
 
 # ─────────────────────────────────────────
