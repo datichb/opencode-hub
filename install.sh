@@ -3,7 +3,7 @@
 # opencode-hub — Script d'installation
 #
 # Usage :
-#   curl -fsSL https://bitbucket.org/bdatich/opencode-hub/raw/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/datichb/opencode-hub/main/install.sh | bash
 #   ou : bash install.sh
 #
 # Ce script :
@@ -18,7 +18,7 @@ set -euo pipefail
 # ─────────────────────────────────────────
 # CONFIG
 # ─────────────────────────────────────────
-REPO_URL="https://bitbucket.org/bdatich/opencode-hub.git"
+REPO_URL="https://github.com/datichb/opencode-hub.git"
 INSTALL_DIR="${OPENCODE_HUB_DIR:-$HOME/.opencode-hub}"
 
 # ─────────────────────────────────────────

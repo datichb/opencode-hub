@@ -24,7 +24,7 @@ Les outils IA fonctionnent en silo. opencode-hub centralise tout :
 ### One-liner (recommandé)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/BenjaminDataiche/opencode-hub/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/datichb/opencode-hub/main/install.sh | bash
 ```
 
 Le script automatise tout : clone du repo dans `~/.opencode-hub`, installation des dépendances (`jq`, `Node.js`, `opencode`, `bun`), création de l'alias `oc` dans votre shell, et configuration interactive des cibles AI.

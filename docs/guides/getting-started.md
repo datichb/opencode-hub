@@ -20,7 +20,7 @@ Ce guide vous permet d'installer le hub et de lancer votre premier agent en moin
 ### Option A — One-liner (recommandé)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/BenjaminDataiche/opencode-hub/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/datichb/opencode-hub/main/install.sh | bash
 ```
 
 Le script automatise :
