@@ -69,7 +69,7 @@ if [ -d "$INSTALL_DIR/.git" ]; then
 else
   if [ -d "$INSTALL_DIR" ] && [ -n "$(ls -A "$INSTALL_DIR" 2>/dev/null)" ]; then
     log_warn "Le dossier $INSTALL_DIR existe mais n'est pas un repo git."
-    read -rp "  Supprimer et recloner ? [y/N] : " _overwrite
+    read -rp "  Supprimer et recloner ? [y/N] : " _overwrite </dev/tty
     if [[ "${_overwrite:-N}" =~ ^[Yy]$ ]]; then
       rm -rf "$INSTALL_DIR"
     else
@@ -100,7 +100,7 @@ log_success "git $(git --version | awk '{print $3}')"
 if ! command -v jq &>/dev/null; then
   log_warn "jq non détecté — dépendance critique"
   if [ "$OS" = "macos" ] && command -v brew &>/dev/null; then
-    read -rp "  Installer jq via Homebrew ? [Y/n] : " _jq_choice
+    read -rp "  Installer jq via Homebrew ? [Y/n] : " _jq_choice </dev/tty
     if [[ "${_jq_choice:-Y}" =~ ^[Yy]$ ]]; then
       if brew install jq --quiet; then
         log_success "jq installé"
@@ -112,12 +112,16 @@ if ! command -v jq &>/dev/null; then
       log_warn "Certaines fonctionnalités seront dégradées sans jq"
     fi
   elif [ "$OS" = "linux" ] && command -v apt-get &>/dev/null; then
-    log_info "Installation de jq via apt-get..."
-    if sudo apt-get install -y -q jq; then
-      log_success "jq installé"
+    read -rp "  Installer jq via apt-get ? [Y/n] : " _jq_linux </dev/tty
+    if [[ "${_jq_linux:-Y}" =~ ^[Yy]$ ]]; then
+      if sudo apt-get install -y -q jq; then
+        log_success "jq installé"
+      else
+        log_error "Échec installation jq — installer manuellement : sudo apt-get install jq"
+        exit 1
+      fi
     else
-      log_error "Échec installation jq — installer manuellement : sudo apt-get install jq"
-      exit 1
+      log_warn "Certaines fonctionnalités seront dégradées sans jq"
     fi
   else
     log_warn "Installer jq manuellement :"
@@ -133,7 +137,7 @@ fi
 if ! command -v node &>/dev/null; then
   log_warn "Node.js non détecté — requis pour opencode"
   if [ "$OS" = "macos" ] && command -v brew &>/dev/null; then
-    read -rp "  Installer Node.js via Homebrew ? [Y/n] : " _node_choice
+    read -rp "  Installer Node.js via Homebrew ? [Y/n] : " _node_choice </dev/tty
     if [[ "${_node_choice:-Y}" =~ ^[Yy]$ ]]; then
       if brew install node --quiet; then
         log_success "Node.js installé"
@@ -145,12 +149,17 @@ if ! command -v node &>/dev/null; then
       log_warn "opencode ne pourra pas être installé sans Node.js"
     fi
   elif [ "$OS" = "linux" ]; then
-    log_info "Installation de Node.js via NodeSource (LTS)..."
-    if curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - \
-       && sudo apt-get install -y -q nodejs; then
-      log_success "Node.js installé"
+    read -rp "  Installer Node.js via NodeSource (LTS) ? [Y/n] : " _node_linux </dev/tty
+    if [[ "${_node_linux:-Y}" =~ ^[Yy]$ ]]; then
+      log_info "Installation de Node.js via NodeSource (LTS)..."
+      if curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - \
+         && sudo apt-get install -y -q nodejs; then
+        log_success "Node.js installé"
+      else
+        log_warn "Échec installation Node.js — installer manuellement : https://nodejs.org"
+      fi
     else
-      log_warn "Échec installation Node.js — installer manuellement : https://nodejs.org"
+      log_warn "opencode ne pourra pas être installé sans Node.js"
     fi
   else
     log_warn "Installer Node.js manuellement : https://nodejs.org"
@@ -162,11 +171,16 @@ fi
 # ── opencode ─────────────────────────────
 if ! command -v opencode &>/dev/null; then
   if command -v npm &>/dev/null; then
-    log_info "Installation de opencode via npm..."
-    if npm install -g opencode-ai --silent; then
-      log_success "opencode installé"
+    log_warn "opencode non détecté — requis pour utiliser opencode-hub"
+    read -rp "  Installer opencode via npm ? [Y/n] : " _oc_choice </dev/tty
+    if [[ "${_oc_choice:-Y}" =~ ^[Yy]$ ]]; then
+      if npm install -g opencode-ai --silent; then
+        log_success "opencode installé"
+      else
+        log_warn "Échec installation opencode — installer manuellement : npm install -g opencode-ai"
+      fi
     else
-      log_warn "Échec installation opencode — installer manuellement : npm install -g opencode-ai"
+      log_warn "opencode non installé — à installer manuellement : npm install -g opencode-ai"
     fi
   else
     log_warn "npm introuvable — opencode non installé. Installer Node.js puis : npm install -g opencode-ai"
@@ -177,20 +191,25 @@ fi
 
 # ── bun ──────────────────────────────────
 if ! command -v bun &>/dev/null; then
-  log_info "Installation de bun..."
-  if command -v curl &>/dev/null; then
-    if curl -fsSL https://bun.sh/install | bash 2>/dev/null; then
-      log_success "bun installé"
+  log_warn "bun non détecté — requis pour certaines fonctionnalités"
+  read -rp "  Installer bun ? [Y/n] : " _bun_choice </dev/tty
+  if [[ "${_bun_choice:-Y}" =~ ^[Yy]$ ]]; then
+    if command -v curl &>/dev/null; then
+      if curl -fsSL https://bun.sh/install | bash 2>/dev/null; then
+        log_success "bun installé"
+      else
+        log_warn "Échec installation bun — installer manuellement : https://bun.sh"
+      fi
+      # Rendre bun disponible dans la session courante si installé via curl
+      if [ -f "$HOME/.bun/bin/bun" ]; then
+        export BUN_INSTALL="$HOME/.bun"
+        export PATH="$BUN_INSTALL/bin:$PATH"
+      fi
     else
-      log_warn "Échec installation bun — installer manuellement : https://bun.sh"
-    fi
-    # Rendre bun disponible dans la session courante si installé via curl
-    if [ -f "$HOME/.bun/bin/bun" ]; then
-      export BUN_INSTALL="$HOME/.bun"
-      export PATH="$BUN_INSTALL/bin:$PATH"
+      log_warn "curl introuvable — bun non installé. Installer manuellement : https://bun.sh"
     fi
   else
-    log_warn "curl introuvable — bun non installé. Installer manuellement : https://bun.sh"
+    log_info "bun non installé — à installer plus tard : https://bun.sh"
   fi
 else
   log_success "bun $(bun --version)"
@@ -213,10 +232,40 @@ elif [ -n "${BASH_VERSION:-}" ] || [ "${SHELL:-}" = "/bin/bash" ] || [ "${SHELL:
 fi
 
 _alias_line="alias oc=\"$INSTALL_DIR/oc.sh\""
+_alias_name="oc"
 
 if [ -n "$_rc_file" ]; then
   if grep -qF "alias oc=" "$_rc_file" 2>/dev/null; then
-    log_info "Alias 'oc' déjà présent dans $_rc_file"
+    log_warn "Un alias 'oc' existe déjà dans $_rc_file"
+    echo ""
+    echo "  1. Garder l'existant (ne rien faire)"
+    echo "  2. Remplacer par le nouvel alias"
+    echo "  3. Utiliser un nom alternatif (ex: och, hub)"
+    echo ""
+    read -rp "  Choisir (1-3, défaut: 1) : " _alias_choice </dev/tty
+    _alias_choice="${_alias_choice:-1}"
+    case "$_alias_choice" in
+      2)
+        # Remplacer la ligne existante
+        sed -i.bak "s|^alias oc=.*|$_alias_line|" "$_rc_file"
+        rm -f "$_rc_file.bak"
+        log_success "Alias 'oc' remplacé dans $_rc_file"
+        ;;
+      3)
+        read -rp "  Nom de l'alias à utiliser : " _alias_name </dev/tty
+        _alias_name="${_alias_name:-och}"
+        _alias_line="alias $_alias_name=\"$INSTALL_DIR/oc.sh\""
+        {
+          echo ""
+          echo "# opencode-hub"
+          echo "$_alias_line"
+        } >> "$_rc_file"
+        log_success "Alias '$_alias_name' ajouté dans $_rc_file"
+        ;;
+      *)
+        log_info "Alias 'oc' existant conservé"
+        ;;
+    esac
   else
     {
       echo ""
@@ -316,7 +365,7 @@ _intro "Configuration des outils AI"
 log_info "Lancement de 'oc install' pour choisir vos cibles et configurer votre fournisseur LLM..."
 echo -e "${DIM}│${RESET}"
 
-if bash "$INSTALL_DIR/oc.sh" install; then
+if bash "$INSTALL_DIR/oc.sh" install < /dev/tty; then
   _outro "Configuration terminée"
 else
   log_warn "Configuration incomplète — relancer plus tard : oc install"
@@ -339,8 +388,8 @@ if [ -n "${_rc_file:-}" ]; then
 fi
 echo -e "${DIM}│${RESET}  Puis enregistrer un projet :"
 echo -e "${DIM}│${RESET}"
-echo -e "${DIM}│${RESET}    oc init          # enregistrer un projet"
-echo -e "${DIM}│${RESET}    oc deploy        # déployer les agents"
-echo -e "${DIM}│${RESET}    oc help          # voir toutes les commandes"
+echo -e "${DIM}│${RESET}    ${_alias_name} init          # enregistrer un projet"
+echo -e "${DIM}│${RESET}    ${_alias_name} deploy        # déployer les agents"
+echo -e "${DIM}│${RESET}    ${_alias_name} help          # voir toutes les commandes"
 echo -e "${DIM}└${RESET}"
 echo ""

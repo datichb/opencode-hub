@@ -233,14 +233,37 @@ if command -v bd &>/dev/null; then
   bd_version=$(bd --version 2>/dev/null || bd version 2>/dev/null || echo '?')
   log_success "Beads déjà installé ($bd_version)"
 else
-  if command -v brew &>/dev/null; then
-    log_info "Installation de bd via Homebrew..."
-    brew install bd && log_success "Beads installé" \
-      || log_warn "Échec de l'installation via Homebrew"
+  log_warn "Beads (bd) non détecté — requis pour la gestion des tickets"
+  read -rp "  Installer Beads ? [Y/n] : " _beads_choice </dev/tty
+  if [[ "${_beads_choice:-Y}" =~ ^[Yy]$ ]]; then
+    if command -v brew &>/dev/null; then
+      log_info "Installation de Beads via Homebrew..."
+      if brew install beads; then
+        log_success "Beads installé"
+      else
+        log_warn "Échec via Homebrew — tentative via curl..."
+        if curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash; then
+          log_success "Beads installé via curl"
+        else
+          log_warn "Échec installation Beads — installer manuellement : brew install beads"
+        fi
+      fi
+    elif command -v curl &>/dev/null; then
+      log_info "Installation de Beads via curl..."
+      if curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash; then
+        log_success "Beads installé"
+      else
+        log_warn "Échec installation Beads — installer manuellement :"
+        log_info "  macOS  : brew install beads"
+        log_info "  Linux  : curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash"
+      fi
+    else
+      log_warn "Homebrew et curl introuvables — installer Beads manuellement :"
+      log_info "  macOS  : brew install beads"
+      log_info "  Linux  : curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash"
+    fi
   else
-    log_warn "Homebrew non disponible — installation manuelle requise"
-    log_info "  macOS  : brew install bd"
-    log_info "  Linux  : voir https://beads.sh/install"
+    log_info "Beads non installé — à installer plus tard : brew install beads"
   fi
 fi
 
