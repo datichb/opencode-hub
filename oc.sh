@@ -12,6 +12,7 @@ COMMAND="${1:-}"
 
 case "$COMMAND" in
   install)         bash "$SCRIPTS_DIR/cmd-install.sh" "${@:2}" ;;
+  uninstall)       bash "$SCRIPTS_DIR/cmd-uninstall.sh" "${@:2}" ;;
   init)            bash "$SCRIPTS_DIR/cmd-init.sh" "${@:2}" ;;
   list)            bash "$SCRIPTS_DIR/cmd-list.sh" ;;
   status)          bash "$SCRIPTS_DIR/cmd-status.sh" "${@:2}" ;;
