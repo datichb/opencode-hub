@@ -3,23 +3,23 @@ set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 source "$LIB_DIR/adapter-manager.sh"
 
-log_title "Installation de opencode-hub"
+log_title "$(t install.title)"
 
 OS=$(detect_os)
-log_info "OS détecté : $OS"
+log_info "$(t install.os_detected) $OS"
 
 # ── Vérifier jq ─────────────────────────
 if ! command -v jq &>/dev/null; then
-  log_warn "jq non détecté — dépendance critique pour opencode-hub"
+  log_warn "$(t install.jq_missing)"
   if [ "$OS" = "macos" ] && command -v brew &>/dev/null; then
-    read -rp "  Installer jq via Homebrew ? [Y/n] : " jq_choice
+    read -rp "  $(t install.jq_install_brew)" jq_choice
     if [[ "${jq_choice:-Y}" =~ ^[Yy]$ ]]; then
-      brew install jq && log_success "jq installé" || log_error "Échec installation jq — à installer manuellement"
+      brew install jq && log_success "$(t install.jq_installed)" || log_error "$(t install.jq_failed)"
     else
-      log_warn "Certaines fonctionnalités (deploy, skills, beads) seront dégradées sans jq"
+      log_warn "$(t install.jq_degraded)"
     fi
   else
-    log_warn "Installer jq manuellement :"
+    log_warn "$(t install.jq_manual)"
     log_info "  macOS  : brew install jq"
     log_info "  Ubuntu : sudo apt-get install jq"
     log_info "  Autre  : https://jqlang.github.io/jq/download/"
@@ -29,13 +29,13 @@ else
 fi
 
 # ── Choisir les cibles ───────────────────
-log_title "Cibles à configurer"
+log_title "$(t install.targets_title)"
 echo ""
-echo "  1. OpenCode (recommandé)"
-echo "  2. Claude Code"
-echo "  3. Tout"
+echo "  1. $(t install.target_opencode)"
+echo "  2. $(t install.target_claude)"
+echo "  3. $(t install.target_all)"
 echo ""
-read -rp "Choisir (1-3, défaut: 1) : " tool_choice
+read -rp "$(t install.choose_prompt)" tool_choice
 tool_choice="${tool_choice:-1}"
 
 active_targets=()
@@ -67,12 +67,12 @@ mkdir -p "$HUB_DIR/projects" "$HUB_DIR/skills" "$HUB_DIR/agents" \
 # ── Écrire config/hub.json (seulement si absent ou si l'utilisateur confirme) ──
 targets_json=$(printf '"%s",' "${active_targets[@]}" | sed 's/,$//')
 if [ -f "$HUB_DIR/config/hub.json" ]; then
-  log_warn "config/hub.json existe déjà."
-  read -rp "  Écraser avec les nouvelles cibles ? [y/N] : " overwrite_choice
+  log_warn "$(t install.hub_json_exists)"
+  read -rp "  $(t install.hub_json_overwrite)" overwrite_choice
   if [[ "${overwrite_choice:-N}" =~ ^[Yy]$ ]]; then
     _write_hub_json=true
   else
-    log_info "config/hub.json conservé tel quel."
+    log_info "$(t install.hub_json_kept)"
     _write_hub_json=false
   fi
 else
@@ -96,14 +96,14 @@ if [ "$_write_hub_json" = true ]; then
   }
 }
 HUBJSON
-  log_success "config/hub.json créé (cibles : ${active_targets[*]})"
+  log_success "$(t install.hub_json_created) ${active_targets[*]})"
 fi
 
 # ── Fournisseur LLM par défaut ────────────────────────────────────────────────
 # Cette section s'exécute APRÈS l'écriture de hub.json pour ne pas être écrasée
-log_title "Fournisseur LLM"
+log_title "$(t install.provider_title)"
 echo ""
-log_info "Quel fournisseur d'IA utiliser pour tous vos projets ?"
+log_info "$(t install.provider_choose)"
 echo ""
 
 # Construire le menu dynamiquement depuis providers.json
@@ -120,26 +120,26 @@ if [ "$_provider_count" -gt 0 ]; then
   for pname in "${_provider_names[@]}"; do
     _label=$(get_provider_info "$pname" "label")
     if [ "$_i" -eq 1 ]; then
-      printf "  %d. %s (recommandé)\n" "$_i" "$_label"
+      printf "  %d. %s %s\n" "$_i" "$_label" "$(t install.provider_recommended)"
     else
       printf "  %d. %s\n" "$_i" "$_label"
     fi
     _i=$((_i + 1))
   done
-  printf "  %d. Ignorer (configurer plus tard via ./oc.sh provider set-default)\n" "$((_provider_count + 1))"
+  printf "  %d. %s\n" "$((_provider_count + 1))" "$(t install.provider_skip)"
   echo ""
-  read -rp "Choisir (1-$((_provider_count + 1)), défaut: 1) : " _provider_choice
+  read -rp "$(t install.choose_prompt)" _provider_choice
   _provider_choice="${_provider_choice:-1}"
 else
   # Fallback sans providers.json : menu statique
-  echo "  1. Anthropic (recommandé)"
+  echo "  1. Anthropic $(t install.provider_recommended)"
   echo "  2. MammouthAI"
   echo "  3. GitHub Models"
   echo "  4. AWS Bedrock"
   echo "  5. Ollama (local)"
-  echo "  6. Ignorer (configurer plus tard via ./oc.sh provider set-default)"
+  echo "  6. $(t install.provider_skip)"
   echo ""
-  read -rp "Choisir (1-6, défaut: 1) : " _provider_choice
+  read -rp "$(t install.choose_prompt)" _provider_choice
   _provider_choice="${_provider_choice:-1}"
   _provider_names=("anthropic" "mammouth" "github-models" "bedrock" "ollama")
   _provider_count=5
@@ -164,14 +164,14 @@ if [ -n "$_selected_provider" ]; then
 
   if [ "$_requires_api_key" = "true" ]; then
     trap 'stty echo 2>/dev/null; echo ""; exit 130' INT TERM
-    read -rsp "  Clé API ${_selected_label} (laisser vide pour ignorer) : " _provider_api_key
+    read -rsp "  Clé API ${_selected_label} $(t install.provider_api_key) " _provider_api_key
     stty echo 2>/dev/null
     trap - INT TERM
     echo ""
   fi
 
   if [ "$_requires_base_url" = "true" ] && [ -n "$_default_base_url" ]; then
-    read -rp "  URL de base [${_default_base_url}] : " _input_base_url
+    read -rp "  $(t install.provider_base_url) [${_default_base_url}] : " _input_base_url
     _provider_base_url="${_input_base_url:-$_default_base_url}"
   fi
 
@@ -196,12 +196,12 @@ if [ -n "$_selected_provider" ]; then
       fi
     fi
 
-    log_success "Fournisseur configuré : ${_selected_label}"
+    log_success "$(t install.provider_configured) ${_selected_label}"
   else
-    log_info "Fournisseur non configuré — utiliser : ./oc.sh provider set-default"
+    log_info "$(t install.provider_skipped)"
   fi
 else
-  log_info "Fournisseur non configuré — utiliser : ./oc.sh provider set-default"
+  log_info "$(t install.provider_skipped)"
 fi
 
 echo ""
@@ -214,58 +214,58 @@ done
 
 # ── Fichiers initiaux ────────────────────
 ensure_projects_file
-log_success "projects.md prêt"
+log_success "$(t install.projects_ready)"
 
 if [ ! -f "$PATHS_FILE" ]; then
   echo "# Chemins locaux (ignoré par git)" > "$PATHS_FILE"
-  log_success "paths.local.md créé"
+  log_success "$(t install.paths_created)"
 fi
 
 echo ""
-log_info "Tip : Enrichissez vos agents avec des skills tiers via context7 :"
+log_info "$(t install.skills_tip)"
 log_info "  ./oc.sh skills search <query>        # Rechercher"
 log_info "  ./oc.sh skills add /owner/repo name  # Ajouter"
 
 # ── Installer Beads (bd) ─────────────────
 echo ""
-log_title "Installation de Beads (bd)"
+log_title "$(t install.beads_title)"
 if command -v bd &>/dev/null; then
   bd_version=$(bd --version 2>/dev/null || bd version 2>/dev/null || echo '?')
-  log_success "Beads déjà installé ($bd_version)"
+  log_success "$(t install.beads_already) ($bd_version)"
 else
-  log_warn "Beads (bd) non détecté — requis pour la gestion des tickets"
-  read -rp "  Installer Beads ? [Y/n] : " _beads_choice </dev/tty
+  log_warn "$(t install.beads_missing)"
+  read -rp "  $(t install.beads_install_prompt)" _beads_choice </dev/tty
   if [[ "${_beads_choice:-Y}" =~ ^[Yy]$ ]]; then
     if command -v brew &>/dev/null; then
-      log_info "Installation de Beads via Homebrew..."
+      log_info "$(t install.beads_via_brew)"
       if brew install beads; then
-        log_success "Beads installé"
+        log_success "$(t install.beads_installed)"
       else
-        log_warn "Échec via Homebrew — tentative via curl..."
+        log_warn "$(t install.beads_brew_failed)"
         if curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash; then
-          log_success "Beads installé via curl"
+          log_success "$(t install.beads_curl_installed)"
         else
-          log_warn "Échec installation Beads — installer manuellement : brew install beads"
+          log_warn "$(t install.beads_failed)"
         fi
       fi
     elif command -v curl &>/dev/null; then
-      log_info "Installation de Beads via curl..."
+      log_info "$(t install.beads_via_curl)"
       if curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash; then
-        log_success "Beads installé"
+        log_success "$(t install.beads_installed)"
       else
-        log_warn "Échec installation Beads — installer manuellement :"
+        log_warn "$(t install.beads_failed)"
         log_info "  macOS  : brew install beads"
         log_info "  Linux  : curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash"
       fi
     else
-      log_warn "Homebrew et curl introuvables — installer Beads manuellement :"
+      log_warn "$(t install.beads_no_tools)"
       log_info "  macOS  : brew install beads"
       log_info "  Linux  : curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash"
     fi
   else
-    log_info "Beads non installé — à installer plus tard : brew install beads"
+    log_info "$(t install.beads_later)"
   fi
 fi
 
 echo ""
-log_success "opencode-hub prêt !"
+log_success "$(t install.ready)"
