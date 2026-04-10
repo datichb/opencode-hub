@@ -597,3 +597,6 @@ resolve_oc_lang() {
   export OC_LANG="$lang"
 }
 
+# Auto-resolve language on source so t() works without explicit call
+resolve_oc_lang
+

@@ -3,6 +3,7 @@
 
 set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
+resolve_oc_lang
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Helper : affiche le menu numéroté des fournisseurs, retourne les noms dans un array
@@ -62,10 +63,10 @@ _collect_credentials() {
 # Affiche tous les fournisseurs du catalogue avec leur statut
 # ────────────────────────────────────────────────────────────────────────────────
 cmd_list() {
-  log_title "Fournisseurs LLM disponibles"
+  log_title "$(t provider.title)"
   echo ""
 
-  [ ! -f "$PROVIDERS_FILE" ] && { log_error "Catalogue providers.json introuvable"; exit 1; }
+  [ ! -f "$PROVIDERS_FILE" ] && { log_error "$(t provider.no_catalog)"; exit 1; }
 
   local hub_provider; hub_provider=$(get_hub_default_provider)
   local hub_api_key; hub_api_key=$(get_hub_default_api_key)
@@ -97,10 +98,10 @@ cmd_list() {
 # Configure le fournisseur par défaut au niveau hub
 # ────────────────────────────────────────────────────────────────────────────────
 cmd_set_default() {
-  log_title "Fournisseur LLM par défaut"
+  log_title "$(t provider.default_title)"
 
-  [ ! -f "$PROVIDERS_FILE" ] && { log_error "Catalogue providers.json introuvable"; exit 1; }
-  [ ! -f "$HUB_CONFIG" ] && { log_error "hub.json introuvable — lancez d'abord : ./oc.sh install"; exit 1; }
+  [ ! -f "$PROVIDERS_FILE" ] && { log_error "$(t provider.no_catalog)"; exit 1; }
+  [ ! -f "$HUB_CONFIG" ] && { log_error "$(t provider.hub_json_missing)"; exit 1; }
 
   # Afficher le fournisseur actuel comme contexte
   local current_provider; current_provider=$(get_hub_default_provider)
@@ -117,7 +118,7 @@ cmd_set_default() {
     echo ""
   fi
 
-  log_info "Choisir le fournisseur par défaut pour tous les projets :"
+  log_info "$(t provider.choose_default)"
   echo ""
 
   local providers_array=()
@@ -136,7 +137,7 @@ cmd_set_default() {
   local requires_api_key; requires_api_key=$(get_provider_info "$selected_provider" "requires_api_key")
 
   echo ""
-  log_info "Fournisseur sélectionné : ${BOLD}${selected_label}${RESET}"
+  log_info "$(t provider.selected) ${BOLD}${selected_label}${RESET}"
 
   _cred_api_key=""
   _cred_base_url=""
@@ -144,7 +145,7 @@ cmd_set_default() {
 
   # Vérification clé si requise
   if [ "$requires_api_key" = "true" ] && [ -z "$_cred_api_key" ]; then
-    log_warn "Clé API vide — le fournisseur sera enregistré sans clé"
+    log_warn "$(t provider.api_key_empty_warn)"
   fi
 
   # Mettre à jour hub.json
@@ -162,14 +163,14 @@ cmd_set_default() {
     local gitignore="$HUB_DIR/.gitignore"
     if [ ! -f "$gitignore" ] || ! grep -qx "config/hub.json" "$gitignore"; then
       echo "config/hub.json" >> "$gitignore"
-      log_info "hub.json ajouté au .gitignore (contient une clé API)"
+      log_info "$(t provider.hub_json_added_gitignore)"
     fi
   fi
 
   echo ""
-  log_success "Fournisseur par défaut enregistré : ${selected_label}"
+  log_success "$(t provider.saved) ${selected_label}"
   [ -n "$_cred_base_url" ] && log_info "URL de base : ${_cred_base_url}"
-  log_info "Appliquer aux projets : ./oc.sh deploy all <PROJECT_ID>"
+  log_info "$(t provider.apply_hint)"
 }
 
 # ────────────────────────────────────────────────────────────────────────────────
@@ -183,15 +184,15 @@ cmd_set() {
   local direct_api_key="${3:-}"
   local direct_base_url="${4:-}"
 
-  [ -z "$project_id" ] && { log_error "PROJECT_ID requis"; exit 1; }
+  [ -z "$project_id" ] && { log_error "$(t project_id.required)"; exit 1; }
   project_id=$(normalize_project_id "$project_id")
 
   if ! project_exists "$project_id"; then
-    log_error "Projet introuvable : $project_id"
+    log_error "$(t project_id.required) : $project_id"
     exit 1
   fi
 
-  [ ! -f "$PROVIDERS_FILE" ] && { log_error "Catalogue providers.json introuvable"; exit 1; }
+  [ ! -f "$PROVIDERS_FILE" ] && { log_error "$(t provider.no_catalog)"; exit 1; }
 
   # Mode non-interactif si tous les paramètres directs sont fournis
   if [ -n "$direct_provider" ]; then
@@ -202,7 +203,7 @@ cmd_set() {
   fi
 
   # Mode interactif
-  log_title "Fournisseur LLM — ${project_id}"
+  log_title "$(t provider.project_title) ${project_id}"
 
   # Afficher le fournisseur actuel du projet et du hub
   local cur_provider; cur_provider=$(get_project_api_provider "$project_id")
@@ -210,14 +211,14 @@ cmd_set() {
   echo ""
   if [ -n "$cur_provider" ]; then
     local cur_label; cur_label=$(get_provider_info "$cur_provider" "label" 2>/dev/null || echo "$cur_provider")
-    echo -e "  Fournisseur actuel du projet : ${BOLD}${cur_label}${RESET}"
+    echo -e "  $(t provider.current_project) ${BOLD}${cur_label}${RESET}"
   elif [ -n "$hub_provider" ]; then
     local hub_label; hub_label=$(get_provider_info "$hub_provider" "label" 2>/dev/null || echo "$hub_provider")
-    echo -e "  Fournisseur du hub (par défaut) : ${BOLD}${hub_label}${RESET}"
+    echo -e "  $(t provider.hub_default) ${BOLD}${hub_label}${RESET}"
   fi
   echo ""
 
-  log_info "Choisir le fournisseur pour ce projet :"
+  log_info "$(t provider.choose_project)"
   echo ""
 
   local providers_array=()
@@ -236,23 +237,23 @@ cmd_set() {
   local requires_api_key; requires_api_key=$(get_provider_info "$selected_provider" "requires_api_key")
 
   echo ""
-  log_info "Fournisseur sélectionné : ${BOLD}${selected_label}${RESET}"
+  log_info "$(t provider.selected) ${BOLD}${selected_label}${RESET}"
 
   _cred_api_key=""
   _cred_base_url=""
   _collect_credentials "$selected_provider" "$selected_label"
 
   if [ "$requires_api_key" = "true" ] && [ -z "$_cred_api_key" ]; then
-    log_error "Clé API requise pour ce fournisseur"
+    log_error "$(t provider.api_key_required)"
     exit 1
   fi
 
   _write_project_provider "$project_id" "$selected_provider" "$_cred_api_key" "$_cred_base_url"
 
   echo ""
-  log_success "Fournisseur configuré pour ${project_id} : ${selected_label}"
+  log_success "$(t provider.set_done) ${project_id} : ${selected_label}"
   [ -n "$_cred_base_url" ] && log_info "URL de base : ${_cred_base_url}"
-  log_info "Appliquer : ./oc.sh deploy all ${project_id}"
+  log_info "$(t provider.apply_hint)"
 }
 
 # ────────────────────────────────────────────────────────────────────────────────
@@ -316,15 +317,15 @@ HEADER
 # ────────────────────────────────────────────────────────────────────────────────
 cmd_get() {
   local project_id="${1:-}"
-  [ -z "$project_id" ] && { log_error "PROJECT_ID requis"; exit 1; }
+  [ -z "$project_id" ] && { log_error "$(t project_id.required)"; exit 1; }
   project_id=$(normalize_project_id "$project_id")
 
   if ! project_exists "$project_id"; then
-    log_error "Projet introuvable : $project_id"
+    log_error "$(t project_id.required) : $project_id"
     exit 1
   fi
 
-  log_title "Fournisseur LLM — ${project_id}"
+  log_title "$(t provider.project_title) ${project_id}"
   echo ""
 
   local project_provider; project_provider=$(get_project_api_provider "$project_id")
@@ -334,9 +335,9 @@ cmd_get() {
 
   if [ -n "$project_provider" ]; then
     local proj_label; proj_label=$(get_provider_info "$project_provider" "label" 2>/dev/null || echo "$project_provider")
-    echo -e "  Source : ${BOLD}configuration du projet${RESET}"
+    echo -e "  $(t provider.source_project)"
     echo ""
-    printf "  %-18s %s\n" "Fournisseur :" "$proj_label"
+    printf "  %-18s %s\n" "$(t provider.current)" "$proj_label"
     [ -n "$project_model" ] && printf "  %-18s %s\n" "Modèle :" "$project_model"
     [ -n "$project_base_url" ] && printf "  %-18s %s\n" "URL de base :" "$project_base_url"
     if [ -n "$project_api_key" ]; then
@@ -350,11 +351,11 @@ cmd_get() {
     local hub_base_url; hub_base_url=$(get_hub_default_base_url)
     local hub_model; hub_model=$(get_hub_default_model)
 
-    echo -e "  Source : ${DIM}fournisseur par défaut du hub${RESET}"
+    echo -e "  $(t provider.source_hub)"
     echo ""
     if [ -n "$hub_provider" ]; then
       local hub_label; hub_label=$(get_provider_info "$hub_provider" "label" 2>/dev/null || echo "$hub_provider")
-      printf "  %-18s %s\n" "Fournisseur :" "$hub_label"
+      printf "  %-18s %s\n" "$(t provider.current)" "$hub_label"
       [ -n "$hub_model" ] && printf "  %-18s %s\n" "Modèle :" "$hub_model"
       [ -n "$hub_base_url" ] && printf "  %-18s %s\n" "URL de base :" "$hub_base_url"
       if [ -n "$hub_api_key" ]; then
@@ -363,7 +364,7 @@ cmd_get() {
         printf "  %-18s %s\n" "Clé API :" "(non configurée)"
       fi
     else
-      echo -e "  ${YELLOW}Aucun fournisseur configuré${RESET}"
+      echo -e "  ${YELLOW}$(t provider.no_provider)${RESET}"
       echo ""
       echo "  Configurer au niveau hub    : ./oc.sh provider set-default"
       echo "  Configurer pour ce projet   : ./oc.sh provider set ${project_id}"
@@ -386,14 +387,14 @@ case "$SUBCOMMAND" in
   set)         cmd_set "${@:2}" ;;
   get)         cmd_get "${@:2}" ;;
   *)
-    log_error "Sous-commande inconnue : $SUBCOMMAND"
+    log_error "$(t subcmd.unknown) : $SUBCOMMAND"
     echo ""
-    echo "Usage : ./oc.sh provider <sous-commande>"
+    echo "$(t provider.usage)"
     echo ""
-    echo "  list                           Liste les fournisseurs disponibles"
-    echo "  set-default                    Configure le fournisseur par défaut (hub)"
-    echo "  set <PROJECT_ID>               Configure le fournisseur pour un projet"
-    echo "  get <PROJECT_ID>               Affiche la configuration effective"
+    echo "  $(t provider.list_cmd)"
+    echo "  $(t provider.set_default_cmd)"
+    echo "  $(t provider.set_cmd)"
+    echo "  $(t provider.get_cmd)"
     exit 1
     ;;
 esac

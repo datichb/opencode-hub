@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
+resolve_oc_lang
 
 # ─────────────────────────────────────────────────────────────────
 # oc config — gestion des clés API et modèles par projet
@@ -210,19 +211,19 @@ cmd_set() {
   # Écriture
   _ensure_api_keys_file
   _write_section "$id" "$flag_model" "$flag_provider" "$flag_api_key" "$flag_base_url"
-  log_success "Configuration enregistrée pour $id"
+  log_success "$(t config.written) $id"
 
   # Proposer un re-déploiement uniquement si le chemin du projet est connu
   echo ""
   if path_exists "$id"; then
-    read -rp "  Appliquer maintenant au projet (re-déployer opencode.json) ? [Y/n] : " apply_now
+    read -rp "  $(t config.apply_now)" apply_now
     if [[ "${apply_now:-Y}" =~ ^[Yy]$ ]]; then
       PROJECT_ID="$id" bash "$SCRIPTS_DIR/cmd-deploy.sh" all "$id"
     else
-      log_info "Appliquer plus tard : ./oc.sh deploy all $id"
+      log_info "$(t config.apply_later)"
     fi
   else
-    log_info "Chemin non enregistré pour $id — appliquer via : ./oc.sh deploy all $id"
+    log_info "$(t config.no_path) $id $(t config.apply_via) $id"
   fi
 }
 
@@ -238,7 +239,7 @@ cmd_get() {
 
   id=$(normalize_project_id "$id")
   if ! api_keys_entry_exists "$id"; then
-    log_warn "Aucune configuration pour $id"
+    log_warn "$(t config.no_entry) $id"
     exit 0
   fi
   echo ""
@@ -248,16 +249,16 @@ cmd_get() {
 
 cmd_list() {
   if [ ! -f "$API_KEYS_FILE" ]; then
-    log_info "Aucune configuration enregistrée (api-keys.local.md absent)"
+    log_info "$(t config.no_file)"
     exit 0
   fi
   local sections
   sections=$(grep -E '^\[.+\]$' "$API_KEYS_FILE" | tr -d '[]' || true)
   if [ -z "$sections" ]; then
-    log_info "Aucune entrée dans api-keys.local.md"
+    log_info "$(t config.no_entries)"
     exit 0
   fi
-  echo -e "\n${BOLD}Configurations API enregistrées :${RESET}\n"
+  echo -e "\n${BOLD}$(t config.saved)${RESET}\n"
   while IFS= read -r id; do
     _display_entry "$id"
     echo ""
@@ -269,15 +270,15 @@ cmd_unset() {
   [ -z "$id" ] && { log_error "Usage : oc config unset <PROJECT_ID>"; exit 1; }
   id=$(normalize_project_id "$id")
   if ! api_keys_entry_exists "$id"; then
-    log_warn "Aucune configuration pour $id"
+    log_warn "$(t config.no_entry) $id"
     exit 0
   fi
-  read -rp "  Supprimer la configuration de $id ? [y/N] : " confirm
+  read -rp "  $(t config.delete_confirm) $id ? [y/N] : " confirm
   if [[ "${confirm:-N}" =~ ^[Yy]$ ]]; then
     _remove_section "$id"
-    log_success "Configuration supprimée pour $id"
+    log_success "$(t config.deleted) $id"
   else
-    log_info "Annulé"
+    log_info "$(t cancelled)"
   fi
 }
 
@@ -289,27 +290,27 @@ case "$SUBCOMMAND" in
   list)  cmd_list ;;
   unset) cmd_unset "$@" ;;
   "")
-    echo -e "${BOLD}Usage :${RESET} ./oc.sh config <sous-commande> [options]"
+    echo -e "${BOLD}$(t config.title)${RESET}"
     echo ""
-    echo "  set <PROJECT_ID> [--model m] [--provider p] [--api-key k] [--base-url u]"
-    echo "  set language <en|fr>"
-    echo "  get <PROJECT_ID>"
-    echo "  get language"
-    echo "  list"
-    echo "  unset <PROJECT_ID>"
+    echo "  $(t help.config_set)"
+    echo "  $(t help.config_set_desc)"
+    echo "  $(t help.config_language)"
+    echo "  $(t help.config_get)"
+    echo "  $(t help.config_list)"
+    echo "  $(t help.config_unset)"
     exit 0
     ;;
   *)
-    log_error "Sous-commande inconnue : $SUBCOMMAND"
+    log_error "$(t subcmd.unknown) : $SUBCOMMAND"
     echo ""
-    echo -e "${BOLD}Usage :${RESET} ./oc.sh config <sous-commande> [options]"
+    echo -e "${BOLD}$(t config.title)${RESET}"
     echo ""
-    echo "  set <PROJECT_ID> [--model m] [--provider p] [--api-key k] [--base-url u]"
-    echo "  set language <en|fr>"
-    echo "  get <PROJECT_ID>"
-    echo "  get language"
-    echo "  list"
-    echo "  unset <PROJECT_ID>"
+    echo "  $(t help.config_set)"
+    echo "  $(t help.config_set_desc)"
+    echo "  $(t help.config_language)"
+    echo "  $(t help.config_get)"
+    echo "  $(t help.config_list)"
+    echo "  $(t help.config_unset)"
     exit 1
     ;;
 esac

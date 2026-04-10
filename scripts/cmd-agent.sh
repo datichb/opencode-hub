@@ -3,6 +3,7 @@
 # Usage : ./oc.sh agent <commande> [args]
 set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
+resolve_oc_lang
 source "$LIB_DIR/tui-picker.sh"
 source "$LIB_DIR/agent-picker.sh"
 source "$LIB_DIR/target-picker.sh"
@@ -332,13 +333,13 @@ cmd_create() {
   read -rp "Identifiant (ex: reviewer) : " agent_id
   agent_id=$(printf '%s' "$agent_id" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/-/g')
   if [ -z "$agent_id" ]; then
-    log_error "Identifiant requis."
+    log_error "$(t agent.id_required)"
     exit 1
   fi
 
   local file="$CANONICAL_AGENTS_DIR/${agent_id}.md"
   if [ -f "$file" ] || [ -n "$(_find_agent_file "$agent_id")" ]; then
-    log_error "L'agent '$agent_id' existe déjà. Utilisez 'oc agent edit $agent_id'."
+    log_error "'${agent_id}' $(t agent.already_exists)."
     exit 1
   fi
 
@@ -457,7 +458,7 @@ cmd_list() {
     found=1
   done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
 
-  [ "$found" -eq 0 ] && echo "  (aucun agent dans agents/)"
+  [ "$found" -eq 0 ] && echo "  $(t agent.no_agents)"
 }
 
 # ── INFO ─────────────────────────────────────────────────────────────────────
@@ -469,18 +470,18 @@ cmd_list() {
 cmd_info() {
   local name="${1:-}"
   if [ -z "$name" ]; then
-    log_error "Usage : oc agent info <agent-id>"
+    log_error "$(t agent.usage.info)"
     exit 1
   fi
 
   local file; file=$(_find_agent_file "$name")
-  [ -n "$file" ] || { log_error "Agent '$name' introuvable dans agents/."; exit 1; }
+  [ -n "$file" ] || { log_error "$(t agent.not_found) : '$name'"; exit 1; }
 
   log_title "Agent : $name"
   echo ""
   sed -n '/^---$/,/^---$/p' "$file" | grep -v '^---$'
   echo ""
-  echo -e "${BOLD}Skills assignés :${RESET}"
+  echo -e "${BOLD}$(t agent.skills_assigned)${RESET}"
   grep '^skills:' "$file" | head -1 \
     | sed 's/^skills:[[:space:]]*//' \
     | tr -d '[]' | tr ',' '\n' \
@@ -505,13 +506,13 @@ cmd_info() {
 cmd_edit() {
   local name="${1:-}"
   if [ -z "$name" ]; then
-    log_error "Usage : oc agent edit <agent-id>"
-    log_info  "Utilisez 'oc agent list' pour voir les agents disponibles."
+    log_error "$(t agent.usage.edit)"
+    log_info  "$(t agent.usage.select | sed 's/select/list/')"
     exit 1
   fi
 
   local file; file=$(_find_agent_file "$name")
-  [ -n "$file" ] || { log_error "Agent '$name' introuvable dans agents/."; exit 1; }
+  [ -n "$file" ] || { log_error "$(t agent.not_found) : '$name'"; exit 1; }
 
   log_title "Modifier l'agent : $name"
 
@@ -674,7 +675,7 @@ cmd_keytest() {
 cmd_select() {
   local raw_id="${1:-}"
   if [ -z "$raw_id" ]; then
-    log_error "Usage : oc agent select <PROJECT_ID>"
+    log_error "$(t agent.usage.select)"
     exit 1
   fi
 
@@ -732,7 +733,7 @@ cmd_select() {
 cmd_mode() {
   local raw_id="${1:-}"
   if [ -z "$raw_id" ]; then
-    log_error "Usage : oc agent mode <PROJECT_ID>"
+    log_error "$(t agent.usage.mode)"
     exit 1
   fi
 
@@ -975,9 +976,9 @@ cmd_validate() {
 
   # ── Résumé ─────────────────────────────────────────────────────────────────
   echo ""
-  local summary="${BOLD}Résumé :${RESET}  ${GREEN}${count_ok} ok${RESET}"
-  [ $count_err  -gt 0 ] && summary="${summary}  ${RED}${count_err} erreur(s)${RESET}"
-  [ $count_warn -gt 0 ] && summary="${summary}  ${YELLOW}${count_warn} avertissement(s)${RESET}"
+  local summary="${BOLD}$(t agent.validate.summary)${RESET}  ${GREEN}${count_ok} $(t agent.validate.ok)${RESET}"
+  [ $count_err  -gt 0 ] && summary="${summary}  ${RED}${count_err} $(t agent.validate.errors)${RESET}"
+  [ $count_warn -gt 0 ] && summary="${summary}  ${YELLOW}${count_warn} $(t agent.validate.warnings)${RESET}"
   echo -e "$summary"
   echo ""
 
@@ -1000,18 +1001,18 @@ case "$SUBCOMMAND" in
   validate) cmd_validate "$@" ;;
   keytest)  cmd_keytest ;;
   *)
-    echo -e "${BOLD}oc agent — Gestion des agents canoniques${RESET}"
+    echo -e "${BOLD}$(t agent.title)${RESET}"
     echo ""
-    echo "  list                  Lister les agents disponibles"
-    echo "  info <agent-id>       Afficher le détail d'un agent"
-    echo "  create                Créer un nouvel agent (interactif)"
-    echo "  edit <agent-id>       Modifier les skills et métadonnées d'un agent"
-    echo "  select <PROJECT_ID>   Choisir les agents à déployer pour un projet"
-    echo "  mode <PROJECT_ID>     Afficher / overrider les modes primary/subagent"
-    echo "  validate [agent-id]   Valider la cohérence de tous les agents (ou d'un seul)"
-    echo "  keytest               Diagnostic clavier — affiche les octets reçus"
+    echo "  $(t agent.list)"
+    echo "  $(t agent.info_cmd)"
+    echo "  $(t agent.create_cmd)"
+    echo "  $(t agent.edit_cmd)"
+    echo "  $(t agent.select_cmd)"
+    echo "  $(t agent.mode_cmd)"
+    echo "  $(t agent.validate_cmd)"
+    echo "  $(t agent.keytest_cmd)"
     echo ""
-    echo -e "${BOLD}Exemples :${RESET}"
+    echo -e "${BOLD}$(t agent.examples)${RESET}"
     echo "  ./oc.sh agent list"
     echo "  ./oc.sh agent create"
     echo "  ./oc.sh agent edit developer"

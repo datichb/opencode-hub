@@ -3,6 +3,7 @@ set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 source "$LIB_DIR/agent-picker.sh"
 source "$LIB_DIR/target-picker.sh"
+resolve_oc_lang
 
 # S'assurer que projects.md existe avant toute opération
 ensure_projects_file

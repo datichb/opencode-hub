@@ -4,6 +4,7 @@
 set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 source "$LIB_DIR/target-picker.sh"
+resolve_oc_lang
 
 ##
 # Affiche les cibles configurées pour un projet.
@@ -12,14 +13,14 @@ source "$LIB_DIR/target-picker.sh"
 cmd_info() {
   local raw_id="${1:-}"
   if [ -z "$raw_id" ]; then
-    log_error "Usage : oc target info <PROJECT_ID>"
+    log_error "$(t target.usage.info)"
     exit 1
   fi
 
   local id
   id=$(normalize_project_id "$raw_id")
   if ! project_exists "$id"; then
-    log_error "Projet $id introuvable → ./oc.sh list"
+    log_error "$(t project_id.required) : $id → ./oc.sh list"
     exit 1
   fi
 
@@ -27,9 +28,9 @@ cmd_info() {
   current=$(get_project_targets "$id")
   echo ""
   if [ -z "$current" ]; then
-    echo -e "  Cibles pour ${BOLD}$id${RESET} : (toutes les cibles actives de hub.json)"
+    echo -e "  $(t target.targets_label) ${BOLD}$id${RESET} : $(t target.all_active)"
   else
-    echo -e "  Cibles pour ${BOLD}$id${RESET} : $current"
+    echo -e "  $(t target.targets_label) ${BOLD}$id${RESET} : $current"
   fi
   echo ""
 }
@@ -42,22 +43,22 @@ cmd_info() {
 cmd_select() {
   local raw_id="${1:-}"
   if [ -z "$raw_id" ]; then
-    log_error "Usage : oc target select <PROJECT_ID>"
+    log_error "$(t target.usage.select)"
     exit 1
   fi
 
   local id
   id=$(normalize_project_id "$raw_id")
   if ! project_exists "$id"; then
-    log_error "Projet $id introuvable → ./oc.sh list"
+    log_error "$(t project_id.required) : $id → ./oc.sh list"
     exit 1
   fi
 
   local current
   current=$(get_project_targets "$id")
-  log_title "Sélection des cibles — $id"
+  log_title "$(t target.select.title) $id"
   if [ -z "$current" ]; then
-    log_info "Sélection actuelle : toutes les cibles actives (hub.json)"
+    log_info "$(t target.current_all)"
   else
     log_info "Sélection actuelle : ${current}"
   fi
@@ -71,7 +72,7 @@ cmd_select() {
   [ "$new_targets" = "all" ] && new_targets=""
 
   if [ "$new_targets" = "$current" ]; then
-    log_info "Aucune modification."
+    log_info "$(t no_modification)"
     return
   fi
 
@@ -79,23 +80,23 @@ cmd_select() {
     # Supprimer le champ Targets → retour au comportement global
     _set_project_targets "$id" "all"
     echo ""
-    log_success "Cibles réinitialisées pour $id → toutes les cibles actives seront utilisées"
+    log_success "$(t target.reset_done) $id — $(t target.reset_suffix)"
   else
     _set_project_targets "$id" "$new_targets"
     echo ""
     local count
     count=$(echo "$new_targets" | tr ',' '\n' | grep -v '^$' | wc -l | tr -d ' ')
-    log_success "$count cible(s) sélectionnée(s) pour $id : $new_targets"
+    log_success "$count $(t target.selected) $id : $new_targets"
   fi
 
   # Proposer un redéploiement immédiat
   echo ""
-  read -rp "Redéployer maintenant ? [Y/n] : " redeploy </dev/tty
+  read -rp "$(t start.deploy_now)" redeploy </dev/tty
   redeploy="${redeploy:-Y}"
   if [[ "$redeploy" =~ ^[Yy]$ ]]; then
     exec "$HUB_DIR/oc.sh" deploy all "$id"
   else
-    log_info "Déployer plus tard : ./oc.sh deploy all $id"
+    log_info "$(t deploy_later) $id"
   fi
 }
 
@@ -108,20 +109,20 @@ case "$SUBCOMMAND" in
   info)    cmd_info "$@" ;;
   select)  cmd_select "$@" ;;
   *)
-    echo -e "${BOLD}oc target — Gestion des cibles de déploiement par projet${RESET}"
+    echo -e "${BOLD}$(t target.title)${RESET}"
     echo ""
-    echo "  info <PROJECT_ID>     Afficher les cibles configurées pour un projet"
-    echo "  select <PROJECT_ID>   Choisir les cibles de déploiement pour un projet"
+    echo "  $(t target.info_cmd)"
+    echo "  $(t target.select_cmd)"
     echo ""
-    echo -e "${BOLD}Exemples :${RESET}"
+    echo -e "${BOLD}$(t target.examples)${RESET}"
     echo "  ./oc.sh target info MY-PROJECT"
     echo "  ./oc.sh target select MY-PROJECT"
     echo ""
-    echo -e "${BOLD}Cibles disponibles :${RESET}"
+    echo -e "${BOLD}$(t target.available)${RESET}"
     echo "  opencode     → .opencode/agents/"
     echo "  claude-code  → .claude/agents/"
     echo ""
-    echo "  Par défaut (si non configuré), les cibles actives de hub.json sont utilisées."
+    echo "  $(t target.default_hint)"
     echo ""
     ;;
 esac

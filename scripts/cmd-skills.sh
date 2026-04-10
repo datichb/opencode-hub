@@ -3,6 +3,7 @@
 # Usage : ./oc.sh skills <commande> [args]
 set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
+resolve_oc_lang
 
 # SOURCES_FILE : provenance des skills externes
 SOURCES_FILE="$EXTERNAL_SKILLS_DIR/.sources.json"
@@ -63,12 +64,12 @@ _remove_source() {
 cmd_search() {
   local query="${1:-}"
   if [ -z "$query" ]; then
-    log_error "Usage : oc skills search <query>"
+    log_error "$(t skills.search.usage)"
     log_info  "Exemple : oc skills search pdf"
     exit 1
   fi
   _require_npx
-  log_title "Recherche de skills : \"$query\""
+  log_title "$(t skills.search.title) \"$query\""
   echo ""
   # On autorise un code de retour non-nul (ex: aucun résultat) sans interrompre le script
   npx ctx7 skills search "$query" || true
@@ -83,12 +84,12 @@ cmd_search() {
 cmd_info() {
   local repo="${1:-}"
   if [ -z "$repo" ]; then
-    log_error "Usage : oc skills info /owner/repo"
+    log_error "$(t skills.info.usage)"
     log_info  "Exemple : oc skills info /anthropics/skills"
     exit 1
   fi
   _require_npx
-  log_title "Skills disponibles dans $repo"
+  log_title "$(t skills.available) dans $repo"
   echo ""
   npx ctx7 skills info "$repo" || true
 }
@@ -105,7 +106,7 @@ cmd_info() {
 cmd_add() {
   local repo="${1:-}" skill_name="${2:-}" force="${3:-}"
   if [ -z "$repo" ]; then
-    log_error "Usage : oc skills add /owner/repo [skill-name]"
+    log_error "$(t skills.add.usage)"
     log_info  "Exemple : oc skills add /anthropics/skills pdf"
     log_info  "Pour voir les skills disponibles : oc skills info /owner/repo"
     exit 1
@@ -113,17 +114,17 @@ cmd_add() {
   _require_npx
   _init_external
 
-  log_title "Ajout d'un skill externe"
+  log_title "$(t skills.add.title)"
 
   # Si aucun nom fourni, afficher la liste et demander
   if [ -z "$skill_name" ]; then
-    log_info "Skills disponibles dans $repo :"
+    log_info "$(t skills.available) dans $repo :"
     echo ""
     npx ctx7 skills info "$repo" 2>/dev/null || true
     echo ""
     read -rp "Nom du skill à installer : " skill_name
     if [ -z "$skill_name" ]; then
-      log_error "Nom de skill requis. Annulé."
+      log_error "Nom de skill requis. $(t cancelled)."
       exit 1
     fi
   fi
@@ -132,9 +133,9 @@ cmd_add() {
 
   # Confirmation si le skill existe déjà localement (sauf en mode --force)
   if [ -f "$dest" ] && [ "$force" != "--force" ]; then
-    log_warn "Le skill 'external/${skill_name}' existe déjà."
-    read -rp "Écraser ? (y/N) : " confirm
-    [[ "$confirm" =~ ^[Yy]$ ]] || { log_info "Annulé."; exit 0; }
+    log_warn "$(t skills.add.already_exists) 'external/${skill_name}'"
+    read -rp "$(t skills.add.overwrite)" confirm
+    [[ "$confirm" =~ ^[Yy]$ ]] || { log_info "$(t cancelled)."; exit 0; }
   fi
 
   log_info "Téléchargement de '$skill_name' depuis $repo via ctx7..."
@@ -167,10 +168,9 @@ cmd_add() {
   now=$(date +%Y-%m-%d)
   _record_source "$skill_name" "$repo" "$now"
 
-  log_success "Skill '$skill_name' ajouté → skills/external/${skill_name}.md"
+  log_success "$(t skills.add.added) skills/external/${skill_name}.md"
   echo ""
-  log_info "Pour l'utiliser dans un agent, ajoutez 'external/${skill_name}' à la liste"
-  log_info "  skills: de son fichier agents/<famille>/<id>.md, puis relancez : ./oc.sh deploy all"
+  log_info "$(t skills.add.use_hint)"
 }
 
 # ── LIST ─────────────────────────────────────────────────────────────────────
@@ -179,19 +179,19 @@ cmd_add() {
 # Liste tous les skills disponibles : locaux (skills/) et externes (skills/external/).
 ##
 cmd_list() {
-  log_title "Skills disponibles"
+  log_title "$(t skills.available)"
   echo ""
 
-  echo -e "${BOLD}Skills locaux :${RESET}"
+  echo -e "${BOLD}$(t skills.local)${RESET}"
   local found_local=0
   while IFS= read -r f; do
     echo "  ${f#$HUB_DIR/skills/}" | sed 's/\.md$//'
     found_local=1
   done < <(find "$HUB_DIR/skills" -name "*.md" -not -path "*/external/*" -type f 2>/dev/null | sort)
-  [ "$found_local" -eq 0 ] && echo "  (aucun)"
+  [ "$found_local" -eq 0 ] && echo "  $(t skills.none_local)"
 
   echo ""
-  echo -e "${BOLD}Skills externes (context7) :${RESET}"
+  echo -e "${BOLD}$(t skills.external)${RESET}"
   local found_ext=0
   for f in "$EXTERNAL_SKILLS_DIR"/*.md; do
     [ -f "$f" ] || continue
@@ -208,7 +208,7 @@ cmd_list() {
     fi
     found_ext=1
   done
-  [ "$found_ext" -eq 0 ] && echo "  (aucun — utilisez : oc skills add /owner/repo [name])"
+  [ "$found_ext" -eq 0 ] && echo "  $(t skills.none_external)"
 
   echo ""
 }
@@ -229,11 +229,11 @@ cmd_sync() {
   fi
 
   if [ ! -f "$SOURCES_FILE" ] || [ "$(cat "$SOURCES_FILE")" = '{}' ]; then
-    log_info "Aucun skill externe enregistré. Rien à synchroniser."
+    log_info "$(t skills.sync.none)"
     return
   fi
 
-  log_title "Synchronisation des skills externes"
+  log_title "$(t skills.sync.title)"
   echo ""
 
   local count=0
@@ -249,7 +249,7 @@ cmd_sync() {
   done < <(jq -r 'keys[]' "$SOURCES_FILE")
 
   echo ""
-  log_success "$count skill(s) synchronisé(s)."
+  log_success "$count $(t skills.sync.done)"
 }
 
 # ── REMOVE ───────────────────────────────────────────────────────────────────
@@ -261,7 +261,7 @@ cmd_sync() {
 cmd_remove() {
   local skill_name="${1:-}"
   if [ -z "$skill_name" ]; then
-    log_error "Usage : oc skills remove <skill-name>"
+    log_error "$(t skills.remove.usage)"
     log_info  "Exemple : oc skills remove pdf"
     log_info  "Utilisez 'oc skills list' pour voir les skills disponibles."
     exit 1
@@ -272,19 +272,19 @@ cmd_remove() {
 
   local dest="$EXTERNAL_SKILLS_DIR/${skill_name}.md"
   if [ ! -f "$dest" ]; then
-    log_error "Skill externe '${skill_name}' introuvable."
+    log_error "$(t skills.remove.not_found)"
     log_info  "Utilisez 'oc skills list' pour voir les skills disponibles."
     exit 1
   fi
 
-  read -rp "Supprimer le skill externe '${skill_name}' ? (y/N) : " confirm
-  [[ "$confirm" =~ ^[Yy]$ ]] || { log_info "Annulé."; exit 0; }
+  read -rp "$(t skills.remove.confirm) '${skill_name}' ? (y/N) : " confirm
+  [[ "$confirm" =~ ^[Yy]$ ]] || { log_info "$(t cancelled)."; exit 0; }
 
   rm "$dest"
   [ -f "$SOURCES_FILE" ] && _remove_source "$skill_name"
 
-  log_success "Skill '${skill_name}' supprimé."
-  log_info    "N'oubliez pas de le retirer de la liste skills: de vos agents si nécessaire."
+  log_success "$(t skills.remove.done)"
+  log_info    "$(t skills.remove.agent_hint)"
 }
 
 # ── USED-BY ──────────────────────────────────────────────────────────────────
@@ -297,14 +297,14 @@ cmd_remove() {
 cmd_used_by() {
   local skill="${1:-}"
   if [ -z "$skill" ]; then
-    log_error "Usage : oc skills used-by <skill>"
+    log_error "$(t skills.used_by.usage)"
     log_info  "Exemples :"
     log_info  "  oc skills used-by developer/dev-standards-frontend"
     log_info  "  oc skills used-by external/pdf"
     exit 1
   fi
 
-  log_title "Agents utilisant le skill : $skill"
+  log_title "$(t skills.used_by.title) $skill"
   echo ""
 
   local found=0
@@ -323,7 +323,7 @@ cmd_used_by() {
   done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
 
   if [ "$found" -eq 0 ]; then
-    echo "  (aucun agent n'utilise ce skill)"
+    echo "  $(t skills.used_by.none)"
   fi
   echo ""
 }
@@ -346,7 +346,7 @@ cmd_update() {
   fi
 
   if [ ! -f "$SOURCES_FILE" ] || [ "$(cat "$SOURCES_FILE")" = '{}' ]; then
-    log_info "Aucun skill externe enregistré. Rien à mettre à jour."
+    log_info "$(t skills.update.no_skills)"
     return
   fi
 
@@ -368,7 +368,7 @@ cmd_update() {
     done < <(jq -r 'keys[]' "$SOURCES_FILE")
   fi
 
-  log_title "Mise à jour des skills externes"
+  log_title "$(t skills.update.title)"
   echo ""
 
   local updated=0 skipped=0
@@ -408,7 +408,7 @@ cmd_update() {
 
     # Comparer avec la version locale
     if [ -f "$dest" ] && diff -q "$dest" "$tmp_file" &>/dev/null; then
-      log_success "'$skill_name' est déjà à jour."
+      log_success "'$skill_name' $(t skills.update.already_up_to_date)"
       rm -f "$tmp_file"
       skipped=$((skipped + 1))
       continue
@@ -426,7 +426,7 @@ cmd_update() {
     fi
     echo ""
 
-    read -rp "Appliquer la mise à jour pour '$skill_name' ? (Y/n) : " confirm
+    read -rp "$(t skills.update.apply) '$skill_name' ? (Y/n) : " confirm
     confirm="${confirm:-Y}"
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
       cp "$tmp_file" "$dest"
@@ -453,7 +453,7 @@ cmd_update() {
         echo -e "  ${YELLOW}⚠${RESET}  Relancez : ./oc.sh deploy all"
       fi
     else
-      log_info "Mise à jour de '$skill_name' ignorée."
+      log_info "$(t skills.update.skipped) '$skill_name'."
       skipped=$((skipped + 1))
     fi
 
@@ -462,8 +462,8 @@ cmd_update() {
   done
 
   echo ""
-  [ "$updated" -gt 0 ] && log_success "$updated skill(s) mis à jour."
-  [ "$skipped" -gt 0 ] && log_info    "$skipped skill(s) inchangé(s) ou ignoré(s)."
+  [ "$updated" -gt 0 ] && log_success "$updated $(t skills.update.updated)"
+  [ "$skipped" -gt 0 ] && log_info    "$skipped $(t skills.update.unchanged)"
 }
 
 # ── DISPATCH ─────────────────────────────────────────────────────────────────
@@ -481,18 +481,18 @@ case "$SUBCOMMAND" in
   used-by) cmd_used_by "$@" ;;
   remove)  cmd_remove "$@" ;;
   *)
-    echo -e "${BOLD}oc skills — Gestion des skills externes${RESET}"
+    echo -e "${BOLD}$(t skills.title)${RESET}"
     echo ""
-    echo "  search <query>             Rechercher des skills sur context7"
-    echo "  info /owner/repo           Prévisualiser les skills d'un dépôt"
-    echo "  add /owner/repo [name]     Ajouter un skill externe"
-    echo "  list                       Lister tous les skills (locaux + externes)"
-    echo "  update [name]              Mettre à jour un skill externe (ou tous)"
-    echo "  used-by <skill>            Lister les agents qui utilisent ce skill"
-    echo "  sync                       Re-télécharger tous les skills (après clone)"
-    echo "  remove <name>              Supprimer un skill externe"
+    echo "  $(t help.skills_search)"
+    echo "  $(t help.skills_info)"
+    echo "  $(t help.skills_add)"
+    echo "  $(t help.skills_list)"
+    echo "  $(t help.skills_update)"
+    echo "  $(t help.skills_used_by)"
+    echo "  $(t help.skills_sync)"
+    echo "  $(t help.skills_remove)"
     echo ""
-    echo -e "${BOLD}Exemples :${RESET}"
+    echo -e "${BOLD}$(t skills.examples)${RESET}"
     echo "  ./oc.sh skills update pdf"
     echo "  ./oc.sh skills update"
     echo "  ./oc.sh skills used-by external/pdf"

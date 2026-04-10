@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
+resolve_oc_lang
 
 ensure_projects_file
 
@@ -30,19 +31,19 @@ PROMPT="${ARGS[1]:-}"
 
 # --dev et --onboard sont mutuellement exclusifs
 if [ "$DEV_MODE" = true ] && [ "$ONBOARD_MODE" = true ]; then
-  log_error "--dev et --onboard sont mutuellement exclusifs"
+  log_error "$(t start.dev_onboard_exclusive)"
   exit 1
 fi
 
 # --label et --assignee nécessitent --dev
 if { [ -n "$DEV_LABEL" ] || [ -n "$DEV_ASSIGNEE" ]; } && [ "$DEV_MODE" = false ]; then
-  log_error "--label et --assignee nécessitent --dev"
+  log_error "$(t start.dev_needs_dev_flag)"
   exit 1
 fi
 
 # --label et --assignee sont mutuellement exclusifs
 if [ -n "$DEV_LABEL" ] && [ -n "$DEV_ASSIGNEE" ]; then
-  log_error "--label et --assignee sont mutuellement exclusifs"
+  log_error "$(t start.dev_label_exclusive)"
   exit 1
 fi
 
@@ -52,11 +53,11 @@ if [ -z "$PROJECT_ID" ]; then
   while IFS= read -r line; do ids+=("$line"); done < <(grep "^## " "$PROJECTS_FILE" | sed 's/^## //')
 
   if [ ${#ids[@]} -eq 0 ]; then
-    log_error "Aucun projet enregistré → ./oc.sh init"
+    log_error "$(t start.no_projects)"
     exit 1
   fi
 
-  echo -e "${BOLD}Choisir un projet :${RESET}"
+  echo -e "${BOLD}$(t start.choose_project)${RESET}"
   echo ""
   for i in "${!ids[@]}"; do
     printf "  ${BLUE}%d${RESET}) %s\n" "$((i+1))" "${ids[$i]}"
@@ -80,7 +81,7 @@ source "$LIB_DIR/adapter-manager.sh"
 default_target=$(get_default_target)
 
 load_adapter "$default_target"
-adapter_validate || { log_error "Cible '$default_target' non disponible → oc install (puis sélectionner $default_target)"; exit 1; }
+adapter_validate || { log_error "$(t start.target_unavailable) (puis sélectionner $default_target)"; exit 1; }
 
 # ── Vérifier que les agents sont déployés ──────────────
 case "$default_target" in
@@ -97,14 +98,14 @@ printf "${DIM}│${RESET}  %-10s %s\n" "Cible"   "$default_target"
 # Agents non déployés : proposer le déploiement (uniquement en mode interactif)
 if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ] && [ -t 0 ]; then
   echo -e "${DIM}│${RESET}"
-  log_warn "Agents non déployés pour ${default_target}"
-  _prompt _deploy_now "Déployer maintenant ? [Y/n] : "
+  log_warn "$(t start.agents_not_deployed) ${default_target}"
+  _prompt _deploy_now "$(t start.deploy_now)"
   if [[ "${_deploy_now:-Y}" =~ ^[Yy]$ ]]; then
     echo ""
     bash "$SCRIPTS_DIR/cmd-deploy.sh" "$default_target" "$PROJECT_ID"
     echo ""
   else
-    log_info "Déployer plus tard : ./oc.sh deploy ${default_target} ${PROJECT_ID}"
+    log_info "$(t deploy_later) ${default_target} ${PROJECT_ID}"
   fi
 fi
 
@@ -121,31 +122,31 @@ echo -e "${DIM}│${RESET}"
 # ── Vérifier que Beads est initialisé dans le projet ───
 if [ ! -d "$PROJECT_PATH/.beads" ]; then
   if [ "$DEV_MODE" = true ]; then
-    log_error "--dev requiert Beads initialisé dans ce projet"
-    log_error "Lancez d'abord : ./oc.sh beads init $PROJECT_ID"
+    log_error "$(t start.dev_requires_beads)"
+    log_error "$(t start.dev_beads_hint) $PROJECT_ID"
     exit 1
   elif command -v bd &>/dev/null; then
     echo ""
-    log_warn "Beads non initialisé dans ce projet (aucun .beads/ trouvé)"
-    _prompt _init_beads "Initialiser Beads maintenant ? [Y/n] : "
+    log_warn "$(t start.beads_not_init)"
+    _prompt _init_beads "$(t start.init_beads_now)"
     if [[ "${_init_beads:-Y}" =~ ^[Yy]$ ]]; then
       if (cd "$PROJECT_PATH" && bd init); then
-        log_success "Beads initialisé dans $PROJECT_PATH"
+        log_success "$(t beads.initialized) $PROJECT_PATH"
         # Proposer de configurer l'upstream git si absent (ni upstream ni origin trouvé)
         if ! (cd "$PROJECT_PATH" && git remote get-url upstream) &>/dev/null && \
            ! (cd "$PROJECT_PATH" && git remote get-url origin) &>/dev/null; then
           echo ""
-          _prompt _setup_upstream "Configurer l'upstream Git (git remote add upstream) ? [Y/n] : "
+          _prompt _setup_upstream "$(t start.setup_upstream)"
           if [[ "${_setup_upstream:-Y}" =~ ^[Yy]$ ]]; then
-            _prompt _upstream_url "URL du remote upstream : "
+            _prompt _upstream_url "$(t start.upstream_url)"
             if [ -n "$_upstream_url" ]; then
               if (cd "$PROJECT_PATH" && git remote add upstream "$_upstream_url"); then
-                log_success "Remote upstream configuré : $_upstream_url"
+                log_success "$(t start.upstream_ok) $_upstream_url"
               else
-                log_warn "Échec de la configuration upstream — configurer manuellement"
+                log_warn "$(t start.upstream_failed)"
               fi
             else
-              log_warn "URL vide — configurer plus tard : git remote add upstream <url>"
+              log_warn "$(t start.upstream_empty)"
             fi
           else
             log_info "Configurer plus tard : git remote add upstream <url>"
@@ -164,28 +165,28 @@ if [ ! -d "$PROJECT_PATH/.beads" ]; then
             fi
           done < <(printf '%s\n' "$_start_labels" | tr ',' '\n')
           if [ "$_labels_ok" = "1" ]; then
-            log_success "Labels enregistrés : $_start_labels"
+            log_success "$(t start.labels_registered) $_start_labels"
           else
-            log_warn "Échec enregistrement labels dans Beads"
+            log_warn "$(t start.labels_failed)"
           fi
         fi
       else
-        log_warn "Échec de bd init — initialiser plus tard : ./oc.sh beads init $PROJECT_ID"
+        log_warn "$(t start.beads_init_failed) $PROJECT_ID"
       fi
     else
-      log_info "Initialiser plus tard : ./oc.sh beads init $PROJECT_ID"
+      log_info "$(t start.beads_later) $PROJECT_ID"
     fi
   else
     echo ""
-    log_warn "Beads non initialisé dans ce projet (aucun .beads/ trouvé)"
-    log_warn "Pour utiliser les tickets : ./oc.sh beads init $PROJECT_ID"
+    log_warn "$(t start.beads_not_init)"
+    log_warn "$(t start.beads_later) $PROJECT_ID"
   fi
 fi
 
 # ── Mode --dev : sync auto + bootstrap prompt ai-delegated ──
 if [ "$DEV_MODE" = true ]; then
   if ! command -v bd &>/dev/null; then
-    log_error "--dev requiert bd (Beads) : brew install bd"
+    log_error "$(t start.dev_requires_bd)"
     exit 1
   fi
 
@@ -224,7 +225,7 @@ if [ "$ONBOARD_MODE" = true ]; then
 fi
 
 # ── Confirmation avant lancement ──────────────────────────────────────────────
-_outro "Appuyer sur Entrée pour lancer ${default_target}…"
+_outro "$(t start.press_enter) ${default_target}…"
 IFS= read -rp "" _ || true
 
 adapter_start "$PROJECT_PATH" "$PROMPT" "$PROJECT_ID" "${AGENT_NAME:-}"

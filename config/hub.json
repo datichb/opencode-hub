@@ -13,6 +13,6 @@
     "disabled_native_agents": ["build", "plan", "general", "explore"]
   },
   "cli": {
-    "language": "en"
+    "language": "fr"
   }
 }

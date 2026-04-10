@@ -4,30 +4,28 @@ set -euo pipefail
 # ── Aide interne ──────────────────────────
 _beads_usage() {
   echo ""
-  echo -e "${BOLD}Usage :${RESET} ./oc.sh beads <sous-commande> [PROJECT_ID]"
+  echo -e "${BOLD}$(t beads.title)${RESET}"
+  echo "  $(t help.beads_status)"
+  echo "  $(t help.beads_init)"
+  echo "  $(t help.beads_list)"
+  echo "  $(t help.beads_create)"
+  echo "  $(t help.beads_create_desc)"
+  echo "  $(t help.beads_open)"
   echo ""
-  echo -e "${BOLD}Gestion Beads :${RESET}"
-  echo "  status         [PROJECT_ID]   Vérifie si Beads est initialisé dans le projet"
-  echo "  init           <PROJECT_ID>   Initialise .beads/ dans le répertoire du projet"
-  echo "  list           <PROJECT_ID>   Liste les tickets ouverts du projet"
-  echo "  create         <PROJECT_ID> [titre] [--label l] [--type t] [--desc d]"
-  echo "                               Crée un ticket dans le projet"
-  echo "  open           <PROJECT_ID>   Affiche le chemin pour utiliser bd manuellement"
-  echo ""
-  echo -e "${BOLD}Synchronisation tracker (Jira / GitLab) :${RESET}"
-  echo "  sync           <PROJECT_ID> [--pull-only|--push-only|--dry-run]"
-  echo "                               Synchronise avec le tracker configuré"
-  echo "  tracker status <PROJECT_ID>  Affiche le tracker configuré et son état de sync"
-  echo "  tracker setup  <PROJECT_ID>  Configure le tracker du projet (interactif)"
-  echo "  tracker switch <PROJECT_ID>  Change le tracker d'un projet"
+  echo -e "${BOLD}$(t beads.tracker.title)${RESET}"
+  echo "  $(t help.beads_sync)"
+  echo "  $(t help.beads_sync_desc)"
+  echo "  $(t help.beads_tracker_status)"
+  echo "  $(t help.beads_tracker_setup)"
+  echo "  $(t help.beads_tracker_switch)"
   echo ""
 }
 
 # ── Vérifier que bd est disponible ────────
 _require_bd() {
   if ! command -v bd &>/dev/null; then
-    log_error "bd (Beads) n'est pas installé"
-    log_info  "Installation : brew install bd"
+    log_error "$(t beads.not_installed)"
+    log_info  "$(t beads.install_hint)"
     exit 1
   fi
 }
@@ -36,7 +34,7 @@ _require_bd() {
 _require_beads_init() {
   local path="$1" id="$2"
   if [ ! -d "$path/.beads" ]; then
-    log_error "Beads non initialisé dans $id → ./oc.sh beads init $id"
+    log_error "$(t beads.not_initialized) $id → ./oc.sh beads init $id"
     exit 1
   fi
 }
@@ -49,8 +47,8 @@ _resolve_tracker() {
   # Normaliser en minuscules (protection contre casse incorrecte dans projects.md)
   tracker=$(echo "$tracker" | tr '[:upper:]' '[:lower:]')
   if [ "$tracker" = "none" ] || [ -z "$tracker" ]; then
-    log_error "Aucun tracker configuré pour $id"
-    log_info  "Configurer : ./oc.sh beads tracker setup $id"
+    log_error "$(t beads.no_tracker) $id"
+    log_info  "$(t beads.tracker.configure) $id"
     exit 1
   fi
   echo "$tracker"
@@ -93,7 +91,7 @@ cmd_status() {
   local id="${1:-}"
 
   if [ -z "$id" ]; then
-    log_title "Statut Beads — tous les projets"
+    log_title "$(t beads.status.all)"
     echo ""
     while IFS= read -r pid; do
       local path tracker
@@ -119,9 +117,9 @@ cmd_status() {
   path=$(resolve_project_path "$id")
 
   if [ -d "$path/.beads" ]; then
-    log_success "Beads initialisé dans $id ($path/.beads)"
+    log_success "$(t beads.initialized) $id ($path/.beads)"
   else
-    log_warn "Beads non initialisé dans $id"
+    log_warn "$(t beads.not_initialized) $id"
     log_info  "Lancez : ./oc.sh beads init $id"
   fi
 
@@ -147,13 +145,13 @@ cmd_init() {
   path=$(resolve_project_path "$id")
 
   if [ -d "$path/.beads" ]; then
-    log_warn "Beads déjà initialisé dans $id ($path/.beads)"
+    log_warn "$(t beads.already_initialized) $id ($path/.beads)"
     exit 0
   fi
 
   log_info "Initialisation de Beads dans : $path"
-  (cd "$path" && bd init) || { log_error "Échec de bd init"; exit 1; }
-  log_success "Beads initialisé dans $id ($path/.beads)"
+  (cd "$path" && bd init) || { log_error "$(t beads.init_failed)"; exit 1; }
+  log_success "$(t beads.initialized) $id ($path/.beads)"
 
   # Proposer de configurer l'upstream git si absent (ni upstream ni origin trouvé)
   if ! (cd "$path" && git remote get-url upstream) &>/dev/null && \
@@ -190,9 +188,9 @@ cmd_init() {
       fi
     done < <(printf '%s\n' "$labels" | tr ',' '\n')
     if [ "$_labels_ok" = "1" ]; then
-      log_success "Labels enregistrés : $labels"
+      log_success "$(t beads.labels.registered) $labels"
     else
-      log_warn "Échec enregistrement labels dans Beads"
+      log_warn "$(t beads.labels.failed)"
     fi
   fi
 }
@@ -210,7 +208,7 @@ cmd_list() {
   path=$(resolve_project_path "$id")
   _require_beads_init "$path" "$id"
 
-  log_title "Tickets ouverts — $id"
+  log_title "$(t beads.status.open_tickets) $id"
   echo ""
   (cd "$path" && bd list -s open) || { log_error "Échec de bd list"; exit 1; }
 }
@@ -228,9 +226,9 @@ cmd_open() {
 
   log_info "Répertoire du projet $id : $path"
   if ! command -v bd &>/dev/null; then
-    log_warn "bd (Beads) n'est pas installé — installer : brew install bd"
+    log_warn "$(t beads.not_installed) — $(t beads.install_hint)"
   fi
-  log_info "Vous pouvez maintenant utiliser bd directement dans ce répertoire"
+  log_info "$(t beads.open_hint)"
   echo ""
   echo "  cd $path"
   echo "  bd list -s open"
@@ -258,8 +256,8 @@ cmd_sync() {
   log_info "Sync $tracker ← → Beads  [$id]"
   # Protection bash 3.2 : ${extra_flags[@]+...} évite le crash si le tableau est vide avec set -u
   (cd "$path" && bd "$tracker" sync ${extra_flags[@]+"${extra_flags[@]}"}) \
-    || { log_error "Échec du sync $tracker"; exit 1; }
-  log_success "Sync $tracker terminé pour $id"
+    || { log_error "$(t beads.sync.failed) $tracker"; exit 1; }
+  log_success "$(t beads.sync.done) $id"
 }
 
 # ══════════════════════════════════════════
@@ -310,7 +308,7 @@ cmd_tracker_setup() {
     case "$choice" in
       1) tracker="jira" ;;
       2) tracker="gitlab" ;;
-      *) log_error "Choix invalide"; exit 1 ;;
+      *) log_error "$(t beads.tracker.invalid)"; exit 1 ;;
     esac
     _set_project_tracker "$id" "$tracker"
     log_success "Tracker $tracker enregistré pour $id"
@@ -355,7 +353,7 @@ cmd_tracker_switch() {
     1) new_tracker="jira" ;;
     2) new_tracker="gitlab" ;;
     3) new_tracker="none" ;;
-    *) log_error "Choix invalide"; exit 1 ;;
+    *) log_error "$(t beads.tracker.invalid)"; exit 1 ;;
   esac
 
   # Vérifier que Beads est initialisé avant d'appliquer le changement
@@ -479,17 +477,17 @@ cmd_create() {
     [ -n "$type"  ] && bd_args+=("--type"  "$type")
     [ -n "$desc"  ] && bd_args+=("--desc"  "$desc")
 
-    log_info "Création du ticket dans ${id}…"
-    (cd "$path" && bd "${bd_args[@]}") || { log_error "Échec de bd create"; exit 1; }
+    log_info "$(t beads.create.creating) ${id}…"
+    (cd "$path" && bd "${bd_args[@]}") || { log_error "$(t beads.create.failed)"; exit 1; }
     return 0
   fi
 
   # ── Mode interactif minimal ────────────────────────────────────────────────
-  log_title "Créer un ticket — $id"
+  log_title "$(t beads.create.title) $id"
   echo ""
 
   read -rp "  Titre : " title
-  [ -z "$title" ] && { log_error "Titre requis"; exit 1; }
+  [ -z "$title" ] && { log_error "$(t beads.create.title_required)"; exit 1; }
 
   if [ -z "$label" ]; then
     read -rp "  Label (laisser vide pour ignorer) : " label
@@ -505,13 +503,14 @@ cmd_create() {
   [ -n "$desc"  ] && bd_args+=("--desc"  "$desc")
 
   echo ""
-  log_info "Création du ticket dans ${id}…"
-  (cd "$path" && bd "${bd_args[@]}") || { log_error "Échec de bd create"; exit 1; }
+  log_info "$(t beads.create.creating) ${id}…"
+  (cd "$path" && bd "${bd_args[@]}") || { log_error "$(t beads.create.failed)"; exit 1; }
 }
 
 # ── Dispatch (exécuté seulement si le script est lancé directement) ────────
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   source "$(cd "$(dirname "$0")" && pwd)/common.sh"
+  resolve_oc_lang
 
   SUBCMD="${1:-}"
   # NOTE : pour la sous-commande "tracker", $2 vaut la sous-sous-commande (setup/status/switch),
@@ -534,9 +533,9 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
         switch) cmd_tracker_switch "$TRACKER_PROJECT" ;;
         ""|--help|-h)
           echo ""
-          echo -e "${BOLD}Usage :${RESET} ./oc.sh beads tracker <status|setup|switch> <PROJECT_ID>"
+          echo -e "${BOLD}$(t beads.tracker.usage)${RESET}"
           ;;
-        *) log_error "Sous-commande tracker inconnue : $TRACKER_SUBCMD"; exit 1 ;;
+        *) log_error "$(t beads.tracker.unknown_subcmd) $TRACKER_SUBCMD"; exit 1 ;;
       esac
       ;;
     ""|--help|-h) _beads_usage ;;
