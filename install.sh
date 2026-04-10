@@ -21,6 +21,22 @@ set -euo pipefail
 REPO_URL="https://github.com/datichb/opencode-hub.git"
 INSTALL_DIR="${OPENCODE_HUB_DIR:-$HOME/.opencode-hub}"
 
+# VERSION optionnelle — accepte "v2.1.0" ou "2.1.0", normalise avec préfixe v
+# Laisser vide (défaut) pour installer HEAD de main.
+# Usage : VERSION=v2.1.0 bash install.sh
+#      ou: curl ... | VERSION=v2.1.0 bash
+_raw_version="${VERSION:-}"
+if [ -n "$_raw_version" ]; then
+  _raw_version="${_raw_version#v}"   # retirer éventuel préfixe v
+  if ! echo "$_raw_version" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+    echo "VERSION invalide : '${VERSION:-}' — format attendu vX.Y.Z ou X.Y.Z" >&2
+    exit 1
+  fi
+  INSTALL_REF="v${_raw_version}"
+else
+  INSTALL_REF=""
+fi
+
 # ─────────────────────────────────────────
 # COLORS & LOGGERS
 # ─────────────────────────────────────────
@@ -57,14 +73,25 @@ OS=$(detect_os)
 # ─────────────────────────────────────────
 # ÉTAPE 1 — CLONE / UPDATE DU REPO
 # ─────────────────────────────────────────
-_intro "Récupération de opencode-hub"
+_intro "Récupération de opencode-hub${INSTALL_REF:+ ${INSTALL_REF}}"
 
 if [ -d "$INSTALL_DIR/.git" ]; then
-  log_info "Mise à jour du repo existant dans $INSTALL_DIR ..."
-  if git -C "$INSTALL_DIR" pull --ff-only --quiet; then
-    log_success "Repo mis à jour (main)"
+  log_info "Repo existant détecté dans $INSTALL_DIR"
+  if [ -n "$INSTALL_REF" ]; then
+    # Mettre à jour les tags puis checkout de la version demandée
+    if git -C "$INSTALL_DIR" fetch --tags --quiet; then
+      git -C "$INSTALL_DIR" checkout --quiet "$INSTALL_REF" \
+        && log_success "Basculé sur ${INSTALL_REF}" \
+        || { log_error "Tag ${INSTALL_REF} introuvable — vérifier que la release existe"; exit 1; }
+    else
+      log_warn "Échec du fetch — repo conservé tel quel"
+    fi
   else
-    log_warn "Échec du pull — repo conservé tel quel"
+    if git -C "$INSTALL_DIR" pull --ff-only --quiet; then
+      log_success "Repo mis à jour (main)"
+    else
+      log_warn "Échec du pull — repo conservé tel quel"
+    fi
   fi
 else
   if [ -d "$INSTALL_DIR" ] && [ -n "$(ls -A "$INSTALL_DIR" 2>/dev/null)" ]; then
@@ -78,11 +105,16 @@ else
     fi
   fi
   log_info "Clonage du repo dans $INSTALL_DIR ..."
-  git clone --quiet "$REPO_URL" "$INSTALL_DIR" \
-    && log_success "Repo cloné avec succès"
+  if [ -n "$INSTALL_REF" ]; then
+    git clone --branch "$INSTALL_REF" --quiet "$REPO_URL" "$INSTALL_DIR" \
+      && log_success "Repo cloné — version ${INSTALL_REF}"
+  else
+    git clone --quiet "$REPO_URL" "$INSTALL_DIR" \
+      && log_success "Repo cloné avec succès"
+  fi
 fi
 
-_outro "Sources disponibles dans $INSTALL_DIR"
+_outro "Sources disponibles dans $INSTALL_DIR${INSTALL_REF:+ (${INSTALL_REF})}"
 
 # ─────────────────────────────────────────
 # ÉTAPE 2 — DÉPENDANCES
