@@ -11,8 +11,6 @@ Ce guide vous permet d'installer le hub et de lancer votre premier agent en moin
 
 > Les autres dépendances (`jq`, `Node.js`, `opencode`, `bun`) sont installées automatiquement par le script d'installation.
 >
-> **Node.js** est requis uniquement si vous ciblez OpenCode ou Claude Code — VS Code / Copilot ne le nécessite pas.
->
 > **Beads (`bd`)** est installé automatiquement par `oc install`.
 
 ---
@@ -61,8 +59,7 @@ oc install
 |-------|--------------------|
 | 1 (défaut) | OpenCode |
 | 2 | Claude Code |
-| 3 | VS Code / Copilot |
-| 4 | Tout |
+| 3 | Tout (OpenCode + Claude Code) |
 
 > Si `config/hub.json` existe déjà, une confirmation est demandée avant d'écraser
 > la configuration. Répondez `N` pour conserver votre configuration existante.
@@ -100,7 +97,6 @@ Résultat attendu selon la cible :
 |-------|---------------------------------|
 | `opencode` | `.opencode/agents/*.md` |
 | `claude-code` | `.claude/agents/*.md` |
-| `vscode` | `.github/copilot-instructions.md` + `.vscode/prompts/*.prompt.md` |
 
 ---
 

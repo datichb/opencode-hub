@@ -104,11 +104,6 @@ EOF
   [ "$status" -eq 0 ]
 }
 
-@test "agent_supports_target : retourne non-zero pour une cible non supportée (vscode)" {
-  run agent_supports_target "$TEST_DIR/agents/test-agent.md" "vscode"
-  [ "$status" -ne 0 ]
-}
-
 # ── get_agent_id ──────────────────────────────────────────────────────────────
 
 @test "get_agent_id : retourne la valeur du champ id du frontmatter" {

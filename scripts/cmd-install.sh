@@ -33,17 +33,15 @@ log_title "Cibles à configurer"
 echo ""
 echo "  1. OpenCode (recommandé)"
 echo "  2. Claude Code"
-echo "  3. VS Code / Copilot"
-echo "  4. Tout"
+echo "  3. Tout"
 echo ""
-read -rp "Choisir (1-4, défaut: 1) : " tool_choice
+read -rp "Choisir (1-3, défaut: 1) : " tool_choice
 tool_choice="${tool_choice:-1}"
 
 active_targets=()
 case "$tool_choice" in
   2) active_targets=("claude-code") ;;
-  3) active_targets=("vscode") ;;
-  4) active_targets=("opencode" "claude-code" "vscode") ;;
+  3) active_targets=("opencode" "claude-code") ;;
   *) active_targets=("opencode") ;;
 esac
 
@@ -95,12 +93,6 @@ if [ "$_write_hub_json" = true ]; then
   },
   "opencode": {
     "model": "${DEFAULT_MODEL}"
-  },
-  "vscode": {
-    "global_skills": [
-      "developer/dev-standards-universal",
-      "developer/dev-standards-frontend-a11y"
-    ]
   }
 }
 HUBJSON

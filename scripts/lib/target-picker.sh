@@ -1,5 +1,5 @@
 #!/bin/bash
-# Picker interactif de cibles de déploiement (opencode, claude-code, vscode).
+# Picker interactif de cibles de déploiement (opencode, claude-code).
 # Dépendances : common.sh (déjà sourcé), lib/tui-picker.sh.
 #
 # Fonctions publiques :
@@ -12,7 +12,7 @@ _TARGET_PICKER_LOADED=1
 source "$LIB_DIR/tui-picker.sh"
 
 # Cibles disponibles (ordre d'affichage)
-_AVAILABLE_TARGETS=("opencode" "claude-code" "vscode")
+_AVAILABLE_TARGETS=("opencode" "claude-code")
 
 ##
 # Rendu du sélecteur de cibles (compatible bash 3.2).

@@ -31,10 +31,7 @@ oc install
 |-------|--------------------|
 | 1 (défaut) | OpenCode |
 | 2 | Claude Code |
-| 3 | VS Code / Copilot |
-| 4 | Tout |
-
-> VS Code / Copilot ne requiert pas Node.js.
+| 3 | Tout |
 
 ---
 
@@ -52,7 +49,7 @@ oc deploy --diff  [target] [PROJECT_ID]
 
 | Argument | Valeurs | Description |
 |----------|---------|-------------|
-| `<target>` | `opencode`, `claude-code`, `vscode`, `all` | Cible à déployer |
+| `<target>` | `opencode`, `claude-code`, `all` | Cible à déployer |
 | `[PROJECT_ID]` | ID d'un projet enregistré | Optionnel — déploie au niveau du hub si absent |
 
 **Options :**
@@ -80,7 +77,6 @@ oc deploy --diff all MON-APP    # affiche le diff sources → déployés pour MO
 |-------|-----------------|
 | `opencode` | `.opencode/agents/*.md` + `opencode.json` (régénéré si une clé API ou un PROJECT_ID est défini) |
 | `claude-code` | `.claude/agents/*.md` |
-| `vscode` | `.github/copilot-instructions.md` + `.vscode/prompts/*.prompt.md` |
 
 **Codes de sortie `--check` :**
 - `0` : tout est à jour
@@ -138,7 +134,6 @@ oc start [PROJECT_ID] [prompt] [--dev [--label <label>] [--assignee <user>]] [--
 | `--onboard` | Injecte un prompt de découverte projet pour onboarder l'agent sur le codebase |
 
 > `--dev` et `--onboard` sont mutuellement exclusifs. `--label` et `--assignee` sont mutuellement exclusifs.
-> Ces options sont ignorées silencieusement pour la cible `vscode` (pas de support prompt).
 
 **Exemples :**
 
@@ -194,12 +189,11 @@ oc audit [PROJECT_ID] [--type <type>]
 
 1. **Validation** — vérifie que le `--type` est parmi les 7 domaines reconnus (si fourni)
 2. **Résolution projet** — normalise l'ID et résout le chemin local
-3. **Blocage vscode** — `vscode` ne supporte pas le passage d'agent par flag ; exit avec message explicite
-4. **Vérification projects.md** — si le projet a une sélection d'agents restrictive (pas `all`), vérifie que `auditor` (et `auditor-<type>` si précisé) sont inclus :
+3. **Vérification projects.md** — si le projet a une sélection d'agents restrictive (pas `all`), vérifie que `auditor` (et `auditor-<type>` si précisé) sont inclus :
    - Si manquants → propose de les ajouter + redéployer
    - Si refus → affiche les agents audit physiquement déployés et propose un menu de sélection
-5. **Vérification déploiement physique** — si le dossier agents est absent ou si les fichiers manquent, propose `oc deploy`
-6. **Lancement** — construit le prompt de bootstrap et ouvre l'outil avec `--agent auditor` (ou l'agent sélectionné)
+4. **Vérification déploiement physique** — si le dossier agents est absent ou si les fichiers manquent, propose `oc deploy`
+5. **Lancement** — construit le prompt de bootstrap et ouvre l'outil avec `--agent auditor` (ou l'agent sélectionné)
 
 **Exemples :**
 
@@ -226,7 +220,6 @@ Workflow :
 4. Produire le rapport d'audit structuré avec recommandations priorisées
 ```
 
-> Non supporté pour la cible `vscode` (pas de support `--agent`).
 > Pour un audit complet multi-domaines, invoquer l'agent `auditor` directement sans `--type`.
 
 ---
@@ -498,7 +491,7 @@ oc agent <sous-commande>
 1. **Identifiant** — slug unique (ex: `reviewer`)
 2. **Label** — nom court affiché dans l'outil (ex: `CodeReviewer`)
 3. **Description** — phrase courte décrivant le rôle
-4. **Cibles** — sélecteur interactif ↑↓/espace : `opencode`, `claude-code`, `vscode`
+4. **Cibles** — sélecteur interactif ↑↓/espace : `opencode`, `claude-code`
 5. **Skills** — sélecteur interactif ↑↓/espace avec panneau de description
 6. **Corps** — si `opencode` est disponible, proposition de génération automatique via `opencode run`
 7. **Prévisualisation** — affichage du fichier `.md` complet avant écriture
@@ -515,7 +508,7 @@ Vérifie pour chaque agent :
 - Champs requis présents (`id`, `label`, `description`, `targets`, `skills`)
 - Unicité de l'`id` sur l'ensemble des agents
 - `mode` valide (`primary` | `subagent` | `all`) si présent
-- Toutes les cibles dans `targets` reconnues (`opencode`, `claude-code`, `vscode`)
+- Toutes les cibles dans `targets` reconnues (`opencode`, `claude-code`)
 - Tous les skills référencés existent (local ou externe)
 
 Retourne le code 1 si au moins une erreur est détectée.

@@ -172,7 +172,7 @@ teardown() {
 id: reviewer
 label: Reviewer
 description: Code reviewer
-targets: [opencode, claude-code, vscode]
+targets: [opencode, claude-code]
 skills: []
 ---
 
@@ -185,7 +185,7 @@ AGENTEOF
 id: debugger
 label: Debugger
 description: Debugger agent
-targets: [opencode, claude-code, vscode]
+targets: [opencode, claude-code]
 skills: []
 ---
 

@@ -75,7 +75,6 @@ _show_project_status() {
     case "$default_target" in
       opencode)    agents_dir="$path/.opencode/agents" ;;
       claude-code) agents_dir="$path/.claude/agents" ;;
-      vscode)      agents_dir="$path/.vscode/prompts" ;;
     esac
 
     if [ -n "$agents_dir" ] && [ -d "$agents_dir" ]; then

@@ -190,10 +190,10 @@ _pick_skills() {
 # @param {string} $1 — sélection courante (CSV de cibles)
 ##
 _pick_targets() {
-  local current_csv="${1:-opencode, claude-code, vscode}"
+  local current_csv="${1:-opencode, claude-code}"
 
   # Initialiser _pick_items avec les cibles disponibles
-  _pick_items=("opencode" "claude-code" "vscode")
+  _pick_items=("opencode" "claude-code")
   _pick_total=${#_pick_items[@]}
 
   # Nettoyer le CSV courant
@@ -352,9 +352,9 @@ cmd_create() {
 
   # ── 4. Cibles ─────────────────────────────────────────────────────────────
   PICKED_TARGETS=""
-  _pick_project_targets "opencode,claude-code,vscode"
+  _pick_project_targets "opencode,claude-code"
   local targets_csv="$PICKED_TARGETS"
-  [ "$targets_csv" = "all" ] && targets_csv="opencode,claude-code,vscode"
+  [ "$targets_csv" = "all" ] && targets_csv="opencode,claude-code"
 
   # ── 5. Skills ─────────────────────────────────────────────────────────────
   PICKED_SKILLS=""
@@ -545,7 +545,7 @@ cmd_edit() {
     PICKED_TARGETS=""
     _pick_project_targets "$cur_targets"
     new_targets="$PICKED_TARGETS"
-    [ "$new_targets" = "all" ] && new_targets="opencode,claude-code,vscode"
+    [ "$new_targets" = "all" ] && new_targets="opencode,claude-code"
   fi
 
   # Skills (toujours proposé)
@@ -926,8 +926,8 @@ cmd_validate() {
       local t
       for t in $targets_clean; do
         case "$t" in
-          opencode|claude-code|vscode) ;;
-          *) issues="${issues}    target invalide : ${t} (attendu : opencode|claude-code|vscode)\n"
+          opencode|claude-code) ;;
+          *) issues="${issues}    target invalide : ${t} (attendu : opencode|claude-code)\n"
              has_err=1 ;;
         esac
       done

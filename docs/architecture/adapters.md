@@ -1,7 +1,7 @@
 # Architecture : Adapters
 
 Un **adapter** traduit les agents canoniques du hub vers le format natif
-d'un outil IA cible (opencode, claude-code, VS Code Copilot, etc.).
+d'un outil IA cible (opencode, claude-code, etc.).
 
 ---
 
@@ -29,7 +29,7 @@ qui vérifie via `declare -F` que les 6 fonctions existent après le `source`.
   lire la langue (`get_project_language`) et les clés API (`get_project_api_*`).
 
 Responsabilités :
-1. Créer l'arborescence de sortie (ex: `.opencode/agents/`, `.claude/agents/`, `.vscode/prompts/`)
+1. Créer l'arborescence de sortie (ex: `.opencode/agents/`, `.claude/agents/`)
 2. Itérer sur les agents canoniques dans `CANONICAL_AGENTS_DIR`
 3. Filtrer via `agent_supports_target` (ne déployer que les agents compatibles)
 4. Appeler `build_agent_content` (de `prompt-builder.sh`) pour assembler le contenu
@@ -127,11 +127,10 @@ adapter_start() {
 |-------|---------|-------------|--------------|
 | opencode | `opencode.adapter.sh` | Oui | Génère `opencode.json` (avec bloc `"agent":` pour les subagents) + `.opencode/agents/*.md`, injecte les clés API |
 | claude-code | `claude-code.adapter.sh` | Oui | Génère `.claude/agents/*.md` — les subagents reçoivent une description préfixée pour orienter Claude vers la délégation |
-| vscode | `vscode.adapter.sh` | Non | Génère `.github/copilot-instructions.md` + `.vscode/prompts/*.prompt.md` — les agents `subagent` sont **exclus** (Copilot Chat n'a pas de mécanisme d'invocation inter-agents)
 
 ### Comportement par mode selon la cible
 
-| Mode agent | opencode | claude-code | vscode |
-|-----------|----------|-------------|--------|
-| `primary` | Déployé normalement, absent du bloc `"agent":` | Déployé normalement | Déployé normalement |
-| `subagent` | Déployé normalement, listé dans `"agent": { "mode": "subagent" }` | Déployé avec description préfixée `"Sous-agent interne — invoquer uniquement via un agent coordinateur…"` | **Non déployé** |
+| Mode agent | opencode | claude-code |
+|-----------|----------|-------------|
+| `primary` | Déployé normalement, absent du bloc `"agent":` | Déployé normalement |
+| `subagent` | Déployé normalement, listé dans `"agent": { "mode": "subagent" }` | Déployé avec description préfixée `"Sous-agent interne — invoquer uniquement via un agent coordinateur…"` |

@@ -3,7 +3,7 @@ id: ux-designer
 label: UXDesigner
 description: Expert en expérience utilisateur — analyse les besoins utilisateurs, identifie les frictions, produit des user flows textuels et des spécifications UX actionnables. Ne code jamais. Invoquer avec "analyse le flow de [feature]", "spec UX pour [ticket]" ou "audit UX de [écran]".
 mode: primary
-targets: [opencode, claude-code, vscode]
+targets: [opencode, claude-code]
 skills: [designer/ux-protocol, developer/beads-plan, developer/beads-dev, posture/expert-posture]
 ---
 

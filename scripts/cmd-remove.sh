@@ -73,12 +73,6 @@ if [ "$CLEAN_MODE" = true ]; then
           log_success "Supprimé : .github/copilot-instructions.md"
         fi
         ;;
-      vscode)
-        if [ -d "$PROJECT_PATH/.vscode/prompts" ]; then
-          rm -rf "$PROJECT_PATH/.vscode/prompts"
-          log_success "Supprimé : .vscode/prompts/"
-        fi
-        ;;
     esac
   done <<< "$local_targets"
 fi

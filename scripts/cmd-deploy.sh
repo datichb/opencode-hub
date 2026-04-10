@@ -46,7 +46,6 @@ _cmd_deploy_check() {
     case "$tgt" in
       opencode)     gen_dir="$deploy_dir/.opencode/agents" ;;
       claude-code)  gen_dir="$deploy_dir/.claude/agents" ;;
-      vscode)       gen_dir="$deploy_dir/.vscode/prompts" ;;
       *)            log_warn "Cible inconnue pour --check : $tgt"; continue ;;
     esac
 
@@ -65,9 +64,7 @@ _cmd_deploy_check() {
       # Nom du fichier généré selon la cible
       local gen_file=""
       case "$tgt" in
-        opencode)     gen_file="$gen_dir/${agent_id}.md" ;;
-        claude-code)  gen_file="$gen_dir/${agent_id}.md" ;;
-        vscode)       gen_file="$gen_dir/${agent_id}.prompt.md" ;;
+        opencode|claude-code) gen_file="$gen_dir/${agent_id}.md" ;;
       esac
 
       if [ ! -f "$gen_file" ]; then
@@ -110,35 +107,6 @@ _cmd_deploy_check() {
         ok_count=$((ok_count + 1))
       fi
     done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
-
-    # Vérifier copilot-instructions.md pour vscode
-    if [ "$tgt" = "vscode" ]; then
-      local ci_file="$deploy_dir/.github/copilot-instructions.md"
-      local max_global_mtime=0
-      if command -v jq &>/dev/null && [ -f "$HUB_DIR/config/hub.json" ]; then
-        while IFS= read -r skill_name; do
-          [ -z "$skill_name" ] && continue
-          local sf="$SKILLS_DIR/${skill_name}.md"
-          [ -f "$sf" ] || continue
-          local sm; sm=$(stat -f %m "$sf" 2>/dev/null || stat -c %Y "$sf" 2>/dev/null)
-          [ "$sm" -gt "$max_global_mtime" ] && max_global_mtime=$sm
-        done < <(jq -r '.vscode.global_skills // [] | .[]' "$HUB_DIR/config/hub.json" 2>/dev/null)
-      fi
-
-      if [ ! -f "$ci_file" ]; then
-        echo -e "  ${RED}✗ MANQUANT${RESET}  copilot-instructions.md"
-        stale_count=$((stale_count + 1))
-      elif [ "$max_global_mtime" -gt 0 ]; then
-        local ci_mtime; ci_mtime=$(stat -f %m "$ci_file" 2>/dev/null || stat -c %Y "$ci_file" 2>/dev/null)
-        if [ "$max_global_mtime" -gt "$ci_mtime" ]; then
-          echo -e "  ${YELLOW}⚠ OBSOLÈTE${RESET}  copilot-instructions.md  (global_skills modifiés)"
-          stale_count=$((stale_count + 1))
-        else
-          echo -e "  ${GREEN}✓ À JOUR${RESET}    copilot-instructions.md"
-          ok_count=$((ok_count + 1))
-        fi
-      fi
-    fi
 
     echo ""
   done
@@ -194,7 +162,6 @@ _cmd_deploy_diff() {
     case "$tgt" in
       opencode)    gen_dir="$deploy_dir/.opencode/agents" ;;
       claude-code) gen_dir="$deploy_dir/.claude/agents" ;;
-      vscode)      gen_dir="$deploy_dir/.vscode/prompts" ;;
       *)           log_warn "Cible inconnue pour --diff : $tgt"; continue ;;
     esac
 
@@ -211,9 +178,7 @@ _cmd_deploy_diff() {
 
       local gen_file=""
       case "$tgt" in
-        opencode)    gen_file="$gen_dir/${agent_id}.md" ;;
-        claude-code) gen_file="$gen_dir/${agent_id}.md" ;;
-        vscode)      gen_file="$gen_dir/${agent_id}.prompt.md" ;;
+        opencode|claude-code) gen_file="$gen_dir/${agent_id}.md" ;;
       esac
 
       # Générer le contenu cible dans un fichier temporaire

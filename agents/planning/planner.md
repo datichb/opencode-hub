@@ -3,7 +3,7 @@ id: planner
 label: ProjectPlanner
 description: Consultant fonctionnel et technique qui analyse le contexte projet (codebase + tickets existants), décompose les features en epics et tickets structurés, déduit les priorités du contexte. Planifie uniquement, ne code jamais.
 mode: primary
-targets: [opencode, claude-code, vscode]
+targets: [opencode, claude-code]
 skills: [developer/beads-plan, planning/planner, posture/expert-posture]
 ---
 

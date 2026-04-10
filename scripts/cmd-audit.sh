@@ -73,14 +73,6 @@ default_target=$(get_default_target)
 load_adapter "$default_target"
 adapter_validate || { log_error "Cible '$default_target' non disponible → oc install"; exit 1; }
 
-# ── Bloquer si vscode (pas de support --agent) ────────────────────────────────
-if [ "$default_target" = "vscode" ]; then
-  log_error "La commande 'oc audit' n'est pas supportée pour la cible vscode"
-  log_info  "vscode ne supporte pas le passage d'agent par flag (--agent)"
-  log_info  "Changer de cible : ./oc.sh target opencode  ou  ./oc.sh target claude-code"
-  exit 1
-fi
-
 # ── Agents nécessaires ────────────────────────────────────────────────────────
 REQUIRED_AGENTS=("auditor")
 [ -n "$AUDIT_TYPE" ] && REQUIRED_AGENTS+=("auditor-${AUDIT_TYPE}")

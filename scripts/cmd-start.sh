@@ -86,7 +86,6 @@ adapter_validate || { log_error "Cible '$default_target' non disponible → oc i
 case "$default_target" in
   opencode)    agents_dir="$PROJECT_PATH/.opencode/agents" ;;
   claude-code) agents_dir="$PROJECT_PATH/.claude/agents" ;;
-  vscode)      agents_dir="$PROJECT_PATH/.vscode/prompts" ;;
   *)           agents_dir="" ;;
 esac
 
@@ -202,34 +201,26 @@ if [ "$DEV_MODE" = true ]; then
     fi
   fi
 
-  if [ "$default_target" = "vscode" ]; then
-    log_warn "--dev ignoré pour la cible vscode (pas de support prompt)"
+  source "$LIB_DIR/prompt-builder.sh"
+  PROMPT=$(build_dev_bootstrap_prompt "$PROJECT_PATH" "$DEV_LABEL" "$DEV_ASSIGNEE")
+  AGENT_NAME="${AGENT_NAME:-orchestrator-dev}"
+  echo ""
+  if [ -n "$DEV_ASSIGNEE" ]; then
+    log_info "Mode --dev  tickets assignés à '${DEV_ASSIGNEE}'  agent: ${AGENT_NAME}"
+  elif [ -n "$DEV_LABEL" ]; then
+    log_info "Mode --dev  tickets label '${DEV_LABEL}'  agent: ${AGENT_NAME}"
   else
-    source "$LIB_DIR/prompt-builder.sh"
-    PROMPT=$(build_dev_bootstrap_prompt "$PROJECT_PATH" "$DEV_LABEL" "$DEV_ASSIGNEE")
-    AGENT_NAME="${AGENT_NAME:-orchestrator-dev}"
-    echo ""
-    if [ -n "$DEV_ASSIGNEE" ]; then
-      log_info "Mode --dev  tickets assignés à '${DEV_ASSIGNEE}'  agent: ${AGENT_NAME}"
-    elif [ -n "$DEV_LABEL" ]; then
-      log_info "Mode --dev  tickets label '${DEV_LABEL}'  agent: ${AGENT_NAME}"
-    else
-      log_info "Mode --dev  tickets ai-delegated  agent: ${AGENT_NAME}"
-    fi
+    log_info "Mode --dev  tickets ai-delegated  agent: ${AGENT_NAME}"
   fi
 fi
 
 # ── Mode --onboard : prompt de découverte projet ────────────────────────────
 if [ "$ONBOARD_MODE" = true ]; then
-  if [ "$default_target" = "vscode" ]; then
-    log_warn "--onboard ignoré pour la cible vscode (pas de support prompt)"
-  else
-    source "$LIB_DIR/prompt-builder.sh"
-    PROMPT=$(build_onboard_bootstrap_prompt "$PROJECT_PATH" "$PROJECT_ID" "$HUB_DIR")
-    AGENT_NAME="${AGENT_NAME:-onboarder}"
-    echo ""
-    log_info "Mode --onboard  découverte projet activée  agent: ${AGENT_NAME}"
-  fi
+  source "$LIB_DIR/prompt-builder.sh"
+  PROMPT=$(build_onboard_bootstrap_prompt "$PROJECT_PATH" "$PROJECT_ID" "$HUB_DIR")
+  AGENT_NAME="${AGENT_NAME:-onboarder}"
+  echo ""
+  log_info "Mode --onboard  découverte projet activée  agent: ${AGENT_NAME}"
 fi
 
 # ── Confirmation avant lancement ──────────────────────────────────────────────

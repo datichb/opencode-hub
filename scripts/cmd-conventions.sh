@@ -54,11 +54,6 @@ adapter_validate || {
   exit 1
 }
 
-if [ "$default_target" = "vscode" ]; then
-  log_error "oc conventions n'est pas supporté pour la cible vscode (pas de support prompt)"
-  exit 1
-fi
-
 # ── Vérifier si CONVENTIONS.md existe déjà ────────────────────────────────────
 CONVENTIONS_FILE="$PROJECT_PATH/CONVENTIONS.md"
 _intro "Conventions — ${PROJECT_ID}"

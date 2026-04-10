@@ -32,7 +32,7 @@ Voir [ADR-001](./adr/001-agent-skill-separation.md) pour la décision de sépara
 
 Un **adapter** est un script shell (`scripts/adapters/<cible>.adapter.sh`) qui
 traduit les agents + skills du format hub vers le format attendu par un outil cible.
-Trois adapters existent : `opencode`, `claude-code`, `vscode`.
+Trois adapters existent : `opencode`, `claude-code`.
 
 ### Projet cible
 
@@ -52,14 +52,12 @@ flowchart LR
         subgraph ADP["adapters/"]
             OC[opencode.adapter.sh]
             CC[claude-code.adapter.sh]
-            VS[vscode.adapter.sh]
         end
     end
 
     subgraph PROJETS["Projets cibles"]
         OC -->|oc deploy opencode| P1[".opencode/agents/*.md"]
         CC -->|oc deploy claude-code| P2[".claude/agents/*.md"]
-        VS -->|oc deploy vscode| P3[".vscode/prompts/*.md\n.github/copilot-instructions.md"]
     end
 ```
 

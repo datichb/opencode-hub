@@ -120,7 +120,6 @@ case "$SUBCOMMAND" in
     echo -e "${BOLD}Cibles disponibles :${RESET}"
     echo "  opencode     → .opencode/agents/"
     echo "  claude-code  → .claude/agents/"
-    echo "  vscode       → .vscode/prompts/"
     echo ""
     echo "  Par défaut (si non configuré), les cibles actives de hub.json sont utilisées."
     echo ""

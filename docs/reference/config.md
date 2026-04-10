@@ -23,12 +23,6 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
     "model": "claude-sonnet-4-5",
     "disabled_native_agents": ["build", "plan"]
   },
-  "vscode": {
-    "global_skills": [
-      "developer/dev-standards-universal",
-      "developer/dev-standards-frontend-a11y"
-    ]
-  }
 }
 ```
 
@@ -46,7 +40,6 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
 | `default_provider.model` | string | `""` | Modèle IA par défaut pour ce provider (si vide : fallback à `opencode.model`) |
 | `opencode.model` | string | — | Modèle IA injecté dans `opencode.json` des projets déployés (si `default_provider.model` est vide) |
 | `opencode.disabled_native_agents` | array | `[]` | Agents natifs OpenCode désactivés par défaut (`build`, `plan`, `general`, `explore`) — surchargeables par projet via `- Disable agents :` dans `projects.md` |
-| `vscode.global_skills` | array | `[]` | Skills injectés dans `copilot-instructions.md` (partagés par tous les agents VS Code) |
 
 ### Cibles disponibles
 
@@ -54,7 +47,6 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
 |--------|-------------|
 | `opencode` | OpenCode (`opencode run`) |
 | `claude-code` | Claude Code |
-| `vscode` | VS Code / GitHub Copilot |
 
 ### Exemple minimal (OpenCode uniquement)
 
@@ -100,7 +92,7 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
 {
   "version": "2.0.0",
   "default_target": "opencode",
-  "active_targets": ["opencode", "claude-code", "vscode"],
+  "active_targets": ["opencode", "claude-code"],
   "default_provider": {
     "name": "anthropic",
     "api_key": "sk-ant-xxx...",
@@ -109,12 +101,6 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
   },
   "opencode": {
     "model": "claude-sonnet-4-5"
-  },
-  "vscode": {
-    "global_skills": [
-      "developer/dev-standards-universal",
-      "developer/dev-standards-frontend-a11y"
-    ]
   }
 }
 ```
@@ -171,7 +157,7 @@ le sien. Créé automatiquement depuis `projects/projects.example.md` au premier
 - `Tracker` : `jira`, `gitlab` ou `none`
 - `Langue` : optionnel — valeur libre (ex: `english`, `spanish`) — si absent, les agents s'expriment en français
 - `Agents` : optionnel — `all` ou CSV d'identifiants d'agents — filtré au déploiement
-- `Targets` : optionnel — CSV de cibles (`opencode`, `claude-code`, `vscode`) — surcharge `active_targets` de `hub.json`
+- `Targets` : optionnel — CSV de cibles (`opencode`, `claude-code`) — surcharge `active_targets` de `hub.json`
 - `Modes` : optionnel — CSV de paires `agent-id:mode` — surcharge le frontmatter des agents. Modes : `primary`, `subagent`. Laisser vide pour revenir aux valeurs frontmatter.
 - `Disable agents` : optionnel — CSV d'agents natifs OpenCode à désactiver (`build`, `plan`, `general`, `explore`) — surcharge `opencode.disabled_native_agents` de `hub.json`. Vide = utiliser le défaut hub.
 - Ce fichier est **local** — ne jamais le committer

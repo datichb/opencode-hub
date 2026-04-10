@@ -17,7 +17,6 @@ OpenCode Hub supports multiple LLM providers, enabling you to choose the best so
 ### Important Notes
 
 - **Claude Code limitation**: Claude Code only supports the `anthropic` provider (architectural constraint). Using other providers will trigger a warning.
-- **VS Code**: Provider configuration is managed within VS Code itself, not through this CLI.
 - **Model priority**: Models are resolved in this order: 1) Project config → 2) Hub default → 3) Environment variable → 4) Hub opencode.model → 5) Default fallback
 
 ## Configuration Levels

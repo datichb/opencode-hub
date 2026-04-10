@@ -79,7 +79,6 @@ for project_id in "${project_ids[@]}"; do
       case "$tgt" in
         opencode)    gen_dir="$local_path/.opencode/agents" ;;
         claude-code) gen_dir="$local_path/.claude/agents" ;;
-        vscode)      gen_dir="$local_path/.vscode/prompts" ;;
         *) continue ;;
       esac
 
@@ -93,7 +92,6 @@ for project_id in "${project_ids[@]}"; do
         gen_file=""
         case "$tgt" in
           opencode|claude-code) gen_file="$gen_dir/${agent_id}.md" ;;
-          vscode)               gen_file="$gen_dir/${agent_id}.prompt.md" ;;
         esac
 
         if [ ! -f "$gen_file" ]; then

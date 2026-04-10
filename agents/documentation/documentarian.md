@@ -3,7 +3,7 @@ id: documentarian
 label: Documentarian
 description: Rédige et met à jour la documentation technique, fonctionnelle, architecturale, API et les changelogs. S'adapte à la structure de documentation existante du projet. Invocation — "Documente [sujet]", "Crée un ADR pour [décision]", "Mets à jour le CHANGELOG".
 mode: primary
-targets: [opencode, claude-code, vscode]
+targets: [opencode, claude-code]
 skills: [developer/dev-standards-git, developer/beads-plan, developer/beads-dev, documentarian/doc-protocol, documentarian/doc-standards, documentarian/doc-adr, documentarian/doc-api, documentarian/doc-changelog, posture/expert-posture]
 ---
 

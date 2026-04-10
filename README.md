@@ -3,7 +3,7 @@
 Hub central pour piloter des assistants IA sur plusieurs projets,
 avec des agents partagés, des skills injectables et un workflow Beads intégré.
 
-Supporte **OpenCode**, **Claude Code** et **VS Code / Copilot**.
+Supporte **OpenCode** et **Claude Code**.
 
 ---
 

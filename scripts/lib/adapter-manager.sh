@@ -1,5 +1,5 @@
 #!/bin/bash
-# Charge et expose les adaptateurs par cible (opencode, claude-code, vscode)
+# Charge et expose les adaptateurs par cible (opencode, claude-code)
 
 # Charge l'adaptateur d'une cible et expose ses fonctions
 load_adapter() {
@@ -8,7 +8,7 @@ load_adapter() {
 
   if [ ! -f "$adapter_file" ]; then
     log_error "Adaptateur inconnu : $target"
-    log_info "Cibles disponibles : opencode, claude-code, vscode"
+    log_info "Cibles disponibles : opencode, claude-code"
     exit 1
   fi
 
