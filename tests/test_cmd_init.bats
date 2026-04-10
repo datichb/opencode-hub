@@ -12,6 +12,39 @@ setup() {
 
   CMD_INIT="$BATS_TEST_DIRNAME/../scripts/cmd-init.sh"
 
+  # ── Mock cmd-deploy.sh ────────────────────────────────────────────────────────
+  # cmd-init.sh appelle : bash "$SCRIPTS_DIR/cmd-deploy.sh" all "$PROJECT_ID"
+  # SCRIPTS_DIR étant calculé depuis BASH_SOURCE dans common.sh, on ne peut pas
+  # le surcharger via l'environnement. On intercepte via un wrapper `bash` dans le PATH
+  # qui détecte l'argument *cmd-deploy.sh et court-circuite l'exécution.
+  DEPLOY_CALLS_LOG="$TEST_DIR/deploy_calls.log"
+  export DEPLOY_CALLS_LOG
+  : > "$DEPLOY_CALLS_LOG"
+
+  mkdir -p "$TEST_DIR/bin"
+
+  REAL_BASH="$(command -v bash)"
+  export REAL_BASH
+  cat > "$TEST_DIR/bin/bash" <<'BASHEOF'
+#!/bin/bash
+# Scan args for *cmd-deploy.sh and short-circuit if found
+deploy_script=""
+other_args=()
+for arg in "$@"; do
+  if [[ "$arg" == *cmd-deploy.sh ]]; then
+    deploy_script="$arg"
+  else
+    other_args+=("$arg")
+  fi
+done
+if [[ -n "$deploy_script" ]]; then
+  echo "cmd-deploy ${other_args[*]}" >> "$DEPLOY_CALLS_LOG"
+  exit 0
+fi
+exec "$REAL_BASH" "$@"
+BASHEOF
+  chmod +x "$TEST_DIR/bin/bash"
+
   # Projects vide (ensure_projects_file le crée si absent)
   cat > "$PROJECTS_FILE" <<'PROJEOF'
 # Registre de test
@@ -26,8 +59,6 @@ PROJEOF
   BD_CALLS_LOG="$TEST_DIR/bd_calls.log"
   export BD_CALLS_LOG
   : > "$BD_CALLS_LOG"
-
-  mkdir -p "$TEST_DIR/bin"
   cat > "$TEST_DIR/bin/bd" <<'BDEOF'
 #!/bin/bash
 echo "bd $*" >> "$BD_CALLS_LOG"

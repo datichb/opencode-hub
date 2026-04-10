@@ -314,7 +314,7 @@ elif [ -z "${PICKED_TARGETS:-}" ] || [ "${PICKED_TARGETS:-}" = "all" ]; then
   fi
 fi
 
-if [ "$_is_opencode_target" = true ]; then
+if [ "$_is_opencode_target" = true ] && [ -t 0 ]; then
   echo ""
   _hub_disabled=$(get_hub_disabled_native_agents)
   if [ -n "$_hub_disabled" ]; then
@@ -445,9 +445,11 @@ fi
 _step 5 5 "Déploiement"
 
 if [ -d "$PROJECT_PATH" ]; then
-  _prompt deploy_now "Déployer les agents maintenant ? [Y/n] : "
   DEPLOYED="non"
-  if [[ "${deploy_now:-Y}" =~ ^[Yy]$ ]]; then
+  if [ -t 0 ]; then
+    _prompt deploy_now "Déployer les agents maintenant ? [Y/n] : "
+  fi
+  if [ -t 0 ] && [[ "${deploy_now:-Y}" =~ ^[Yy]$ ]]; then
     bash "$SCRIPTS_DIR/cmd-deploy.sh" all "$PROJECT_ID"
     DEPLOYED="oui"
   else
