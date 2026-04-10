@@ -354,6 +354,100 @@ t() {
       uninstall.done)         printf '%s' "Désinstallation terminée." ;;
       uninstall.cancelled)    printf '%s' "Désinstallation annulée." ;;
 
+      # ── cmd-list.sh ────────────────────────────────────────────────────────
+      list.title)             printf '%s' "Projets enregistrés" ;;
+      list.no_projects)       printf '%s' "Aucun projet enregistré" ;;
+      list.col_id)            printf '%s' "ID" ;;
+      list.col_path)          printf '%s' "Chemin local" ;;
+      list.col_status)        printf '%s' "Statut" ;;
+      list.status_no_path)    printf '%s' "⚠ sans chemin" ;;
+      list.path_undefined)    printf '%s' "non défini" ;;
+      list.status_ok)         printf '%s' "✔ accessible" ;;
+      list.status_missing)    printf '%s' "✘ introuvable" ;;
+
+      # ── cmd-status.sh ──────────────────────────────────────────────────────
+      status.no_path)         printf '%s' "Chemin local non configuré (paths.local.md)" ;;
+      status.dir_missing)     printf '%s' "Dossier introuvable : " ;;
+      status.path_label)      printf '%s' "Chemin : " ;;
+      status.beads_ok)        printf '%s' "Beads initialisé" ;;
+      status.beads_not_init)  printf '%s' "Beads non initialisé" ;;
+      status.api_not_set)     printf '%s' "Clé API non configurée" ;;
+      status.tracker_none)    printf '%s' "Tracker : aucun" ;;
+      status.agents_deployed) printf '%s' "Agents déployés" ;;
+      status.agents_missing)  printf '%s' "Agents non déployés pour" ;;
+      status.title)           printf '%s' "Statut des projets" ;;
+      status.no_projects)     printf '%s' "Aucun projet enregistré — démarrer avec : ./oc.sh init" ;;
+
+      # ── cmd-sync.sh ────────────────────────────────────────────────────────
+      sync.title_dryrun)      printf '%s' "Vérification globale des agents déployés (dry-run)" ;;
+      sync.title)             printf '%s' "Synchronisation des agents sur tous les projets" ;;
+      sync.no_projects)       printf '%s' "Aucun projet enregistré — lancez : ./oc.sh init" ;;
+      sync.no_targets)        printf '%s' "Aucune cible configurée — vérifier active_targets dans config/hub.json" ;;
+      sync.project_label)     printf '%s' "── Projet : " ;;
+      sync.path_undefined)    printf '%s' "path non défini localement, ignoré" ;;
+      sync.dir_missing)       printf '%s' "dossier introuvable : " ;;
+      sync.missing)           printf '%s' "✗ MANQUANT" ;;
+      sync.stale)             printf '%s' "⚠ OBSOLÈTE" ;;
+      sync.ok)                printf '%s' "✓ À JOUR" ;;
+      sync.deployed)          printf '%s' "déployé" ;;
+      sync.deploy_failed)     printf '%s' "échec déploiement" ;;
+      sync.target_unavailable) printf '%s' "non disponible — ignoré" ;;
+      sync.result_ok)         printf '%s' "à jour" ;;
+      sync.result_stale)      printf '%s' "obsolète(s)/manquant(s)" ;;
+      sync.result_skipped)    printf '%s' "ignoré(s)" ;;
+      sync.deploy_hint)       printf '%s' "Pour déployer : ./oc.sh sync" ;;
+      sync.result_deployed)   printf '%s' "déployé(s)" ;;
+
+      # ── cmd-update.sh ──────────────────────────────────────────────────────
+      update.title)           printf '%s' "Mise à jour des outils" ;;
+      update.beads_updating)  printf '%s' "Mise à jour Beads (bd)..." ;;
+      update.beads_done)      printf '%s' "Beads mis à jour via Homebrew" ;;
+      update.beads_failed)    printf '%s' "Échec mise à jour Beads — déjà à jour ou erreur Homebrew" ;;
+      update.beads_not_brew)  printf '%s' "bd installé mais pas via Homebrew — mise à jour manuelle requise" ;;
+      update.beads_manual_hint) printf '%s' "  → https://beads.sh ou via votre gestionnaire de paquets" ;;
+      update.bd_missing)      printf '%s' "bd non installé — lancez : oc install" ;;
+      update.skills_updating) printf '%s' "Mise à jour des skills externes..." ;;
+      update.skills_none)     printf '%s' "Aucun skill externe enregistré — étape ignorée." ;;
+      update.done)            printf '%s' "Mise à jour terminée" ;;
+      update.skills_stale_warn) printf '%s' "Des skills ont été mis à jour — les agents déployés dans vos projets peuvent être obsolètes." ;;
+      update.sync_now)        printf '%s' "  Lancer oc sync pour redéployer sur tous les projets ? [Y/n] : " ;;
+      update.sync_later)      printf '%s' "Redéployer manuellement : ./oc.sh sync" ;;
+
+      # ── cmd-audit.sh ───────────────────────────────────────────────────────
+      audit.invalid_type)     printf '%s' "Type d'audit invalide : '" ;;
+      audit.valid_types)      printf '%s' "Types valides : " ;;
+      audit.no_projects)      printf '%s' "Aucun projet enregistré → ./oc.sh init" ;;
+      audit.choose_project)   printf '%s' "Choisir un projet :" ;;
+      audit.choose_number)    printf '%s' "  Numéro : " ;;
+      audit.invalid_choice)   printf '%s' "Choix invalide : " ;;
+      audit.target_unavailable) printf '%s' "Cible '" ;;
+      audit.label_path)       printf '%s' "Chemin" ;;
+      audit.label_target)     printf '%s' "Cible" ;;
+      audit.label_agents)     printf '%s' "Agents" ;;
+      audit.label_type)       printf '%s' "Type" ;;
+      audit.agents_missing_config) printf '%s' "Agent(s) absent(s) de la sélection projet : " ;;
+      audit.add_agents_prompt) printf '%s' "Ajouter ces agents à la sélection du projet ? [Y/n] : " ;;
+      audit.agents_updated)   printf '%s' "Agents mis à jour dans projects.md : " ;;
+      audit.redeploy_prompt)  printf '%s' "Redéployer les agents maintenant ? [Y/n] : " ;;
+      audit.redeploy_later)   printf '%s' "Redéployer plus tard : ./oc.sh deploy " ;;
+      audit.searching_agents) printf '%s' "Recherche des agents audit disponibles dans " ;;
+      audit.no_agents_deployed) printf '%s' "Aucun agent audit déployé dans " ;;
+      audit.deploy_hint)      printf '%s' "Déployer les agents : ./oc.sh deploy " ;;
+      audit.add_agents_hint)  printf '%s' "Puis ajouter les agents au projet : ./oc.sh agent edit " ;;
+      audit.available_agents) printf '%s' "Agents audit disponibles :" ;;
+      audit.choose_agent)     printf '%s' "  Choisir un agent (numéro) : " ;;
+      audit.agent_selected)   printf '%s' "Agent sélectionné : " ;;
+      audit.agents_not_deployed) printf '%s' "Agents non déployés pour " ;;
+      audit.deploy_now_prompt) printf '%s' "Déployer maintenant ? [Y/n] : " ;;
+      audit.deploy_skipped)   printf '%s' "Déploiement ignoré — l'agent risque d'être introuvable" ;;
+      audit.deploy_later)     printf '%s' "Déployer plus tard : ./oc.sh deploy " ;;
+      audit.agents_not_deployed_list) printf '%s' "Agent(s) non déployé(s) : " ;;
+      audit.main_agent)       printf '%s' "Agent principal : " ;;
+      audit.launching)        printf '%s' "Lancement de l'audit " ;;
+
+      # ── cmd-version.sh ─────────────────────────────────────────────────────
+      version.unknown)        printf '%s' "inconnu" ;;
+
       *) t_en "$key" ;;
     esac
   else
@@ -696,6 +790,100 @@ t_en() {
     uninstall.confirm)      printf '%s' "Uninstall opencode-hub? [y/N] " ;;
     uninstall.done)         printf '%s' "Uninstall complete." ;;
     uninstall.cancelled)    printf '%s' "Uninstall cancelled." ;;
+
+    # ── cmd-list.sh ──────────────────────────────────────────────────────────
+    list.title)             printf '%s' "Registered projects" ;;
+    list.no_projects)       printf '%s' "No registered projects" ;;
+    list.col_id)            printf '%s' "ID" ;;
+    list.col_path)          printf '%s' "Local path" ;;
+    list.col_status)        printf '%s' "Status" ;;
+    list.status_no_path)    printf '%s' "⚠ no path" ;;
+    list.path_undefined)    printf '%s' "undefined" ;;
+    list.status_ok)         printf '%s' "✔ accessible" ;;
+    list.status_missing)    printf '%s' "✘ not found" ;;
+
+    # ── cmd-status.sh ────────────────────────────────────────────────────────
+    status.no_path)         printf '%s' "Local path not configured (paths.local.md)" ;;
+    status.dir_missing)     printf '%s' "Directory not found: " ;;
+    status.path_label)      printf '%s' "Path: " ;;
+    status.beads_ok)        printf '%s' "Beads initialized" ;;
+    status.beads_not_init)  printf '%s' "Beads not initialized" ;;
+    status.api_not_set)     printf '%s' "API key not configured" ;;
+    status.tracker_none)    printf '%s' "Tracker: none" ;;
+    status.agents_deployed) printf '%s' "Deployed agents" ;;
+    status.agents_missing)  printf '%s' "Agents not deployed for" ;;
+    status.title)           printf '%s' "Project status" ;;
+    status.no_projects)     printf '%s' "No registered projects — start with: ./oc.sh init" ;;
+
+    # ── cmd-sync.sh ──────────────────────────────────────────────────────────
+    sync.title_dryrun)      printf '%s' "Global check of deployed agents (dry-run)" ;;
+    sync.title)             printf '%s' "Sync agents on all registered projects" ;;
+    sync.no_projects)       printf '%s' "No registered projects — run: ./oc.sh init" ;;
+    sync.no_targets)        printf '%s' "No target configured — check active_targets in config/hub.json" ;;
+    sync.project_label)     printf '%s' "── Project: " ;;
+    sync.path_undefined)    printf '%s' "path not defined locally, skipped" ;;
+    sync.dir_missing)       printf '%s' "directory not found: " ;;
+    sync.missing)           printf '%s' "✗ MISSING" ;;
+    sync.stale)             printf '%s' "⚠ STALE" ;;
+    sync.ok)                printf '%s' "✓ UP TO DATE" ;;
+    sync.deployed)          printf '%s' "deployed" ;;
+    sync.deploy_failed)     printf '%s' "deploy failed" ;;
+    sync.target_unavailable) printf '%s' "not available — skipped" ;;
+    sync.result_ok)         printf '%s' "up to date" ;;
+    sync.result_stale)      printf '%s' "stale/missing" ;;
+    sync.result_skipped)    printf '%s' "skipped" ;;
+    sync.deploy_hint)       printf '%s' "To deploy: ./oc.sh sync" ;;
+    sync.result_deployed)   printf '%s' "deployed" ;;
+
+    # ── cmd-update.sh ────────────────────────────────────────────────────────
+    update.title)           printf '%s' "Updating tools" ;;
+    update.beads_updating)  printf '%s' "Updating Beads (bd)..." ;;
+    update.beads_done)      printf '%s' "Beads updated via Homebrew" ;;
+    update.beads_failed)    printf '%s' "Beads update failed — already up to date or Homebrew error" ;;
+    update.beads_not_brew)  printf '%s' "bd installed but not via Homebrew — manual update required" ;;
+    update.beads_manual_hint) printf '%s' "  → https://beads.sh or via your package manager" ;;
+    update.bd_missing)      printf '%s' "bd not installed — run: oc install" ;;
+    update.skills_updating) printf '%s' "Updating external skills..." ;;
+    update.skills_none)     printf '%s' "No external skills registered — step skipped." ;;
+    update.done)            printf '%s' "Update complete" ;;
+    update.skills_stale_warn) printf '%s' "Some skills were updated — deployed agents in your projects may be outdated." ;;
+    update.sync_now)        printf '%s' "  Run oc sync to redeploy on all projects? [Y/n]: " ;;
+    update.sync_later)      printf '%s' "Redeploy manually: ./oc.sh sync" ;;
+
+    # ── cmd-audit.sh ─────────────────────────────────────────────────────────
+    audit.invalid_type)     printf '%s' "Invalid audit type: '" ;;
+    audit.valid_types)      printf '%s' "Valid types: " ;;
+    audit.no_projects)      printf '%s' "No registered projects → ./oc.sh init" ;;
+    audit.choose_project)   printf '%s' "Choose a project:" ;;
+    audit.choose_number)    printf '%s' "  Number: " ;;
+    audit.invalid_choice)   printf '%s' "Invalid choice: " ;;
+    audit.target_unavailable) printf '%s' "Target '" ;;
+    audit.label_path)       printf '%s' "Path" ;;
+    audit.label_target)     printf '%s' "Target" ;;
+    audit.label_agents)     printf '%s' "Agents" ;;
+    audit.label_type)       printf '%s' "Type" ;;
+    audit.agents_missing_config) printf '%s' "Agent(s) missing from project selection: " ;;
+    audit.add_agents_prompt) printf '%s' "Add these agents to project selection? [Y/n]: " ;;
+    audit.agents_updated)   printf '%s' "Agents updated in projects.md: " ;;
+    audit.redeploy_prompt)  printf '%s' "Redeploy agents now? [Y/n]: " ;;
+    audit.redeploy_later)   printf '%s' "Redeploy later: ./oc.sh deploy " ;;
+    audit.searching_agents) printf '%s' "Searching for available audit agents in " ;;
+    audit.no_agents_deployed) printf '%s' "No audit agent deployed in " ;;
+    audit.deploy_hint)      printf '%s' "Deploy agents: ./oc.sh deploy " ;;
+    audit.add_agents_hint)  printf '%s' "Then add agents to project: ./oc.sh agent edit " ;;
+    audit.available_agents) printf '%s' "Available audit agents:" ;;
+    audit.choose_agent)     printf '%s' "  Choose an agent (number): " ;;
+    audit.agent_selected)   printf '%s' "Selected agent: " ;;
+    audit.agents_not_deployed) printf '%s' "Agents not deployed for " ;;
+    audit.deploy_now_prompt) printf '%s' "Deploy now? [Y/n]: " ;;
+    audit.deploy_skipped)   printf '%s' "Deploy skipped — the agent may not be found" ;;
+    audit.deploy_later)     printf '%s' "Deploy later: ./oc.sh deploy " ;;
+    audit.agents_not_deployed_list) printf '%s' "Agent(s) not deployed: " ;;
+    audit.main_agent)       printf '%s' "Main agent: " ;;
+    audit.launching)        printf '%s' "Launching audit " ;;
+
+    # ── cmd-version.sh ───────────────────────────────────────────────────────
+    version.unknown)        printf '%s' "unknown" ;;
 
     # Fallback: return the key itself
     *) printf '%s' "$key" ;;

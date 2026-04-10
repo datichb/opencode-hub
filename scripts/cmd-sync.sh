@@ -12,9 +12,9 @@ for arg in "$@"; do
 done
 
 if [ "$DRY_RUN" = true ]; then
-  log_title "Vérification globale des agents déployés (dry-run)"
+  log_title "$(t sync.title_dryrun)"
 else
-  log_title "Synchronisation des agents sur tous les projets"
+  log_title "$(t sync.title)"
 fi
 
 # S'assurer que projects.md existe
@@ -26,7 +26,7 @@ while IFS= read -r line; do project_ids+=("$line"); done \
   < <(grep "^## " "$PROJECTS_FILE" 2>/dev/null | sed 's/^## //' || true)
 
 if [ ${#project_ids[@]} -eq 0 ]; then
-  log_warn "Aucun projet enregistré — lancez : ./oc.sh init"
+  log_warn "$(t sync.no_projects)"
   exit 0
 fi
 
@@ -35,7 +35,7 @@ active_targets=()
 while IFS= read -r t; do [ -n "$t" ] && active_targets+=("$t"); done < <(get_active_targets)
 
 if [ "${#active_targets[@]}" -eq 0 ]; then
-  log_warn "Aucune cible configurée — vérifier active_targets dans config/hub.json"
+  log_warn "$(t sync.no_targets)"
   exit 0
 fi
 
@@ -47,13 +47,13 @@ ok_count=0      # utilisé uniquement en dry-run
 echo ""
 
 for project_id in "${project_ids[@]}"; do
-  echo -e "${BOLD}── Projet : $project_id${RESET}"
+  echo -e "${BOLD}$(t sync.project_label)$project_id${RESET}"
 
   # Résoudre le chemin local
   local_path=$(get_project_path "$project_id" 2>/dev/null || true)
 
   if [ -z "$local_path" ]; then
-    log_info "  path non défini localement, ignoré"
+    log_info "  $(t sync.path_undefined)"
     skipped_count=$((skipped_count + 1))
     echo ""
     continue
@@ -63,7 +63,7 @@ for project_id in "${project_ids[@]}"; do
   local_path="${local_path/#\~/$HOME}"
 
   if [ ! -d "$local_path" ]; then
-    log_warn "  dossier introuvable : $local_path — ignoré"
+    log_warn "  $(t sync.dir_missing)$local_path — $(t sync.result_skipped)"
     skipped_count=$((skipped_count + 1))
     echo ""
     continue
@@ -95,7 +95,7 @@ for project_id in "${project_ids[@]}"; do
         esac
 
         if [ ! -f "$gen_file" ]; then
-          echo -e "  ${RED}✗ MANQUANT${RESET}   [$tgt] $agent_id"
+          echo -e "  ${RED}$(t sync.missing)${RESET}   [$tgt] $agent_id"
           project_stale=$((project_stale + 1))
           continue
         fi
@@ -123,10 +123,10 @@ for project_id in "${project_ids[@]}"; do
         fi
 
         if [ "$max_src_mtime" -gt "$gen_mtime" ]; then
-          echo -e "  ${YELLOW}⚠ OBSOLÈTE${RESET}   [$tgt] $agent_id  (${stale_reason:-source modifié})"
+          echo -e "  ${YELLOW}$(t sync.stale)${RESET}   [$tgt] $agent_id  (${stale_reason:-source modifié})"
           project_stale=$((project_stale + 1))
         else
-          echo -e "  ${GREEN}✓ À JOUR${RESET}     [$tgt] $agent_id"
+          echo -e "  ${GREEN}$(t sync.ok)${RESET}     [$tgt] $agent_id"
           project_ok=$((project_ok + 1))
         fi
       done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
@@ -141,10 +141,10 @@ for project_id in "${project_ids[@]}"; do
     for tgt in "${active_targets[@]}"; do
       load_adapter "$tgt"
       if adapter_validate 2>/dev/null; then
-        adapter_deploy "$local_path" "$project_id" && log_success "  [$tgt] déployé" \
-          || { log_warn "  [$tgt] échec déploiement"; deploy_ok=false; }
+        adapter_deploy "$local_path" "$project_id" && log_success "  [$tgt] $(t sync.deployed)" \
+          || { log_warn "  [$tgt] $(t sync.deploy_failed)"; deploy_ok=false; }
       else
-        log_warn "  [$tgt] non disponible — ignoré"
+        log_warn "  [$tgt] $(t sync.target_unavailable)"
       fi
     done
     if [ "$deploy_ok" = "true" ]; then
@@ -159,12 +159,12 @@ done
 
 # ── Rapport final ─────────────────────────────────────────────────────────────
 if [ "$DRY_RUN" = true ]; then
-  echo -e "Résultat : ${GREEN}$ok_count à jour${RESET}  |  ${YELLOW}$stale_count obsolète(s)/manquant(s)${RESET}  |  $skipped_count ignoré(s)"
+  echo -e "Résultat : ${GREEN}$ok_count $(t sync.result_ok)${RESET}  |  ${YELLOW}$stale_count $(t sync.result_stale)${RESET}  |  $skipped_count $(t sync.result_skipped)"
   if [ "$stale_count" -gt 0 ]; then
     echo ""
-    log_info "Pour déployer : ./oc.sh sync"
+    log_info "$(t sync.deploy_hint)"
     exit 1
   fi
 else
-  echo -e "Résultat : ${GREEN}$deployed_count déployé(s)${RESET}  |  $skipped_count ignoré(s)"
+  echo -e "Résultat : ${GREEN}$deployed_count $(t sync.result_deployed)${RESET}  |  $skipped_count $(t sync.result_skipped)"
 fi

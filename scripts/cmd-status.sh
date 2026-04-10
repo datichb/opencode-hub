@@ -31,19 +31,19 @@ _show_project_status() {
   path="${path/#\~/$HOME}"
 
   if [ -z "$path" ]; then
-    _status_warn "Chemin local non configuré (paths.local.md)"
+    _status_warn "$(t status.no_path)"
   elif [ ! -d "$path" ]; then
-    _status_warn "Dossier introuvable : $path"
+    _status_warn "$(t status.dir_missing)$path"
     path=""
   else
-    _status_info "Chemin : $path"
+    _status_info "$(t status.path_label)$path"
   fi
 
   # ── Beads initialisé ──────────────────────────────────────────────────────
   if [ -n "$path" ] && [ -d "$path/.beads" ]; then
-    _status_ok "Beads initialisé"
+    _status_ok "$(t status.beads_ok)"
   else
-    _status_warn "Beads non initialisé  (./oc.sh beads init $id)"
+    _status_warn "$(t status.beads_not_init)  (./oc.sh beads init $id)"
   fi
 
   # ── Clé API configurée ────────────────────────────────────────────────────
@@ -56,14 +56,14 @@ _show_project_status() {
     [ -n "$model" ]    && detail="${detail:+${detail} / }${model}"
     _status_ok "API configurée${detail:+ (${detail})}"
   else
-    _status_warn "Clé API non configurée  (./oc.sh config $id)"
+    _status_warn "$(t status.api_not_set)  (./oc.sh config $id)"
   fi
 
   # ── Tracker ───────────────────────────────────────────────────────────────
   local tracker
   tracker=$(get_project_tracker "$id")
   case "$tracker" in
-    none|"") _status_info "Tracker : aucun" ;;
+    none|"") _status_info "$(t status.tracker_none)" ;;
     *)       _status_ok   "Tracker : $tracker" ;;
   esac
 
@@ -80,9 +80,9 @@ _show_project_status() {
     if [ -n "$agents_dir" ] && [ -d "$agents_dir" ]; then
       local count
       count=$(find "$agents_dir" -name "*.md" -o -name "*.json" 2>/dev/null | wc -l | tr -d ' ')
-      _status_ok "Agents déployés (${default_target}) : ${count} fichier(s)"
+      _status_ok "$(t status.agents_deployed) (${default_target}) : ${count} fichier(s)"
     else
-      _status_warn "Agents non déployés pour ${default_target}  (./oc.sh deploy all $id)"
+      _status_warn "$(t status.agents_missing) ${default_target}  (./oc.sh deploy all $id)"
     fi
   fi
 }
@@ -91,13 +91,13 @@ _show_project_status() {
 
 ensure_projects_file
 
-log_title "Statut des projets"
+log_title "$(t status.title)"
 
 project_ids=$(_list_project_ids)
 
 if [ -z "$project_ids" ]; then
   echo ""
-  log_warn "Aucun projet enregistré — démarrer avec : ./oc.sh init"
+  log_warn "$(t status.no_projects)"
   echo ""
   exit 0
 fi

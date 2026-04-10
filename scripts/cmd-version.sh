@@ -12,6 +12,6 @@ if [ -f "$HUB_DIR/config/hub.json" ]; then
   fi
 fi
 
-HUB_VERSION="${HUB_VERSION:-inconnu}"
+HUB_VERSION="${HUB_VERSION:-$(t version.unknown)}"
 
 echo -e "${BOLD}opencode-hub${RESET} v${HUB_VERSION}"
