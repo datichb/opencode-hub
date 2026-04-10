@@ -73,7 +73,8 @@ _outro() {
 _prompt() {
   local _var="$1" _msg="$2"
   echo -e "${DIM}│${RESET}"
-  IFS= read -rp "  ${_msg}" "$_var" || true
+  # shellcheck disable=SC2229  # intentional: $_var holds the target variable name
+  IFS= read -rp "  ${_msg}" $_var || true
 }
 
 # ─────────────────────────────────────────
