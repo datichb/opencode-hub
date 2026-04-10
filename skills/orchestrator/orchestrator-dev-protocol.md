@@ -67,18 +67,20 @@ En cas d'ambiguïté, choisir `developer-fullstack` et l'indiquer dans le compte
 
 ### Invoqué standalone
 
-Afficher les tickets à traiter et demander le mode :
+Afficher les tickets à traiter et demander le mode.
+
+Pour chaque ticket, lire ses labels via `bd show <ID>` et noter la présence du label `tdd`.
 
 ```
 ## Tickets à implémenter
 
-| ID | Titre | Priorité | Type | Agent identifié |
-|----|-------|----------|------|-----------------|
-| bd-12 | ...  | P1 | feature | developer-frontend |
-| bd-13 | ...  | P1 | task    | developer-backend  |
-| bd-14 | ...  | P2 | feature | developer-platform |
+| ID | Titre | Priorité | Type | Agent identifié | TDD |
+|----|-------|----------|------|-----------------|-----|
+| bd-12 | ...  | P1 | feature | developer-frontend | —   |
+| bd-13 | ...  | P1 | task    | developer-backend  | ✅  |
+| bd-14 | ...  | P2 | feature | developer-platform | —   |
 
-X tickets identifiés.
+X tickets identifiés. Y en TDD (tests écrits avant l'implémentation — QA skippé).
 
 Mode de workflow :
 - manuel    — chaque étape attend ta confirmation (défaut)
@@ -150,16 +152,25 @@ Afficher le ticket :
 2. Invoquer l'agent développeur identifié, en fournissant :
    - L'ID du ticket (`bd show <ID>`)
    - Le contexte de la feature si disponible (specs UX/UI validées, rapports d'audit)
+   - Si le ticket porte le label `tdd` → préciser explicitement :
+     > « Ce ticket est en TDD — écrire les tests rouges couvrant les critères d'acceptance **avant** d'implémenter. »
 
 3. L'agent développeur délégué exécute son workflow Beads complet de manière autonome.
-   (bd claim → implémenter → tester → bd update -s review)
+   (bd claim → **[TDD : tests rouges d'abord]** → implémenter → tester → bd update -s review)
    orchestrator-dev attend le compte rendu — il n'exécute aucune de ces étapes lui-même.
 
 ---
 
 ### Étape 3 — QA (optionnel)
 
-**Selon le mode :**
+**Si le ticket porte le label `tdd` :**
+
+```
+▶️ [CP-QA] Ticket TDD — tests écrits par le developer dans la boucle red/green/refactor. QA skippé.
+```
+→ Passer directement à l'étape 4.
+
+**Sinon, selon le mode :**
 
 - **`manuel` / `semi-auto`** → pause CP-QA :
   ```

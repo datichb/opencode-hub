@@ -251,6 +251,11 @@ de fichiers.
 ticket Beads. Produit un rapport de couverture avant/après. Ne modifie jamais
 le code fonctionnel.
 
+**Non pertinent pour les tickets TDD** : quand un ticket porte le label `tdd`,
+les tests sont écrits par le developer lui-même avant l'implémentation (boucle
+red/green/refactor). L'`orchestrator-dev` saute automatiquement le CP-QA pour
+ces tickets — le `qa-engineer` n'est pas invoqué.
+
 > Voir [ADR-004](./adr/004-qa-debugger-separation.md).
 
 ---

@@ -71,7 +71,7 @@ Skills d'audit. Tous les agents auditor-* injectent `audit-protocol` + leur skil
 | Fichier | Agents qui l'utilisent | Contenu |
 |---------|----------------------|---------|
 | `orchestrator/orchestrator-protocol.md` | orchestrator | Workflow feature complet, matrice de routing (3 familles : design, auditor, dev via orchestrator-dev), format des checkpoints ([CP-0], [CP-spec], [CP-audit], [CP-feature]), gestion des cas particuliers |
-| `orchestrator/orchestrator-dev-protocol.md` | orchestrator-dev | Workflow Beads ticket par ticket, matrice de routing developer-* (9 signaux → 9 agents), format des checkpoints ([CP-1] à [CP-3] + [CP-QA]), 3 modes (manuel/semi-auto/auto), format du compte rendu d'étape et du récap global |
+| `orchestrator/orchestrator-dev-protocol.md` | orchestrator-dev | Workflow Beads ticket par ticket, matrice de routing developer-* (9 signaux → 9 agents), format des checkpoints ([CP-1] à [CP-3] + [CP-QA]), 3 modes (manuel/semi-auto/auto), détection du label `tdd` (CP-QA skippé automatiquement — tests écrits par le developer en red/green/refactor), format du compte rendu d'étape et du récap global |
 
 ---
 

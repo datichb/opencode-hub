@@ -102,7 +102,7 @@ sequenceDiagram
     loop Pour chaque ticket dev
         OD->>DEV: Délègue l'implémentation
         DEV-->>OD: Implémentation terminée
-        opt QA activé
+        opt QA activé (ticket sans label tdd)
             OD->>QA: Délègue la vérification
             QA-->>OD: Tests écrits + rapport couverture
         end

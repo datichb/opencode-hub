@@ -73,8 +73,8 @@ sequenceDiagram
     loop Pour chaque ticket
         OD->>DEV: Délègue l'implémentation (auto en semi-auto)
         DEV-->>OD: Implémentation terminée
-        OD->>QA: QA (si activé au CP-QA)
-        QA-->>OD: Tests écrits
+        OD->>QA: QA (si activé au CP-QA — ignoré si ticket label:tdd)
+        QA-->>OD: Tests écrits (tickets non-TDD uniquement)
         OD->>R: Review automatique
         R-->>OD: Rapport de review
         OD->>U: [CP-2] Merger ou corriger ? ← TOUJOURS PAUSE
@@ -150,7 +150,7 @@ L'orchestrateur transmet les tickets dev à `orchestrator-dev` avec le mode choi
 
 1. Présente chaque ticket `[CP-1]` (automatique en semi-auto/auto)
 2. Identifie l'agent via la matrice de routing et délègue
-3. Propose le QA `[CP-QA]` (automatique en mode auto si activé au CP-0)
+   3. Propose le QA `[CP-QA]` (automatique en mode auto si activé au CP-0 — skippé automatiquement si le ticket porte le label `tdd`)
 4. Lance la review automatiquement après implémentation (± QA)
 5. Présente le rapport de review `[CP-2]` — **toujours une pause**, sans exception
 6. Clôture et passe au suivant `[CP-3]` (automatique en semi-auto/auto)
