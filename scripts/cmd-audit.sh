@@ -164,7 +164,7 @@ if [ "$agents_csv" != "all" ]; then
         log_error "Choix invalide"
         exit 1
       fi
-      AUDIT_AGENT="${available_audit_agents[$((choice-1))]}"
+      AUDIT_AGENT="${available_audit_agents[$((_choice-1))]}"
       REQUIRED_AGENTS=("$AUDIT_AGENT")
       log_info "Agent sélectionné : $AUDIT_AGENT"
     fi
