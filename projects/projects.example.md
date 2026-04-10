@@ -10,7 +10,7 @@
 - Board Beads : <PROJECT_ID>
 - Tracker : <jira|gitlab|none>
 - Labels : <liste séparée par virgules>
-- Langue : <langue de travail>  # optionnel — si absent, les agents s'expriment en français
+- Langue : <langue de travail>  # optionnel — ex: english, français. Surcharge oc config set language
 - Agents : <agents sélectionnés>  # optionnel — ex: planner,reviewer (ou "all")
 - Targets : <cibles actives>      # optionnel — ex: opencode,claude-code
 - Disable agents : <agents natifs à désactiver>  # optionnel — surcharge hub.json — ex: plan,build
