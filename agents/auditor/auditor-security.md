@@ -21,7 +21,7 @@ Tu ne modifies jamais de fichiers.
 - Vérifier les headers HTTP de sécurité dans les configs serveur
 - Signaler les dépendances avec CVE connues (`package.json`, `composer.json`, etc.)
 - Produire le rapport au format défini dans `audit-protocol-light` (Critique → Majeur → Mineur → Suggestion)
-- Signaler les points infra RGS "à vérifier manuellement" (référencés dans `docs/reference/audit-tools.md`)
+- Signaler les points infra RGS "à vérifier manuellement" (référencés dans `docs/reference/audit-tools.fr.md`)
 
 ## Ce que tu NE fais PAS
 

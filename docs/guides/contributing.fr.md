@@ -145,7 +145,7 @@ Un adapter traduit les agents du format hub vers le format d'un outil cible.
 
 Le contrat complet (6 fonctions obligatoires, paramètres, fonctions utilitaires
 disponibles et exemple minimal) est documenté dans
-[docs/architecture/adapters.md](../architecture/adapters.md).
+[docs/architecture/adapters.fr.md](../architecture/adapters.fr.md).
 
 ### Étapes rapides
 
@@ -203,7 +203,7 @@ Toute décision architecturale significative doit être documentée dans un ADR 
 touch docs/architecture/adr/<NNN>-<titre-kebab-case>.md
 ```
 
-Format : voir [ADR-001](../architecture/adr/001-agent-skill-separation.md) comme modèle.
+Format : voir [ADR-001](../architecture/adr/001-agent-skill-separation.fr.md) comme modèle.
 
 ### PR
 
@@ -224,8 +224,8 @@ oc agent list
 
 - [ ] Le fichier agent respecte la structure minimale (frontmatter + corps)
 - [ ] Le skill a un frontmatter avec `name` et `description`
-- [ ] L'agent est référencé dans `README.md` et `docs/architecture/agents.md`
-- [ ] Le skill est référencé dans `docs/architecture/skills.md`
+- [ ] L'agent est référencé dans `README.md` et `docs/architecture/agents.fr.md`
+- [ ] Le skill est référencé dans `docs/architecture/skills.fr.md`
 - [ ] Si décision architecturale : un ADR est créé dans `docs/architecture/adr/`
 - [ ] Le commit respecte les Conventional Commits
 - [ ] `oc deploy opencode` et `oc deploy --check opencode` passent sans erreur

@@ -1,69 +1,71 @@
+> 🇫🇷 [Lire en français](README.fr.md)
+
 # opencode-hub
 
-Hub central pour piloter des assistants IA sur plusieurs projets,
-avec des agents partagés, des skills injectables et un workflow Beads intégré.
+Central hub for managing AI assistants across multiple projects,
+with shared agents, injectable skills, and an integrated Beads workflow.
 
-Supporte **OpenCode** et **Claude Code**.
-
----
-
-## Comment ça marche
-
-opencode-hub repose sur trois concepts : **agents**, **skills** et **déploiement**.
-
-- Les **agents** définissent les rôles IA (qui fait quoi, comment, dans quel ordre).
-- Les **skills** sont des protocoles injectables (standards de code, checklists, formats de rapport) — déclarés une fois, réutilisés entre plusieurs agents.
-- Le **déploiement** assemble agents + skills et les copie dans vos projets cibles.
-
-```
-opencode-hub/          ← source de vérité (éditer ici, jamais dans les projets)
-├── agents/            ← identité des rôles IA (~40-80 lignes par agent)
-├── skills/            ← protocoles détaillés injectables
-└── scripts/           ← assemblage et déploiement
-
-         oc deploy opencode MON-APP
-opencode-hub  ──────────────────────►  mon-app/.opencode/agents/*.md
-                                   └►  mon-app/opencode.json
-
-         oc deploy claude-code MON-APP
-opencode-hub  ──────────────────────►  mon-app/.claude/agents/*.md
-```
-
-Résultat : 27 agents spécialisés, toujours à jour, disponibles dans tous vos projets
-depuis une source de vérité unique.
+Supports **OpenCode** and **Claude Code**.
 
 ---
 
-## Prérequis
+## How it works
 
-| Outil | Usage |
-|-------|-------|
-| `git` | Cloner le hub |
-| `curl` | Télécharger le script d'installation |
+opencode-hub is built around three concepts: **agents**, **skills**, and **deployment**.
 
-> Les autres dépendances (`jq`, `Node.js`, `opencode`, `bun`, `beads`) sont proposées
-> lors de `oc install` — chaque outil demande une **confirmation explicite** avant installation.
+- **Agents** define AI roles (who does what, how, and in what order).
+- **Skills** are injectable protocols (code standards, checklists, report formats) — declared once, reused across multiple agents.
+- **Deployment** assembles agents + skills and copies them into your target projects.
+
+```
+opencode-hub/          ← single source of truth (edit here, never in projects)
+├── agents/            ← AI role definitions (~40-80 lines per agent)
+├── skills/            ← detailed injectable protocols
+└── scripts/           ← assembly and deployment
+
+         oc deploy opencode MY-APP
+opencode-hub  ──────────────────────►  my-app/.opencode/agents/*.md
+                                   └►  my-app/opencode.json
+
+         oc deploy claude-code MY-APP
+opencode-hub  ──────────────────────►  my-app/.claude/agents/*.md
+```
+
+Result: 27 specialized agents, always up to date, available across all your projects
+from a single source of truth.
+
+---
+
+## Prerequisites
+
+| Tool | Purpose |
+|------|---------|
+| `git` | Clone the hub |
+| `curl` | Download the install script |
+
+> Other dependencies (`jq`, `Node.js`, `opencode`, `bun`, `beads`) are offered
+> during `oc install` — each tool requires **explicit confirmation** before installation.
 
 ---
 
 ## Installation
 
-### One-liner (recommandé)
+### One-liner (recommended)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/datichb/opencode-hub/main/install.sh | bash
 ```
 
-Le script automatise tout : clone dans `~/.opencode-hub`, vérification des dépendances
-avec confirmation, création de l'alias `oc`, et configuration interactive des cibles AI.
+The script automates everything: clones to `~/.opencode-hub`, checks dependencies
+with confirmation prompts, creates the `oc` alias, and interactively configures AI targets.
 
-Après l'installation, recharger le shell :
+After installation, reload your shell:
 
 ```bash
-source ~/.zshrc   # ou source ~/.bashrc
+source ~/.zshrc   # or source ~/.bashrc
 ```
 
-### Installation manuelle
+### Manual installation
 
 ```bash
 git clone https://github.com/datichb/opencode-hub.git ~/.opencode-hub
@@ -73,109 +75,109 @@ oc install
 
 ---
 
-## Désinstallation
+## Uninstallation
 
 ```bash
 oc uninstall
-# ou directement :
+# or directly:
 bash ~/.opencode-hub/uninstall.sh
 ```
 
-Guide interactif en 4 étapes — tout est optionnel et demande confirmation :
+Interactive 4-step guide — everything is optional and requires confirmation:
 
-| Étape | Action | Défaut |
-|-------|--------|--------|
-| 1 | Nettoyer les agents déployés dans les projets (`.opencode/agents/`, `opencode.json`, `.claude/agents/`) | `[y/N]` |
-| 2 | Supprimer le hub (`~/.opencode-hub`) | `[y/N]` |
-| 3 | Retirer l'alias `oc` et les exports bun du fichier rc | `[Y/n]` |
-| 4 | Désinstaller opencode, Beads, bun (séparément) | `[y/N]` |
+| Step | Action | Default |
+|------|--------|---------|
+| 1 | Clean deployed agents from projects (`.opencode/agents/`, `opencode.json`, `.claude/agents/`) | `[y/N]` |
+| 2 | Remove the hub (`~/.opencode-hub`) | `[y/N]` |
+| 3 | Remove the `oc` alias and bun exports from the rc file | `[Y/n]` |
+| 4 | Uninstall opencode, Beads, bun (separately) | `[y/N]` |
 
-> `jq` et `node` ne sont jamais désinstallés. Un backup `.bak` est créé avant toute
-> modification du fichier rc.
+> `jq` and `node` are never uninstalled. A `.bak` backup is created before any
+> modification to the rc file.
 
 ---
 
-## Démarrage rapide
+## Quick start
 
 ```bash
-# 1. Enregistrer un projet
-oc init MON-APP ~/workspace/mon-app
+# 1. Register a project
+oc init MY-APP ~/workspace/my-app
 
-# 2. Déployer les agents dans le projet
-oc deploy opencode MON-APP
+# 2. Deploy agents into the project
+oc deploy opencode MY-APP
 
-# 3. Lancer l'outil dans le projet
-oc start MON-APP
+# 3. Launch the tool in the project
+oc start MY-APP
 ```
 
-> Guide complet : [docs/guides/getting-started.md](docs/guides/getting-started.md)
+> Full guide: [docs/guides/getting-started.en.md](docs/guides/getting-started.en.md)
 
 ---
 
-## Agents disponibles
+## Available agents
 
-27 agents en deux modes :
+27 agents in two modes:
 
-- **`primary`** — visibles directement dans l'outil IA (tab picker OpenCode, liste Claude Code). Invocables par l'utilisateur.
-- **`subagent`** — invisibles dans le picker. Invocables uniquement par délégation depuis un agent coordinateur.
+- **`primary`** — directly visible in the AI tool (OpenCode tab picker, Claude Code list). Invocable by the user.
+- **`subagent`** — hidden from the picker. Only invocable by delegation from a coordinator agent.
 
-### Agents primaires (invocables directement)
+### Primary agents (directly invocable)
 
-| Agent | Famille | Rôle |
-|-------|---------|------|
-| `orchestrator` | Coordinateur | Feature de A à Z — délègue spec, audit, implémentation |
-| `orchestrator-dev` | Coordinateur | Implémentation de tickets — pilote les `developer-*` |
-| `auditor` | Coordinateur | Audit multi-domaine — délègue aux 7 `auditor-*` |
-| `onboarder` | Coordinateur | Découverte de projet existant, rapport de contexte |
-| `planner` | Planification | Décompose une feature en tickets Beads |
-| `ux-designer` | Design | Spec UX — user flows, critères d'acceptance |
-| `ui-designer` | Design | Spec UI — tokens, composants, guidelines visuelles |
-| `reviewer` | Qualité | Review de PR/MR par sévérité |
-| `qa-engineer` | Qualité | Tests manquants (unit / integration / E2E) |
-| `debugger` | Qualité | Diagnostic de bugs, rapport de cause racine |
-| `documentarian` | Documentation | README, CHANGELOG, ADR, doc API |
+| Agent | Family | Role |
+|-------|--------|------|
+| `orchestrator` | Coordinator | Feature end-to-end — delegates spec, audit, implementation |
+| `orchestrator-dev` | Coordinator | Ticket implementation — drives `developer-*` agents |
+| `auditor` | Coordinator | Multi-domain audit — delegates to 7 `auditor-*` agents |
+| `onboarder` | Coordinator | Discovery of existing projects, context report |
+| `planner` | Planning | Breaks down a feature into Beads tickets |
+| `ux-designer` | Design | UX spec — user flows, acceptance criteria |
+| `ui-designer` | Design | UI spec — tokens, components, visual guidelines |
+| `reviewer` | Quality | PR/MR review by severity |
+| `qa-engineer` | Quality | Missing tests (unit / integration / E2E) |
+| `debugger` | Quality | Bug diagnosis, root cause report |
+| `documentarian` | Documentation | README, CHANGELOG, ADR, API docs |
 
-### Sous-agents (délégués par les coordinateurs)
+### Subagents (delegated by coordinators)
 
-| Agent | Délégué par | Domaine |
-|-------|-------------|---------|
-| `developer-frontend` | `orchestrator-dev` | UI, composants, Vue.js, CSS, a11y |
+| Agent | Delegated by | Domain |
+|-------|-------------|--------|
+| `developer-frontend` | `orchestrator-dev` | UI, components, Vue.js, CSS, a11y |
 | `developer-backend` | `orchestrator-dev` | Services, repositories, migrations |
-| `developer-fullstack` | `orchestrator-dev` | Features front + back |
+| `developer-fullstack` | `orchestrator-dev` | Full-stack features |
 | `developer-data` | `orchestrator-dev` | Pipelines, ETL, ML, dbt |
-| `developer-devops` | `orchestrator-dev` | Docker, CI/CD, scripts shell |
+| `developer-devops` | `orchestrator-dev` | Docker, CI/CD, shell scripts |
 | `developer-mobile` | `orchestrator-dev` | React Native, Flutter, iOS, Android |
 | `developer-api` | `orchestrator-dev` | REST, GraphQL, webhooks |
 | `developer-platform` | `orchestrator-dev` | Terraform, K8s, Helm, GitOps |
-| `developer-security` | `orchestrator-dev` | Hardening post-audit sécurité |
+| `developer-security` | `orchestrator-dev` | Hardening after security audit |
 | `auditor-security` | `auditor` | OWASP Top 10, CVE, RGS |
 | `auditor-performance` | `auditor` | Core Web Vitals, N+1, cache |
 | `auditor-accessibility` | `auditor` | WCAG 2.1 AA, RGAA 4.1 |
 | `auditor-ecodesign` | `auditor` | RGESN, GreenIT, Écoindex |
-| `auditor-architecture` | `auditor` | SOLID, Clean Architecture, dette technique |
-| `auditor-privacy` | `auditor` | RGPD, EDPB, CNIL |
-| `auditor-observability` | `auditor` | Méthode RED, SLOs, OpenTelemetry |
+| `auditor-architecture` | `auditor` | SOLID, Clean Architecture, technical debt |
+| `auditor-privacy` | `auditor` | GDPR, EDPB, CNIL |
+| `auditor-observability` | `auditor` | RED method, SLOs, OpenTelemetry |
 
-> Les sous-agents sont aussi invocables directement si besoin (ex : `auditor-security` seul sans passer par `auditor`).
+> Subagents can also be invoked directly when needed (e.g. `auditor-security` alone without going through `auditor`).
 
-> Référence complète : [docs/architecture/agents.md](docs/architecture/agents.md)
+> Full reference: [docs/architecture/agents.en.md](docs/architecture/agents.en.md)
 
 ---
 
-## Workflows disponibles
+## Available workflows
 
-| Scénario | Point d'entrée | Prompt type |
-|----------|---------------|-------------|
-| Feature de A à Z | `orchestrator` | `"Implémente [feature]"` |
-| Tickets prêts à coder | `orchestrator-dev` | `"Implémente les tickets bd-X à bd-Y"` |
-| Audit avant mise en prod | `auditor` | `"Audite le projet"` |
-| Bug en production | `debugger` | `"Ce bug : [stacktrace]"` |
-| Spec UX/UI standalone | `ux-designer` / `ui-designer` | `"Spec UX pour [feature]"` |
-| Documenter une feature | `documentarian` | `"Documente [sujet]"` |
-| Découvrir un projet existant | `onboarder` | `"Onboarde-toi sur ce projet"` |
-| Planifier sans implémenter | `planner` | `"Décompose [feature] en tickets"` |
+| Scenario | Entry point | Typical prompt |
+|----------|------------|----------------|
+| Feature end-to-end | `orchestrator` | `"Implement [feature]"` |
+| Ready-to-code tickets | `orchestrator-dev` | `"Implement tickets bd-X to bd-Y"` |
+| Pre-production audit | `auditor` | `"Audit the project"` |
+| Production bug | `debugger` | `"This bug: [stacktrace]"` |
+| Standalone UX/UI spec | `ux-designer` / `ui-designer` | `"UX spec for [feature]"` |
+| Document a feature | `documentarian` | `"Document [topic]"` |
+| Discover an existing project | `onboarder` | `"Onboard yourself on this project"` |
+| Plan without implementing | `planner` | `"Break down [feature] into tickets"` |
 
-> Scénarios détaillés avec diagrammes et prompts réels : [docs/guides/workflows.md](docs/guides/workflows.md)
+> Detailed scenarios with diagrams and real prompts: [docs/guides/workflows.en.md](docs/guides/workflows.en.md)
 
 ---
 
@@ -185,29 +187,29 @@ oc start MON-APP
 
 | Document | Description |
 |----------|-------------|
-| [Démarrage rapide](docs/guides/getting-started.md) | Installation complète, premier déploiement |
-| [Providers LLM](docs/guides/providers.md) | Anthropic, MammouthAI, GitHub Models, Bedrock, Ollama |
-| [Workflows](docs/guides/workflows.md) | Feature complète, audit, debug — scénarios illustrés |
-| [Contribuer](docs/guides/contributing.md) | Ajouter un agent, un skill, un adapter |
+| [Getting started](docs/guides/getting-started.en.md) | Full installation, first deployment |
+| [LLM Providers](docs/guides/providers.en.md) | Anthropic, MammouthAI, GitHub Models, Bedrock, Ollama |
+| [Workflows](docs/guides/workflows.en.md) | Full feature, audit, debug — illustrated scenarios |
+| [Contributing](docs/guides/contributing.en.md) | Adding an agent, a skill, an adapter |
 
 ### Architecture
 
 | Document | Description |
 |----------|-------------|
-| [Vue d'ensemble](docs/architecture/overview.md) | Concepts, diagrammes de flux, principes de design |
-| [Agents](docs/architecture/agents.md) | Référence exhaustive des 27 agents |
-| [Skills](docs/architecture/skills.md) | Référence exhaustive des skills et leurs dépendances |
-| [ADR](docs/architecture/adr/) | Décisions architecturales (6 ADR) |
+| [Overview](docs/architecture/overview.en.md) | Concepts, flow diagrams, design principles |
+| [Agents](docs/architecture/agents.en.md) | Exhaustive reference for all 27 agents |
+| [Skills](docs/architecture/skills.en.md) | Exhaustive reference for skills and their dependencies |
+| [ADR](docs/architecture/adr/) | Architectural decision records (6 ADRs) |
 
-### Référence
+### Reference
 
 | Document | Description |
 |----------|-------------|
-| [CLI](docs/reference/cli.md) | Toutes les commandes `oc` avec options et exemples |
-| [Configuration](docs/reference/config.md) | hub.json, projects.md, paths.local.md |
+| [CLI](docs/reference/cli.en.md) | All `oc` commands with options and examples |
+| [Configuration](docs/reference/config.en.md) | hub.json, projects.md, paths.local.md |
 
 ---
 
-## Licence
+## License
 
 MIT

@@ -122,7 +122,7 @@ npm run dev
 ## Documentation
 
 - [Guide de contribution](CONTRIBUTING.md)
-- [Architecture](docs/architecture/overview.md)
+- [Architecture](docs/architecture/overview.fr.md)
 - [API Reference](docs/api/)
 - [Changelog](CHANGELOG.md)
 

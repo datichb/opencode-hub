@@ -112,7 +112,7 @@ supervise le QA optionnel et la review. Trois modes : `manuel` (défaut), `semi-
 
 CP-2 (merge ou corriger ?) est toujours manuel dans tous les modes.
 
-> Voir [ADR-006](./adr/006-orchestrator-configurable-mode.md) — les modes s'appliquent à `orchestrator-dev` uniquement.
+> Voir [ADR-006](./adr/006-orchestrator-configurable-mode.fr.md) — les modes s'appliquent à `orchestrator-dev` uniquement.
 
 ---
 
@@ -169,7 +169,7 @@ Skills communs à tous : `dev-standards-universal`, `dev-standards-security`, `d
 | `developer-platform` | `agents/developer/developer-platform.md` | Terraform, K8s, Helm, GitOps, infra as code | `dev-standards-platform` |
 | `developer-security` | `agents/developer/developer-security.md` | Hardening applicatif post-audit | `dev-standards-security-hardening`, `dev-standards-backend`, `dev-standards-testing` |
 
-> Voir [ADR-002](./adr/002-developer-segmentation.md) pour la décision de segmentation.
+> Voir [ADR-002](./adr/002-developer-segmentation.fr.md) pour la décision de segmentation.
 
 `developer-platform` se distingue de `developer-devops` : DevOps couvre Dockerfile,
 docker-compose, GitHub Actions et scripts shell applicatifs ; Platform couvre
@@ -256,7 +256,7 @@ les tests sont écrits par le developer lui-même avant l'implémentation (boucl
 red/green/refactor). L'`orchestrator-dev` saute automatiquement le CP-QA pour
 ces tickets — le `qa-engineer` n'est pas invoqué.
 
-> Voir [ADR-004](./adr/004-qa-debugger-separation.md).
+> Voir [ADR-004](./adr/004-qa-debugger-separation.fr.md).
 
 ---
 
@@ -274,7 +274,7 @@ identification → hypothèse). Produit un rapport de diagnostic avec hypothèse
 graduées. Crée un ticket Beads de correction après confirmation explicite.
 Ne corrige jamais le bug.
 
-> Voir [ADR-004](./adr/004-qa-debugger-separation.md).
+> Voir [ADR-004](./adr/004-qa-debugger-separation.fr.md).
 
 ---
 

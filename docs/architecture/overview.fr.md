@@ -14,7 +14,7 @@ Un **agent** est un fichier Markdown (`.md`) qui définit l'identité d'un rôle
 qui il est, ce qu'il fait, ce qu'il ne fait pas, et son workflow condensé.
 Les agents sont courts (~40-80 lignes) et ne contiennent pas les protocoles détaillés.
 
-Voir [agents.md](./agents.md) pour la référence complète.
+Voir [agents.fr.md](./agents.fr.md) pour la référence complète.
 
 ### Skill
 
@@ -25,8 +25,8 @@ de l'agent (`skills: [...]`) et assemblés au déploiement.
 Un skill peut être partagé entre plusieurs agents (ex: `dev-standards-universal`
 est injecté dans tous les agents développeurs et dans le reviewer).
 
-Voir [skills.md](./skills.md) pour la référence complète.
-Voir [ADR-001](./adr/001-agent-skill-separation.md) pour la décision de séparation.
+Voir [skills.fr.md](./skills.fr.md) pour la référence complète.
+Voir [ADR-001](./adr/001-agent-skill-separation.fr.md) pour la décision de séparation.
 
 ### Adapter
 
@@ -145,28 +145,28 @@ L'agent définit **qui** il est, le skill définit **comment** il travaille.
 Cette séparation permet la réutilisation des protocoles entre agents et maintient
 les fichiers agents lisibles.
 
-→ [ADR-001](./adr/001-agent-skill-separation.md)
+→ [ADR-001](./adr/001-agent-skill-separation.fr.md)
 
 ### 2. Spécialisation plutôt que généralisme
 
 Les agents développeurs sont segmentés en 7 spécialisations pour que chaque agent
 reçoive uniquement le contexte pertinent à son domaine.
 
-→ [ADR-002](./adr/002-developer-segmentation.md)
+→ [ADR-002](./adr/002-developer-segmentation.fr.md)
 
 ### 3. Checkpoints explicites
 
 L'orchestrateur ne fait jamais avancer le workflow automatiquement. Chaque étape
 critique nécessite une confirmation explicite de l'utilisateur.
 
-→ [ADR-003](./adr/003-orchestrator-checkpoints.md)
+→ [ADR-003](./adr/003-orchestrator-checkpoints.fr.md)
 
 ### 4. Séparation des responsabilités de qualité
 
 Implémenter, tester et diagnostiquer sont trois responsabilités distinctes confiées
 à trois agents différents (developer, qa-engineer, debugger).
 
-→ [ADR-004](./adr/004-qa-debugger-separation.md)
+→ [ADR-004](./adr/004-qa-debugger-separation.fr.md)
 
 ### 5. Lecture seule pour les agents non-développeurs
 

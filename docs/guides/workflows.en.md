@@ -1,0 +1,548 @@
+> 🇫🇷 [Lire en français](workflows.fr.md)
+
+# Workflows
+
+This guide illustrates the main usage scenarios for the hub,
+end to end, with real prompts and expected outputs.
+
+---
+
+## Choosing your entry point
+
+Before invoking an agent, identify your situation:
+
+| Situation | Recommended entry point | Typical prompt |
+|-----------|------------------------|----------------|
+| Feature to design + implement from scratch | `orchestrator` | `"Implement [feature]"` |
+| Beads tickets already planned, ready to code | `orchestrator-dev` | `"Implement tickets bd-X to bd-Y"` |
+| UX/UI specifications only, without implementing | `ux-designer` / `ui-designer` | `"UX spec for [feature]"` |
+| Audit before going to production | `auditor` | `"Audit the project"` |
+| Production bug with stacktrace or logs | `debugger` | `"This bug: [stacktrace]"` |
+| Review of a manually developed PR | `reviewer` | `"Review my PR — diff: [...]"` |
+| Plan a feature without implementing it | `planner` | `"Break down [feature] into tickets"` |
+| Document a delivered feature or a decision | `documentarian` | `"Document [topic]"` |
+
+**Quick decision rule:**
+- You have an idea → `orchestrator` (it orchestrates everything, from spec to merge)
+- You have ready tickets → `orchestrator-dev` (direct implementation)
+- You have a precise and bounded need → the specialised agent directly
+
+---
+
+## Scenario 1 — Full feature (orchestrator)
+
+**Context:** you want to implement a new feature from A to Z,
+from design to merge, mobilising all necessary agents.
+
+### Diagram
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant O as Orchestrator
+    participant PL as Planner
+    participant UX as ux-designer
+    participant UI as ui-designer
+    participant AU as auditor-*
+    participant OD as OrchestratorDev
+    participant DEV as Developer-*
+    participant QA as QA Engineer
+    participant R as Reviewer
+
+    U->>O: "Implement JWT authentication"
+    O->>PL: Delegates planning
+    PL->>PL: Clarification → breakdown → bd create
+    PL-->>O: 6 tickets created (bd-1 to bd-6)
+    O->>U: [CP-0] Plan + workflow mode? (manual/semi-auto/auto)
+    U->>O: "semi-auto"
+
+    O->>UX: Ticket spec-ux (bd-1)
+    UX-->>O: UX spec — login/register flow
+    O->>U: [CP-spec] Validate UX spec?
+    U->>O: "validate"
+
+    O->>UI: Ticket spec-ui (bd-2)
+    UI-->>O: UI spec — components + tokens
+    O->>U: [CP-spec] Validate UI spec?
+    U->>O: "validate"
+
+    O->>AU: Ticket label:audit-security (bd-3)
+    AU-->>O: Security audit report
+    O->>U: [CP-audit] Fix / accept / ignore?
+    U->>O: "fix → add ticket bd-7"
+
+    O->>OD: Dev tickets bd-4, bd-5, bd-6, bd-7 (semi-auto mode passed)
+    loop For each ticket
+        OD->>DEV: Delegates implementation (auto in semi-auto)
+        DEV-->>OD: Implementation complete
+        OD->>QA: QA (if enabled at CP-QA — skipped if ticket label:tdd)
+        QA-->>OD: Tests written (non-TDD tickets only)
+        OD->>R: Automatic review
+        R-->>OD: Review report
+        OD->>U: [CP-2] Merge or fix? ← ALWAYS PAUSE
+        U->>OD: "merge"
+    end
+    OD-->>O: Implementation recap
+
+    O->>U: [CP-feature] Global feature recap
+```
+
+### Detailed steps
+
+#### 1. Launch the orchestrator
+
+```
+Prompt: "Implement the JWT authentication feature for our REST API"
+```
+
+The orchestrator immediately delegates to `planner` to break down the feature.
+
+#### 2. The planner breaks it down
+
+The planner explores the codebase (routes, models, components), asks clarification
+questions, then proposes a plan:
+
+```
+## Breakdown plan — JWT Authentication
+
+### Phase 0 — Specifications
+- [ ] UX spec — login / register / reset password flow (label:ux)
+- [ ] UI spec — form components + error feedback (label:ui)
+
+### Phase 1 — Prior audit
+- [ ] Security audit — OWASP Top 10 on the auth scope (label:audit-security)
+
+### Phase 2 — Implementation
+- [ ] User model + migrations
+- [ ] JWT service (sign, verify, refresh)
+- [ ] Login / logout / refresh endpoints
+```
+
+#### 3. [CP-0] Plan validation + mode selection
+
+```
+## Planned tickets — JWT Authentication
+
+| ID   | Title                           | Type          | Planned agent     |
+|------|---------------------------------|---------------|-------------------|
+| bd-1 | UX spec — auth flow             | spec-ux       | ux-designer       |
+| bd-2 | UI spec — auth components       | spec-ui       | ui-designer       |
+| bd-3 | Security audit auth scope       | audit         | auditor-security  |
+| bd-4 | User model + migrations         | task          | developer-backend |
+| bd-5 | JWT service                     | feature       | developer-backend |
+| bd-6 | Login/logout/refresh endpoints  | feature       | developer-backend |
+
+Workflow mode: manual / semi-auto / auto?
+(semi-auto: CP-1 and CP-3 automatic, CP-2 always manual)
+```
+
+#### 4. Design and audit phases
+
+The orchestrator first handles `spec-*` and `audit` tickets:
+
+- Invokes `ux-designer` → UX spec produced → **[CP-spec]** validate / revise / skip
+- Invokes `ui-designer` → UI spec produced → **[CP-spec]** validate / revise / skip
+- Invokes `auditor-security` → audit report → **[CP-audit]** fix / accept / skip
+  - If "fix": a correction ticket is added to the dev list
+
+#### 5. Implementation phase via orchestrator-dev
+
+The orchestrator passes dev tickets to `orchestrator-dev` with the chosen mode.
+`orchestrator-dev` takes over:
+
+1. Presents each ticket `[CP-1]` (automatic in semi-auto/auto)
+2. Identifies the agent via the routing matrix and delegates
+3. Offers QA `[CP-QA]` (automatic in auto mode if enabled at CP-0 — automatically skipped if the ticket carries the `tdd` label)
+4. Launches review automatically after implementation (± QA)
+5. Presents the review report `[CP-2]` — **always a pause, no exception**
+6. Closes and moves to the next `[CP-3]` (automatic in semi-auto/auto)
+
+#### 6. [CP-feature] Global recap
+
+```
+## Feature recap — JWT Authentication
+
+| ID   | Title                           | Phase  | Agent             | Status      |
+|------|---------------------------------|--------|-------------------|-------------|
+| bd-1 | UX spec — auth flow             | design | ux-designer       | ✅ Validated |
+| bd-2 | UI spec — auth components       | design | ui-designer       | ✅ Validated |
+| bd-3 | Security audit auth scope       | audit  | auditor-security  | ✅ Accepted  |
+| bd-4 | User model + migrations         | dev    | developer-backend | ✅ Merged    |
+| bd-5 | JWT service                     | dev    | developer-backend | ✅ Merged    |
+| bd-6 | Login/logout/refresh endpoints  | dev    | developer-backend | ✅ Merged    |
+| bd-7 | Fix misconfigured CORS          | dev    | developer-backend | ✅ Merged    |
+
+- Tickets handled: 7 / 7
+- Review cycles: 8
+- Corrections requested: 1 (security audit → bd-7)
+```
+
+---
+
+## Scenario 2 — Multi-domain audit
+
+**Context:** you want a complete audit of the project before going to production.
+
+### Diagram
+
+```mermaid
+flowchart TD
+    U[User\n'Audit the project'] --> A[Auditor]
+    A --> |Qualifies: full audit| AS[auditor-security]
+    A --> AP[auditor-performance]
+    A --> AA[auditor-accessibility]
+    A --> AE[auditor-ecodesign]
+    A --> AR[auditor-architecture]
+    A --> APR[auditor-privacy]
+    A --> AO[auditor-observability]
+    AS --> S[Executive summary\nmulti-domain]
+    AP --> S
+    AA --> S
+    AE --> S
+    AR --> S
+    APR --> S
+    AO --> S
+    S --> U2[Final report\nwith global score]
+```
+
+### Detailed steps
+
+#### 1. Full audit
+
+```
+Prompt: "Audit the project"
+```
+
+The auditor qualifies the request as a **full audit** and delegates to the 7 sub-agents.
+
+#### 2. Targeted audit
+
+```
+Prompt: "Audit security and check GDPR compliance"
+```
+
+The auditor delegates only to `auditor-security` and `auditor-privacy`.
+
+#### 3. Express audit (quick audit)
+
+```
+Prompt: "Quick audit"
+```
+
+The auditor delegates to `auditor-security`, `auditor-accessibility`, `auditor-performance`.
+
+#### 4. Synthesis report format
+
+```
+## Multi-domain Audit Summary — my-project
+
+### Overview
+
+| Domain        | Score | Level | Criticals |
+|---------------|-------|-------|-----------|
+| Security      | 6/10  | 🟠    | 2         |
+| Performance   | 8/10  | ✅    | 0         |
+| Accessibility | 5/10  | 🟠    | 1         |
+| Ecodesign     | 7/10  | 🟡    | 0         |
+| Architecture  | 7/10  | 🟡    | 0         |
+| Privacy (GDPR)| 9/10  | ✅    | 0         |
+| Observability | 6/10  | 🟠    | 1         |
+
+### Estimated global score
+6.7/10 — Fair — 4 critical issues to resolve before production
+
+### Top 5 priority actions
+1. [Security 🔴] Possible SQL injection — src/controllers/user.controller.ts:34
+2. [Security 🔴] Secret exposed in code — config/database.ts:12
+3. [Accessibility 🔴] Images without alt attribute — src/components/Gallery.vue
+4. [Observability 🔴] No SLO defined — no error budget or actionable alerting
+5. [Security 🟠] Misconfigured CORS — src/middleware/cors.ts
+```
+
+---
+
+## Scenario 3 — Debug → fix cycle
+
+**Context:** a bug is reported in production, you have a stacktrace.
+
+### Diagram
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant D as Debugger
+    participant B as Beads
+    participant DEV as Developer-*
+    participant R as Reviewer
+
+    U->>D: Stacktrace + bug description
+    D->>D: Reproduction → Isolation → Identification → Hypothesis
+    D-->>U: Diagnostic report
+    D-->>U: Suggested ticket: "Fix NPE in UserService:47"
+    U->>D: [CP] "Create the ticket?"
+    D->>B: bd create + bd update
+    B-->>D: bd-42 created
+    D-->>U: "Ticket bd-42 created"
+
+    U->>DEV: "Handle ticket bd-42"
+    DEV->>B: bd show bd-42 → bd claim bd-42
+    DEV-->>U: Fix implemented
+    U->>R: "Review branch fix/bd-42"
+    R-->>U: Review report
+```
+
+### Detailed steps
+
+#### 1. Submit the bug to the debugger
+
+```
+Prompt:
+"This bug has been happening in prod since this morning:
+
+TypeError: Cannot read properties of null (reading 'email')
+    at UserService.findById (src/services/user.service.ts:47:20)
+    at AuthController.login (src/controllers/auth.controller.ts:23:35)
+    at Layer.handle [as handle_request] (express/lib/router/layer.js:95:5)
+
+Context: occurs when a user tries to log in with a non-existent
+email. Frequency: systematic."
+```
+
+#### 2. Diagnostic report
+
+```
+## Diagnostic — TypeError null email in UserService
+
+### Symptom
+Login with non-existent email throws a TypeError in production.
+Expected behaviour: return an explicit 401 error.
+Frequency: systematic.
+
+### Probable location
+`src/services/user.service.ts:47`
+
+### Main hypothesis — high probability
+The `findById` method returns `null` when the user doesn't exist,
+but line 47 directly accesses `.email` without prior validation.
+
+Supporting evidence:
+- The stacktrace points precisely to `user.service.ts:47`
+- The message "Cannot read properties of null" confirms a null access
+
+To confirm:
+- Check if `UserRepository.findByEmail` can return null
+- Search for null guards on the return value before line 47
+
+### Suggested correction ticket
+Title: Fix missing null guard in UserService.findById
+Type: bug | Priority: P0
+```
+
+#### 3. Ticket creation
+
+```
+⏸️ Create this ticket in Beads? (yes/no)
+→ yes
+
+bd create "Fix missing null guard in UserService.findById" -p 0 -t bug --json
+→ Ticket bd-42 created
+```
+
+#### 4. Fix and review
+
+The developer receives ticket bd-42, reads the diagnostic in the notes,
+implements the targeted fix, and the reviewer checks the PR.
+
+---
+
+## Scenario 4 — Review only
+
+**Context:** you developed a feature manually and want a review
+before merging.
+
+```
+Prompt: "Review my PR — here is the diff:
+
+<paste git diff or branch name>"
+```
+
+Or with Beads context:
+
+```
+Prompt: "Review branch feat/user-profile — ticket bd-28"
+```
+
+The reviewer reads ticket bd-28 for context, applies its systematic
+checklist, and produces a structured report.
+
+---
+
+## Scenario 5 — UX/UI spec then implementation (standalone designers)
+
+**Context:** you want to design the experience and interface of a feature
+before coding, without going through the full orchestrator. Useful when specs
+must be validated by a team or client before any development.
+
+### Diagram
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant UX as ux-designer
+    participant UI as ui-designer
+    participant OD as orchestrator-dev
+    participant DEV as Developer-*
+    participant R as Reviewer
+
+    U->>UX: "UX spec for the user onboarding flow"
+    UX->>UX: Context questions (min. 2)
+    UX-->>U: UX spec — user flows + acceptance criteria + Beads tickets
+    U->>U: UX spec validation
+
+    U->>UI: "UI spec for onboarding screens — UX spec: bd-10"
+    UI->>UI: Read UX spec (bd show bd-10)
+    UI-->>U: UI spec — tokens + components + guidelines + Beads tickets
+    U->>U: UI spec validation
+
+    U->>OD: "Implement tickets bd-11 to bd-15"
+    loop For each ticket
+        OD->>DEV: developer-frontend (UI/component signals)
+        DEV-->>OD: Implementation complete
+        OD->>R: Automatic review
+        R-->>OD: Review report
+        OD->>U: [CP-2] Merge or fix?
+        U->>OD: "merge"
+    end
+    OD-->>U: Implementation recap
+```
+
+### Detailed steps
+
+#### 1. UX spec
+
+```
+Prompt: "UX spec for the user onboarding flow —
+our app is a B2B SaaS project management platform"
+```
+
+The `ux-designer` asks at least 2 context questions before producing:
+
+```
+Questions:
+1. What is the profile of the user signing up
+   (company admin, invited team member, both)?
+2. What information is required at account creation?
+```
+
+Then produces the UX spec with:
+- Nominal + alternative + error user flows
+- Acceptance criteria per step
+- Identified friction points and recommendations
+- Suggested Beads tickets (with `label:ui` for screens to specify)
+
+#### 2. UI spec
+
+```
+Prompt: "UI spec for onboarding screens — UX spec available in bd-10"
+```
+
+The `ui-designer` reads the UX spec via `bd show bd-10`, then produces:
+- Design tokens used (colours, typography, spacing)
+- Component specification (variants, states, do/don't)
+- Flow-specific visual guidelines
+- Beads tickets updated with UI constraints
+
+#### 3. Implementation via orchestrator-dev
+
+Once specs are validated, launch `orchestrator-dev` directly on development
+tickets (spec tickets are already closed):
+
+```
+Prompt: "Implement tickets bd-11 to bd-15 — semi-auto mode"
+```
+
+---
+
+## Scenario 6 — Documenting a delivered feature
+
+**Context:** a feature has just been merged. You want to document what changed:
+README, user guides, ADR if an architectural decision was made, CHANGELOG,
+or API documentation if new endpoints were created.
+
+### Diagram
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant D as Documentarian
+    participant B as Beads
+
+    U->>D: "Document the JWT auth feature — tickets bd-1 to bd-6"
+    D->>B: bd show bd-1 … bd-6 (context reading)
+    D->>D: Codebase exploration — routes, models, modified components
+    D-->>U: Detected doc gap report
+
+    Note over D,U: "README missing auth section,<br/>CHANGELOG not updated,<br/>endpoint /auth/refresh not documented in API"
+
+    D-->>U: Documentation plan proposal
+    U->>D: "Validate — start with CHANGELOG and API"
+
+    D-->>U: CHANGELOG updated (Added + Changed sections)
+    D-->>U: API doc — /auth/login, /auth/logout, /auth/refresh
+    U->>D: "Now the README and an ADR for the JWT choice"
+    D-->>U: README auth section + ADR-007 proposed
+    U->>D: "Validate the ADR"
+    D-->>U: ADR-007 created
+```
+
+### Detailed steps
+
+#### 1. Launch the documentarian with context
+
+```
+Prompt: "Document the JWT authentication feature delivered in tickets bd-1 to bd-6"
+```
+
+The `documentarian` starts by exploring before writing:
+1. Reads Beads tickets to understand the scope
+2. Explores the codebase (new files, modified routes, added models)
+3. Inspects existing documentation (README, `docs/`, CHANGELOG, API spec)
+
+#### 2. Gap report
+
+```
+## Documentation gaps detected — JWT Auth Feature
+
+| Document              | Status   | Recommended action                                  |
+|-----------------------|----------|-----------------------------------------------------|
+| README.md             | Partial  | Add "Authentication" section with examples          |
+| CHANGELOG.md          | Missing  | Add Added + Changed entries for the release         |
+| docs/api/auth.md      | Missing  | Create OpenAPI doc for /auth/* (3 endpoints)        |
+| ADR                   | Missing  | Propose ADR-007 — JWT vs sessions choice            |
+| docs/guides/          | Compliant| No modification needed                              |
+
+Where to start? (or "all" to let the documentarian decide the order)
+```
+
+#### 3. Writing by validated sections
+
+The `documentarian` **never modifies a format without confirmation**. For each
+document:
+- It detects the existing format and adapts to it
+- It proposes content before writing if the document is new
+- It never changes format (e.g.: switching from Nygard to MADR for ADRs)
+  without explicit confirmation
+
+#### 4. Example — generated CHANGELOG entry
+
+```markdown
+## [1.2.0] — 2026-03-30
+
+### Added
+- JWT authentication: endpoints `/auth/login`, `/auth/logout`, `/auth/refresh`
+- `User` model with `email`, `password_hash`, `refresh_token` fields
+- `JwtService` — sign, verify, refresh with token rotation
+
+### Changed
+- `AuthController`: migration from cookie sessions to JWT Bearer
+```
