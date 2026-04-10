@@ -33,7 +33,8 @@ case "$COMMAND" in
   help|--help|-h)  bash "$SCRIPTS_DIR/cmd-help.sh" ;;
   "")              bash "$SCRIPTS_DIR/cmd-help.sh" ;;
   *)
-    log_error "Commande inconnue : $COMMAND"
+    resolve_oc_lang
+    log_error "$(t cmd.unknown) : $COMMAND"
     bash "$SCRIPTS_DIR/cmd-help.sh"
     exit 1
     ;;
