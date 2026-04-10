@@ -261,8 +261,8 @@ cmd_set() {
 # ────────────────────────────────────────────────────────────────────────────────
 _write_project_provider() {
   local project_id="$1" provider="$2" api_key="$3" base_url="$4"
-  local api_keys_file="$PROJECTS_DIR/api-keys.local.md"
-  mkdir -p "$PROJECTS_DIR"
+  local api_keys_file="$API_KEYS_FILE"
+  mkdir -p "$(dirname "$API_KEYS_FILE")"
 
   if [ ! -f "$api_keys_file" ]; then
     cat > "$api_keys_file" <<'HEADER'
@@ -304,7 +304,7 @@ HEADER
   } >> "$api_keys_file"
 
   # S'assurer que api-keys.local.md est dans .gitignore
-  local gitignore="$PROJECTS_DIR/.gitignore"
+  local gitignore; gitignore="$(dirname "$API_KEYS_FILE")/.gitignore"
   if [ ! -f "$gitignore" ] || ! grep -qx "api-keys.local.md" "$gitignore"; then
     mkdir -p "$(dirname "$gitignore")"
     echo "api-keys.local.md" >> "$gitignore"
