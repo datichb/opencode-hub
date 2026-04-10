@@ -101,6 +101,7 @@ adapter_deploy() {
   if [ -n "$project_id" ]; then
     lang=$(get_project_language "$project_id")
   fi
+  lang=$(resolve_agent_lang "$lang")
 
   local deployed=0
   # Tableau associatif : agent_id → mode effectif (pour générer opencode.json)

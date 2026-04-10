@@ -597,6 +597,27 @@ resolve_oc_lang() {
   export OC_LANG="$lang"
 }
 
+# Resolves the human-readable language name to inject in agent prompts.
+# Priority: per-project Langue field → OC_LANG code → empty (no injection)
+# Maps language codes to human-readable names: fr → "français", en → "english"
+# @param $1 — raw lang string from get_project_language (may be empty)
+# Returns the human-readable name to pass to build_agent_content, or "" for none.
+resolve_agent_lang() {
+  local raw="${1:-}"
+  if [ -n "$raw" ]; then
+    # Per-project Langue field: return as-is (already human-readable)
+    printf '%s' "$raw"
+    return 0
+  fi
+  # Fall back to OC_LANG code → human-readable name
+  local code="${OC_LANG:-}"
+  case "$code" in
+    fr) printf '%s' "français" ;;
+    en) printf '%s' "english" ;;
+    *)  printf '%s' "" ;;
+  esac
+}
+
 # Auto-resolve language on source so t() works without explicit call
 resolve_oc_lang
 

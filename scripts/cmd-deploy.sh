@@ -168,6 +168,7 @@ _cmd_deploy_diff() {
     # Langue du projet si disponible
     local lang=""
     [ -n "$project_id" ] && lang=$(get_project_language "$project_id" 2>/dev/null || true)
+    lang=$(resolve_agent_lang "$lang")
 
     while IFS= read -r agent_file; do
       [ -f "$agent_file" ] || continue
