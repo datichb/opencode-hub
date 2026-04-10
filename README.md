@@ -114,18 +114,49 @@ oc start MON-APP
 
 ## Agents disponibles
 
-27 agents organisés en 7 familles. Les agents `primary` sont visibles directement
-par l'utilisateur ; les agents `subagent` sont invocables par les coordinateurs.
+27 agents en deux modes :
 
-| Famille | Agents | Description | Usage type |
-|---------|--------|-------------|------------|
-| **Coordinateurs** | `orchestrator`, `orchestrator-dev`, `auditor`, `onboarder` | Pilotent d'autres agents, ne codent jamais | `"Implémente [feature]"` — orchestre tout de la spec au merge |
-| **Développeurs** | `developer-frontend`, `developer-backend`, `developer-fullstack`, `developer-data`, `developer-devops`, `developer-mobile`, `developer-api`, `developer-platform`, `developer-security` | Implémentation par domaine technique | Routés automatiquement par `orchestrator-dev` |
-| **Design** | `ux-designer`, `ui-designer` | Conception UX/UI en amont de l'implémentation, lecture seule | `"Spec UX pour [feature]"` avant de coder |
-| **Qualité** | `reviewer`, `qa-engineer`, `debugger` | Review, tests manquants, diagnostic de bugs | `"Review de ma PR"` / `"Ce bug : [stacktrace]"` |
-| **Audit** | `auditor-security`, `auditor-performance`, `auditor-accessibility`, `auditor-ecodesign`, `auditor-architecture`, `auditor-privacy`, `auditor-observability` | Audit par domaine, lecture seule | Délégués par `auditor` ou invocables directement |
-| **Planification** | `planner`, `onboarder` | Décomposition en tickets Beads, découverte de projet | `"Décompose [feature] en tickets"` |
-| **Documentation** | `documentarian` | README, CHANGELOG, ADR, doc API | `"Documente [sujet]"` |
+- **`primary`** — visibles directement dans l'outil IA (tab picker OpenCode, liste Claude Code). Invocables par l'utilisateur.
+- **`subagent`** — invisibles dans le picker. Invocables uniquement par délégation depuis un agent coordinateur.
+
+### Agents primaires (invocables directement)
+
+| Agent | Famille | Rôle |
+|-------|---------|------|
+| `orchestrator` | Coordinateur | Feature de A à Z — délègue spec, audit, implémentation |
+| `orchestrator-dev` | Coordinateur | Implémentation de tickets — pilote les `developer-*` |
+| `auditor` | Coordinateur | Audit multi-domaine — délègue aux 7 `auditor-*` |
+| `onboarder` | Coordinateur | Découverte de projet existant, rapport de contexte |
+| `planner` | Planification | Décompose une feature en tickets Beads |
+| `ux-designer` | Design | Spec UX — user flows, critères d'acceptance |
+| `ui-designer` | Design | Spec UI — tokens, composants, guidelines visuelles |
+| `reviewer` | Qualité | Review de PR/MR par sévérité |
+| `qa-engineer` | Qualité | Tests manquants (unit / integration / E2E) |
+| `debugger` | Qualité | Diagnostic de bugs, rapport de cause racine |
+| `documentarian` | Documentation | README, CHANGELOG, ADR, doc API |
+
+### Sous-agents (délégués par les coordinateurs)
+
+| Agent | Délégué par | Domaine |
+|-------|-------------|---------|
+| `developer-frontend` | `orchestrator-dev` | UI, composants, Vue.js, CSS, a11y |
+| `developer-backend` | `orchestrator-dev` | Services, repositories, migrations |
+| `developer-fullstack` | `orchestrator-dev` | Features front + back |
+| `developer-data` | `orchestrator-dev` | Pipelines, ETL, ML, dbt |
+| `developer-devops` | `orchestrator-dev` | Docker, CI/CD, scripts shell |
+| `developer-mobile` | `orchestrator-dev` | React Native, Flutter, iOS, Android |
+| `developer-api` | `orchestrator-dev` | REST, GraphQL, webhooks |
+| `developer-platform` | `orchestrator-dev` | Terraform, K8s, Helm, GitOps |
+| `developer-security` | `orchestrator-dev` | Hardening post-audit sécurité |
+| `auditor-security` | `auditor` | OWASP Top 10, CVE, RGS |
+| `auditor-performance` | `auditor` | Core Web Vitals, N+1, cache |
+| `auditor-accessibility` | `auditor` | WCAG 2.1 AA, RGAA 4.1 |
+| `auditor-ecodesign` | `auditor` | RGESN, GreenIT, Écoindex |
+| `auditor-architecture` | `auditor` | SOLID, Clean Architecture, dette technique |
+| `auditor-privacy` | `auditor` | RGPD, EDPB, CNIL |
+| `auditor-observability` | `auditor` | Méthode RED, SLOs, OpenTelemetry |
+
+> Les sous-agents sont aussi invocables directement si besoin (ex : `auditor-security` seul sans passer par `auditor`).
 
 > Référence complète : [docs/architecture/agents.md](docs/architecture/agents.md)
 
