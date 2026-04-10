@@ -9,9 +9,9 @@ Ce guide vous permet d'installer le hub et de lancer votre premier agent en moin
 | Git | 2.x | `git --version` |
 | curl | — | `curl --version` |
 
-> Les autres dépendances (`jq`, `Node.js`, `opencode`, `bun`) sont installées automatiquement par le script d'installation.
+> Les autres dépendances (`jq`, `Node.js`, `opencode`, `bun`) sont proposées à l'installation — **chaque outil demande une confirmation explicite** avant d'être installé.
 >
-> **Beads (`bd`)** est installé automatiquement par `oc install`.
+> **Beads (`bd`)** est proposé à l'installation par `oc install` (via `brew install beads` ou curl).
 
 ---
 
@@ -25,8 +25,8 @@ curl -fsSL https://raw.githubusercontent.com/datichb/opencode-hub/main/install.s
 
 Le script automatise :
 - Clone du repo dans `~/.opencode-hub`
-- Installation des dépendances manquantes (`jq`, `Node.js`, `opencode`, `bun`)
-- Création de l'alias `oc` dans `~/.zshrc` ou `~/.bashrc`
+- Vérification des dépendances manquantes (`jq`, `Node.js`, `opencode`, `bun`) — **confirmation demandée avant chaque installation**
+- Création de l'alias `oc` dans `~/.zshrc` ou `~/.bashrc` (propose garder / remplacer / renommer si un alias `oc` existe déjà)
 - Initialisation des fichiers de config locaux
 - Configuration interactive des cibles AI et du provider LLM
 
@@ -44,7 +44,7 @@ source ~/.zshrc   # ou source ~/.bashrc
 
 ```bash
 # 1. Cloner
-git clone https://github.com/BenjaminDataiche/opencode-hub.git ~/.opencode-hub
+git clone https://github.com/datichb/opencode-hub.git ~/.opencode-hub
 
 # 2. Alias shell
 echo 'alias oc="~/.opencode-hub/oc.sh"' >> ~/.zshrc && source ~/.zshrc
@@ -190,5 +190,24 @@ oc sync
 | `Node.js introuvable` | Relancer `oc install` — propose les installeurs disponibles |
 | Agent absent dans l'outil | Relancer `oc deploy <target> MON-APP` |
 | Agent obsolète (`⚠ OBSOLÈTE`) | `oc deploy <target> MON-APP` pour resynchroniser |
-| `bd: command not found` | Installer Beads : `brew install bd` |
+| `bd: command not found` | Installer Beads : `brew install beads` |
 | Dossier d'install déjà existant | `OPENCODE_HUB_DIR=~/autre-chemin bash install.sh` |
+
+---
+
+## Désinstaller le hub
+
+```bash
+oc uninstall
+# ou depuis n'importe où :
+bash ~/.opencode-hub/uninstall.sh
+```
+
+Le script guide la désinstallation en 4 étapes optionnelles (toutes avec confirmation) :
+
+| Étape | Action | Défaut |
+|-------|--------|--------|
+| 1 | Nettoyer les agents déployés dans les projets | `[y/N]` |
+| 2 | Supprimer `~/.opencode-hub` | `[y/N]` |
+| 3 | Retirer l'alias et les exports bun du fichier rc | `[Y/n]` |
+| 4 | Désinstaller opencode, Beads, bun (séparément) | `[y/N]` |

@@ -27,10 +27,10 @@ Les outils IA fonctionnent en silo. opencode-hub centralise tout :
 curl -fsSL https://raw.githubusercontent.com/datichb/opencode-hub/main/install.sh | bash
 ```
 
-Le script automatise tout : clone du repo dans `~/.opencode-hub`, installation des dépendances (`jq`, `Node.js`, `opencode`, `bun`), création de l'alias `oc` dans votre shell, et configuration interactive des cibles AI.
+Le script automatise tout : clone du repo dans `~/.opencode-hub`, vérification des dépendances (`jq`, `Node.js`, `opencode`, `bun`) avec **confirmation demandée avant chaque installation**, création de l'alias `oc` dans votre shell, et configuration interactive des cibles AI.
 
 > **Dépendances requises :** `git`, `curl`
-> Les autres dépendances (`jq`, `Node.js`, `opencode`, `bun`) sont installées automatiquement.
+> Les autres dépendances (`jq`, `Node.js`, `opencode`, `bun`) sont proposées à l'installation — chaque outil demande une confirmation explicite.
 
 Après l'installation, recharger le shell :
 
@@ -41,7 +41,7 @@ source ~/.zshrc   # ou source ~/.bashrc
 ### Installation manuelle
 
 ```bash
-git clone https://github.com/BenjaminDataiche/opencode-hub.git ~/.opencode-hub
+git clone https://github.com/datichb/opencode-hub.git ~/.opencode-hub
 echo 'alias oc="~/.opencode-hub/oc.sh"' >> ~/.zshrc && source ~/.zshrc
 oc install
 ```
@@ -64,6 +64,14 @@ oc start MON-APP
 ```
 
 > Guide complet : [docs/guides/getting-started.md](docs/guides/getting-started.md)
+
+### Désinstaller
+
+```bash
+oc uninstall
+```
+
+Guide interactif en 4 étapes (projets, hub, alias shell, outils) — tout est optionnel et demande confirmation.
 
 ---
 

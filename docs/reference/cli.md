@@ -22,7 +22,7 @@ oc install
 
 **Comportement :**
 - Interactif — propose un menu de sélection des cibles
-- Vérifie et propose d'installer Node.js si une cible en a besoin (OpenCode, Claude Code)
+- Vérifie et **demande confirmation** avant d'installer chaque dépendance (Node.js, opencode, Beads, bun)
 - Si `config/hub.json` existe déjà, demande confirmation avant d'écraser
 
 **Options de cible :**
@@ -32,6 +32,33 @@ oc install
 | 1 (défaut) | OpenCode |
 | 2 | Claude Code |
 | 3 | Tout |
+
+---
+
+## `oc uninstall`
+
+Désinstalle opencode-hub et nettoie les artefacts créés lors de l'installation.
+
+```bash
+oc uninstall
+# équivalent à :
+bash ~/.opencode-hub/uninstall.sh
+```
+
+**Comportement :**
+
+Guide la désinstallation en 4 étapes, toutes optionnelles et avec confirmation explicite :
+
+| Étape | Action | Défaut |
+|-------|--------|--------|
+| 1 | Nettoyer les agents déployés dans les projets (`.opencode/agents/`, `opencode.json`, `.claude/agents/`) | `[y/N]` |
+| 2 | Supprimer le hub (`~/.opencode-hub`) | `[y/N]` |
+| 3 | Retirer l'alias `oc` et les exports bun du fichier rc shell | `[Y/n]` |
+| 4 | Désinstaller les outils système : `opencode`, `beads`, `bun` (séparément) | `[y/N]` |
+
+> `jq` et `node` ne sont pas proposés à la désinstallation (usage général, risque de casser d'autres outils).
+>
+> Un backup `.bak` est créé automatiquement avant toute modification du fichier rc.
 
 ---
 
