@@ -94,9 +94,43 @@ _display_entry() {
 
 # ── Sous-commandes ─────────────────────────────────────────────────
 
+cmd_set_language() {
+  local value="${1:-}"
+  if [ -z "$value" ]; then
+    log_error "Usage: oc config set language <en|fr>"
+    exit 1
+  fi
+  case "$value" in
+    en|fr) ;;
+    *) log_error "Invalid language value (accepted: en, fr)"; exit 1 ;;
+  esac
+  if ! command -v jq >/dev/null 2>&1; then
+    log_error "jq is required to set the language"
+    exit 1
+  fi
+  if [ ! -f "$HUB_CONFIG" ]; then
+    log_error "hub.json not found — run first: ./oc.sh install"
+    exit 1
+  fi
+  local tmp; tmp=$(mktemp)
+  jq --arg lang "$value" '.cli.language = $lang' "$HUB_CONFIG" > "$tmp" && mv "$tmp" "$HUB_CONFIG"
+  log_success "CLI language set to $value"
+}
+
+cmd_get_language() {
+  local lang; lang=$(get_hub_language)
+  log_info "Current CLI language: ${lang:-en}"
+}
+
 cmd_set() {
   local id="${1:-}"
   shift || true
+
+  # Special case: oc config set language <en|fr>
+  if [ "$id" = "language" ]; then
+    cmd_set_language "$@"
+    return
+  fi
 
   # Flags optionnels
   local flag_model="" flag_provider="" flag_api_key="" flag_base_url=""
@@ -195,6 +229,13 @@ cmd_set() {
 cmd_get() {
   local id="${1:-}"
   [ -z "$id" ] && { log_error "Usage : oc config get <PROJECT_ID>"; exit 1; }
+
+  # Special case: oc config get language
+  if [ "$id" = "language" ]; then
+    cmd_get_language
+    return
+  fi
+
   id=$(normalize_project_id "$id")
   if ! api_keys_entry_exists "$id"; then
     log_warn "Aucune configuration pour $id"
@@ -251,7 +292,9 @@ case "$SUBCOMMAND" in
     echo -e "${BOLD}Usage :${RESET} ./oc.sh config <sous-commande> [options]"
     echo ""
     echo "  set <PROJECT_ID> [--model m] [--provider p] [--api-key k] [--base-url u]"
+    echo "  set language <en|fr>"
     echo "  get <PROJECT_ID>"
+    echo "  get language"
     echo "  list"
     echo "  unset <PROJECT_ID>"
     exit 0
@@ -262,7 +305,9 @@ case "$SUBCOMMAND" in
     echo -e "${BOLD}Usage :${RESET} ./oc.sh config <sous-commande> [options]"
     echo ""
     echo "  set <PROJECT_ID> [--model m] [--provider p] [--api-key k] [--base-url u]"
+    echo "  set language <en|fr>"
     echo "  get <PROJECT_ID>"
+    echo "  get language"
     echo "  list"
     echo "  unset <PROJECT_ID>"
     exit 1
