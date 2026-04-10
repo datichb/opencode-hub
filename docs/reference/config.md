@@ -124,7 +124,7 @@ le sien. Créé automatiquement depuis `projects/projects.example.md` au premier
 - Labels : label1, label2, label3
 - Langue : english        # optionnel — si absent : agents en français par défaut
 - Agents : all            # optionnel — all (défaut) ou liste CSV d'agent-ids
-- Targets : opencode,vscode  # optionnel — override de active_targets du hub.json
+- Targets : opencode,claude-code  # optionnel — override de active_targets du hub.json
 - Modes : agent-id:mode,agent-id:mode  # optionnel — override des modes primary/subagent par agent
 - Disable agents : plan,build  # optionnel — surcharge hub.json pour ce projet
 ```

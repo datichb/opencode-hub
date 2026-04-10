@@ -394,7 +394,7 @@ oc remove <PROJECT_ID> [--clean]
 
 | Option | Description |
 |--------|-------------|
-| `--clean` | Supprime également les fichiers agents déployés dans le répertoire du projet (`.opencode/agents/`, `opencode.json`, `.claude/agents/`, `.vscode/prompts/` selon les cibles actives) |
+| `--clean` | Supprime également les fichiers agents déployés dans le répertoire du projet (`.opencode/agents/`, `opencode.json`, `.claude/agents/` selon les cibles actives) |
 
 **Exemples :**
 
