@@ -37,38 +37,23 @@ _build_provider_block() {
 
   case "$provider" in
     anthropic)
-      # Sanitiser la clé API avant injection JSON : échapper \ puis "
-      local safe_api_key
-      safe_api_key="${api_key//\\/\\\\}"
-      safe_api_key="${safe_api_key//\"/\\\"}"
-      cat <<JSON
-  "provider": {
-    "anthropic": {
-      "apiKey": "${safe_api_key}"
-    }
-  }
-JSON
+      # Utiliser jq pour encoder proprement la clé API dans le JSON
+      jq -n --arg key "$api_key" \
+        '{"provider": {"anthropic": {"apiKey": $key}}}' \
+        | sed 's/^{//;s/^}$//;/^$/d'
       ;;
     mammouth|github-models|bedrock|ollama|litellm)
       # Tous les autres providers utilisent le mécanisme OpenAI-compatible via litellm
       base_url=$(get_project_api_base_url "$project_id")
-      # Sanitiser les valeurs avant injection JSON : échapper \ puis "
-      local safe_api_key safe_base_url
-      safe_api_key="${api_key//\\/\\\\}"
-      safe_api_key="${safe_api_key//\"/\\\"}"
-      safe_base_url="${base_url//\\/\\\\}"
-      safe_base_url="${safe_base_url//\"/\\\"}"
-      cat <<JSON
-  "provider": {
-    "litellm": {
-      "npm": "@ai-sdk/openai-compatible",
-      "options": {
-        "apiKey": "${safe_api_key}"$([ -n "$safe_base_url" ] && echo ",
-        \"baseURL\": \"${safe_base_url}\"")
-      }
-    }
-  }
-JSON
+      if [ -n "$base_url" ]; then
+        jq -n --arg key "$api_key" --arg url "$base_url" \
+          '{"provider": {"litellm": {"npm": "@ai-sdk/openai-compatible", "options": {"apiKey": $key, "baseURL": $url}}}}' \
+          | sed 's/^{//;s/^}$//;/^$/d'
+      else
+        jq -n --arg key "$api_key" \
+          '{"provider": {"litellm": {"npm": "@ai-sdk/openai-compatible", "options": {"apiKey": $key}}}}' \
+          | sed 's/^{//;s/^}$//;/^$/d'
+      fi
       ;;
   esac
 }
@@ -148,37 +133,21 @@ adapter_deploy() {
       
       case "$hub_provider" in
         anthropic)
-          local safe_api_key
-          safe_api_key="${hub_api_key//\\/\\\\}"
-          safe_api_key="${safe_api_key//\"/\\\"}"
-          provider_block=$(cat <<JSON
-  "provider": {
-    "anthropic": {
-      "apiKey": "${safe_api_key}"
-    }
-  }
-JSON
-)
+          provider_block=$(jq -n --arg key "$hub_api_key" \
+            '{"provider": {"anthropic": {"apiKey": $key}}}' \
+            | sed 's/^{//;s/^}$//;/^$/d')
           has_api_key=true
           ;;
         mammouth|github-models|bedrock|ollama|litellm)
-          local safe_api_key safe_base_url
-          safe_api_key="${hub_api_key//\\/\\\\}"
-          safe_api_key="${safe_api_key//\"/\\\"}"
-          safe_base_url="${hub_base_url//\\/\\\\}"
-          safe_base_url="${safe_base_url//\"/\\\"}"
-          provider_block=$(cat <<JSON
-  "provider": {
-    "litellm": {
-      "npm": "@ai-sdk/openai-compatible",
-      "options": {
-        "apiKey": "${safe_api_key}"$([ -n "$safe_base_url" ] && echo ",
-        \"baseURL\": \"${safe_base_url}\"")
-      }
-    }
-  }
-JSON
-)
+          if [ -n "$hub_base_url" ]; then
+            provider_block=$(jq -n --arg key "$hub_api_key" --arg url "$hub_base_url" \
+              '{"provider": {"litellm": {"npm": "@ai-sdk/openai-compatible", "options": {"apiKey": $key, "baseURL": $url}}}}' \
+              | sed 's/^{//;s/^}$//;/^$/d')
+          else
+            provider_block=$(jq -n --arg key "$hub_api_key" \
+              '{"provider": {"litellm": {"npm": "@ai-sdk/openai-compatible", "options": {"apiKey": $key}}}}' \
+              | sed 's/^{//;s/^}$//;/^$/d')
+          fi
           has_api_key=true
           ;;
       esac
