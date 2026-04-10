@@ -11,5 +11,8 @@
   "opencode": {
     "model": "claude-sonnet-4-5",
     "disabled_native_agents": ["build", "plan", "general", "explore"]
+  },
+  "cli": {
+    "language": "en"
   }
 }

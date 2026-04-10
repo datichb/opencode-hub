@@ -18,6 +18,10 @@ LIB_DIR="$HUB_DIR/scripts/lib"
 ADAPTERS_DIR="$HUB_DIR/scripts/adapters"
 EXTERNAL_SKILLS_DIR="$HUB_DIR/skills/external"
 
+# Load i18n string table (bash 3.2 compatible)
+# shellcheck source=scripts/lib/i18n.sh
+[ -f "$HUB_DIR/scripts/lib/i18n.sh" ] && source "$HUB_DIR/scripts/lib/i18n.sh"
+
 # ─────────────────────────────────────────
 # DEFAULTS
 # ─────────────────────────────────────────
@@ -549,5 +553,47 @@ _set_project_disabled_native_agents() {
   fi
   log_error "Impossible d'insérer le champ 'Disable agents' dans le bloc $id de projects.md"
   return 1
+}
+
+# ─────────────────────────────────────────
+# I18N — Language resolution
+# ─────────────────────────────────────────
+
+# Reads the global CLI language from hub.json (.cli.language)
+# Returns "" if not set or jq unavailable
+get_hub_language() {
+  [ -f "$HUB_CONFIG" ] || return 0
+  command -v jq >/dev/null 2>&1 || return 0
+  jq -r '.cli.language // empty' "$HUB_CONFIG" 2>/dev/null
+}
+
+# Resolves and exports OC_LANG for the current invocation.
+# Priority: project Langue field > global hub.json .cli.language > "en"
+# Normalises french/English → fr/en.
+# @param $1 — PROJECT_ID (optional)
+resolve_oc_lang() {
+  local project_id="${1:-}"
+  local lang=""
+
+  # 1. Per-project Langue field in projects.md
+  if [ -n "$project_id" ]; then
+    lang=$(get_project_language "$project_id")
+  fi
+
+  # 2. Global CLI language from hub.json
+  if [ -z "$lang" ]; then
+    lang=$(get_hub_language)
+  fi
+
+  # 3. Default to English
+  lang="${lang:-en}"
+
+  # Normalise: french → fr, english/anything else → en
+  case "$lang" in
+    french|fr) lang="fr" ;;
+    *)         lang="en" ;;
+  esac
+
+  export OC_LANG="$lang"
 }
 
