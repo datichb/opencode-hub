@@ -976,7 +976,8 @@ cmd_validate() {
 
   # ── Résumé ─────────────────────────────────────────────────────────────────
   echo ""
-  local summary="${BOLD}$(t agent.validate.summary)${RESET}  ${GREEN}${count_ok} $(t agent.validate.ok)${RESET}"
+  local summary
+  summary="${BOLD}$(t agent.validate.summary)${RESET}  ${GREEN}${count_ok} $(t agent.validate.ok)${RESET}"
   [ $count_err  -gt 0 ] && summary="${summary}  ${RED}${count_err} $(t agent.validate.errors)${RESET}"
   [ $count_warn -gt 0 ] && summary="${summary}  ${YELLOW}${count_warn} $(t agent.validate.warnings)${RESET}"
   echo -e "$summary"
