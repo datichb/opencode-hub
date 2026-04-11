@@ -3,13 +3,13 @@
 # ─────────────────────────────────────────
 # PATHS
 # ─────────────────────────────────────────
-HUB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+HUB_DIR="${HUB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 PROJECTS_FILE="${PROJECTS_FILE:-$HUB_DIR/projects/projects.md}"
 PROJECTS_EXAMPLE_FILE="$HUB_DIR/projects/projects.example.md"
 PATHS_FILE="${PATHS_FILE:-$HUB_DIR/projects/paths.local.md}"
 API_KEYS_FILE="${API_KEYS_FILE:-$HUB_DIR/projects/api-keys.local.md}"
 SKILLS_DIR="$HUB_DIR/skills"
-SCRIPTS_DIR="$HUB_DIR/scripts"
+SCRIPTS_DIR="${SCRIPTS_DIR:-$HUB_DIR/scripts}"
 
 # Phase 2+ : sources canoniques (agents/ et config/)
 CANONICAL_AGENTS_DIR="$HUB_DIR/agents"

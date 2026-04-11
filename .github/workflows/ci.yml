@@ -81,4 +81,4 @@ jobs:
         run: sudo apt-get install -y bats
 
       - name: Run bats tests
-        run: bats tests/
+        run: for f in tests/*.bats; do bats "$f" || exit 1; done

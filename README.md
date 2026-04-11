@@ -73,6 +73,29 @@ echo 'alias oc="~/.opencode-hub/oc.sh"' >> ~/.zshrc && source ~/.zshrc
 oc install
 ```
 
+### Install a specific version
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/datichb/opencode-hub/main/install.sh | VERSION=v1.0.0 bash
+```
+
+---
+
+## Upgrading
+
+### Update hub sources
+
+```bash
+oc upgrade           # pull latest main
+oc upgrade v1.1.0    # switch to a specific release tag
+```
+
+### Update installed tools (opencode, Beads, skills)
+
+```bash
+oc update
+```
+
 ---
 
 ## Uninstallation

@@ -444,6 +444,21 @@ oc update
 
 ---
 
+## `oc upgrade`
+
+Met à jour les sources du hub lui-même (`git pull` sur le repo local). Avec un argument de version optionnel, bascule sur un tag de release spécifique.
+
+```bash
+oc upgrade              # pull le dernier main
+oc upgrade v1.1.0       # checkout du tag v1.1.0
+```
+
+Après une mise à jour réussie, propose de relancer `oc sync` pour redéployer les agents sur tous les projets enregistrés.
+
+> Utiliser `oc update` pour mettre à jour les outils installés (opencode, Beads, skills externes). Utiliser `oc upgrade` pour mettre à jour les scripts et agents du hub eux-mêmes.
+
+---
+
 ## `oc version`
 
 Affiche la version du hub (lue depuis `config/hub.json`).

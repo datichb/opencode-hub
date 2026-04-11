@@ -70,6 +70,7 @@ t() {
       help.sync)              printf '%s' "sync                                  Redéploie les agents sur tous les projets enregistrés" ;;
       help.sync_dryrun)       printf '%s' "sync --dry-run                        Vérifie la fraîcheur sur tous les projets (sans déployer)" ;;
       help.update)            printf '%s' "update                                Met à jour les outils installés" ;;
+      help.upgrade)           printf '%s' "upgrade [vX.Y.Z]                      Met à jour les sources du hub (git pull / checkout tag)" ;;
       help.config_set)        printf '%s' "config set <PROJECT_ID> [--model m] [--provider p] [--api-key k] [--base-url u]" ;;
       help.config_set_desc)   printf '%s' "                                     Configure le modèle et la clé API d'un projet" ;;
       help.config_get)        printf '%s' "config get <PROJECT_ID>              Affiche la configuration d'un projet" ;;
@@ -413,6 +414,22 @@ t() {
       update.sync_now)        printf '%s' "  Lancer oc sync pour redéployer sur tous les projets ? [Y/n] : " ;;
       update.sync_later)      printf '%s' "Redéployer manuellement : ./oc.sh sync" ;;
 
+      # ── cmd-upgrade.sh ─────────────────────────────────────────────────────
+      upgrade.title)              printf '%s' "Mise à jour du hub" ;;
+      upgrade.invalid_ref)        printf '%s' "Référence invalide — format attendu vX.Y.Z ou X.Y.Z" ;;
+      upgrade.ref_hint)           printf '%s' "Exemple : oc upgrade v1.1.0" ;;
+      upgrade.fetching_tag)       printf '%s' "Récupération du tag" ;;
+      upgrade.tag_not_found)      printf '%s' "Tag introuvable — vérifier que la release existe" ;;
+      upgrade.fetch_failed)       printf '%s' "Échec du fetch — vérifier la connexion réseau" ;;
+      upgrade.pulling)            printf '%s' "Récupération des dernières sources (git pull)" ;;
+      upgrade.already_uptodate)   printf '%s' "Le hub est déjà à jour." ;;
+      upgrade.pull_failed)        printf '%s' "Échec du git pull — vérifier la connexion réseau" ;;
+      upgrade.updated)            printf '%s' "Hub mis à jour" ;;
+      upgrade.done)               printf '%s' "Hub à jour" ;;
+      upgrade.sync_stale_warn)    printf '%s' "Les sources ont été mises à jour — les agents déployés dans vos projets peuvent être obsolètes." ;;
+      upgrade.sync_now)           printf '%s' "  Lancer oc sync pour redéployer sur tous les projets ? [Y/n] : " ;;
+      upgrade.sync_later)         printf '%s' "Redéployer manuellement : ./oc.sh sync" ;;
+
       # ── cmd-audit.sh ───────────────────────────────────────────────────────
       audit.invalid_type)     printf '%s' "Type d'audit invalide : '" ;;
       audit.valid_types)      printf '%s' "Types valides : " ;;
@@ -507,6 +524,7 @@ t_en() {
     help.sync)              printf '%s' "sync                                  Redeploy agents on all registered projects" ;;
     help.sync_dryrun)       printf '%s' "sync --dry-run                        Check freshness on all projects (without deploying)" ;;
     help.update)            printf '%s' "update                                Update installed tools" ;;
+    help.upgrade)           printf '%s' "upgrade [vX.Y.Z]                      Update hub sources (git pull / checkout tag)" ;;
     help.config_set)        printf '%s' "config set <PROJECT_ID> [--model m] [--provider p] [--api-key k] [--base-url u]" ;;
     help.config_set_desc)   printf '%s' "                                     Configure model and API key for a project" ;;
     help.config_get)        printf '%s' "config get <PROJECT_ID>              Show project configuration" ;;
@@ -849,6 +867,22 @@ t_en() {
     update.skills_stale_warn) printf '%s' "Some skills were updated — deployed agents in your projects may be outdated." ;;
     update.sync_now)        printf '%s' "  Run oc sync to redeploy on all projects? [Y/n]: " ;;
     update.sync_later)      printf '%s' "Redeploy manually: ./oc.sh sync" ;;
+
+    # ── cmd-upgrade.sh ───────────────────────────────────────────────────────
+    upgrade.title)              printf '%s' "Upgrading the hub" ;;
+    upgrade.invalid_ref)        printf '%s' "Invalid reference — expected format vX.Y.Z or X.Y.Z" ;;
+    upgrade.ref_hint)           printf '%s' "Example: oc upgrade v1.1.0" ;;
+    upgrade.fetching_tag)       printf '%s' "Fetching tag" ;;
+    upgrade.tag_not_found)      printf '%s' "Tag not found — check the release exists" ;;
+    upgrade.fetch_failed)       printf '%s' "Fetch failed — check network connection" ;;
+    upgrade.pulling)            printf '%s' "Fetching latest sources (git pull)" ;;
+    upgrade.already_uptodate)   printf '%s' "Hub is already up to date." ;;
+    upgrade.pull_failed)        printf '%s' "git pull failed — check network connection" ;;
+    upgrade.updated)            printf '%s' "Hub updated" ;;
+    upgrade.done)               printf '%s' "Hub up to date" ;;
+    upgrade.sync_stale_warn)    printf '%s' "Sources were updated — deployed agents in your projects may be outdated." ;;
+    upgrade.sync_now)           printf '%s' "  Run oc sync to redeploy on all projects? [Y/n]: " ;;
+    upgrade.sync_later)         printf '%s' "Redeploy manually: ./oc.sh sync" ;;
 
     # ── cmd-audit.sh ─────────────────────────────────────────────────────────
     audit.invalid_type)     printf '%s' "Invalid audit type: '" ;;

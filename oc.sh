@@ -27,6 +27,7 @@ case "$COMMAND" in
   agent)           bash "$SCRIPTS_DIR/cmd-agent.sh" "${@:2}" ;;
   target)          bash "$SCRIPTS_DIR/cmd-target.sh" "${@:2}" ;;
   update)          bash "$SCRIPTS_DIR/cmd-update.sh" ;;
+  upgrade)         bash "$SCRIPTS_DIR/cmd-upgrade.sh" "${@:2}" ;;
   conventions)     bash "$SCRIPTS_DIR/cmd-conventions.sh" "${@:2}" ;;
   beads)           bash "$SCRIPTS_DIR/cmd-beads.sh" "${@:2}" ;;
   version|--version) bash "$SCRIPTS_DIR/cmd-version.sh" ;;

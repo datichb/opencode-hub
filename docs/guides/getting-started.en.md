@@ -168,17 +168,32 @@ You can now invoke any agent in OpenCode:
 
 ## Update the hub
 
+### Update installed tools
+
 ```bash
 oc update
 ```
 
 Updates opencode, Beads, and external skills. If skills are modified, offers to re-run `oc sync`.
 
-To update the hub sources themselves:
+### Upgrade hub sources
 
 ```bash
-git -C ~/.opencode-hub pull
-oc sync
+oc upgrade
+```
+
+Pulls the latest hub scripts and agents (`git pull`). Offers to re-run `oc sync` after a successful update.
+
+To switch to a specific version:
+
+```bash
+oc upgrade v1.1.0
+```
+
+Equivalent to the one-liner:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/datichb/opencode-hub/main/install.sh | VERSION=v1.1.0 bash
 ```
 
 ---

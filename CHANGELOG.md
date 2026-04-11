@@ -253,6 +253,9 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 
 ### Added
 
+- Commande `oc upgrade` : met à jour les sources du hub via `git pull` (main) ou
+  `git checkout <tag>` (`oc upgrade v1.1.0`). Propose `oc sync` après mise à jour réussie.
+  Support du one-liner `VERSION=vX.Y.Z` dans `install.sh` pour installer une version épinglée.
 - Agent `documentarian` (famille Documentation) avec 5 skills spécialisés :
   `doc-protocol`, `doc-standards`, `doc-adr`, `doc-api`, `doc-changelog`
 - Skill `planning/planner.md` : Phase 0 (exploration adaptative de la codebase
