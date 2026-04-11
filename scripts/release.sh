@@ -3,7 +3,7 @@
 # release.sh — Créer une release versionnée de opencode-hub
 #
 # Usage : bash scripts/release.sh <version>
-#   ex  : bash scripts/release.sh 2.1.0
+#   ex  : bash scripts/release.sh 1.1.0
 #
 # Ce script :
 #   1. Valide le format X.Y.Z
@@ -37,7 +37,7 @@ log_title()   { echo -e "\n${BOLD}$*${RESET}"; }
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   echo -e "${BOLD}Usage :${RESET} bash scripts/release.sh <version>"
   echo ""
-  echo "  <version>   Numéro de version au format X.Y.Z (ex : 2.1.0)"
+  echo "  <version>   Numéro de version au format X.Y.Z (ex : 1.1.0)"
   echo ""
   echo "Ce script :"
   echo "  1. Valide le format X.Y.Z"
@@ -53,7 +53,7 @@ VERSION="${1:-}"
 
 if [ -z "$VERSION" ]; then
   log_error "Version manquante."
-  echo -e "  Usage : bash scripts/release.sh <version>  (ex : 2.1.0)"
+  echo -e "  Usage : bash scripts/release.sh <version>  (ex : 1.1.0)"
   exit 1
 fi
 
@@ -61,7 +61,7 @@ fi
 VERSION="${VERSION#v}"
 
 if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-  log_error "Format invalide : '$VERSION' — attendu X.Y.Z (ex : 2.1.0)"
+  log_error "Format invalide : '$VERSION' — attendu X.Y.Z (ex : 1.1.0)"
   exit 1
 fi
 

@@ -10,7 +10,7 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
 
 ```json
 {
-  "version": "2.0.0",
+  "version": "1.0.0",
   "default_target": "opencode",
   "active_targets": ["opencode"],
   "default_provider": {
@@ -52,7 +52,7 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
 
 ```json
 {
-  "version": "2.0.0",
+  "version": "1.0.0",
   "default_target": "opencode",
   "active_targets": ["opencode"],
   "default_provider": {
@@ -71,7 +71,7 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
 
 ```json
 {
-  "version": "2.0.0",
+  "version": "1.0.0",
   "default_target": "opencode",
   "active_targets": ["opencode"],
   "default_provider": {
@@ -90,7 +90,7 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
 
 ```json
 {
-  "version": "2.0.0",
+  "version": "1.0.0",
   "default_target": "opencode",
   "active_targets": ["opencode", "claude-code"],
   "default_provider": {

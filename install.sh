@@ -21,10 +21,10 @@ set -euo pipefail
 REPO_URL="https://github.com/datichb/opencode-hub.git"
 INSTALL_DIR="${OPENCODE_HUB_DIR:-$HOME/.opencode-hub}"
 
-# VERSION optionnelle — accepte "v2.1.0" ou "2.1.0", normalise avec préfixe v
+# VERSION optionnelle — accepte "v1.1.0" ou "1.1.0", normalise avec préfixe v
 # Laisser vide (défaut) pour installer HEAD de main.
-# Usage : VERSION=v2.1.0 bash install.sh
-#      ou: curl ... | VERSION=v2.1.0 bash
+# Usage : VERSION=v1.1.0 bash install.sh
+#      ou: curl ... | VERSION=v1.1.0 bash
 _raw_version="${VERSION:-}"
 if [ -n "$_raw_version" ]; then
   _raw_version="${_raw_version#v}"   # retirer éventuel préfixe v
