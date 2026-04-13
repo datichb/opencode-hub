@@ -461,8 +461,8 @@ if [ -d "$PROJECT_PATH" ]; then
   if [ -t 0 ]; then
     _prompt add_gitignore "$(t init.gitignore_opencode_prompt)"
     if [[ "${add_gitignore:-N}" =~ ^[Yy]$ ]]; then
-      local _gitignore_path="$PROJECT_PATH/.gitignore"
-      local _already=true
+      _gitignore_path="$PROJECT_PATH/.gitignore"
+      _already=true
       if [ ! -f "$_gitignore_path" ] || ! grep -qx "opencode.json" "$_gitignore_path"; then
         echo "opencode.json" >> "$_gitignore_path"
         _already=false
