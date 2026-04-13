@@ -64,7 +64,7 @@ _gitignore_opencode_json() {
   local gitignore="$deploy_dir/.gitignore"
   if [ ! -f "$gitignore" ] || ! grep -qx "opencode.json" "$gitignore"; then
     echo "opencode.json" >> "$gitignore"
-    log_info "[opencode] opencode.json ajouté au .gitignore du projet (contient une clé API)"
+    log_info "$(t init.gitignore_opencode_added)"
   fi
 }
 

@@ -456,6 +456,20 @@ if [ -d "$PROJECT_PATH" ]; then
   else
     log_info "Déployer plus tard : ./oc.sh deploy all $PROJECT_ID"
   fi
+
+  # Proposition d'ajout de opencode.json au .gitignore du projet
+  if [ -t 0 ]; then
+    _prompt add_gitignore "$(t init.gitignore_opencode_prompt)"
+    if [[ "${add_gitignore:-N}" =~ ^[Yy]$ ]]; then
+      local _gitignore_path="$PROJECT_PATH/.gitignore"
+      if [ ! -f "$_gitignore_path" ] || ! grep -qx "opencode.json" "$_gitignore_path"; then
+        echo "opencode.json" >> "$_gitignore_path"
+        log_info "$(t init.gitignore_opencode_added)"
+      else
+        log_info "$(t init.gitignore_opencode_exists)"
+      fi
+    fi
+  fi
 else
   log_warn "Déploiement impossible — dossier $PROJECT_PATH introuvable"
   DEPLOYED="impossible (dossier absent)"
