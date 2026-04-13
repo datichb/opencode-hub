@@ -6,6 +6,31 @@ set -euo pipefail
 
 HUB_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 SCRIPTS_DIR="$HUB_DIR/scripts"
+
+# ── Sandbox isolée ───────────────────────────────────────────────────────────
+# Tous les fichiers locaux (projects.md, paths.local.md, api-keys.local.md)
+# sont redirigés vers un répertoire temporaire supprimé en fin de test,
+# même en cas d'échec ou d'interruption.
+
+TEST_DIR="$(mktemp -d)"
+
+cleanup() {
+  rm -rf "$TEST_DIR"
+}
+trap cleanup EXIT INT TERM
+
+# Surcharger les chemins AVANT de sourcer common.sh
+export PROJECTS_FILE="$TEST_DIR/projects.md"
+export PATHS_FILE="$TEST_DIR/paths.local.md"
+export API_KEYS_FILE="$TEST_DIR/api-keys.local.md"
+
+# Fournir un projects.md minimal pour les fonctions qui en ont besoin
+cat > "$PROJECTS_FILE" <<'PROJEOF'
+# Registre de test
+PROJEOF
+
+touch "$PATHS_FILE"
+
 source "$SCRIPTS_DIR/common.sh"
 
 # Colors for output
@@ -118,12 +143,10 @@ test_get_effective_llm_model() {
   echo ""
   echo "=== Testing get_effective_llm_model() ==="
   
-  # Create a temporary project for testing
-  local test_project="TEST-PROVIDER"
-  
   # Test 1: No project config → should use hub or default
+  # Utilise un ID qui n'existe pas dans api-keys.local.md (sandbox vide)
   local model
-  model=$(get_effective_llm_model "$test_project")
+  model=$(get_effective_llm_model "TEST-PROVIDER-NOCONFIG")
   assert_equal "claude-sonnet-4-5" "$model" "default model returned when no project config"
 }
 

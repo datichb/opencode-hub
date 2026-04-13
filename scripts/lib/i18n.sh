@@ -90,6 +90,8 @@ t() {
       help.agent_create)      printf '%s' "agent create                   Créer un agent (interactif)" ;;
       help.agent_edit)        printf '%s' "agent edit <agent-id>          Modifier les skills et métadonnées" ;;
       help.agent_info)        printf '%s' "agent info <agent-id>          Afficher le détail d'un agent" ;;
+      help.agent_select)      printf '%s' "agent select <PROJECT_ID>      Choisir les agents à déployer pour un projet (interactif)" ;;
+      help.agent_mode)        printf '%s' "agent mode <PROJECT_ID>        Afficher / overrider les modes primary/subagent par projet" ;;
       help.agent_validate)    printf '%s' "agent validate [agent-id]      Valider la cohérence des agents (ou d'un seul)" ;;
       help.agent_keytest)     printf '%s' "agent keytest                  Diagnostic clavier (octets reçus par touche)" ;;
       help.skills_search)     printf '%s' "skills search <query>          Rechercher des skills sur context7" ;;
@@ -544,6 +546,8 @@ t_en() {
     help.agent_create)      printf '%s' "agent create                   Create an agent (interactive)" ;;
     help.agent_edit)        printf '%s' "agent edit <agent-id>          Edit skills and metadata" ;;
     help.agent_info)        printf '%s' "agent info <agent-id>          Show agent details" ;;
+    help.agent_select)      printf '%s' "agent select <PROJECT_ID>      Choose agents to deploy for a project (interactive)" ;;
+    help.agent_mode)        printf '%s' "agent mode <PROJECT_ID>        Show / override primary/subagent modes per project" ;;
     help.agent_validate)    printf '%s' "agent validate [agent-id]      Validate agent consistency (or a single one)" ;;
     help.agent_keytest)     printf '%s' "agent keytest                  Keyboard diagnostic (bytes received per key)" ;;
     help.skills_search)     printf '%s' "skills search <query>          Search for skills on context7" ;;
