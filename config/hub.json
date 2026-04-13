@@ -1,5 +1,5 @@
 {
-  "version": "1.0.1",
+  "version": "1.1.0",
   "default_target": "opencode",
   "active_targets": [
     "opencode"
