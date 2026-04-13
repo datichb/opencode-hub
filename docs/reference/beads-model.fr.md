@@ -246,11 +246,15 @@ Le hub supporte deux trackers : **Jira** et **GitLab**.
 | Commande | Description |
 |----------|-------------|
 | `oc beads tracker setup <PROJECT_ID>` | Configuration interactive des credentials |
-| `oc beads sync <PROJECT_ID>` | Synchronisation bidirectionnelle |
-| `oc beads sync <PROJECT_ID> --pull-only` | Import seul depuis le tracker |
-| `oc beads sync <PROJECT_ID> --push-only` | Export seul vers le tracker |
+| `oc beads tracker set-sync-mode <PROJECT_ID> [mode]` | Définir la direction de sync par défaut (`bidirectional` \| `pull-only` \| `push-only`) |
+| `oc beads sync <PROJECT_ID>` | Synchronisation selon le `Sync mode` configuré (défaut : bidirectional) |
+| `oc beads sync <PROJECT_ID> --pull-only` | Import seul depuis le tracker (surcharge le `Sync mode`) |
+| `oc beads sync <PROJECT_ID> --push-only` | Export seul vers le tracker (surcharge le `Sync mode`) |
 | `oc beads sync <PROJECT_ID> --dry-run` | Simulation sans écriture |
 | `oc beads tracker status <PROJECT_ID>` | État de la connexion au tracker |
+
+> **Champ `Sync mode`** — stocké dans `projects.md` sous `- Sync mode : <bidirectional|pull-only|push-only>`.
+> Valeur par défaut si absent : `bidirectional`. Un flag CLI (`--pull-only`, `--push-only`) prend toujours le dessus sur le mode configuré.
 
 ### Références externes
 

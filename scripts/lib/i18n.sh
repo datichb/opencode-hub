@@ -113,6 +113,7 @@ t() {
       help.beads_tracker_status) printf '%s' "beads tracker status <PROJECT_ID>        Affiche le statut de connexion au tracker" ;;
       help.beads_tracker_setup)  printf '%s' "beads tracker setup  <PROJECT_ID>        Configure le tracker (interactif)" ;;
       help.beads_tracker_switch) printf '%s' "beads tracker switch <PROJECT_ID>        Change de provider de tracker" ;;
+      help.beads_tracker_set_sync_mode) printf '%s' "beads tracker set-sync-mode <PROJECT_ID> [mode]  Définit le mode de sync (bidirectional|pull-only|push-only)" ;;
 
       # ── cmd-agent.sh ───────────────────────────────────────────────────────
       agent.title)            printf '%s' "oc agent — Gestion des agents canoniques" ;;
@@ -185,6 +186,15 @@ t() {
       beads.labels.failed)    printf '%s' "Échec enregistrement labels dans Beads" ;;
       beads.sync.failed)      printf '%s' "Échec du sync" ;;
       beads.sync.done)        printf '%s' "Sync terminé pour" ;;
+      beads.sync_mode.applied)    printf '%s' "Mode de sync appliqué :" ;;
+      beads.sync_mode.current)    printf '%s' "Mode de sync actuel :" ;;
+      beads.sync_mode.choose)     printf '%s' "Choisir le mode de sync pour" ;;
+      beads.sync_mode.desc_bidi)  printf '%s' "Import et export (défaut)" ;;
+      beads.sync_mode.desc_pull)  printf '%s' "Import seulement depuis le tracker" ;;
+      beads.sync_mode.desc_push)  printf '%s' "Export seulement vers le tracker" ;;
+      beads.sync_mode.invalid)    printf '%s' "Mode de sync invalide (bidirectional | pull-only | push-only)" ;;
+      beads.sync_mode.save_failed) printf '%s' "Échec de la sauvegarde du Sync mode pour" ;;
+      beads.sync_mode.saved)      printf '%s' "Sync mode enregistré :" ;;
       beads.status.open_tickets) printf '%s' "Tickets ouverts —" ;;
       beads.create.title)     printf '%s' "Créer un ticket —" ;;
       beads.create.title_required) printf '%s' "Titre requis" ;;
@@ -574,6 +584,7 @@ t_en() {
     help.beads_tracker_status) printf '%s' "beads tracker status <PROJECT_ID>        Show tracker connection status" ;;
     help.beads_tracker_setup)  printf '%s' "beads tracker setup  <PROJECT_ID>        Configure the tracker (interactive)" ;;
     help.beads_tracker_switch) printf '%s' "beads tracker switch <PROJECT_ID>        Switch tracker provider" ;;
+    help.beads_tracker_set_sync_mode) printf '%s' "beads tracker set-sync-mode <PROJECT_ID> [mode]  Set sync mode (bidirectional|pull-only|push-only)" ;;
 
     # ── cmd-agent.sh ─────────────────────────────────────────────────────────
     agent.title)            printf '%s' "oc agent — Canonical agent management" ;;
@@ -646,6 +657,15 @@ t_en() {
     beads.labels.failed)    printf '%s' "Failed to register labels in Beads" ;;
     beads.sync.failed)      printf '%s' "Sync failed for" ;;
     beads.sync.done)        printf '%s' "Sync done for" ;;
+    beads.sync_mode.applied)    printf '%s' "Sync mode applied:" ;;
+    beads.sync_mode.current)    printf '%s' "Current sync mode:" ;;
+    beads.sync_mode.choose)     printf '%s' "Choose sync mode for" ;;
+    beads.sync_mode.desc_bidi)  printf '%s' "Import and export (default)" ;;
+    beads.sync_mode.desc_pull)  printf '%s' "Import only from the tracker" ;;
+    beads.sync_mode.desc_push)  printf '%s' "Export only to the tracker" ;;
+    beads.sync_mode.invalid)    printf '%s' "Invalid sync mode (bidirectional | pull-only | push-only)" ;;
+    beads.sync_mode.save_failed) printf '%s' "Failed to save Sync mode for" ;;
+    beads.sync_mode.saved)      printf '%s' "Sync mode saved:" ;;
     beads.status.open_tickets) printf '%s' "Open tickets —" ;;
     beads.create.title)     printf '%s' "Create ticket —" ;;
     beads.create.title_required) printf '%s' "Title required" ;;

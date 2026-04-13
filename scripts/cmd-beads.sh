@@ -18,6 +18,7 @@ _beads_usage() {
   echo "  $(t help.beads_tracker_status)"
   echo "  $(t help.beads_tracker_setup)"
   echo "  $(t help.beads_tracker_switch)"
+  echo "  $(t help.beads_tracker_set_sync_mode)"
   echo ""
 }
 
@@ -253,6 +254,25 @@ cmd_sync() {
   local tracker
   tracker=$(_resolve_tracker "$id")
 
+  # Appliquer le Sync mode du projet si aucun flag de direction n'est passé en CLI
+  local has_direction_flag=false
+  for f in "${extra_flags[@]+"${extra_flags[@]}"}"; do
+    case "$f" in
+      --pull-only|--push-only) has_direction_flag=true; break ;;
+    esac
+  done
+
+  if [ "$has_direction_flag" = false ]; then
+    local sync_mode
+    sync_mode=$(get_project_sync_mode "$id")
+    case "$sync_mode" in
+      pull-only)  extra_flags=("--pull-only"  "${extra_flags[@]+"${extra_flags[@]}"}") ;;
+      push-only)  extra_flags=("--push-only"  "${extra_flags[@]+"${extra_flags[@]}"}") ;;
+      bidirectional|*) ;; # pas de flag à injecter
+    esac
+    [ "$sync_mode" != "bidirectional" ] && log_info "$(t beads.sync_mode.applied) ${sync_mode}  [$id]"
+  fi
+
   log_info "Sync $tracker ← → Beads  [$id]"
   # Protection bash 3.2 : ${extra_flags[@]+...} évite le crash si le tableau est vide avec set -u
   (cd "$path" && bd "$tracker" sync ${extra_flags[@]+"${extra_flags[@]}"}) \
@@ -376,6 +396,46 @@ cmd_tracker_switch() {
 }
 
 # ── Helpers de configuration ──────────────
+
+# tracker set-sync-mode — définir le mode de synchronisation par défaut
+cmd_tracker_set_sync_mode() {
+  require_project_id "$1"
+
+  local id
+  id=$(normalize_project_id "$1")
+  local new_mode="${2:-}"
+
+  # Mode non-interactif si la valeur est passée en argument
+  if [ -n "$new_mode" ]; then
+    case "$new_mode" in
+      bidirectional|pull-only|push-only) ;;
+      *) log_error "$(t beads.sync_mode.invalid)"; exit 1 ;;
+    esac
+  else
+    # Mode interactif
+    local current
+    current=$(get_project_sync_mode "$id")
+    echo ""
+    log_info "$(t beads.sync_mode.current) ${current}  [$id]"
+    echo ""
+    echo -e "${BOLD}$(t beads.sync_mode.choose) $id :${RESET}"
+    echo "  1) bidirectional  — $(t beads.sync_mode.desc_bidi)"
+    echo "  2) pull-only      — $(t beads.sync_mode.desc_pull)"
+    echo "  3) push-only      — $(t beads.sync_mode.desc_push)"
+    echo ""
+    read -rp "  Choix : " choice
+    case "$choice" in
+      1) new_mode="bidirectional" ;;
+      2) new_mode="pull-only" ;;
+      3) new_mode="push-only" ;;
+      *) log_error "$(t beads.tracker.invalid)"; exit 1 ;;
+    esac
+  fi
+
+  _set_project_sync_mode "$id" "$new_mode" \
+    || { log_error "$(t beads.sync_mode.save_failed) $id"; exit 1; }
+  log_success "$(t beads.sync_mode.saved) $new_mode  [$id]"
+}
 
 _setup_jira() {
   local path="$1" id="$2"
@@ -528,9 +588,10 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
       TRACKER_SUBCMD="${2:-}"
       TRACKER_PROJECT="${3:-}"
       case "$TRACKER_SUBCMD" in
-        status) cmd_tracker_status "$TRACKER_PROJECT" ;;
-        setup)  cmd_tracker_setup  "$TRACKER_PROJECT" ;;
-        switch) cmd_tracker_switch "$TRACKER_PROJECT" ;;
+        status)        cmd_tracker_status       "$TRACKER_PROJECT" ;;
+        setup)         cmd_tracker_setup        "$TRACKER_PROJECT" ;;
+        switch)        cmd_tracker_switch       "$TRACKER_PROJECT" ;;
+        set-sync-mode) cmd_tracker_set_sync_mode "$TRACKER_PROJECT" "${4:-}" ;;
         ""|--help|-h)
           echo ""
           echo -e "${BOLD}$(t beads.tracker.usage)${RESET}"

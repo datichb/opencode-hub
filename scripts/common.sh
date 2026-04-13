@@ -241,6 +241,47 @@ get_project_targets() {
   echo "${raw:-}" | tr -d '\r' | sed 's/^ *//;s/ *$//'
 }
 
+# Retourne le mode de synchronisation d'un projet (bidirectional|pull-only|push-only)
+# Retourne "bidirectional" si le champ est absent (comportement historique)
+get_project_sync_mode() {
+  local raw
+  raw=$(_get_project_field "$1" "Sync mode")
+  raw=$(echo "$raw" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
+  echo "${raw:-bidirectional}"
+}
+
+# Met à jour le champ "- Sync mode :" dans le bloc d'un projet dans projects.md
+# @param $1 — PROJECT_ID
+# @param $2 — valeur : bidirectional | pull-only | push-only
+_set_project_sync_mode() {
+  local id="$1" new_mode="$2"
+  # Whitelist stricte — protège contre l'injection Perl
+  case "$new_mode" in
+    bidirectional|pull-only|push-only) ;;
+    *) log_error "Sync mode invalide : $new_mode (bidirectional | pull-only | push-only)"; return 1 ;;
+  esac
+  # Remplacer si le champ existe déjà
+  if perl -i -0777pe "
+    s{(^## \Q${id}\E\n.*?)(- Sync mode : [^\n]+)}{\${1}- Sync mode : ${new_mode}}ms
+  " "$PROJECTS_FILE" 2>/dev/null && grep -q -- "- Sync mode : ${new_mode}" "$PROJECTS_FILE"; then
+    return 0
+  fi
+  # Insérer après "- Tracker :" si présent
+  if perl -i -0777pe "
+    s{(^## \Q${id}\E\n.*?- Tracker : [^\n]+\n)}{\${1}- Sync mode : ${new_mode}\n}ms
+  " "$PROJECTS_FILE" 2>/dev/null && grep -q -- "- Sync mode : ${new_mode}" "$PROJECTS_FILE"; then
+    return 0
+  fi
+  # Fallback : insérer après "- Labels :"
+  if perl -i -0777pe "
+    s{(^## \Q${id}\E\n.*?- Labels : [^\n]+\n)}{\${1}- Sync mode : ${new_mode}\n}ms
+  " "$PROJECTS_FILE" 2>/dev/null && grep -q -- "- Sync mode : ${new_mode}" "$PROJECTS_FILE"; then
+    return 0
+  fi
+  log_error "Impossible d'insérer le champ Sync mode dans le bloc $id de projects.md"
+  return 1
+}
+
 # Retourne la liste CSV des overrides de mode pour un projet
 # Format : "agent-id:mode,agent-id:mode,..."
 # Retourne "" si le champ est absent (= utiliser les modes du frontmatter agent)

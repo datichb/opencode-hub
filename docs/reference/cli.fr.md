@@ -602,6 +602,7 @@ oc beads <sous-commande>
 | `tracker status <PROJECT_ID>` | Affiche le statut de connexion au tracker |
 | `tracker setup <PROJECT_ID>` | Configure le tracker (interactif) |
 | `tracker switch <PROJECT_ID>` | Change de provider (jira ↔ gitlab ↔ none) |
+| `tracker set-sync-mode <PROJECT_ID> [mode]` | Définit la direction de sync par défaut pour le projet |
 
 ### `oc beads create`
 
@@ -629,8 +630,12 @@ oc beads create MON-APP "Fix race condition" --type fix --label bug  # avec flag
 
 | Option | Description |
 |--------|-------------|
-| `--pull-only` | Importe seulement depuis le tracker |
-| `--push-only` | Exporte seulement vers le tracker |
+| `--pull-only` | Importe seulement depuis le tracker (surcharge le `Sync mode` du projet) |
+| `--push-only` | Exporte seulement vers le tracker (surcharge le `Sync mode` du projet) |
 | `--dry-run` | Simule sans modifier |
+
+> La direction par défaut de `oc beads sync` est contrôlée par le champ `Sync mode` dans `projects.md`
+> (défini avec `oc beads tracker set-sync-mode <PROJECT_ID>`). Valeur par défaut : `bidirectional`.
+> Un flag CLI prend toujours le dessus sur le mode configuré.
 
 > `oc start` avertit automatiquement si `.beads/` n'est pas présent dans le projet.
