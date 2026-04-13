@@ -358,9 +358,9 @@ t() {
       uninstall.cancelled)    printf '%s' "Désinstallation annulée." ;;
 
       # ── cmd-init.sh ────────────────────────────────────────────────────────
-      init.gitignore_opencode_prompt) printf '%s' "Ajouter opencode.json au .gitignore du projet ? [y/N] : " ;;
-      init.gitignore_opencode_added)  printf '%s' "opencode.json ajouté au .gitignore du projet" ;;
-      init.gitignore_opencode_exists) printf '%s' "opencode.json déjà présent dans le .gitignore du projet" ;;
+      init.gitignore_opencode_prompt) printf '%s' "Ajouter opencode.json et .opencode/ au .gitignore du projet ? [y/N] : " ;;
+      init.gitignore_opencode_added)  printf '%s' "opencode.json et .opencode/ ajoutés au .gitignore du projet" ;;
+      init.gitignore_opencode_exists) printf '%s' "opencode.json et .opencode/ déjà présents dans le .gitignore du projet" ;;
 
       # ── cmd-list.sh ────────────────────────────────────────────────────────
       list.title)             printf '%s' "Projets enregistrés" ;;
@@ -819,9 +819,9 @@ t_en() {
     uninstall.cancelled)    printf '%s' "Uninstall cancelled." ;;
 
     # ── cmd-init.sh ──────────────────────────────────────────────────────────
-    init.gitignore_opencode_prompt) printf '%s' "Add opencode.json to the project .gitignore? [y/N]: " ;;
-    init.gitignore_opencode_added)  printf '%s' "opencode.json added to project .gitignore" ;;
-    init.gitignore_opencode_exists) printf '%s' "opencode.json already present in project .gitignore" ;;
+    init.gitignore_opencode_prompt) printf '%s' "Add opencode.json and .opencode/ to the project .gitignore? [y/N]: " ;;
+    init.gitignore_opencode_added)  printf '%s' "opencode.json and .opencode/ added to project .gitignore" ;;
+    init.gitignore_opencode_exists) printf '%s' "opencode.json and .opencode/ already present in project .gitignore" ;;
 
     # ── cmd-list.sh ──────────────────────────────────────────────────────────
     list.title)             printf '%s' "Registered projects" ;;

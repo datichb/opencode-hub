@@ -457,13 +457,21 @@ if [ -d "$PROJECT_PATH" ]; then
     log_info "Déployer plus tard : ./oc.sh deploy all $PROJECT_ID"
   fi
 
-  # Proposition d'ajout de opencode.json au .gitignore du projet
+  # Proposition d'ajout de opencode.json et .opencode/ au .gitignore du projet
   if [ -t 0 ]; then
     _prompt add_gitignore "$(t init.gitignore_opencode_prompt)"
     if [[ "${add_gitignore:-N}" =~ ^[Yy]$ ]]; then
       local _gitignore_path="$PROJECT_PATH/.gitignore"
+      local _already=true
       if [ ! -f "$_gitignore_path" ] || ! grep -qx "opencode.json" "$_gitignore_path"; then
         echo "opencode.json" >> "$_gitignore_path"
+        _already=false
+      fi
+      if [ ! -f "$_gitignore_path" ] || ! grep -qx ".opencode/" "$_gitignore_path"; then
+        echo ".opencode/" >> "$_gitignore_path"
+        _already=false
+      fi
+      if [ "$_already" = false ]; then
         log_info "$(t init.gitignore_opencode_added)"
       else
         log_info "$(t init.gitignore_opencode_exists)"

@@ -58,14 +58,20 @@ _build_provider_block() {
   esac
 }
 
-# Ajoute opencode.json au .gitignore du projet cible si une clé API est injectée
+# Ajoute opencode.json et .opencode/ au .gitignore du projet cible si une clé API est injectée
 _gitignore_opencode_json() {
   local deploy_dir="$1"
   local gitignore="$deploy_dir/.gitignore"
+  local _added=false
   if [ ! -f "$gitignore" ] || ! grep -qx "opencode.json" "$gitignore"; then
     echo "opencode.json" >> "$gitignore"
-    log_info "$(t init.gitignore_opencode_added)"
+    _added=true
   fi
+  if [ ! -f "$gitignore" ] || ! grep -qx ".opencode/" "$gitignore"; then
+    echo ".opencode/" >> "$gitignore"
+    _added=true
+  fi
+  [ "$_added" = true ] && log_info "$(t init.gitignore_opencode_added)"
 }
 
 adapter_validate() {
