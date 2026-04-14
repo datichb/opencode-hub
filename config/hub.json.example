@@ -5,7 +5,7 @@
     "opencode"
   ],
   "default_provider": {
-    "name": "anthropic",
+    "name": "",
     "api_key": "",
     "base_url": "",
     "model": ""

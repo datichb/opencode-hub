@@ -14,6 +14,7 @@ SCRIPTS_DIR="${SCRIPTS_DIR:-$HUB_DIR/scripts}"
 # Phase 2+ : sources canoniques (agents/ et config/)
 CANONICAL_AGENTS_DIR="$HUB_DIR/agents"
 HUB_CONFIG="$HUB_DIR/config/hub.json"
+HUB_CONFIG_EXAMPLE="$HUB_DIR/config/hub.json.example"
 LIB_DIR="$HUB_DIR/scripts/lib"
 ADAPTERS_DIR="$HUB_DIR/scripts/adapters"
 EXTERNAL_SKILLS_DIR="$HUB_DIR/skills/external"
@@ -107,6 +108,39 @@ ensure_projects_file() {
 *Ajouter un projet : ./oc.sh init*
 PROJEOF
       log_info "projects.md créé"
+    fi
+  fi
+}
+
+# Crée config/hub.json depuis hub.json.example s'il n'existe pas encore
+ensure_hub_config() {
+  if [ ! -f "$HUB_CONFIG" ]; then
+    if [ -f "$HUB_CONFIG_EXAMPLE" ]; then
+      cp "$HUB_CONFIG_EXAMPLE" "$HUB_CONFIG"
+      log_info "config/hub.json créé depuis hub.json.example — configurez votre provider avec : ./oc.sh provider set-default"
+    else
+      mkdir -p "$(dirname "$HUB_CONFIG")"
+      cat > "$HUB_CONFIG" <<'HUBEOF'
+{
+  "version": "1.1.0",
+  "default_target": "opencode",
+  "active_targets": ["opencode"],
+  "default_provider": {
+    "name": "",
+    "api_key": "",
+    "base_url": "",
+    "model": ""
+  },
+  "opencode": {
+    "model": "claude-sonnet-4-5",
+    "disabled_native_agents": ["build", "plan", "general", "explore"]
+  },
+  "cli": {
+    "language": "fr"
+  }
+}
+HUBEOF
+      log_info "config/hub.json créé (vide) — configurez votre provider avec : ./oc.sh provider set-default"
     fi
   fi
 }

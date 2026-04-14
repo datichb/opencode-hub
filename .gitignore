@@ -18,3 +18,4 @@ skills/external/
 .opencode/package.json
 .opencode/bun.lock
 config/hub.json
+opencode.json

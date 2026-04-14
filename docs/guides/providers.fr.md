@@ -311,12 +311,22 @@ ollama serve
 - **Masking**: When viewing configurations, API keys are masked to show only the first 8 characters.
 - **Environment-specific**: Each environment can have different provider configurations.
 
-### Files with Secrets
+### Fichiers avec secrets
 
-The following files contain API credentials and are automatically added to `.gitignore`:
+Les fichiers suivants contiennent des credentials et ne sont **jamais commités dans git** :
 
-- `config/hub.json` — if `default_provider.api_key` is set
-- `projects/api-keys.local.md` — always (per design)
+| Fichier | Pourquoi gitignored |
+|---------|---------------------|
+| `config/hub.json` | Contient l'`api_key` / bearer token — toujours gitignored |
+| `opencode.json` | Généré par `adapter_deploy`, reflète la config provider locale — toujours gitignored |
+| `projects/api-keys.local.md` | Clés API par projet — toujours gitignored par conception |
+
+Un template sans secret est commité dans `config/hub.json.example`. Au premier lancement (ou après un clone), `hub.json` est créé automatiquement depuis ce template s'il n'existe pas.
+
+```bash
+# Après un clone, lancez cette commande pour configurer votre provider :
+./oc.sh provider set-default
+```
 
 ## Troubleshooting
 

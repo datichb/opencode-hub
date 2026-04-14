@@ -8,6 +8,9 @@ SCRIPTS_DIR="$HUB_DIR/scripts"
 # Source des variables communes
 source "$SCRIPTS_DIR/common.sh"
 
+# S'assurer que hub.json existe (créé depuis hub.json.example si absent)
+ensure_hub_config
+
 COMMAND="${1:-}"
 
 case "$COMMAND" in

@@ -5,8 +5,9 @@ source "$LIB_DIR/agent-picker.sh"
 source "$LIB_DIR/target-picker.sh"
 resolve_oc_lang
 
-# S'assurer que projects.md existe avant toute opération
+# S'assurer que projects.md et hub.json existent avant toute opération
 ensure_projects_file
+ensure_hub_config
 
 PROJECT_ID="${1:-}"
 PROJECT_PATH="${2:-}"
