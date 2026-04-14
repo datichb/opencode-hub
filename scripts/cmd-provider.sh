@@ -37,10 +37,13 @@ _collect_credentials() {
   local provider_label="$2"
   local requires_api_key; requires_api_key=$(get_provider_info "$provider_name" "requires_api_key" 2>/dev/null || echo "true")
   local requires_base_url; requires_base_url=$(get_provider_info "$provider_name" "requires_base_url" 2>/dev/null || echo "false")
+  local requires_region; requires_region=$(get_provider_info "$provider_name" "requires_region" 2>/dev/null || echo "false")
   local default_base_url; default_base_url=$(get_provider_info "$provider_name" "default_base_url" 2>/dev/null || echo "")
+  local default_region; default_region=$(get_provider_info "$provider_name" "default_region" 2>/dev/null || echo "")
 
   _cred_api_key=""
   _cred_base_url="$default_base_url"
+  _cred_region=""
 
   if [ "$requires_api_key" = "true" ]; then
     echo ""
@@ -49,6 +52,16 @@ _collect_credentials() {
     stty echo 2>/dev/null
     trap - INT TERM
     echo ""
+  fi
+
+  if [ "$requires_region" = "true" ]; then
+    echo ""
+    if [ -n "$default_region" ]; then
+      read -rp "  Région AWS [${default_region}] : " _input_region
+      _cred_region="${_input_region:-$default_region}"
+    else
+      read -rp "  Région AWS (ex: us-east-1) : " _cred_region
+    fi
   fi
 
   if [ "$requires_base_url" = "true" ] && [ -n "$default_base_url" ]; then
@@ -148,14 +161,24 @@ cmd_set_default() {
     log_warn "$(t provider.api_key_empty_warn)"
   fi
 
-  # Mettre à jour hub.json
+  # Mettre à jour hub.json (avec région si bedrock)
   local tmp; tmp=$(mktemp)
-  jq \
-    --arg name "$selected_provider" \
-    --arg key  "$_cred_api_key" \
-    --arg url  "$_cred_base_url" \
-    '.default_provider.name = $name | .default_provider.api_key = $key | .default_provider.base_url = $url' \
-    "$HUB_CONFIG" > "$tmp"
+  if [ -n "${_cred_region:-}" ]; then
+    jq \
+      --arg name   "$selected_provider" \
+      --arg key    "$_cred_api_key" \
+      --arg url    "$_cred_base_url" \
+      --arg region "${_cred_region}" \
+      '.default_provider.name = $name | .default_provider.api_key = $key | .default_provider.base_url = $url | .default_provider.region = $region' \
+      "$HUB_CONFIG" > "$tmp"
+  else
+    jq \
+      --arg name "$selected_provider" \
+      --arg key  "$_cred_api_key" \
+      --arg url  "$_cred_base_url" \
+      '.default_provider.name = $name | .default_provider.api_key = $key | .default_provider.base_url = $url | del(.default_provider.region)' \
+      "$HUB_CONFIG" > "$tmp"
+  fi
   mv "$tmp" "$HUB_CONFIG"
 
   # Protéger hub.json si clé présente
@@ -263,7 +286,7 @@ cmd_set() {
     exit 1
   fi
 
-  _write_project_provider "$project_id" "$selected_provider" "$_cred_api_key" "$_cred_base_url"
+  _write_project_provider "$project_id" "$selected_provider" "$_cred_api_key" "$_cred_base_url" "${_cred_region:-}"
 
   echo ""
   log_success "$(t provider.set_done) ${project_id} : ${selected_label}"
@@ -275,7 +298,7 @@ cmd_set() {
 # Helper : écriture atomique dans api-keys.local.md
 # ────────────────────────────────────────────────────────────────────────────────
 _write_project_provider() {
-  local project_id="$1" provider="$2" api_key="$3" base_url="$4"
+  local project_id="$1" provider="$2" api_key="$3" base_url="$4" region="${5:-}"
   local api_keys_file="$API_KEYS_FILE"
   mkdir -p "$(dirname "$API_KEYS_FILE")"
 
@@ -288,6 +311,7 @@ _write_project_provider() {
 #   provider=anthropic
 #   api_key=sk-ant-...
 #   base_url=https://...   (optionnel)
+#   region=us-east-1       (optionnel, AWS Bedrock uniquement)
 
 HEADER
   fi
@@ -316,6 +340,7 @@ HEADER
     echo "provider=${provider}"
     echo "api_key=${api_key}"
     [ -n "$base_url" ] && echo "base_url=${base_url}"
+    [ -n "$region"   ] && echo "region=${region}"
   } >> "$api_keys_file"
 
   # S'assurer que api-keys.local.md est dans .gitignore

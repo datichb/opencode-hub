@@ -452,6 +452,11 @@ get_project_api_base_url() {
   _api_keys_get "$1" "base_url"
 }
 
+# Retourne la région AWS configurée pour un projet (vide si absent)
+get_project_api_region() {
+  _api_keys_get "$1" "region"
+}
+
 # Vérifie si une section [PROJECT_ID] existe dans api-keys.local.md
 # Utilise une comparaison de ligne exacte pour éviter les faux positifs
 # (ex: "[PROJ]" ne doit pas matcher "[PROJ-FULL]")

@@ -36,11 +36,13 @@
     },
     "bedrock": {
       "label": "AWS Bedrock (natif)",
-      "description": "AWS Bedrock via le provider natif amazon-bedrock d'OpenCode (bearer token)",
+      "description": "AWS Bedrock via le provider natif amazon-bedrock d'OpenCode (credentials AWS)",
       "requires_api_key": true,
       "requires_base_url": false,
+      "requires_region": true,
       "litellm": false,
       "default_base_url": "",
+      "default_region": "eu-west-3",
       "default_model": "amazon-bedrock/anthropic.claude-sonnet-4-5",
       "supported_targets": ["opencode"],
       "docs_url": "https://opencode.ai/docs/providers/#amazon-bedrock"

@@ -43,9 +43,14 @@ _build_provider_block() {
         | sed 's/^{//;s/^}$//;/^$/d'
       ;;
     bedrock)
-      # Provider natif amazon-bedrock d'OpenCode — le bearer token est injecté
-      # via AWS_BEARER_TOKEN_BEDROCK au lancement (adapter_start), pas dans opencode.json
-      jq -n '{"provider": {"amazon-bedrock": {}}}' \
+      # Provider natif amazon-bedrock d'OpenCode.
+      # La région est obligatoire ; la clé API stockée est le bearer token
+      # (injecté aussi via AWS_BEARER_TOKEN_BEDROCK au lancement par adapter_start).
+      local aws_region
+      aws_region=$(get_project_api_region "$project_id")
+      aws_region="${aws_region:-eu-west-3}"
+      jq -n --arg region "$aws_region" \
+        '{"provider": {"amazon-bedrock": {"options": {"region": $region}}}}' \
         | sed 's/^{//;s/^}$//;/^$/d'
       ;;
     mammouth|github-models|ollama|litellm)
@@ -159,9 +164,13 @@ adapter_deploy() {
           has_api_key=true
           ;;
         bedrock)
-          # Provider natif amazon-bedrock d'OpenCode — le bearer token est injecté
-          # via AWS_BEARER_TOKEN_BEDROCK au lancement (adapter_start), pas dans opencode.json
-          provider_block=$(jq -n '{"provider": {"amazon-bedrock": {}}}' \
+          # Provider natif amazon-bedrock d'OpenCode.
+          # La région est lue depuis hub.json (.default_provider.region) ou défaut eu-west-3.
+          local hub_aws_region
+          hub_aws_region=$(jq -r '.default_provider.region // empty' "$HUB_CONFIG" 2>/dev/null)
+          hub_aws_region="${hub_aws_region:-eu-west-3}"
+          provider_block=$(jq -n --arg region "$hub_aws_region" \
+            '{"provider": {"amazon-bedrock": {"options": {"region": $region}}}}' \
             | sed 's/^{//;s/^}$//;/^$/d')
           has_api_key=true
           ;;
