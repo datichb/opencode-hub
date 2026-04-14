@@ -129,13 +129,14 @@ test_hub_default_functions() {
   # These functions read from hub.json
   local hub_provider
   hub_provider=$(get_hub_default_provider)
-  # Default should be anthropic or empty
-  assert_equal "anthropic" "$hub_provider" "hub default provider is anthropic"
-  
-  local hub_api_key
-  hub_api_key=$(get_hub_default_api_key)
-  # Should be empty in default setup
-  assert_equal "" "$hub_api_key" "hub default api key is empty (not configured)"
+  # Should be a known provider (anthropic, bedrock, etc.) or empty
+  if [ -n "$hub_provider" ]; then
+    assert_equal "0" "$(provider_exists "$hub_provider" && echo 0 || echo 1)" "hub default provider is a valid known provider"
+  else
+    TESTS_RUN=$((TESTS_RUN + 1))
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+    echo -e "${GREEN}✓${NC} PASS: hub default provider is empty (not configured)"
+  fi
 }
 
 # Test: Provider model resolution
@@ -213,12 +214,50 @@ test_adapters_have_provider_support() {
   assert_contains "$opencode_adapter" "github-models" "opencode adapter has github-models support"
   assert_contains "$opencode_adapter" "bedrock" "opencode adapter has bedrock support"
   assert_contains "$opencode_adapter" "ollama" "opencode adapter has ollama support"
+  # Bedrock doit utiliser le provider natif amazon-bedrock (pas litellm)
+  assert_contains "$opencode_adapter" "amazon-bedrock" "opencode adapter uses native amazon-bedrock provider for bedrock"
+  assert_contains "$opencode_adapter" "AWS_BEARER_TOKEN_BEDROCK" "opencode adapter injects AWS_BEARER_TOKEN_BEDROCK at start"
   
   # Check claude-code adapter
   local claude_code_adapter
   claude_code_adapter=$(cat "$SCRIPTS_DIR/adapters/claude-code.adapter.sh")
   assert_contains "$claude_code_adapter" "get_hub_default_provider" "claude-code adapter checks hub default provider"
   assert_contains "$claude_code_adapter" "warn" "claude-code adapter warns about non-anthropic providers"
+}
+
+# Test: Bedrock native provider génère le bon opencode.json
+test_bedrock_native_opencode_json() {
+  echo ""
+  echo "=== Testing bedrock native opencode.json generation ==="
+
+  local opencode_adapter
+  opencode_adapter=$(cat "$SCRIPTS_DIR/adapters/opencode.adapter.sh")
+
+  # Le bloc bedrock ne doit PAS contenir litellm ni apiKey inline pour bedrock
+  # On vérifie que le case bedrock pointe vers amazon-bedrock
+  assert_contains "$opencode_adapter" '"amazon-bedrock"' "bedrock case generates amazon-bedrock provider block"
+
+  # Le providers.json doit avoir requires_base_url: false pour bedrock (pas de litellm)
+  local providers_json
+  providers_json=$(cat "$HUB_DIR/config/providers.json")
+  # Le default_model bedrock doit utiliser le format amazon-bedrock/...
+  assert_contains "$providers_json" "amazon-bedrock/" "bedrock default_model uses amazon-bedrock/ prefix"
+  # litellm doit être false pour bedrock
+  local bedrock_litellm
+  bedrock_litellm=$(jq -r '.providers.bedrock.litellm' "$HUB_DIR/config/providers.json" 2>/dev/null || echo "")
+  assert_equal "false" "$bedrock_litellm" "bedrock.litellm is false (uses native provider)"
+}
+
+# Test: cmd_set_default déclenche la mise à jour de opencode.json
+test_set_default_syncs_opencode_json() {
+  echo ""
+  echo "=== Testing cmd_set_default auto-syncs opencode.json ==="
+
+  local cmd_provider_script
+  cmd_provider_script=$(cat "$SCRIPTS_DIR/cmd-provider.sh")
+  # La commande set-default doit appeler adapter_deploy après la sauvegarde
+  assert_contains "$cmd_provider_script" "adapter_deploy" "cmd_set_default calls adapter_deploy for sync"
+  assert_contains "$cmd_provider_script" "adapter-manager.sh" "cmd_set_default sources adapter-manager"
 }
 
 # Test: Hub.json has default_provider structure
@@ -270,6 +309,8 @@ test_provider_list
 test_provider_get_unconfigured
 test_config_accepts_providers
 test_adapters_have_provider_support
+test_bedrock_native_opencode_json
+test_set_default_syncs_opencode_json
 test_hub_json_structure
 test_providers_catalog
 

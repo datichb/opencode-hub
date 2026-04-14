@@ -1,4 +1,29 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "claude-sonnet-4-5"
+  "model": "claude-sonnet-4-5",
+  "provider": {
+    "amazon-bedrock": {}
+  },
+  "agent": {
+    "auditor-accessibility": { "mode": "subagent" },
+    "auditor-architecture": { "mode": "subagent" },
+    "auditor-ecodesign": { "mode": "subagent" },
+    "auditor-observability": { "mode": "subagent" },
+    "auditor-performance": { "mode": "subagent" },
+    "auditor-privacy": { "mode": "subagent" },
+    "auditor-security": { "mode": "subagent" },
+    "developer-api": { "mode": "subagent" },
+    "developer-backend": { "mode": "subagent" },
+    "developer-data": { "mode": "subagent" },
+    "developer-devops": { "mode": "subagent" },
+    "developer-frontend": { "mode": "subagent" },
+    "developer-fullstack": { "mode": "subagent" },
+    "developer-mobile": { "mode": "subagent" },
+    "developer-platform": { "mode": "subagent" },
+    "developer-security": { "mode": "subagent" },
+    "build": { "disable": true },
+    "plan": { "disable": true },
+    "general": { "disable": true },
+    "explore": { "disable": true }
+  }
 }

@@ -1,23 +1,25 @@
-# Multi-Provider LLM Support
+> 🇬🇧 [Read in English](providers.en.md)
 
-OpenCode Hub supports multiple LLM providers, enabling you to choose the best solution for your needs. This guide explains how to configure and use different providers.
+# Support multi-fournisseurs LLM
 
-## Overview
+OpenCode Hub supporte plusieurs fournisseurs LLM, vous permettant de choisir la meilleure solution selon vos besoins. Ce guide explique comment configurer et utiliser les différents fournisseurs.
 
-### Supported Providers
+## Vue d'ensemble
 
-| Provider | Type | Targets | API Key | Default Base URL |
-|----------|------|---------|---------|------------------|
-| **Anthropic** | Native | OpenCode, Claude Code | Required | N/A |
-| **MammouthAI** | OpenAI-compatible | OpenCode | Required | `https://api.mammouth.ai/v1` |
-| **GitHub Models** | OpenAI-compatible | OpenCode | Required | `https://models.inference.ai.azure.com` |
-| **AWS Bedrock** | OpenAI-compatible | OpenCode | Required | N/A (AWS-specific) |
-| **Ollama** | OpenAI-compatible | OpenCode | Optional | `http://localhost:11434/v1` |
+### Fournisseurs supportés
 
-### Important Notes
+| Fournisseur | Type | Cibles | Credential | URL de base par défaut |
+|-------------|------|--------|------------|------------------------|
+| **Anthropic** | Natif | OpenCode, Claude Code | Clé API | N/A |
+| **MammouthAI** | OpenAI-compatible (litellm) | OpenCode | Clé API | `https://api.mammouth.ai/v1` |
+| **GitHub Models** | OpenAI-compatible (litellm) | OpenCode | Clé API | `https://models.inference.ai.azure.com` |
+| **AWS Bedrock** | Natif (`amazon-bedrock`) | OpenCode | Bearer token | N/A |
+| **Ollama** | OpenAI-compatible (litellm) | OpenCode | Optionnel | `http://localhost:11434/v1` |
 
-- **Claude Code limitation**: Claude Code only supports the `anthropic` provider (architectural constraint). Using other providers will trigger a warning.
-- **Model priority**: Models are resolved in this order: 1) Project config → 2) Hub default → 3) Environment variable → 4) Hub opencode.model → 5) Default fallback
+### Notes importantes
+
+- **Limitation Claude Code** : Claude Code ne supporte que le fournisseur `anthropic` (contrainte architecturale). L'utilisation d'autres fournisseurs déclenchera un avertissement.
+- **Priorité des modèles** : Les modèles sont résolus dans cet ordre : 1) Config projet → 2) Hub par défaut → 3) Variable d'env → 4) Hub opencode.model → 5) Fallback par défaut
 
 ## Configuration Levels
 
@@ -107,18 +109,18 @@ MammouthAI
 
 ### `oc provider set-default`
 
-Interactively configure the hub default provider:
+Configure interactivement le fournisseur par défaut du hub :
 
 ```bash
 ./oc.sh provider set-default
 ```
 
-You'll be prompted to:
-1. Select a provider
-2. Enter API credentials (masked input for security)
-3. Optionally enter a custom base URL
+Vous serez invité à :
+1. Sélectionner un fournisseur
+2. Saisir les credentials (saisie masquée pour la sécurité)
+3. Optionnellement saisir une URL de base personnalisée
 
-The configuration is written to `config/hub.json`.
+La configuration est écrite dans `config/hub.json` **et `opencode.json` est régénéré immédiatement** — pas besoin de lancer `oc deploy` manuellement.
 
 ### `oc provider set <PROJECT_ID> [PROVIDER] [API_KEY] [BASE_URL]`
 
@@ -204,22 +206,39 @@ GitHub Models provides access to various models via the GitHub/Copilot API.
 
 ### AWS Bedrock
 
-**Supported targets**: OpenCode
+**Cibles supportées** : OpenCode
 
-AWS Bedrock provides access to foundation models via AWS.
+AWS Bedrock utilise le **provider natif `amazon-bedrock`** intégré à OpenCode. Il requiert un **bearer token Bedrock** (clé à long terme générée depuis la console Amazon Bedrock).
 
-1. Configure AWS credentials (e.g., `aws configure` or environment variables)
-2. Run `./oc.sh provider set-default`
-3. Choose "AWS Bedrock" (option 4)
-4. Enter your AWS region/credentials
-5. Set the base URL to your Bedrock endpoint
+**Fonctionnement :**
+- Le bearer token est stocké dans `config/hub.json` (jamais dans `opencode.json`)
+- `opencode.json` est généré avec un bloc `amazon-bedrock` vide
+- Au lancement via `oc start`, le token est injecté automatiquement comme `AWS_BEARER_TOKEN_BEDROCK`
+
+1. Générez un bearer token depuis la [console Amazon Bedrock](https://console.aws.amazon.com/bedrock/) sous **API Keys**
+2. Demandez l'accès aux modèles dans le **Model catalog**
+3. Lancez `./oc.sh provider set-default`
+4. Choisissez "AWS Bedrock (natif)" et entrez votre bearer token
+
+Le `opencode.json` généré ressemblera à :
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "amazon-bedrock/anthropic.claude-sonnet-4-5",
+  "provider": {
+    "amazon-bedrock": {}
+  }
+}
+```
+
+Au lancement, `oc start` injecte :
+```bash
+AWS_BEARER_TOKEN_BEDROCK=<token> opencode
+```
 
 ```bash
-# Or via config:
-./oc.sh config set MY-PROJECT \
-  --provider bedrock \
-  --api-key your-aws-key \
-  --base-url https://bedrock.us-east-1.amazonaws.com
+# Ou configurer par projet :
+./oc.sh config set MON-PROJET --provider bedrock --api-key <bearer-token>
 ```
 
 ### Ollama (Local)
@@ -323,15 +342,15 @@ This is expected. Claude Code only supports Anthropic. If you need to use Claude
 3. Ensure the provider service is running (especially for Ollama)
 4. Test your API key directly with the provider's CLI or API
 
-### Provider changes not applied
+### Les changements de provider ne sont pas appliqués
 
-After changing a provider configuration, redeploy:
+Après `oc provider set-default`, `opencode.json` est automatiquement régénéré — aucune étape manuelle nécessaire.
+
+Pour les changements au niveau projet (`oc config set` ou `oc provider set`), redéployez :
 
 ```bash
-./oc.sh deploy all MY-PROJECT
+./oc.sh deploy all MON-PROJET
 ```
-
-This regenerates `opencode.json` with the new provider settings.
 
 ## Related Commands
 

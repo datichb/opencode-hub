@@ -42,8 +42,14 @@ _build_provider_block() {
         '{"provider": {"anthropic": {"apiKey": $key}}}' \
         | sed 's/^{//;s/^}$//;/^$/d'
       ;;
-    mammouth|github-models|bedrock|ollama|litellm)
-      # Tous les autres providers utilisent le mécanisme OpenAI-compatible via litellm
+    bedrock)
+      # Provider natif amazon-bedrock d'OpenCode — le bearer token est injecté
+      # via AWS_BEARER_TOKEN_BEDROCK au lancement (adapter_start), pas dans opencode.json
+      jq -n '{"provider": {"amazon-bedrock": {}}}' \
+        | sed 's/^{//;s/^}$//;/^$/d'
+      ;;
+    mammouth|github-models|ollama|litellm)
+      # Providers OpenAI-compatible via litellm
       base_url=$(get_project_api_base_url "$project_id")
       if [ -n "$base_url" ]; then
         jq -n --arg key "$api_key" --arg url "$base_url" \
@@ -152,7 +158,15 @@ adapter_deploy() {
             | sed 's/^{//;s/^}$//;/^$/d')
           has_api_key=true
           ;;
-        mammouth|github-models|bedrock|ollama|litellm)
+        bedrock)
+          # Provider natif amazon-bedrock d'OpenCode — le bearer token est injecté
+          # via AWS_BEARER_TOKEN_BEDROCK au lancement (adapter_start), pas dans opencode.json
+          provider_block=$(jq -n '{"provider": {"amazon-bedrock": {}}}' \
+            | sed 's/^{//;s/^}$//;/^$/d')
+          has_api_key=true
+          ;;
+        mammouth|github-models|ollama|litellm)
+          # Providers OpenAI-compatible via litellm
           if [ -n "$hub_base_url" ]; then
             provider_block=$(jq -n --arg key "$hub_api_key" --arg url "$hub_base_url" \
               '{"provider": {"litellm": {"npm": "@ai-sdk/openai-compatible", "options": {"apiKey": $key, "baseURL": $url}}}}' \
@@ -278,9 +292,27 @@ adapter_start() {
   local args=()
   [ -n "$agent"  ] && args+=(--agent "$agent")
   [ -n "$prompt" ] && args+=(--prompt "$prompt")
-  if [ ${#args[@]} -gt 0 ]; then
-    exec opencode "${args[@]}"
-  else
-    exec opencode
+
+  # Résoudre le provider effectif (projet > hub) et injecter les credentials si besoin
+  local effective_provider=""
+  if [ -n "$project_id" ] && api_keys_entry_exists "$project_id" 2>/dev/null; then
+    effective_provider=$(get_project_api_provider "$project_id" 2>/dev/null || echo "")
   fi
+  [ -z "$effective_provider" ] && effective_provider=$(get_hub_default_provider 2>/dev/null || echo "")
+
+  if [ "$effective_provider" = "bedrock" ]; then
+    # Récupérer le bearer token depuis la config projet ou hub
+    local bearer_token=""
+    if [ -n "$project_id" ] && api_keys_entry_exists "$project_id" 2>/dev/null; then
+      bearer_token=$(get_project_api_key "$project_id" 2>/dev/null || echo "")
+    fi
+    [ -z "$bearer_token" ] && bearer_token=$(get_hub_default_api_key 2>/dev/null || echo "")
+
+    if [ -n "$bearer_token" ]; then
+      log_info "[opencode] Injection AWS_BEARER_TOKEN_BEDROCK"
+      exec env AWS_BEARER_TOKEN_BEDROCK="$bearer_token" opencode "${args[@]}"
+    fi
+  fi
+
+  exec opencode "${args[@]}"
 }

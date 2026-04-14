@@ -17,3 +17,4 @@ skills/external/
 .opencode/node_modules/
 .opencode/package.json
 .opencode/bun.lock
+config/hub.json

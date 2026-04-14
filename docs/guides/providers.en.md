@@ -8,13 +8,13 @@ OpenCode Hub supports multiple LLM providers, enabling you to choose the best so
 
 ### Supported Providers
 
-| Provider | Type | Targets | API Key | Default Base URL |
-|----------|------|---------|---------|------------------|
-| **Anthropic** | Native | OpenCode, Claude Code | Required | N/A |
-| **MammouthAI** | OpenAI-compatible | OpenCode | Required | `https://api.mammouth.ai/v1` |
-| **GitHub Models** | OpenAI-compatible | OpenCode | Required | `https://models.inference.ai.azure.com` |
-| **AWS Bedrock** | OpenAI-compatible | OpenCode | Required | N/A (AWS-specific) |
-| **Ollama** | OpenAI-compatible | OpenCode | Optional | `http://localhost:11434/v1` |
+| Provider | Type | Targets | Credential | Default Base URL |
+|----------|------|---------|------------|------------------|
+| **Anthropic** | Native | OpenCode, Claude Code | API key | N/A |
+| **MammouthAI** | OpenAI-compatible (litellm) | OpenCode | API key | `https://api.mammouth.ai/v1` |
+| **GitHub Models** | OpenAI-compatible (litellm) | OpenCode | API key | `https://models.inference.ai.azure.com` |
+| **AWS Bedrock** | Native (`amazon-bedrock`) | OpenCode | Bearer token | N/A |
+| **Ollama** | OpenAI-compatible (litellm) | OpenCode | Optional | `http://localhost:11434/v1` |
 
 ### Important Notes
 
@@ -120,7 +120,7 @@ You'll be prompted to:
 2. Enter API credentials (masked input for security)
 3. Optionally enter a custom base URL
 
-The configuration is written to `config/hub.json`.
+The configuration is written to `config/hub.json` **and `opencode.json` is regenerated immediately** — no need to run `oc deploy` manually.
 
 ### `oc provider set <PROJECT_ID> [PROVIDER] [API_KEY] [BASE_URL]`
 
@@ -208,20 +208,37 @@ GitHub Models provides access to various models via the GitHub/Copilot API.
 
 **Supported targets**: OpenCode
 
-AWS Bedrock provides access to foundation models via AWS.
+AWS Bedrock uses the **native `amazon-bedrock` provider** built into OpenCode. It requires a **Bedrock bearer token** (generated from the Amazon Bedrock console — long-term API key).
 
-1. Configure AWS credentials (e.g., `aws configure` or environment variables)
-2. Run `./oc.sh provider set-default`
-3. Choose "AWS Bedrock" (option 4)
-4. Enter your AWS region/credentials
-5. Set the base URL to your Bedrock endpoint
+**How it works:**
+- The bearer token is stored in `config/hub.json` (never in `opencode.json`)
+- `opencode.json` is generated with an empty `amazon-bedrock` provider block
+- When you run `oc start`, the token is injected as `AWS_BEARER_TOKEN_BEDROCK` automatically
+
+1. Generate a bearer token from the [Amazon Bedrock console](https://console.aws.amazon.com/bedrock/) under **API Keys**
+2. Request model access in the **Model catalog** for the models you want
+3. Run `./oc.sh provider set-default`
+4. Choose "AWS Bedrock (natif)" and enter your bearer token
+
+The generated `opencode.json` will look like:
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "amazon-bedrock/anthropic.claude-sonnet-4-5",
+  "provider": {
+    "amazon-bedrock": {}
+  }
+}
+```
+
+At launch, `oc start` injects:
+```bash
+AWS_BEARER_TOKEN_BEDROCK=<token> opencode
+```
 
 ```bash
-# Or via config:
-./oc.sh config set MY-PROJECT \
-  --provider bedrock \
-  --api-key your-aws-key \
-  --base-url https://bedrock.us-east-1.amazonaws.com
+# Or configure per-project:
+./oc.sh config set MY-PROJECT --provider bedrock --api-key <bearer-token>
 ```
 
 ### Ollama (Local)
@@ -327,13 +344,13 @@ This is expected. Claude Code only supports Anthropic. If you need to use Claude
 
 ### Provider changes not applied
 
-After changing a provider configuration, redeploy:
+After `oc provider set-default`, `opencode.json` is automatically regenerated — no manual step needed.
+
+For project-level changes (`oc config set` or `oc provider set`), redeploy:
 
 ```bash
 ./oc.sh deploy all MY-PROJECT
 ```
-
-This regenerates `opencode.json` with the new provider settings.
 
 ## Related Commands
 

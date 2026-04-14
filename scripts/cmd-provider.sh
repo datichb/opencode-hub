@@ -170,7 +170,22 @@ cmd_set_default() {
   echo ""
   log_success "$(t provider.saved) ${selected_label}"
   [ -n "$_cred_base_url" ] && log_info "URL de base : ${_cred_base_url}"
-  log_info "$(t provider.apply_hint)"
+
+  # Régénérer opencode.json du hub immédiatement pour que la config soit active
+  source "$HUB_DIR/scripts/lib/adapter-manager.sh"
+  local active_targets
+  active_targets=$(get_active_targets)
+  local _synced=false
+  while IFS= read -r target; do
+    [ -z "$target" ] && continue
+    load_adapter "$target"
+    if declare -F adapter_deploy &>/dev/null; then
+      log_info "Mise à jour de ${target} (opencode.json)..."
+      adapter_deploy "$HUB_DIR" ""
+      _synced=true
+    fi
+  done <<< "$active_targets"
+  [ "$_synced" = false ] && log_info "$(t provider.apply_hint)"
 }
 
 # ────────────────────────────────────────────────────────────────────────────────

@@ -35,15 +35,15 @@
       "docs_url": "https://docs.github.com/en/github-models"
     },
     "bedrock": {
-      "label": "AWS Bedrock (via litellm)",
-      "description": "AWS Bedrock models via litellm proxy",
+      "label": "AWS Bedrock (natif)",
+      "description": "AWS Bedrock via le provider natif amazon-bedrock d'OpenCode (bearer token)",
       "requires_api_key": true,
-      "requires_base_url": true,
-      "litellm": true,
+      "requires_base_url": false,
+      "litellm": false,
       "default_base_url": "",
-      "default_model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+      "default_model": "amazon-bedrock/anthropic.claude-sonnet-4-5",
       "supported_targets": ["opencode"],
-      "docs_url": "https://docs.litellm.ai/docs/providers/bedrock"
+      "docs_url": "https://opencode.ai/docs/providers/#amazon-bedrock"
     },
     "ollama": {
       "label": "Ollama (local)",
