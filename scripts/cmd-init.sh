@@ -457,18 +457,22 @@ if [ -d "$PROJECT_PATH" ]; then
     log_info "Déployer plus tard : ./oc.sh deploy all $PROJECT_ID"
   fi
 
-  # Proposition d'ajout de opencode.json et .opencode/ au .gitignore du projet
+  # Proposition d'ajout de opencode.json et .opencode/ au .git/info/exclude du projet
+  # (utilise exclude plutôt que .gitignore pour ne pas polluer le dépôt partagé)
   if [ -t 0 ]; then
     _prompt add_gitignore "$(t init.gitignore_opencode_prompt)"
     if [[ "${add_gitignore:-N}" =~ ^[Yy]$ ]]; then
-      _gitignore_path="$PROJECT_PATH/.gitignore"
+      _exclude_dir="$PROJECT_PATH/.git/info"
+      _exclude_file="$_exclude_dir/exclude"
+      # S'assurer que .git/info/ existe (cas git init récent)
+      mkdir -p "$_exclude_dir"
       _already=true
-      if [ ! -f "$_gitignore_path" ] || ! grep -qx "opencode.json" "$_gitignore_path"; then
-        echo "opencode.json" >> "$_gitignore_path"
+      if [ ! -f "$_exclude_file" ] || ! grep -qx "opencode.json" "$_exclude_file"; then
+        echo "opencode.json" >> "$_exclude_file"
         _already=false
       fi
-      if [ ! -f "$_gitignore_path" ] || ! grep -qx ".opencode/" "$_gitignore_path"; then
-        echo ".opencode/" >> "$_gitignore_path"
+      if [ ! -f "$_exclude_file" ] || ! grep -qx ".opencode/" "$_exclude_file"; then
+        echo ".opencode/" >> "$_exclude_file"
         _already=false
       fi
       if [ "$_already" = false ]; then

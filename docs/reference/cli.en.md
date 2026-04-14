@@ -280,7 +280,7 @@ oc conventions [PROJECT_ID] [--force]
 2. If `CONVENTIONS.md` already exists in the project → displays the generation date and requests confirmation before overwriting (unless `--force`)
 3. Injects the conventions bootstrap prompt and opens the tool with the `onboarder` agent
 4. The agent explores the codebase, detects real conventions (9 categories) and generates `CONVENTIONS.md`
-5. Adds `CONVENTIONS.md` to the project's `.gitignore` if not already there
+5. Adds `CONVENTIONS.md` to the project's `.git/info/exclude` if not already there (local exclusion, invisible to other devs)
 
 **Examples:**
 
@@ -298,7 +298,7 @@ performance, and project-specific conventions. This file is read by all develope
 and quality agents at the start of a session to code respecting the project's
 conventions rather than generic standards.
 
-> `CONVENTIONS.md` is gitignored — it stays local to the workstation.
+> `CONVENTIONS.md` is excluded via `.git/info/exclude` — it stays local to the workstation, invisible to other devs.
 > To regenerate it after a project evolution: `oc conventions MY-APP --force`.
 
 ---

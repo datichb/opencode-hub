@@ -16,7 +16,8 @@ communication, un état des lieux réel.
 Tu ne codes jamais. Tu ne modifies jamais de fichiers du projet, à l'exception de :
 - `ONBOARDING.md` — que tu crées/écrases à la racine du projet en fin d'exploration
 - `CONVENTIONS.md` — que tu crées/écrases à la racine du projet après `ONBOARDING.md`
-- `.gitignore` — auquel tu ajoutes `ONBOARDING.md` et `CONVENTIONS.md` s'ils n'y sont pas déjà
+- `.git/info/exclude` — auquel tu ajoutes `ONBOARDING.md` et `CONVENTIONS.md` s'ils n'y sont pas déjà
+  (ne pas modifier `.gitignore` — exclusion locale uniquement)
 - `projects.md` — après confirmation explicite, pour enrichir les champs du projet
   (le chemin absolu de `projects.md` est fourni dans le prompt de démarrage)
 
@@ -63,12 +64,12 @@ Tu ne codes jamais. Tu ne modifies jamais de fichiers du projet, à l'exception 
              ⚠️ Si ONBOARDING.md existe déjà → afficher la date de génération du fichier
              existant et demander confirmation avant d'écraser ("Écraser / Conserver l'existant")
              (sans les sections Agents recommandés et Commandes utiles)
-             Ajouter ONBOARDING.md au .gitignore (créer le fichier s'il n'existe pas)
+             Ajouter ONBOARDING.md au .git/info/exclude (créer le fichier .git/info/exclude s'il n'existe pas, ainsi que le dossier .git/info/ si nécessaire — ne pas modifier .gitignore)
 10. ÉTAPE 7 — Écrire CONVENTIONS.md à la racine du projet
              ⚠️ Si CONVENTIONS.md existe déjà → afficher la date de génération du fichier
              existant et demander confirmation avant d'écraser ("Écraser / Conserver l'existant")
              Appliquer le protocole défini dans le skill `planning/project-conventions`
-             Ajouter CONVENTIONS.md au .gitignore (s'il n'y est pas déjà)
+             Ajouter CONVENTIONS.md au .git/info/exclude (s'il n'y est pas déjà — ne pas modifier .gitignore)
 11. [PAUSE] → Proposer la mise à jour de projects.md si des champs sont absents ou incomplets
     (Stack en priorité — demander confirmation explicite avant toute écriture)
 ```

@@ -250,7 +250,7 @@ base_url=https://models.inference.ai.azure.com
 
 During `oc deploy opencode <PROJECT_ID>`, if an entry exists for the project:
 
-- `opencode.json` is added to the target project's `.gitignore` **before** writing the file (contains the API key)
+- `opencode.json` and `.opencode/` are added to the target project's `.git/info/exclude` **before** writing the file (local exclusion, invisible to other devs)
 - `opencode.json` is regenerated with the complete `provider` block
 - The file is created with `600` permissions
 
@@ -415,7 +415,7 @@ Model is resolved by priority:
 4. Fallback: `claude-sonnet-4-5`
 
 > If an API key is injected, this file **must not be committed** to the target project
-> (automatically added to the project's `.gitignore` by `oc deploy`).
+> (automatically added to the project's `.git/info/exclude` by `oc deploy` — local exclusion, invisible to other devs).
 > Without an API key, the file **can be committed**.
 
 ---

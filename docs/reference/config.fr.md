@@ -248,7 +248,7 @@ base_url=https://models.inference.ai.azure.com
 
 Lors d'un `oc deploy opencode <PROJECT_ID>`, si une entrée existe pour le projet :
 
-- `opencode.json` est ajouté au `.gitignore` du projet cible **avant** l'écriture du fichier (contient la clé API)
+- `opencode.json` et `.opencode/` sont ajoutés au `.git/info/exclude` du projet cible **avant** l'écriture du fichier (exclusion locale, invisible pour les autres devs)
 - `opencode.json` est régénéré avec le bloc `provider` complet
 - Le fichier est créé avec les permissions `600`
 
@@ -413,7 +413,7 @@ Le modèle est résolu par priorité :
 4. Fallback : `claude-sonnet-4-5`
 
 > Si une clé API est injectée, ce fichier **ne doit pas être commité** dans le projet cible
-> (ajouté automatiquement au `.gitignore` du projet par `oc deploy`).
+> (ajouté automatiquement au `.git/info/exclude` du projet par `oc deploy` — exclusion locale, invisible pour les autres devs).
 > Sans clé API, le fichier **peut être commité**.
 
 ---

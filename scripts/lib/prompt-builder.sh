@@ -254,15 +254,16 @@ Workflow :
 7. ÉTAPE 6 — Détecter les conventions et écrire CONVENTIONS.md à la racine du projet
 
 Règles :
-- Lecture seule — tu ne modifies aucun fichier du projet (sauf ONBOARDING.md, CONVENTIONS.md et .gitignore)
+- Lecture seule — tu ne modifies aucun fichier du projet (sauf ONBOARDING.md, CONVENTIONS.md et .git/info/exclude)
 - Rapport honnête : signaler les points critiques (🔴), importants (🟠), améliorations (🟡)
 - Lister les zones d'ombre non résolues
 - Après le rapport complet dans la conversation, écrire ONBOARDING.md à la racine du projet
   (sans les sections Agents recommandés et Commandes utiles)
 - Ensuite, détecter et écrire CONVENTIONS.md à la racine du projet
   (linting config, tsconfig, package.json, git log, fichiers représentatifs de la codebase)
-- Ajouter ONBOARDING.md et CONVENTIONS.md au .gitignore du projet
-  (créer le fichier .gitignore s'il n'existe pas)
+- Ajouter ONBOARDING.md et CONVENTIONS.md au .git/info/exclude du projet
+  (créer le fichier .git/info/exclude s'il n'existe pas, ainsi que le dossier .git/info/ si nécessaire)
+  Ne pas modifier le .gitignore du projet — utiliser uniquement .git/info/exclude (exclusion locale)
 - Si le champ Stack est absent ou incomplet dans projects.md, le mettre à jour
   (chemin fourni ci-dessus — demander confirmation explicite avant toute écriture)
 EOF
@@ -317,7 +318,8 @@ Workflow :
 8. ÉTAPE 7 — Écrire CONVENTIONS.md à la racine du projet
    ⚠️ Si CONVENTIONS.md existe déjà → afficher la date du fichier existant et demander confirmation
    avant d'écraser ("Écraser / Conserver l'existant")
-   Ajouter CONVENTIONS.md au .gitignore s'il n'y est pas déjà
+    Ajouter CONVENTIONS.md au .git/info/exclude s'il n'y est pas déjà
+    (ne pas modifier le .gitignore du projet — exclusion locale uniquement)
 
 Règles :
 - Baser chaque convention sur un fichier réellement lu — ne jamais inventer

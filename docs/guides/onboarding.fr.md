@@ -193,7 +193,7 @@ Je génère ? (Générer / Annuler)
 
 ### 7. Génération des fichiers
 
-L'onboarder écrit les deux fichiers à la racine du projet et les ajoute au `.gitignore` :
+L'onboarder écrit les deux fichiers à la racine du projet et les ajoute au `.git/info/exclude` (exclusion locale, invisible pour les autres devs) :
 
 - `ONBOARDING.md` — rapport de contexte (sans les sections Agents recommandés et Commandes utiles)
 - `CONVENTIONS.md` — conventions détectées dans la codebase (formatage, nommage, architecture, tests, Git…)

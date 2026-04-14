@@ -195,7 +195,7 @@ Generate? (Generate / Cancel)
 
 ### 7. File generation
 
-The onboarder writes the two files at the project root and adds them to `.gitignore`:
+The onboarder writes the two files at the project root and adds them to `.git/info/exclude` (local exclusion, invisible to other devs):
 
 - `ONBOARDING.md` — context report (without the Recommended agents and Useful commands sections)
 - `CONVENTIONS.md` — conventions detected in the codebase (formatting, naming, architecture, tests, Git…)

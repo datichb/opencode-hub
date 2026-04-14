@@ -278,7 +278,7 @@ oc conventions [PROJECT_ID] [--force]
 2. Si `CONVENTIONS.md` existe déjà dans le projet → affiche la date de génération et demande confirmation avant d'écraser (sauf `--force`)
 3. Injecte le prompt de bootstrap conventions et ouvre l'outil avec l'agent `onboarder`
 4. L'agent explore la codebase, détecte les conventions réelles (9 catégories) et génère `CONVENTIONS.md`
-5. Ajoute `CONVENTIONS.md` au `.gitignore` du projet s'il n'y est pas déjà
+5. Ajoute `CONVENTIONS.md` au `.git/info/exclude` du projet s'il n'y est pas déjà (exclusion locale, invisible pour les autres devs)
 
 **Exemples :**
 
@@ -296,7 +296,7 @@ performance, et conventions spécifiques. Ce fichier est lu par tous les agents
 développeurs et qualité en début de session pour coder en respectant les
 conventions du projet plutôt que les standards génériques.
 
-> `CONVENTIONS.md` est gitignored — il reste local au poste de travail.
+> `CONVENTIONS.md` est exclu via `.git/info/exclude` — il reste local au poste de travail, invisible pour les autres devs.
 > Pour le régénérer après une évolution du projet : `oc conventions MON-APP --force`.
 
 ---

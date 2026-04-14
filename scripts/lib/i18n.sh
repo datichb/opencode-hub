@@ -368,9 +368,9 @@ t() {
       uninstall.cancelled)    printf '%s' "Désinstallation annulée." ;;
 
       # ── cmd-init.sh ────────────────────────────────────────────────────────
-      init.gitignore_opencode_prompt) printf '%s' "Ajouter opencode.json et .opencode/ au .gitignore du projet ? [y/N] : " ;;
-      init.gitignore_opencode_added)  printf '%s' "opencode.json et .opencode/ ajoutés au .gitignore du projet" ;;
-      init.gitignore_opencode_exists) printf '%s' "opencode.json et .opencode/ déjà présents dans le .gitignore du projet" ;;
+      init.gitignore_opencode_prompt) printf '%s' "Ajouter opencode.json et .opencode/ au .git/info/exclude du projet ? [y/N] : " ;;
+      init.gitignore_opencode_added)  printf '%s' "opencode.json et .opencode/ ajoutés au .git/info/exclude du projet (exclusion locale, invisible pour les autres devs)" ;;
+      init.gitignore_opencode_exists) printf '%s' "opencode.json et .opencode/ déjà présents dans le .git/info/exclude du projet" ;;
 
       # ── cmd-list.sh ────────────────────────────────────────────────────────
       list.title)             printf '%s' "Projets enregistrés" ;;
@@ -839,9 +839,9 @@ t_en() {
     uninstall.cancelled)    printf '%s' "Uninstall cancelled." ;;
 
     # ── cmd-init.sh ──────────────────────────────────────────────────────────
-    init.gitignore_opencode_prompt) printf '%s' "Add opencode.json and .opencode/ to the project .gitignore? [y/N]: " ;;
-    init.gitignore_opencode_added)  printf '%s' "opencode.json and .opencode/ added to project .gitignore" ;;
-    init.gitignore_opencode_exists) printf '%s' "opencode.json and .opencode/ already present in project .gitignore" ;;
+    init.gitignore_opencode_prompt) printf '%s' "Add opencode.json and .opencode/ to the project .git/info/exclude? [y/N]: " ;;
+    init.gitignore_opencode_added)  printf '%s' "opencode.json and .opencode/ added to project .git/info/exclude (local exclusion, invisible to other devs)" ;;
+    init.gitignore_opencode_exists) printf '%s' "opencode.json and .opencode/ already present in project .git/info/exclude" ;;
 
     # ── cmd-list.sh ──────────────────────────────────────────────────────────
     list.title)             printf '%s' "Registered projects" ;;
