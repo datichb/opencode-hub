@@ -200,6 +200,8 @@ t() {
       beads.create.title_required) printf '%s' "Titre requis" ;;
       beads.create.creating)  printf '%s' "Création du ticket dans" ;;
       beads.create.failed)    printf '%s' "Échec de bd create" ;;
+      beads.gitignore_added)  printf '%s' ".beads/ ajouté au .git/info/exclude du projet (exclusion locale, invisible aux autres développeurs)" ;;
+      beads.gitignore_exists) printf '%s' ".beads/ déjà présent dans .git/info/exclude du projet" ;;
 
       # ── cmd-target.sh ──────────────────────────────────────────────────────
       target.title)           printf '%s' "oc target — Gestion des cibles de déploiement par projet" ;;
@@ -671,6 +673,8 @@ t_en() {
     beads.create.title_required) printf '%s' "Title required" ;;
     beads.create.creating)  printf '%s' "Creating ticket in" ;;
     beads.create.failed)    printf '%s' "bd create failed" ;;
+    beads.gitignore_added)  printf '%s' ".beads/ added to project .git/info/exclude (local exclusion, invisible to other developers)" ;;
+    beads.gitignore_exists) printf '%s' ".beads/ already present in project .git/info/exclude" ;;
 
     # ── cmd-target.sh ────────────────────────────────────────────────────────
     target.title)           printf '%s' "oc target — Deploy target management by project" ;;
