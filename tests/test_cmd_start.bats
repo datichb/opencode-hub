@@ -139,8 +139,8 @@ teardown() {
   # bd init a été appelé
   grep -q "bd init" "$BD_CALLS_LOG"
   # Les labels ont été propagés
-  grep -q "bd label add feature" "$BD_CALLS_LOG"
-  grep -q "bd label add fix" "$BD_CALLS_LOG"
+  grep -q "bd label create feature" "$BD_CALLS_LOG"
+  grep -q "bd label create fix" "$BD_CALLS_LOG"
 }
 
 @test "cmd-start : respecte le refus de bd init (n)" {
@@ -180,8 +180,8 @@ teardown() {
 
   # Vérifier les appels bd
   grep -q "bd init" "$BD_CALLS_LOG"
-  grep -q "bd label add feature" "$BD_CALLS_LOG"
-  grep -q "bd label add fix" "$BD_CALLS_LOG"
+  grep -q "bd label create feature" "$BD_CALLS_LOG"
+  grep -q "bd label create fix" "$BD_CALLS_LOG"
 }
 
 # ── Proposition upstream git ──────────────────────────────────────────────────
