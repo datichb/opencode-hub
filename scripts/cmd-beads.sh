@@ -20,6 +20,12 @@ _beads_usage() {
   echo "  $(t help.beads_tracker_switch)"
   echo "  $(t help.beads_tracker_set_sync_mode)"
   echo ""
+  echo -e "${BOLD}$(t beads.ui.title)${RESET}"
+  echo "  $(t help.beads_ui_install)"
+  echo "  $(t help.beads_ui_start)"
+  echo "  $(t help.beads_ui_stop)"
+  echo "  $(t help.beads_ui_status)"
+  echo ""
 }
 
 # ── Vérifier que bd est disponible ────────
@@ -27,6 +33,48 @@ _require_bd() {
   if ! command -v bd &>/dev/null; then
     log_error "$(t beads.not_installed)"
     log_info  "$(t beads.install_hint)"
+    exit 1
+  fi
+}
+
+# ── Installer bdui (logique partagée) ────
+_install_bdui() {
+  if command -v bdui &>/dev/null; then
+    log_success "$(t beads.ui.already_installed)"
+    return 0
+  fi
+  if ! command -v npm &>/dev/null; then
+    log_error "$(t beads.ui.install_no_npm)"
+    return 1
+  fi
+  log_info "$(t beads.ui.installing)"
+  if npm install -g beads-ui; then
+    log_success "$(t beads.ui.installed)"
+    return 0
+  else
+    log_error "$(t beads.ui.install_failed)"
+    return 1
+  fi
+}
+
+# ── Vérifier que bdui est disponible ──────
+# Si bdui est absent et que stdin est un terminal, propose l'installation.
+_require_bdui() {
+  if command -v bdui &>/dev/null; then
+    return 0
+  fi
+  log_warn "$(t beads.ui.not_installed)"
+  if [ -t 0 ]; then
+    read -rp "  $(t beads.ui.install_prompt)" _bdui_install_choice </dev/tty
+    if [[ "${_bdui_install_choice:-Y}" =~ ^[Yy]$ ]]; then
+      _install_bdui || exit 1
+      return 0
+    else
+      log_info "$(t beads.ui.install_cancelled)"
+      exit 1
+    fi
+  else
+    log_info "$(t beads.ui.install_hint)"
     exit 1
   fi
 }
@@ -184,7 +232,7 @@ cmd_init() {
     while IFS= read -r _lbl; do
       _lbl=$(printf '%s' "$_lbl" | sed 's/^ *//;s/ *$//')
       [ -z "$_lbl" ] && continue
-      if ! (cd "$path" && bd label add "$_lbl"); then
+      if ! (cd "$path" && bd label create "$_lbl"); then
         _labels_ok=0
       fi
     done < <(printf '%s\n' "$labels" | tr ',' '\n')
@@ -194,6 +242,9 @@ cmd_init() {
       log_warn "$(t beads.labels.failed)"
     fi
   fi
+
+  # Importer les labels depuis le tracker distant si configuré (GitLab ou Jira)
+  _fetch_tracker_labels "$id" "$path"
 
   # Ajouter .beads/ au .git/info/exclude du projet (exclusion locale des credentials tracker)
   local _exclude_dir="$path/.git/info"
@@ -522,6 +573,75 @@ _setup_gitlab() {
   log_info "Synchroniser : ./oc.sh beads sync $id --pull-only --dry-run"
 }
 
+# ══════════════════════════════════════════
+# Import des labels depuis le tracker distant (GitLab ou Jira)
+# Usage : _fetch_tracker_labels <project_id> <project_path>
+# Appelé automatiquement depuis cmd_init si un tracker est configuré.
+# Skip silencieux si aucun tracker configuré ou si jq est absent.
+# ══════════════════════════════════════════
+_fetch_tracker_labels() {
+  local id="$1" path="$2"
+
+  # jq est requis pour parser le JSON des APIs
+  if ! command -v jq &>/dev/null; then
+    return 0
+  fi
+
+  # ── Tentative GitLab ──────────────────────────────────────────────────────
+  local gl_url gl_token gl_project_id
+  gl_url=$(cd "$path"    && bd config get gitlab.url        2>/dev/null || true)
+  gl_token=$(cd "$path"  && bd config get gitlab.token      2>/dev/null || true)
+  gl_project_id=$(cd "$path" && bd config get gitlab.project_id 2>/dev/null || true)
+
+  if [ -n "$gl_url" ] && [ -n "$gl_token" ] && [ -n "$gl_project_id" ]; then
+    log_info "$(t beads.labels.fetching_gitlab)"
+    local labels_json
+    # Encoder le project_id pour l'URL (namespace/project → namespace%2Fproject)
+    local encoded_id
+    encoded_id=$(printf '%s' "$gl_project_id" | sed 's|/|%2F|g')
+    labels_json=$(curl -sf --header "PRIVATE-TOKEN: $gl_token" \
+      "${gl_url%/}/api/v4/projects/${encoded_id}/labels?per_page=100" 2>/dev/null || true)
+    if [ -n "$labels_json" ]; then
+      local count=0
+      while IFS= read -r lbl; do
+        [ -z "$lbl" ] && continue
+        (cd "$path" && bd label create "$lbl" 2>/dev/null) && count=$((count + 1)) || true
+      done < <(printf '%s' "$labels_json" | jq -r '.[].name' 2>/dev/null)
+      if [ "$count" -gt 0 ]; then
+        log_success "$(t beads.labels.imported_gitlab) $count"
+      fi
+    fi
+    return 0
+  fi
+
+  # ── Tentative Jira ────────────────────────────────────────────────────────
+  local jira_url jira_user jira_token
+  jira_url=$(cd "$path"   && bd config get jira.url   2>/dev/null || true)
+  jira_user=$(cd "$path"  && bd config get jira.user  2>/dev/null || true)
+  jira_token=$(cd "$path" && bd config get jira.token 2>/dev/null || true)
+
+  if [ -n "$jira_url" ] && [ -n "$jira_user" ] && [ -n "$jira_token" ]; then
+    log_info "$(t beads.labels.fetching_jira)"
+    local labels_json
+    labels_json=$(curl -sf -u "$jira_user:$jira_token" \
+      "${jira_url%/}/rest/api/2/label?maxResults=200" 2>/dev/null || true)
+    if [ -n "$labels_json" ]; then
+      local count=0
+      while IFS= read -r lbl; do
+        [ -z "$lbl" ] && continue
+        (cd "$path" && bd label create "$lbl" 2>/dev/null) && count=$((count + 1)) || true
+      done < <(printf '%s' "$labels_json" | jq -r '.values[]' 2>/dev/null)
+      if [ "$count" -gt 0 ]; then
+        log_success "$(t beads.labels.imported_jira) $count"
+      fi
+    fi
+    return 0
+  fi
+
+  # Aucun tracker configuré → skip silencieux
+  return 0
+}
+
 # Normalise un gitlab.project_id saisi par l'utilisateur.
 # - Si la valeur est une URL complète (commence par http:// ou https://),
 #   on en extrait le chemin relatif à la base GitLab.
@@ -639,9 +759,60 @@ cmd_create() {
   (cd "$path" && bd "${bd_args[@]}") || { log_error "$(t beads.create.failed)"; exit 1; }
 }
 
+# ══════════════════════════════════════════
+# Sous-commandes : ui *
+# ══════════════════════════════════════════
+
+# ui install — installe bdui
+cmd_ui_install() {
+  _install_bdui
+}
+
+# ui start — lance bdui dans le répertoire du projet
+cmd_ui_start() {
+  _require_bdui
+
+  local id="${1:-}"
+  local port="${2:-}"
+
+  local bdui_args=("start" "--open")
+  [ -n "$port" ] && bdui_args+=("--port" "$port")
+
+  if [ -n "$id" ]; then
+    id=$(normalize_project_id "$id")
+    local path
+    path=$(resolve_project_path "$id")
+    _require_beads_init "$path" "$id"
+    log_info "$(t beads.ui.starting) $id ($path)"
+    (cd "$path" && bdui "${bdui_args[@]}" &) || { log_error "Échec de bdui start"; exit 1; }
+  else
+    log_info "$(t beads.ui.starting) ."
+    (bdui "${bdui_args[@]}" &) || { log_error "Échec de bdui start"; exit 1; }
+  fi
+  log_success "$(t beads.ui.started)"
+}
+
+# ui stop — arrête bdui
+cmd_ui_stop() {
+  _require_bdui
+  log_info "$(t beads.ui.stopping)"
+  if bdui stop; then
+    log_success "$(t beads.ui.stopped)"
+  else
+    log_error "Échec de bdui stop"
+    exit 1
+  fi
+}
+
+# ui status — affiche le statut bdui
+cmd_ui_status() {
+  _require_bdui
+  log_info "$(t beads.ui.status_cmd)"
+  bdui status
+}
+
 # ── Dispatch (exécuté seulement si le script est lancé directement) ────────
-if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
-  source "$(cd "$(dirname "$0")" && pwd)/common.sh"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then  source "$(cd "$(dirname "$0")" && pwd)/common.sh"
   resolve_oc_lang
 
   SUBCMD="${1:-}"
@@ -669,6 +840,20 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
           echo -e "${BOLD}$(t beads.tracker.usage)${RESET}"
           ;;
         *) log_error "$(t beads.tracker.unknown_subcmd) $TRACKER_SUBCMD"; exit 1 ;;
+      esac
+      ;;
+    ui)
+      UI_SUBCMD="${2:-}"
+      case "$UI_SUBCMD" in
+        install) cmd_ui_install ;;
+        start)  cmd_ui_start  "${3:-}" "${4:-}" ;;
+        stop)   cmd_ui_stop ;;
+        status) cmd_ui_status ;;
+        ""|--help|-h)
+          echo ""
+          echo -e "${BOLD}$(t beads.ui.usage)${RESET}"
+          ;;
+        *) log_error "$(t beads.ui.unknown_subcmd) $UI_SUBCMD"; exit 1 ;;
       esac
       ;;
     ""|--help|-h) _beads_usage ;;

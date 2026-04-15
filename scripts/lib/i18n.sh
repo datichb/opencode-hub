@@ -114,6 +114,10 @@ t() {
       help.beads_tracker_setup)  printf '%s' "beads tracker setup  <PROJECT_ID>        Configure le tracker (interactif)" ;;
       help.beads_tracker_switch) printf '%s' "beads tracker switch <PROJECT_ID>        Change de provider de tracker" ;;
       help.beads_tracker_set_sync_mode) printf '%s' "beads tracker set-sync-mode <PROJECT_ID> [mode]  Définit le mode de sync (bidirectional|pull-only|push-only)" ;;
+      help.beads_ui_start)       printf '%s' "beads ui start [PROJECT_ID] [--port N]   Lance beads-ui (interface graphique locale)" ;;
+      help.beads_ui_stop)        printf '%s' "beads ui stop                            Arrête le serveur beads-ui" ;;
+      help.beads_ui_status)      printf '%s' "beads ui status                          Affiche le statut du serveur beads-ui" ;;
+      help.beads_ui_install)     printf '%s' "beads ui install                         Installe beads-ui (npm install -g beads-ui)" ;;
 
       # ── cmd-agent.sh ───────────────────────────────────────────────────────
       agent.title)            printf '%s' "oc agent — Gestion des agents canoniques" ;;
@@ -182,8 +186,12 @@ t() {
       beads.tracker.usage)    printf '%s' "Usage : ./oc.sh beads tracker <status|setup|switch> <PROJECT_ID>" ;;
       beads.status.all)       printf '%s' "Statut Beads — tous les projets" ;;
       beads.open_hint)        printf '%s' "Vous pouvez maintenant utiliser bd directement dans ce répertoire" ;;
-      beads.labels.registered) printf '%s' "Labels enregistrés :" ;;
-      beads.labels.failed)    printf '%s' "Échec enregistrement labels dans Beads" ;;
+      beads.labels.registered)       printf '%s' "Labels enregistrés :" ;;
+      beads.labels.failed)           printf '%s' "Échec enregistrement labels dans Beads" ;;
+      beads.labels.fetching_gitlab)  printf '%s' "Import des labels depuis GitLab…" ;;
+      beads.labels.fetching_jira)    printf '%s' "Import des labels depuis Jira…" ;;
+      beads.labels.imported_gitlab)  printf '%s' "Labels GitLab importés :" ;;
+      beads.labels.imported_jira)    printf '%s' "Labels Jira importés :" ;;
       beads.sync.failed)      printf '%s' "Échec du sync" ;;
       beads.sync.done)        printf '%s' "Sync terminé pour" ;;
       beads.sync_mode.applied)    printf '%s' "Mode de sync appliqué :" ;;
@@ -202,6 +210,25 @@ t() {
       beads.create.failed)    printf '%s' "Échec de bd create" ;;
       beads.gitignore_added)  printf '%s' ".beads/ ajouté au .git/info/exclude du projet (exclusion locale, invisible aux autres développeurs)" ;;
       beads.gitignore_exists) printf '%s' ".beads/ déjà présent dans .git/info/exclude du projet" ;;
+
+      # ── beads ui (bdui) ────────────────────────────────────────────────────
+      beads.ui.title)         printf '%s' "Interface graphique Beads (bdui) :" ;;
+      beads.ui.not_installed) printf '%s' "bdui n'est pas installé" ;;
+      beads.ui.install_hint)  printf '%s' "Installation : npm install -g beads-ui" ;;
+      beads.ui.install_prompt) printf '%s' "Installer Beads UI maintenant ? [Y/n] : " ;;
+      beads.ui.installing)    printf '%s' "Installation de beads-ui via npm..." ;;
+      beads.ui.installed)     printf '%s' "Beads UI installé avec succès" ;;
+      beads.ui.install_failed) printf '%s' "Échec installation Beads UI — installer manuellement : npm install -g beads-ui" ;;
+      beads.ui.install_no_npm) printf '%s' "npm non disponible — installer Beads UI manuellement : npm install -g beads-ui" ;;
+      beads.ui.install_cancelled) printf '%s' "Installation annulée — installer plus tard : npm install -g beads-ui" ;;
+      beads.ui.already_installed) printf '%s' "Beads UI déjà installé" ;;
+      beads.ui.starting)      printf '%s' "Démarrage de beads-ui dans" ;;
+      beads.ui.started)       printf '%s' "beads-ui démarré — ouvrir http://localhost:3000" ;;
+      beads.ui.stopping)      printf '%s' "Arrêt de beads-ui..." ;;
+      beads.ui.stopped)       printf '%s' "beads-ui arrêté" ;;
+      beads.ui.status_cmd)    printf '%s' "Statut beads-ui" ;;
+      beads.ui.unknown_subcmd) printf '%s' "Sous-commande ui inconnue :" ;;
+      beads.ui.usage)         printf '%s' "Usage : ./oc.sh beads ui <install|start|stop|status> [PROJECT_ID]" ;;
 
       # ── cmd-target.sh ──────────────────────────────────────────────────────
       target.title)           printf '%s' "oc target — Gestion des cibles de déploiement par projet" ;;
@@ -318,6 +345,8 @@ t() {
       start.dev_label_exclusive) printf '%s' "--label et --assignee sont mutuellement exclusifs" ;;
       start.dev_needs_dev_flag) printf '%s' "--label et --assignee nécessitent --dev" ;;
       start.dev_onboard_exclusive) printf '%s' "--dev et --onboard sont mutuellement exclusifs" ;;
+      start.ui_starting)      printf '%s' "Démarrage de beads-ui en arrière-plan..." ;;
+      start.ui_not_installed) printf '%s' "bdui non installé — installer : npm install -g beads-ui" ;;
 
       # ── install/uninstall ──────────────────────────────────────────────────
       install.title)          printf '%s' "Installation opencode-hub" ;;
@@ -364,6 +393,17 @@ t() {
       install.beads_no_tools) printf '%s' "Homebrew et curl introuvables — installer Beads manuellement :" ;;
       install.beads_later)    printf '%s' "Beads non installé — à installer plus tard : brew install beads" ;;
       install.ready)          printf '%s' "opencode-hub prêt !" ;;
+
+      # ── install bdui ───────────────────────────────────────────────────────
+      install.bdui_title)     printf '%s' "Installation de Beads UI (bdui)" ;;
+      install.bdui_already)   printf '%s' "Beads UI déjà installé" ;;
+      install.bdui_missing)   printf '%s' "Beads UI (bdui) non détecté — interface graphique locale pour bd" ;;
+      install.bdui_install_prompt) printf '%s' "Installer Beads UI ? [Y/n] : " ;;
+      install.bdui_installing) printf '%s' "Installation de beads-ui via npm..." ;;
+      install.bdui_installed) printf '%s' "Beads UI installé" ;;
+      install.bdui_failed)    printf '%s' "Échec installation Beads UI — installer manuellement : npm install -g beads-ui" ;;
+      install.bdui_no_npm)    printf '%s' "npm non disponible — installer Beads UI manuellement : npm install -g beads-ui" ;;
+      install.bdui_later)     printf '%s' "Beads UI non installé — à installer plus tard : npm install -g beads-ui" ;;
       uninstall.title)        printf '%s' "Désinstallation opencode-hub" ;;
       uninstall.confirm)      printf '%s' "Désinstaller opencode-hub ? [y/N] " ;;
       uninstall.done)         printf '%s' "Désinstallation terminée." ;;
@@ -432,6 +472,12 @@ t() {
       update.skills_stale_warn) printf '%s' "Des skills ont été mis à jour — les agents déployés dans vos projets peuvent être obsolètes." ;;
       update.sync_now)        printf '%s' "  Lancer oc sync pour redéployer sur tous les projets ? [Y/n] : " ;;
       update.sync_later)      printf '%s' "Redéployer manuellement : ./oc.sh sync" ;;
+
+      # ── update bdui ────────────────────────────────────────────────────────
+      update.bdui_updating)   printf '%s' "Mise à jour de Beads UI (bdui)..." ;;
+      update.bdui_done)       printf '%s' "Beads UI mis à jour" ;;
+      update.bdui_failed)     printf '%s' "Échec mise à jour Beads UI — npm update -g beads-ui" ;;
+      update.bdui_missing)    printf '%s' "bdui non installé — lancez : oc install" ;;
 
       # ── cmd-upgrade.sh ─────────────────────────────────────────────────────
       upgrade.title)              printf '%s' "Mise à jour du hub" ;;
@@ -587,6 +633,10 @@ t_en() {
     help.beads_tracker_setup)  printf '%s' "beads tracker setup  <PROJECT_ID>        Configure the tracker (interactive)" ;;
     help.beads_tracker_switch) printf '%s' "beads tracker switch <PROJECT_ID>        Switch tracker provider" ;;
     help.beads_tracker_set_sync_mode) printf '%s' "beads tracker set-sync-mode <PROJECT_ID> [mode]  Set sync mode (bidirectional|pull-only|push-only)" ;;
+    help.beads_ui_start)       printf '%s' "beads ui start [PROJECT_ID] [--port N]   Start beads-ui (local graphical interface)" ;;
+    help.beads_ui_stop)        printf '%s' "beads ui stop                            Stop the beads-ui server" ;;
+    help.beads_ui_status)      printf '%s' "beads ui status                          Show beads-ui server status" ;;
+    help.beads_ui_install)     printf '%s' "beads ui install                         Install beads-ui (npm install -g beads-ui)" ;;
 
     # ── cmd-agent.sh ─────────────────────────────────────────────────────────
     agent.title)            printf '%s' "oc agent — Canonical agent management" ;;
@@ -655,8 +705,12 @@ t_en() {
     beads.tracker.usage)    printf '%s' "Usage: ./oc.sh beads tracker <status|setup|switch> <PROJECT_ID>" ;;
     beads.status.all)       printf '%s' "Beads status — all projects" ;;
     beads.open_hint)        printf '%s' "You can now use bd directly in this directory" ;;
-    beads.labels.registered) printf '%s' "Labels registered:" ;;
-    beads.labels.failed)    printf '%s' "Failed to register labels in Beads" ;;
+    beads.labels.registered)       printf '%s' "Labels registered:" ;;
+    beads.labels.failed)           printf '%s' "Failed to register labels in Beads" ;;
+    beads.labels.fetching_gitlab)  printf '%s' "Importing labels from GitLab…" ;;
+    beads.labels.fetching_jira)    printf '%s' "Importing labels from Jira…" ;;
+    beads.labels.imported_gitlab)  printf '%s' "GitLab labels imported:" ;;
+    beads.labels.imported_jira)    printf '%s' "Jira labels imported:" ;;
     beads.sync.failed)      printf '%s' "Sync failed for" ;;
     beads.sync.done)        printf '%s' "Sync done for" ;;
     beads.sync_mode.applied)    printf '%s' "Sync mode applied:" ;;
@@ -675,6 +729,25 @@ t_en() {
     beads.create.failed)    printf '%s' "bd create failed" ;;
     beads.gitignore_added)  printf '%s' ".beads/ added to project .git/info/exclude (local exclusion, invisible to other developers)" ;;
     beads.gitignore_exists) printf '%s' ".beads/ already present in project .git/info/exclude" ;;
+
+    # ── beads ui (bdui) ──────────────────────────────────────────────────────
+    beads.ui.title)         printf '%s' "Beads graphical interface (bdui):" ;;
+    beads.ui.not_installed) printf '%s' "bdui is not installed" ;;
+    beads.ui.install_hint)  printf '%s' "Install: npm install -g beads-ui" ;;
+    beads.ui.install_prompt) printf '%s' "Install Beads UI now? [Y/n]: " ;;
+    beads.ui.installing)    printf '%s' "Installing beads-ui via npm..." ;;
+    beads.ui.installed)     printf '%s' "Beads UI installed successfully" ;;
+    beads.ui.install_failed) printf '%s' "Beads UI installation failed — install manually: npm install -g beads-ui" ;;
+    beads.ui.install_no_npm) printf '%s' "npm not available — install Beads UI manually: npm install -g beads-ui" ;;
+    beads.ui.install_cancelled) printf '%s' "Installation cancelled — install later: npm install -g beads-ui" ;;
+    beads.ui.already_installed) printf '%s' "Beads UI already installed" ;;
+    beads.ui.starting)      printf '%s' "Starting beads-ui in" ;;
+    beads.ui.started)       printf '%s' "beads-ui started — open http://localhost:3000" ;;
+    beads.ui.stopping)      printf '%s' "Stopping beads-ui..." ;;
+    beads.ui.stopped)       printf '%s' "beads-ui stopped" ;;
+    beads.ui.status_cmd)    printf '%s' "beads-ui status" ;;
+    beads.ui.unknown_subcmd) printf '%s' "Unknown ui subcommand:" ;;
+    beads.ui.usage)         printf '%s' "Usage: ./oc.sh beads ui <install|start|stop|status> [PROJECT_ID]" ;;
 
     # ── cmd-target.sh ────────────────────────────────────────────────────────
     target.title)           printf '%s' "oc target — Deploy target management by project" ;;
@@ -791,6 +864,8 @@ t_en() {
     start.dev_label_exclusive) printf '%s' "--label and --assignee are mutually exclusive" ;;
     start.dev_needs_dev_flag) printf '%s' "--label and --assignee require --dev" ;;
     start.dev_onboard_exclusive) printf '%s' "--dev and --onboard are mutually exclusive" ;;
+    start.ui_starting)      printf '%s' "Starting beads-ui in the background..." ;;
+    start.ui_not_installed) printf '%s' "bdui not installed — install: npm install -g beads-ui" ;;
 
     # ── install/uninstall ────────────────────────────────────────────────────
     install.title)          printf '%s' "opencode-hub installation" ;;
@@ -837,6 +912,17 @@ t_en() {
     install.beads_no_tools) printf '%s' "Homebrew and curl not found — install Beads manually:" ;;
     install.beads_later)    printf '%s' "Beads not installed — install later: brew install beads" ;;
     install.ready)          printf '%s' "opencode-hub ready!" ;;
+
+    # ── install bdui ─────────────────────────────────────────────────────────
+    install.bdui_title)     printf '%s' "Beads UI (bdui) installation" ;;
+    install.bdui_already)   printf '%s' "Beads UI already installed" ;;
+    install.bdui_missing)   printf '%s' "Beads UI (bdui) not detected — local graphical interface for bd" ;;
+    install.bdui_install_prompt) printf '%s' "Install Beads UI? [Y/n]: " ;;
+    install.bdui_installing) printf '%s' "Installing beads-ui via npm..." ;;
+    install.bdui_installed) printf '%s' "Beads UI installed" ;;
+    install.bdui_failed)    printf '%s' "Beads UI installation failed — install manually: npm install -g beads-ui" ;;
+    install.bdui_no_npm)    printf '%s' "npm not available — install Beads UI manually: npm install -g beads-ui" ;;
+    install.bdui_later)     printf '%s' "Beads UI not installed — install later: npm install -g beads-ui" ;;
     uninstall.title)        printf '%s' "opencode-hub uninstall" ;;
     uninstall.confirm)      printf '%s' "Uninstall opencode-hub? [y/N] " ;;
     uninstall.done)         printf '%s' "Uninstall complete." ;;
@@ -905,6 +991,12 @@ t_en() {
     update.skills_stale_warn) printf '%s' "Some skills were updated — deployed agents in your projects may be outdated." ;;
     update.sync_now)        printf '%s' "  Run oc sync to redeploy on all projects? [Y/n]: " ;;
     update.sync_later)      printf '%s' "Redeploy manually: ./oc.sh sync" ;;
+
+    # ── update bdui ──────────────────────────────────────────────────────────
+    update.bdui_updating)   printf '%s' "Updating Beads UI (bdui)..." ;;
+    update.bdui_done)       printf '%s' "Beads UI updated" ;;
+    update.bdui_failed)     printf '%s' "Beads UI update failed — npm update -g beads-ui" ;;
+    update.bdui_missing)    printf '%s' "bdui not installed — run: oc install" ;;
 
     # ── cmd-upgrade.sh ───────────────────────────────────────────────────────
     upgrade.title)              printf '%s' "Upgrading the hub" ;;

@@ -97,17 +97,22 @@ Labels réservés par le hub. Ils ne doivent pas être détournés pour un autre
 ### Commandes labels
 
 ```bash
-# Ajouter un label
+# Créer un label au niveau projet (l'enregistrer pour utilisation dans le projet)
+bd label create <label>
+
+# Ajouter un label à un ticket
 bd label add <ID> <label>
 # ou
 bd update <ID> --add-label <label>
 
-# Retirer un label
+# Retirer un label d'un ticket
 bd update <ID> --remove-label <label>
 
 # Lister les labels disponibles dans le projet
 bd label list-all
 ```
+
+> **Import automatique à l'init** — lors de `oc beads init`, si un tracker (GitLab ou Jira) est déjà configuré, les labels du tracker distant sont automatiquement récupérés et enregistrés dans Beads via `bd label create`. Les labels définis dans `projects.md` sont toujours enregistrés en premier ; les labels distants sont fusionnés par-dessus (union). `projects.md` n'est jamais modifié automatiquement.
 
 ---
 

@@ -227,9 +227,9 @@ EOF
   [ "$status" -eq 0 ]
   # bd init a été appelé
   grep -q "bd init" "$BD_CALLS_LOG"
-  # Les labels feature,fix ont été propagés
-  grep -q "bd label add feature" "$BD_CALLS_LOG"
-  grep -q "bd label add fix" "$BD_CALLS_LOG"
+  # Les labels feature,fix ont été propagés via bd label create
+  grep -q "bd label create feature" "$BD_CALLS_LOG"
+  grep -q "bd label create fix" "$BD_CALLS_LOG"
 }
 
 @test "cmd_init : ne propage rien si aucun label configuré" {
@@ -237,9 +237,9 @@ EOF
   rm -rf "$TEST_DIR/fake-project/.beads"
   run cmd_init "PROJ-NO-LABELS"
   [ "$status" -eq 0 ]
-  # bd init appelé, mais pas bd label add
+  # bd init appelé, mais pas bd label create
   grep -q "bd init" "$BD_CALLS_LOG"
-  ! grep -q "bd label add" "$BD_CALLS_LOG"
+  ! grep -q "bd label create" "$BD_CALLS_LOG"
 }
 
 @test "cmd_init : exit si .beads existe déjà" {
@@ -374,4 +374,310 @@ EOF
 @test "_normalize_gitlab_project_id : échoue si l'URL ne contient que la base (pas de chemin)" {
   run --separate-stderr _normalize_gitlab_project_id "https://gitlab.com" "https://gitlab.com/"
   [ "$status" -ne 0 ]
+}
+
+# ── _fetch_tracker_labels ─────────────────────────────────────────────────────
+
+@test "_fetch_tracker_labels : skip silencieux si jq absent" {
+  # Masquer jq pour simuler son absence
+  jq() { return 127; }
+  export -f jq
+  command() {
+    if [ "${1:-}" = "-v" ] && [ "${2:-}" = "jq" ]; then return 1; fi
+    builtin command "$@"
+  }
+  export -f command
+
+  : > "$BD_CALLS_LOG"
+  run _fetch_tracker_labels "PROJ-FULL" "$TEST_DIR/fake-project"
+  [ "$status" -eq 0 ]
+  ! grep -q "bd label create" "$BD_CALLS_LOG"
+}
+
+@test "_fetch_tracker_labels : skip silencieux si aucun tracker configuré" {
+  # bd config get ne retourne rien (déjà le comportement du mock bd)
+  # Le mock bd enregistre les appels mais retourne 0 sans stdout
+  : > "$BD_CALLS_LOG"
+  run _fetch_tracker_labels "PROJ-FULL" "$TEST_DIR/fake-project"
+  [ "$status" -eq 0 ]
+  # Aucun label create déclenché par le fetch (pas de curl, pas de données)
+  # Le test valide uniquement le code de sortie (pas d'erreur)
+}
+
+@test "_fetch_tracker_labels : importe les labels GitLab et appelle bd label create" {
+  # Mock jq disponible
+  # Mock curl — retourne un JSON GitLab simulé
+  CURL_CALLS_LOG="$TEST_DIR/curl_calls.log"
+  : > "$CURL_CALLS_LOG"
+  curl() {
+    echo "curl $*" >> "$CURL_CALLS_LOG"
+    # Simuler la réponse de l'API GitLab /labels
+    printf '[{"name":"frontend"},{"name":"backend"},{"name":"hotfix"}]'
+    return 0
+  }
+  export -f curl
+  export CURL_CALLS_LOG
+
+  # Mock bd config get — retourne des valeurs pour gitlab.*
+  bd() {
+    local _oifs="${IFS-}"; IFS=' '
+    echo "bd $*" >> "$BD_CALLS_LOG"
+    IFS="$_oifs"
+    case "${1:-} ${2:-} ${3:-}" in
+      "config get gitlab.url")        printf 'https://gitlab.example.com' ;;
+      "config get gitlab.token")      printf 'glpat-test-token' ;;
+      "config get gitlab.project_id") printf 'my-group/my-project' ;;
+      "init")                          mkdir -p .beads ;;
+    esac
+    return 0
+  }
+  export -f bd
+
+  : > "$BD_CALLS_LOG"
+  run _fetch_tracker_labels "PROJ-FULL" "$TEST_DIR/fake-project"
+  [ "$status" -eq 0 ]
+
+  # curl a été appelé avec l'URL GitLab
+  grep -q "gitlab.example.com" "$CURL_CALLS_LOG"
+  # Les 3 labels ont été créés
+  grep -q "bd label create frontend" "$BD_CALLS_LOG"
+  grep -q "bd label create backend"  "$BD_CALLS_LOG"
+  grep -q "bd label create hotfix"   "$BD_CALLS_LOG"
+  # Message de succès présent
+  [[ "$output" == *"GitLab"* ]] || [[ "$output" == *"3"* ]]
+}
+
+@test "_fetch_tracker_labels : encode le slash dans le project_id pour l'URL GitLab" {
+  CURL_CALLS_LOG="$TEST_DIR/curl_calls.log"
+  : > "$CURL_CALLS_LOG"
+  curl() {
+    echo "curl $*" >> "$CURL_CALLS_LOG"
+    printf '[]'
+    return 0
+  }
+  export -f curl
+  export CURL_CALLS_LOG
+
+  bd() {
+    local _oifs="${IFS-}"; IFS=' '
+    echo "bd $*" >> "$BD_CALLS_LOG"
+    IFS="$_oifs"
+    case "${1:-} ${2:-} ${3:-}" in
+      "config get gitlab.url")        printf 'https://gitlab.example.com' ;;
+      "config get gitlab.token")      printf 'glpat-test' ;;
+      "config get gitlab.project_id") printf 'my-group/my-project' ;;
+    esac
+    return 0
+  }
+  export -f bd
+
+  run _fetch_tracker_labels "PROJ-FULL" "$TEST_DIR/fake-project"
+  [ "$status" -eq 0 ]
+  # L'URL doit contenir le slash encodé %2F
+  grep -q "%2F" "$CURL_CALLS_LOG"
+}
+
+@test "_fetch_tracker_labels : importe les labels Jira et appelle bd label create" {
+  CURL_CALLS_LOG="$TEST_DIR/curl_calls.log"
+  : > "$CURL_CALLS_LOG"
+  curl() {
+    echo "curl $*" >> "$CURL_CALLS_LOG"
+    # Simuler la réponse de l'API Jira /label
+    printf '{"values":["bug","improvement","task"],"total":3}'
+    return 0
+  }
+  export -f curl
+  export CURL_CALLS_LOG
+
+  # Mock bd config get — gitlab.* vide, jira.* renseigné
+  bd() {
+    local _oifs="${IFS-}"; IFS=' '
+    echo "bd $*" >> "$BD_CALLS_LOG"
+    IFS="$_oifs"
+    case "${1:-} ${2:-} ${3:-}" in
+      "config get gitlab.url")   printf '' ;;
+      "config get gitlab.token") printf '' ;;
+      "config get jira.url")     printf 'https://jira.example.com' ;;
+      "config get jira.user")    printf 'user@example.com' ;;
+      "config get jira.token")   printf 'jira-api-token' ;;
+    esac
+    return 0
+  }
+  export -f bd
+
+  : > "$BD_CALLS_LOG"
+  run _fetch_tracker_labels "PROJ-FULL" "$TEST_DIR/fake-project"
+  [ "$status" -eq 0 ]
+
+  # curl a été appelé avec l'URL Jira
+  grep -q "jira.example.com" "$CURL_CALLS_LOG"
+  # Les 3 labels ont été créés
+  grep -q "bd label create bug"         "$BD_CALLS_LOG"
+  grep -q "bd label create improvement" "$BD_CALLS_LOG"
+  grep -q "bd label create task"        "$BD_CALLS_LOG"
+}
+
+@test "_fetch_tracker_labels : GitLab prioritaire sur Jira si les deux sont configurés" {
+  CURL_CALLS_LOG="$TEST_DIR/curl_calls.log"
+  : > "$CURL_CALLS_LOG"
+  curl() {
+    echo "curl $*" >> "$CURL_CALLS_LOG"
+    printf '[]'
+    return 0
+  }
+  export -f curl
+  export CURL_CALLS_LOG
+
+  # Les deux trackers configurés
+  bd() {
+    local _oifs="${IFS-}"; IFS=' '
+    echo "bd $*" >> "$BD_CALLS_LOG"
+    IFS="$_oifs"
+    case "${1:-} ${2:-} ${3:-}" in
+      "config get gitlab.url")        printf 'https://gitlab.example.com' ;;
+      "config get gitlab.token")      printf 'glpat-test' ;;
+      "config get gitlab.project_id") printf '42' ;;
+      "config get jira.url")          printf 'https://jira.example.com' ;;
+      "config get jira.user")         printf 'user@example.com' ;;
+      "config get jira.token")        printf 'jira-token' ;;
+    esac
+    return 0
+  }
+  export -f bd
+
+  run _fetch_tracker_labels "PROJ-FULL" "$TEST_DIR/fake-project"
+  [ "$status" -eq 0 ]
+
+  # Seul GitLab a été appelé (return 0 après le bloc gitlab)
+  grep -q "gitlab.example.com" "$CURL_CALLS_LOG"
+  ! grep -q "jira.example.com" "$CURL_CALLS_LOG"
+}
+
+@test "_fetch_tracker_labels : skip silencieux si curl échoue (réseau indisponible)" {
+  curl() { return 1; }
+  export -f curl
+
+  bd() {
+    local _oifs="${IFS-}"; IFS=' '
+    echo "bd $*" >> "$BD_CALLS_LOG"
+    IFS="$_oifs"
+    case "${1:-} ${2:-} ${3:-}" in
+      "config get gitlab.url")        printf 'https://gitlab.example.com' ;;
+      "config get gitlab.token")      printf 'glpat-test' ;;
+      "config get gitlab.project_id") printf '42' ;;
+    esac
+    return 0
+  }
+  export -f bd
+
+  : > "$BD_CALLS_LOG"
+  run _fetch_tracker_labels "PROJ-FULL" "$TEST_DIR/fake-project"
+  [ "$status" -eq 0 ]
+  # Aucun label créé
+  ! grep -q "bd label create" "$BD_CALLS_LOG"
+}
+
+# ── cmd_ui_start / cmd_ui_stop / cmd_ui_status — guard bdui ──────────────────
+
+@test "cmd_ui_start : exit si bdui n'est pas installé" {
+  # Surcharger bdui pour simuler son absence
+  bdui() { return 127; }
+  export -f bdui
+  # Forcer _require_bdui à simuler l'absence (command -v bdui échouera grâce au override)
+  _require_bdui() { log_error "$(t beads.ui.not_installed)"; log_info "$(t beads.ui.install_hint)"; exit 1; }
+  export -f _require_bdui
+
+  run cmd_ui_start
+  [ "$status" -ne 0 ]
+  echo "$output" | grep -qi "bdui"
+}
+
+@test "cmd_ui_stop : exit si bdui n'est pas installé" {
+  _require_bdui() { log_error "$(t beads.ui.not_installed)"; exit 1; }
+  export -f _require_bdui
+
+  run cmd_ui_stop
+  [ "$status" -ne 0 ]
+}
+
+@test "cmd_ui_status : exit si bdui n'est pas installé" {
+  _require_bdui() { log_error "$(t beads.ui.not_installed)"; exit 1; }
+  export -f _require_bdui
+
+  run cmd_ui_status
+  [ "$status" -ne 0 ]
+}
+
+@test "cmd_ui_start : appelle bdui start --open si bdui est disponible" {
+  # Mock bdui — enregistre les appels
+  BDUI_CALLS_LOG="$TEST_DIR/bdui_calls.log"
+  : > "$BDUI_CALLS_LOG"
+  bdui() {
+    echo "bdui $*" >> "$BDUI_CALLS_LOG"
+    return 0
+  }
+  export -f bdui
+  export BDUI_CALLS_LOG
+
+  _require_bdui() { return 0; }
+  export -f _require_bdui
+
+  run cmd_ui_start
+  [ "$status" -eq 0 ]
+  grep -q "bdui start --open" "$BDUI_CALLS_LOG"
+}
+
+@test "cmd_ui_start : passe --port si fourni" {
+  BDUI_CALLS_LOG="$TEST_DIR/bdui_calls.log"
+  : > "$BDUI_CALLS_LOG"
+  bdui() {
+    echo "bdui $*" >> "$BDUI_CALLS_LOG"
+    return 0
+  }
+  export -f bdui
+  export BDUI_CALLS_LOG
+
+  _require_bdui() { return 0; }
+  export -f _require_bdui
+
+  # cmd_ui_start <id> <port> — sans PROJECT_ID (vide), avec port
+  run cmd_ui_start "" "8080"
+  [ "$status" -eq 0 ]
+  grep -q "bdui start --open --port 8080" "$BDUI_CALLS_LOG"
+}
+
+@test "cmd_ui_stop : appelle bdui stop" {
+  BDUI_CALLS_LOG="$TEST_DIR/bdui_calls.log"
+  : > "$BDUI_CALLS_LOG"
+  bdui() {
+    echo "bdui $*" >> "$BDUI_CALLS_LOG"
+    return 0
+  }
+  export -f bdui
+  export BDUI_CALLS_LOG
+
+  _require_bdui() { return 0; }
+  export -f _require_bdui
+
+  run cmd_ui_stop
+  [ "$status" -eq 0 ]
+  grep -q "bdui stop" "$BDUI_CALLS_LOG"
+}
+
+@test "cmd_ui_status : appelle bdui status" {
+  BDUI_CALLS_LOG="$TEST_DIR/bdui_calls.log"
+  : > "$BDUI_CALLS_LOG"
+  bdui() {
+    echo "bdui $*" >> "$BDUI_CALLS_LOG"
+    return 0
+  }
+  export -f bdui
+  export BDUI_CALLS_LOG
+
+  _require_bdui() { return 0; }
+  export -f _require_bdui
+
+  run cmd_ui_status
+  [ "$status" -eq 0 ]
+  grep -q "bdui status" "$BDUI_CALLS_LOG"
 }
