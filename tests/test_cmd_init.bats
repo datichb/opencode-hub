@@ -125,9 +125,9 @@ _run_init() {
   # bd init a été appelé
   grep -q "bd init" "$BD_CALLS_LOG"
   # Les labels ont été propagés
-  grep -q "bd label add feature" "$BD_CALLS_LOG"
-  grep -q "bd label add fix" "$BD_CALLS_LOG"
-  grep -q "bd label add back" "$BD_CALLS_LOG"
+  grep -q "bd label create feature" "$BD_CALLS_LOG"
+  grep -q "bd label create fix" "$BD_CALLS_LOG"
+  grep -q "bd label create back" "$BD_CALLS_LOG"
 }
 
 @test "cmd-init : ne propose pas bd init si .beads existe déjà" {
@@ -176,9 +176,9 @@ _run_init() {
   [ "$status" -eq 0 ]
 
   # Les labels doivent être trimés
-  grep -q "bd label add feature" "$BD_CALLS_LOG"
-  grep -q "bd label add fix" "$BD_CALLS_LOG"
-  grep -q "bd label add back" "$BD_CALLS_LOG"
+  grep -q "bd label create feature" "$BD_CALLS_LOG"
+  grep -q "bd label create fix" "$BD_CALLS_LOG"
+  grep -q "bd label create back" "$BD_CALLS_LOG"
 }
 
 # ── Labels par défaut ────────────────────────────────────────────────────────
@@ -194,8 +194,8 @@ _run_init() {
   # bd init a été appelé
   grep -q "bd init" "$BD_CALLS_LOG"
   # Les labels par défaut (feature,fix) doivent être propagés
-  grep -q "bd label add feature" "$BD_CALLS_LOG"
-  grep -q "bd label add fix" "$BD_CALLS_LOG"
+  grep -q "bd label create feature" "$BD_CALLS_LOG"
+  grep -q "bd label create fix" "$BD_CALLS_LOG"
 }
 
 # ── Proposition upstream git ─────────────────────────────────────────────────
