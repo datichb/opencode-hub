@@ -12,6 +12,10 @@ setup() {
   # Sourcer common.sh pour les fonctions partagées
   source "$BATS_TEST_DIRNAME/../scripts/common.sh"
 
+  # Forcer la langue FR pour que les messages i18n soient stables
+  # indépendamment de la présence ou non de config/hub.json
+  export OC_LANG=fr
+
   # Surcharger les fichiers de données
   PROJECTS_FILE="$TEST_DIR/projects.md"
   PATHS_FILE="$TEST_DIR/paths.local.md"

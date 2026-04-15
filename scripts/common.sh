@@ -13,7 +13,7 @@ SCRIPTS_DIR="${SCRIPTS_DIR:-$HUB_DIR/scripts}"
 
 # Phase 2+ : sources canoniques (agents/ et config/)
 CANONICAL_AGENTS_DIR="$HUB_DIR/agents"
-HUB_CONFIG="$HUB_DIR/config/hub.json"
+HUB_CONFIG="${HUB_CONFIG:-$HUB_DIR/config/hub.json}"
 HUB_CONFIG_EXAMPLE="$HUB_DIR/config/hub.json.example"
 LIB_DIR="$HUB_DIR/scripts/lib"
 ADAPTERS_DIR="$HUB_DIR/scripts/adapters"

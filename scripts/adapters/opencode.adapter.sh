@@ -319,9 +319,9 @@ adapter_start() {
 
     if [ -n "$bearer_token" ]; then
       log_info "[opencode] Injection AWS_BEARER_TOKEN_BEDROCK"
-      exec env AWS_BEARER_TOKEN_BEDROCK="$bearer_token" opencode "${args[@]}"
+      exec env AWS_BEARER_TOKEN_BEDROCK="$bearer_token" opencode ${args[@]+"${args[@]}"}
     fi
   fi
 
-  exec opencode "${args[@]}"
+  exec opencode ${args[@]+"${args[@]}"}
 }
