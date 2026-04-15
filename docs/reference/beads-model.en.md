@@ -255,6 +255,29 @@ The hub supports two trackers: **Jira** and **GitLab**.
 | `oc beads sync <PROJECT_ID> --dry-run` | Simulation without writing |
 | `oc beads tracker status <PROJECT_ID>` | Tracker connection status |
 
+#### Local exclusion of `.beads/`
+
+`oc beads init` automatically adds `.beads/` to the target project's `.git/info/exclude` file.
+This file is local to the machine and never versioned — tracker credentials (GitLab token, Jira token) stored by `bd config set` are never exposed in the shared repository.
+
+> This behaviour mirrors the exclusion of `opencode.json` and `.opencode/` applied by `oc init` / `oc deploy`.
+
+#### GitLab configuration — `gitlab.project_id`
+
+During `tracker setup`, the **GitLab project ID or path** field accepts three formats:
+
+| Format | Example | Behaviour |
+|--------|---------|-----------|
+| Numeric ID | `12345` | Used as-is |
+| Namespace/project path | `my-group/my-project` | Used as-is |
+| Full URL | `https://gitlab.com/my-group/my-project` | Path extracted automatically with a warning |
+
+> **Tip**: prefer the numeric ID or the `namespace/project` path.
+> The numeric ID is visible in GitLab under **Settings → General** (at the top of the page).
+
+After setup, the connection is tested automatically via `bd gitlab status`.
+If it fails, the configured values are displayed to help diagnose the issue.
+
 > **`Sync mode` field** — stored in `projects.md` under `- Sync mode : <bidirectional|pull-only|push-only>`.
 > Default value when absent: `bidirectional`. A CLI flag (`--pull-only`, `--push-only`) always takes precedence over the configured mode.
 

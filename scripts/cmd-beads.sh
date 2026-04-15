@@ -194,6 +194,17 @@ cmd_init() {
       log_warn "$(t beads.labels.failed)"
     fi
   fi
+
+  # Ajouter .beads/ au .git/info/exclude du projet (exclusion locale des credentials tracker)
+  local _exclude_dir="$path/.git/info"
+  local _exclude_file="$_exclude_dir/exclude"
+  mkdir -p "$_exclude_dir"
+  if [ ! -f "$_exclude_file" ] || ! grep -qx ".beads/" "$_exclude_file"; then
+    echo ".beads/" >> "$_exclude_file"
+    log_info "$(t beads.gitignore_added)"
+  else
+    log_info "$(t beads.gitignore_exists)"
+  fi
 }
 
 # ══════════════════════════════════════════
@@ -486,14 +497,75 @@ _setup_gitlab() {
   read -rp "  ID ou chemin du projet GitLab (ex: 12345 ou namespace/project) : " gl_project_id
   [ -z "$gl_project_id" ] && { log_error "ID de projet GitLab requis"; exit 1; }
 
+  # Normaliser le project_id : si l'utilisateur a saisi une URL complète, extraire le chemin
+  gl_project_id=$(_normalize_gitlab_project_id "$gl_url" "$gl_project_id") \
+    || exit 1
+
   # url et token déjà configurés ci-dessus — ajouter uniquement project_id
   (cd "$path" && bd config set gitlab.project_id "$gl_project_id") \
     || { log_error "Échec de la configuration GitLab"; exit 1; }
 
   log_success "GitLab configuré pour $id"
   echo ""
-  log_info "Tester la connexion : ./oc.sh beads tracker status $id"
-  log_info "Synchroniser        : ./oc.sh beads sync $id --pull-only --dry-run"
+
+  # Vérifier immédiatement la connexion pour détecter les erreurs de config tôt
+  log_info "Vérification de la connexion GitLab..."
+  if (cd "$path" && bd gitlab status) 2>/dev/null; then
+    log_success "Connexion GitLab OK"
+  else
+    log_warn "Connexion GitLab échouée — vérifier l'URL, le token et le project_id"
+    log_info "  URL          : $gl_url"
+    log_info "  Project ID   : $gl_project_id"
+    log_info "Relancer après correction : ./oc.sh beads tracker setup $id"
+  fi
+  echo ""
+  log_info "Synchroniser : ./oc.sh beads sync $id --pull-only --dry-run"
+}
+
+# Normalise un gitlab.project_id saisi par l'utilisateur.
+# - Si la valeur est une URL complète (commence par http:// ou https://),
+#   on en extrait le chemin relatif à la base GitLab.
+# - Sinon la valeur est retournée telle quelle.
+# - Dans tous les cas, le résultat doit être un entier ou un chemin namespace/projet.
+_normalize_gitlab_project_id() {
+  local gl_url="$1" raw="$2"
+
+  # Cas 1 : valeur numérique → OK directement
+  if [[ "$raw" =~ ^[0-9]+$ ]]; then
+    printf '%s' "$raw"
+    return 0
+  fi
+
+  # Cas 2 : URL complète → extraire le chemin relatif à gl_url
+  if [[ "$raw" == http://* || "$raw" == https://* ]]; then
+    # Normaliser les deux URLs : supprimer le slash final
+    local base="${gl_url%/}"
+    local full="${raw%/}"
+
+    # Vérifier que l'URL saisie commence bien par la base configurée
+    if [[ "$full" == "$base"* ]]; then
+      local extracted="${full#"$base"}"
+      # Supprimer le slash initial s'il reste
+      extracted="${extracted#/}"
+      # Supprimer un éventuel suffixe .git
+      extracted="${extracted%.git}"
+      if [ -z "$extracted" ]; then
+        log_error "Impossible d'extraire un chemin de projet depuis : $raw" >&2
+        return 1
+      fi
+      log_warn "URL détectée — project_id extrait automatiquement : $extracted" >&2
+      printf '%s' "$extracted"
+      return 0
+    else
+      log_error "L'URL saisie ($raw) ne correspond pas à l'instance GitLab configurée ($gl_url)" >&2
+      log_error "Saisir l'ID numérique ou le chemin namespace/project, pas une URL complète" >&2
+      return 1
+    fi
+  fi
+
+  # Cas 3 : chemin namespace/project → OK directement
+  printf '%s' "$raw"
+  return 0
 }
 
 # ══════════════════════════════════════════

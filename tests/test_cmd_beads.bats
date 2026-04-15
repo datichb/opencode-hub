@@ -1,6 +1,9 @@
 #!/usr/bin/env bats
 # Tests unitaires pour scripts/cmd-beads.sh
-# Fonctions testées : _set_project_tracker, _resolve_tracker, cmd_init
+# Fonctions testées : _set_project_tracker, _resolve_tracker, cmd_init,
+#                     _normalize_gitlab_project_id
+
+bats_require_minimum_version 1.5.0
 #
 # Grâce au guard BASH_SOURCE, cmd-beads.sh peut être sourcé directement :
 # il n'exécute le dispatch que lorsqu'il est lancé en tant que script principal.
@@ -291,4 +294,84 @@ EOF
   # git remote add ne doit PAS avoir été appelé
   ! grep -q "git remote add upstream" "$GIT_CALLS_LOG"
   [[ "$output" == *"Configurer plus tard"* ]]
+}
+
+# ── cmd_init — exclusion .beads/ dans .git/info/exclude ──────────────────────
+
+@test "cmd_init : ajoute .beads/ au .git/info/exclude du projet" {
+  : > "$BD_CALLS_LOG"
+  rm -rf "$TEST_DIR/fake-project/.beads"
+  mkdir -p "$TEST_DIR/fake-project/.git/info"
+  run cmd_init "PROJ-FULL"
+  [ "$status" -eq 0 ]
+
+  # .beads/ doit être présent dans le fichier exclude
+  grep -qx ".beads/" "$TEST_DIR/fake-project/.git/info/exclude"
+}
+
+@test "cmd_init : n'ajoute pas .beads/ en double si déjà présent dans exclude" {
+  : > "$BD_CALLS_LOG"
+  rm -rf "$TEST_DIR/fake-project/.beads"
+  mkdir -p "$TEST_DIR/fake-project/.git/info"
+  echo ".beads/" > "$TEST_DIR/fake-project/.git/info/exclude"
+
+  run cmd_init "PROJ-FULL"
+  [ "$status" -eq 0 ]
+
+  # Compter les occurrences — doit être exactement 1
+  local count
+  count=$(grep -cx ".beads/" "$TEST_DIR/fake-project/.git/info/exclude")
+  [ "$count" -eq 1 ]
+  # Message "déjà présent" attendu
+  [[ "$output" == *"déjà présent"* ]]
+}
+
+# ── _normalize_gitlab_project_id ─────────────────────────────────────────────
+
+@test "_normalize_gitlab_project_id : retourne un ID numérique tel quel" {
+  run _normalize_gitlab_project_id "https://gitlab.com" "12345"
+  [ "$status" -eq 0 ]
+  [ "$output" = "12345" ]
+}
+
+@test "_normalize_gitlab_project_id : retourne un chemin namespace/projet tel quel" {
+  run _normalize_gitlab_project_id "https://gitlab.com" "my-group/my-project"
+  [ "$status" -eq 0 ]
+  [ "$output" = "my-group/my-project" ]
+}
+
+@test "_normalize_gitlab_project_id : extrait le chemin d'une URL gitlab.com" {
+  run --separate-stderr _normalize_gitlab_project_id "https://gitlab.com" "https://gitlab.com/my-group/my-project"
+  [ "$status" -eq 0 ]
+  [ "$output" = "my-group/my-project" ]
+  echo "$stderr" | grep -qi "extrait automatiquement"
+}
+
+@test "_normalize_gitlab_project_id : extrait le chemin d'une URL d'instance privée" {
+  run --separate-stderr _normalize_gitlab_project_id "https://git.example.com" "https://git.example.com/team/backend"
+  [ "$status" -eq 0 ]
+  [ "$output" = "team/backend" ]
+}
+
+@test "_normalize_gitlab_project_id : supprime le suffixe .git de l'URL" {
+  run --separate-stderr _normalize_gitlab_project_id "https://gitlab.com" "https://gitlab.com/my-group/my-project.git"
+  [ "$status" -eq 0 ]
+  [ "$output" = "my-group/my-project" ]
+}
+
+@test "_normalize_gitlab_project_id : tolère un slash final dans la base URL" {
+  run --separate-stderr _normalize_gitlab_project_id "https://gitlab.com/" "https://gitlab.com/my-group/my-project"
+  [ "$status" -eq 0 ]
+  [ "$output" = "my-group/my-project" ]
+}
+
+@test "_normalize_gitlab_project_id : échoue si l'URL ne correspond pas à l'instance" {
+  run --separate-stderr _normalize_gitlab_project_id "https://git.example.com" "https://gitlab.com/my-group/my-project"
+  [ "$status" -ne 0 ]
+  echo "$stderr" | grep -qi "ne correspond pas"
+}
+
+@test "_normalize_gitlab_project_id : échoue si l'URL ne contient que la base (pas de chemin)" {
+  run --separate-stderr _normalize_gitlab_project_id "https://gitlab.com" "https://gitlab.com/"
+  [ "$status" -ne 0 ]
 }
