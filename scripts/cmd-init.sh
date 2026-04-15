@@ -219,7 +219,7 @@ if command -v bd &>/dev/null && [ -d "$PROJECT_PATH" ] && [ ! -d "$PROJECT_PATH/
         while IFS= read -r _lbl; do
           _lbl=$(printf '%s' "$_lbl" | sed 's/^ *//;s/ *$//')
           [ -z "$_lbl" ] && continue
-          if ! (cd "$PROJECT_PATH" && bd label add "$_lbl"); then
+          if ! (cd "$PROJECT_PATH" && bd label create "$_lbl"); then
             _labels_ok=0
           fi
         done < <(printf '%s\n' "$_init_labels" | tr ',' '\n')
