@@ -36,18 +36,6 @@ depuis une source de vérité unique.
 
 ---
 
-## Prérequis
-
-| Outil | Usage |
-|-------|-------|
-| `git` | Cloner le hub |
-| `curl` | Télécharger le script d'installation |
-
-> Les autres dépendances (`jq`, `Node.js`, `opencode`, `bun`, `beads`) sont proposées
-> lors de `oc install` — chaque outil demande une **confirmation explicite** avant installation.
-
----
-
 ## Installation
 
 ### One-liner (recommandé)

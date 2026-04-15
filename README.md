@@ -36,18 +36,6 @@ from a single source of truth.
 
 ---
 
-## Prerequisites
-
-| Tool | Purpose |
-|------|---------|
-| `git` | Clone the hub |
-| `curl` | Download the install script |
-
-> Other dependencies (`jq`, `Node.js`, `opencode`, `bun`, `beads`) are offered
-> during `oc install` — each tool requires **explicit confirmation** before installation.
-
----
-
 ## Installation
 
 ### One-liner (recommended)
