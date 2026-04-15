@@ -267,5 +267,30 @@ else
   fi
 fi
 
+# ── Installer Beads UI (bdui) ─────────────────────────────
+echo ""
+log_title "$(t install.bdui_title)"
+if command -v bdui &>/dev/null; then
+  bdui_version=$(npm list -g beads-ui --depth=0 2>/dev/null | grep beads-ui | sed 's/.*@//' || echo '?')
+  log_success "$(t install.bdui_already) ($bdui_version)"
+else
+  log_warn "$(t install.bdui_missing)"
+  read -rp "  $(t install.bdui_install_prompt)" _bdui_choice </dev/tty
+  if [[ "${_bdui_choice:-Y}" =~ ^[Yy]$ ]]; then
+    if command -v npm &>/dev/null; then
+      log_info "$(t install.bdui_installing)"
+      if npm install -g beads-ui; then
+        log_success "$(t install.bdui_installed)"
+      else
+        log_warn "$(t install.bdui_failed)"
+      fi
+    else
+      log_warn "$(t install.bdui_no_npm)"
+    fi
+  else
+    log_info "$(t install.bdui_later)"
+  fi
+fi
+
 echo ""
 log_success "$(t install.ready)"

@@ -141,7 +141,7 @@ oc sync --dry-run   # vérifie sans déployer
 Lance l'outil par défaut dans le répertoire d'un projet.
 
 ```bash
-oc start [PROJECT_ID] [prompt] [--dev [--label <label>] [--assignee <user>]] [--onboard]
+oc start [PROJECT_ID] [prompt] [--dev [--label <label>] [--assignee <user>]] [--onboard] [--ui [--port <port>]]
 ```
 
 **Arguments :**
@@ -159,8 +159,11 @@ oc start [PROJECT_ID] [prompt] [--dev [--label <label>] [--assignee <user>]] [--
 | `--dev --label <label>` | Comme `--dev`, mais filtre les tickets ayant le label `<label>` |
 | `--dev --assignee <user>` | Comme `--dev`, mais filtre les tickets assignés à `<user>` |
 | `--onboard` | Injecte un prompt de découverte projet pour onboarder l'agent sur le codebase |
+| `--ui` | Lance `bdui` (interface graphique Beads) en arrière-plan en parallèle de l'outil |
+| `--ui --port <port>` | Comme `--ui`, mais sur un port spécifique (défaut : 3000) |
 
 > `--dev` et `--onboard` sont mutuellement exclusifs. `--label` et `--assignee` sont mutuellement exclusifs.
+> `--ui` nécessite que `bdui` soit installé (`npm install -g beads-ui`). Si absent, un avertissement est affiché mais l'outil se lance quand même.
 
 **Exemples :**
 
@@ -172,6 +175,9 @@ oc start MON-APP --dev                          # charge les tickets ai-delegate
 oc start MON-APP --dev --label ai-delegated     # filtre par label
 oc start MON-APP --dev --assignee alice         # filtre par assignee
 oc start MON-APP --onboard                      # prompt de découverte projet
+oc start MON-APP --ui                           # lance l'outil + bdui en parallèle
+oc start MON-APP --dev --ui                     # mode dev + bdui
+oc start MON-APP --ui --port 8080               # bdui sur le port 8080
 ```
 
 **Rendu au lancement :**
@@ -639,3 +645,44 @@ oc beads create MON-APP "Fix race condition" --type fix --label bug  # avec flag
 > Un flag CLI prend toujours le dessus sur le mode configuré.
 
 > `oc start` avertit automatiquement si `.beads/` n'est pas présent dans le projet.
+
+### `oc beads ui` — Interface graphique Beads
+
+Gère l'interface web locale `bdui` pour Beads. Nécessite `beads-ui` installé (`npm install -g beads-ui`).
+
+```bash
+oc beads ui start [PROJECT_ID] [--port <port>]
+oc beads ui stop
+oc beads ui status
+oc beads ui install
+```
+
+| Sous-commande | Description |
+|---------------|-------------|
+| `ui install` | Installe `beads-ui` globalement (`npm install -g beads-ui`) |
+| `ui start [PROJECT_ID]` | Lance `bdui` en arrière-plan (ouvre le navigateur automatiquement). Exécuté dans le répertoire du projet si `PROJECT_ID` est fourni. |
+| `ui stop` | Arrête le serveur `bdui` en cours d'exécution |
+| `ui status` | Affiche le statut actuel du serveur `bdui` |
+
+**Options de `ui start` :**
+
+| Option | Description |
+|--------|-------------|
+| `[PROJECT_ID]` | Lance `bdui` dans le répertoire du projet (optionnel, utilise le répertoire courant sinon) |
+| `--port <port>` | Surcharge le port par défaut (défaut : 3000) |
+
+**Exemples :**
+
+```bash
+oc beads ui install                      # installe bdui
+oc beads ui start                        # lance bdui dans le répertoire courant
+oc beads ui start MON-APP                # lance bdui dans le répertoire de MON-APP
+oc beads ui start MON-APP --port 8080    # bdui sur le port 8080
+oc beads ui stop                         # arrête bdui
+oc beads ui status                       # affiche le statut de bdui
+```
+
+> `bdui` fournit des vues Issues, Épics et Board avec mises à jour en temps réel, navigation au clavier et support multi-workspace.
+> C'est un outil pour le **développeur humain** uniquement — les agents IA continuent d'utiliser le CLI `bd` directement.
+> Installation : `oc beads ui install` ou `npm install -g beads-ui` (proposé aussi pendant `oc install`).
+> Si `bdui` n'est pas installé lors d'un `oc beads ui start/stop/status`, le hub propose interactivement son installation.

@@ -23,6 +23,19 @@ else
   log_warn "$(t update.bd_missing)"
 fi
 
+# ── Mettre à jour Beads UI (bdui) ────────────────────────────────────────────
+log_info "$(t update.bdui_updating)"
+if command -v bdui &>/dev/null; then
+  if command -v npm &>/dev/null; then
+    npm update -g beads-ui && log_success "$(t update.bdui_done)" \
+      || log_warn "$(t update.bdui_failed)"
+  else
+    log_warn "$(t update.bdui_failed)"
+  fi
+else
+  log_warn "$(t update.bdui_missing)"
+fi
+
 # ── Skills externes ───────────────────────────────────────────────────────────
 EXTERNAL_SOURCES="$HUB_DIR/skills/external/.sources.json"
 SKILLS_UPDATED=false
