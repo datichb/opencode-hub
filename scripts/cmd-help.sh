@@ -4,108 +4,139 @@ source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 
 resolve_oc_lang
 
-echo -e "${BOLD}opencode-hub — oc.sh${RESET}"
-echo ""
-echo -e "${BOLD}$(t help.usage)${RESET}"
-echo "  ./oc.sh <commande> [arguments]"
-echo ""
-echo -e "${BOLD}$(t help.section.setup)${RESET}"
-echo "  $(t help.install)"
-echo "  $(t help.uninstall)"
-echo "  $(t help.init)"
-echo "  $(t help.version)"
-echo ""
-echo -e "${BOLD}$(t help.section.projects)${RESET}"
-echo "  $(t help.list)"
-echo "  $(t help.status)"
-echo "  $(t help.remove)"
-echo "  $(t help.remove_clean)"
-echo ""
-echo -e "${BOLD}$(t help.section.launch)${RESET}"
-echo "  $(t help.start)"
-echo "  $(t help.start_dev)"
-echo "  $(t help.start_dev_label)"
-echo "  $(t help.start_dev_assignee)"
-echo "  $(t help.start_onboard)"
-echo ""
-echo -e "${BOLD}$(t help.section.analysis)${RESET}"
-echo "  $(t help.audit)"
-echo "  $(t help.audit_type)"
-echo "  $(t help.audit_types)"
-echo "  $(t help.audit_types2)"
-echo "  $(t help.review)"
-echo "  $(t help.review_branch)"
-echo "  $(t help.conventions)"
-echo "  $(t help.conventions_force)"
-echo ""
-echo -e "${BOLD}$(t help.section.maintenance)${RESET}"
-echo "  $(t help.deploy)"
-echo "  $(t help.deploy_check)"
-echo "  $(t help.deploy_diff)"
-echo "  $(t help.sync)"
-echo "  $(t help.sync_dryrun)"
-  echo "  $(t help.update)"
-  echo "  $(t help.upgrade)"
-echo ""
-echo -e "${BOLD}$(t help.section.config)${RESET}"
-echo "  $(t help.config_set)"
-echo "  $(t help.config_set_desc)"
-echo "  $(t help.config_get)"
-echo "  $(t help.config_list)"
-echo "  $(t help.config_unset)"
-echo "  $(t help.config_language)"
-echo "  $(t help.provider_list)"
-echo "  $(t help.provider_set_default)"
-echo "  $(t help.provider_set)"
-echo "  $(t help.provider_get)"
-echo "  $(t help.target_info)"
-echo "  $(t help.target_select)"
-echo ""
-echo -e "${BOLD}$(t help.section.deploy_targets)${RESET}"
-echo "  $(t help.deploy_target.opencode)"
-echo "  $(t help.deploy_target.claude)"
-echo "  $(t help.deploy_target.all)"
-echo ""
-echo -e "${BOLD}$(t help.section.agents)${RESET}"
-echo "  $(t help.agent_list)"
-echo "  $(t help.agent_create)"
-echo "  $(t help.agent_edit)"
-echo "  $(t help.agent_info)"
-echo "  $(t help.agent_select)"
-echo "  $(t help.agent_mode)"
-echo "  $(t help.agent_validate)"
-echo "  $(t help.agent_keytest)"
-echo ""
-echo -e "${BOLD}$(t help.section.skills)${RESET}"
-echo "  $(t help.skills_search)"
-echo "  $(t help.skills_info)"
-echo "  $(t help.skills_add)"
-echo "  $(t help.skills_list)"
-echo "  $(t help.skills_update)"
-echo "  $(t help.skills_used_by)"
-echo "  $(t help.skills_sync)"
-echo "  $(t help.skills_remove)"
-echo ""
-echo -e "${BOLD}$(t help.section.beads)${RESET}"
-echo "  $(t help.beads_status)"
-echo "  $(t help.beads_init)"
-echo "  $(t help.beads_list)"
-echo "  $(t help.beads_create)"
-echo "  $(t help.beads_create_desc)"
-echo "  $(t help.beads_open)"
-echo "  $(t help.beads_sync)"
-echo "  $(t help.beads_sync_desc)"
-echo "  $(t help.beads_tracker_status)"
-echo "  $(t help.beads_tracker_setup)"
-echo "  $(t help.beads_tracker_switch)"
-echo "  $(t help.beads_tracker_set_sync_mode)"
-echo "  $(t help.beads_ui_install)"
-echo "  $(t help.beads_ui_start)"
-echo "  $(t help.beads_ui_stop)"
-echo "  $(t help.beads_ui_status)"
-echo ""
-echo -e "${BOLD}$(t help.section.examples)${RESET}"
-echo "  ./oc.sh skills search pdf"
-echo "  ./oc.sh skills add /owner/repo skill-name"
-echo "  Puis dans agents/developer.md → skills: [..., \"external/skill-name\"]"
+# ── Layout constants ──────────────────────────────────────────────────────────
+# CMD_W: width reserved for the command column (pad with spaces).
+# Chosen to accommodate the longest standard command string without truncation.
+CMD_W=44
+
+# ── Helper functions ──────────────────────────────────────────────────────────
+
+# Print a section header: bold title followed by a separator line.
+_section() {
+  local title
+  title="$(t "$1")"
+  echo ""
+  echo -e "${BOLD}${title}${RESET}"
+  printf '%*s\n' "${#title}" '' | tr ' ' '─'
+}
+
+# Print one command row: cyan command column + normal description column.
+# For commands that fit within CMD_W, command and description are on one line.
+_cmd() {
+  local cmd desc
+  cmd="$(t "$1.cmd")"
+  desc="$(t "$1.desc")"
+  if [ "${#cmd}" -le "$CMD_W" ]; then
+    printf "  ${CYAN}%-${CMD_W}s${RESET}  %s\n" "$cmd" "$desc"
+  else
+    # Long signature: command on its own line, description indented below.
+    printf "  ${CYAN}%s${RESET}\n" "$cmd"
+    printf "  %*s  %s\n" "$CMD_W" "" "$desc"
+  fi
+}
+
+# Print a plain indented note (used for deploy targets, examples, …).
+_note() {
+  echo "  $1"
+}
+
+# ── Help output ───────────────────────────────────────────────────────────────
+
+echo -e "${BOLD}$(t help.title)${RESET}"
+echo -e "$(t help.usage) ./oc.sh <command> [arguments]"
+
+_section help.section.setup
+_cmd help.install
+_cmd help.uninstall
+_cmd help.init
+_cmd help.version
+
+_section help.section.projects
+_cmd help.list
+_cmd help.status
+_cmd help.remove
+_cmd help.remove_clean
+
+_section help.section.launch
+_cmd help.start
+_cmd help.start_dev
+_cmd help.start_dev_label
+_cmd help.start_dev_assignee
+_cmd help.start_onboard
+
+_section help.section.analysis
+_cmd help.audit
+_cmd help.audit_type
+_cmd help.conventions
+_cmd help.conventions_force
+_cmd help.review
+_cmd help.review_branch
+
+_section help.section.maintenance
+_cmd help.deploy
+_cmd help.deploy_check
+_cmd help.deploy_diff
+_cmd help.sync
+_cmd help.sync_dryrun
+_cmd help.update
+_cmd help.upgrade
+
+_section help.section.config
+_cmd help.config_set
+_cmd help.config_get
+_cmd help.config_list
+_cmd help.config_unset
+_cmd help.config_language
+_cmd help.provider_list
+_cmd help.provider_set_default
+_cmd help.provider_set
+_cmd help.provider_get
+_cmd help.target_info
+_cmd help.target_select
+
+_section help.section.deploy_targets
+_note "$(t help.deploy_target.opencode)"
+_note "$(t help.deploy_target.claude)"
+_note "$(t help.deploy_target.all)"
+
+_section help.section.agents
+_cmd help.agent_list
+_cmd help.agent_create
+_cmd help.agent_edit
+_cmd help.agent_info
+_cmd help.agent_select
+_cmd help.agent_mode
+_cmd help.agent_validate
+_cmd help.agent_keytest
+
+_section help.section.skills
+_cmd help.skills_search
+_cmd help.skills_info
+_cmd help.skills_add
+_cmd help.skills_list
+_cmd help.skills_update
+_cmd help.skills_used_by
+_cmd help.skills_sync
+_cmd help.skills_remove
+
+_section help.section.beads
+_cmd help.beads_status
+_cmd help.beads_init
+_cmd help.beads_list
+_cmd help.beads_create
+_cmd help.beads_open
+_cmd help.beads_sync
+_cmd help.beads_tracker_status
+_cmd help.beads_tracker_setup
+_cmd help.beads_tracker_switch
+_cmd help.beads_tracker_set_sync_mode
+_cmd help.beads_ui_install
+_cmd help.beads_ui_start
+_cmd help.beads_ui_stop
+_cmd help.beads_ui_status
+
+_section help.section.examples
+_note "./oc.sh skills search pdf"
+_note "./oc.sh skills add /owner/repo skill-name"
+_note "$(t help.section.agents) → skills: [..., \"external/skill-name\"] → ./oc.sh deploy all"
 echo ""
