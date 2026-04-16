@@ -269,6 +269,75 @@ Règles :
 EOF
 }
 
+# Construit le prompt de bootstrap pour la commande oc review
+# Exécute git diff main...<branch> et injecte le résultat dans le prompt
+# @param $1 — project_path
+# @param $2 — project_id
+# @param $3 — branch (branche à reviewer)
+build_review_bootstrap_prompt() {
+  local project_path="$1"
+  local project_id="${2:-}"
+  local branch="${3:-}"
+
+  local project_info=""
+  if [ -n "$project_id" ]; then
+    project_info="Projet : ${project_id}
+Chemin : ${project_path}"
+  else
+    project_info="Chemin : ${project_path}"
+  fi
+
+  # Générer le diff git main...<branch>
+  local diff_content=""
+  local diff_cmd="git diff main...${branch}"
+  if diff_content=$(git -C "$project_path" diff "main...${branch}" 2>/dev/null); then
+    if [ -z "$diff_content" ]; then
+      diff_content="(aucune différence détectée entre main et ${branch})"
+    fi
+  else
+    # Fallback : essayer sans les trois points (branche sans ancêtre commun avec main)
+    diff_content=$(git -C "$project_path" diff "main..${branch}" 2>/dev/null || echo "(impossible de générer le diff — vérifier que la branche '${branch}' et 'main' existent)")
+    diff_cmd="git diff main..${branch}"
+  fi
+
+  # Vérifier l'existence de CONVENTIONS.md et ONBOARDING.md
+  local conventions_hint=""
+  if [ -f "${project_path}/CONVENTIONS.md" ]; then
+    conventions_hint="
+→ Lire CONVENTIONS.md à la racine du projet avant la review (prime sur les standards génériques)"
+  fi
+
+  local onboarding_hint=""
+  if [ -f "${project_path}/ONBOARDING.md" ]; then
+    onboarding_hint="
+→ ONBOARDING.md disponible — consulter pour le contexte du projet si nécessaire"
+  fi
+
+  cat <<EOF
+Effectue une code review de la branche \`${branch}\`.
+
+${project_info}
+Branche reviewée : ${branch}
+Commande diff utilisée : ${diff_cmd}
+${conventions_hint}${onboarding_hint}
+
+--- DIFF ---
+
+${diff_content}
+
+--- FIN DU DIFF ---
+
+Workflow :
+1. Si CONVENTIONS.md existe à la racine → le lire pour appliquer les conventions réelles du projet
+2. Analyser le diff ci-dessus selon la checklist systématique du skill review-protocol
+3. Produire le rapport structuré par sévérité : Critique → Majeur → Mineur → Suggestion → Points positifs
+
+Rappel :
+- Tu fournis un avis de review, tu ne modifies pas de fichiers
+- Calibre les commentaires au scope réel du diff (pas de refactoring hors-scope)
+EOF
+}
+
 # Construit le prompt de bootstrap pour la commande oc conventions
 # Déclenche la détection ciblée des conventions du projet → CONVENTIONS.md
 # @param $1 — project_path

@@ -495,6 +495,35 @@ t() {
       upgrade.sync_now)           printf '%s' "  Lancer oc sync pour redéployer sur tous les projets ? [Y/n] : " ;;
       upgrade.sync_later)         printf '%s' "Redéployer manuellement : ./oc.sh sync" ;;
 
+      # ── cmd-review.sh ──────────────────────────────────────────────────────
+      review.no_projects)         printf '%s' "Aucun projet enregistré → ./oc.sh init" ;;
+      review.choose_project)      printf '%s' "Choisir un projet :" ;;
+      review.choose_number)       printf '%s' "  Numéro : " ;;
+      review.invalid_choice)      printf '%s' "Choix invalide : " ;;
+      review.target_unavailable)  printf '%s' "Cible '" ;;
+      review.target_unavailable_suffix) printf '%s' "non disponible → oc install" ;;
+      review.no_branch)           printf '%s' "Impossible de détecter la branche courante. Utilisez --branch <branche>" ;;
+      review.label_path)          printf '%s' "Chemin" ;;
+      review.label_target)        printf '%s' "Cible" ;;
+      review.label_branch)        printf '%s' "Branche" ;;
+      review.label_agent)         printf '%s' "Agent" ;;
+      review.agent_missing_config) printf '%s' "Agent absent de la sélection projet : " ;;
+      review.add_agent_prompt)    printf '%s' "Ajouter reviewer à la sélection du projet ? [Y/n] : " ;;
+      review.agent_updated)       printf '%s' "Agents mis à jour dans projects.md : " ;;
+      review.redeploy_prompt)     printf '%s' "Redéployer les agents maintenant ? [Y/n] : " ;;
+      review.redeploy_later)      printf '%s' "Redéployer plus tard : ./oc.sh deploy " ;;
+      review.agents_not_deployed) printf '%s' "Agents non déployés pour " ;;
+      review.agent_not_deployed)  printf '%s' "Agent non déployé : " ;;
+      review.deploy_now_prompt)   printf '%s' "Déployer maintenant ? [Y/n] : " ;;
+      review.deploy_skipped)      printf '%s' "Déploiement ignoré — l'agent risque d'être introuvable" ;;
+      review.deploy_later)        printf '%s' "Déployer plus tard : ./oc.sh deploy " ;;
+      review.main_agent)          printf '%s' "Agent : " ;;
+      review.launching)           printf '%s' "Lancement de la review " ;;
+
+      # ── help review ────────────────────────────────────────────────────────
+      help.review)            printf '%s' "review [PROJECT_ID]                     Lance une code review via l'agent reviewer" ;;
+      help.review_branch)     printf '%s' "review [PROJECT_ID] --branch <branche>  Review d'une branche spécifique (défaut : branche courante)" ;;
+
       # ── cmd-audit.sh ───────────────────────────────────────────────────────
       audit.invalid_type)     printf '%s' "Type d'audit invalide : '" ;;
       audit.valid_types)      printf '%s' "Types valides : " ;;
@@ -1013,6 +1042,35 @@ t_en() {
     upgrade.sync_stale_warn)    printf '%s' "Sources were updated — deployed agents in your projects may be outdated." ;;
     upgrade.sync_now)           printf '%s' "  Run oc sync to redeploy on all projects? [Y/n]: " ;;
     upgrade.sync_later)         printf '%s' "Redeploy manually: ./oc.sh sync" ;;
+
+    # ── cmd-review.sh ────────────────────────────────────────────────────────
+    review.no_projects)         printf '%s' "No registered projects → ./oc.sh init" ;;
+    review.choose_project)      printf '%s' "Choose a project:" ;;
+    review.choose_number)       printf '%s' "  Number: " ;;
+    review.invalid_choice)      printf '%s' "Invalid choice: " ;;
+    review.target_unavailable)  printf '%s' "Target '" ;;
+    review.target_unavailable_suffix) printf '%s' "unavailable → oc install" ;;
+    review.no_branch)           printf '%s' "Cannot detect current branch. Use --branch <branch>" ;;
+    review.label_path)          printf '%s' "Path" ;;
+    review.label_target)        printf '%s' "Target" ;;
+    review.label_branch)        printf '%s' "Branch" ;;
+    review.label_agent)         printf '%s' "Agent" ;;
+    review.agent_missing_config) printf '%s' "Agent missing from project selection: " ;;
+    review.add_agent_prompt)    printf '%s' "Add reviewer to project selection? [Y/n]: " ;;
+    review.agent_updated)       printf '%s' "Agents updated in projects.md: " ;;
+    review.redeploy_prompt)     printf '%s' "Redeploy agents now? [Y/n]: " ;;
+    review.redeploy_later)      printf '%s' "Redeploy later: ./oc.sh deploy " ;;
+    review.agents_not_deployed) printf '%s' "Agents not deployed for " ;;
+    review.agent_not_deployed)  printf '%s' "Agent not deployed: " ;;
+    review.deploy_now_prompt)   printf '%s' "Deploy now? [Y/n]: " ;;
+    review.deploy_skipped)      printf '%s' "Deployment skipped — agent may not be found" ;;
+    review.deploy_later)        printf '%s' "Deploy later: ./oc.sh deploy " ;;
+    review.main_agent)          printf '%s' "Agent: " ;;
+    review.launching)           printf '%s' "Launching review on " ;;
+
+    # ── help review ──────────────────────────────────────────────────────────
+    help.review)            printf '%s' "review [PROJECT_ID]                     Run a code review via the reviewer agent" ;;
+    help.review_branch)     printf '%s' "review [PROJECT_ID] --branch <branch>   Review a specific branch (default: current branch)" ;;
 
     # ── cmd-audit.sh ─────────────────────────────────────────────────────────
     audit.invalid_type)     printf '%s' "Invalid audit type: '" ;;

@@ -22,6 +22,7 @@ case "$COMMAND" in
   remove)          bash "$SCRIPTS_DIR/cmd-remove.sh" "${@:2}" ;;
   start)           bash "$SCRIPTS_DIR/cmd-start.sh" "${@:2}" ;;
   audit)           bash "$SCRIPTS_DIR/cmd-audit.sh" "${@:2}" ;;
+  review)          bash "$SCRIPTS_DIR/cmd-review.sh" "${@:2}" ;;
   deploy)          bash "$SCRIPTS_DIR/cmd-deploy.sh" "${@:2}" ;;
   sync)            bash "$SCRIPTS_DIR/cmd-sync.sh" "${@:2}" ;;
   config)          bash "$SCRIPTS_DIR/cmd-config.sh" "${@:2}" ;;

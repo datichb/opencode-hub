@@ -257,6 +257,73 @@ Workflow :
 
 ---
 
+## `oc review`
+
+Lance une code review IA sur une branche en invoquant l'agent `reviewer` avec le diff complet injecté dans le prompt.
+
+```bash
+oc review [PROJECT_ID] [--branch <branche>]
+```
+
+**Arguments :**
+
+| Argument | Description |
+|----------|-------------|
+| `[PROJECT_ID]` | ID du projet — sélection interactive si absent |
+
+**Options :**
+
+| Option | Description |
+|--------|-------------|
+| `--branch <branche>` | Branche à reviewer. Si absent : utilise la branche git courante du projet |
+
+**Comportement :**
+
+1. **Résolution de la branche** — si `--branch` non fourni, détecte la branche courante via `git branch --show-current` dans le répertoire du projet
+2. **Vérification projects.md** — si le projet a une sélection d'agents restrictive (pas `all`), vérifie que `reviewer` est inclus :
+   - Si manquant → propose de l'ajouter + redéployer
+3. **Vérification déploiement physique** — si le dossier agents est absent ou si `reviewer.md` manque, propose `oc deploy`
+4. **Génération du diff** — exécute `git diff main...<branche>` et injecte le résultat complet dans le prompt de bootstrap
+5. **Lancement** — ouvre l'outil avec `--agent reviewer` et le prompt contenant le diff
+
+**Exemples :**
+
+```bash
+oc review                              # sélection interactive du projet, branche courante
+oc review MON-APP                      # review de la branche courante de MON-APP
+oc review MON-APP --branch feat/login  # review de la branche feat/login
+```
+
+**Prompt injecté :**
+
+```
+Effectue une code review de la branche `feat/login`.
+
+Projet : MON-APP
+Chemin : /Users/alice/workspace/mon-app
+Branche reviewée : feat/login
+Commande diff utilisée : git diff main...feat/login
+
+→ Lire CONVENTIONS.md à la racine du projet avant la review   ← si le fichier existe
+
+--- DIFF ---
+
+diff --git a/src/auth/login.ts b/src/auth/login.ts
+...
+
+--- FIN DU DIFF ---
+
+Workflow :
+1. Si CONVENTIONS.md existe à la racine → le lire pour appliquer les conventions réelles du projet
+2. Analyser le diff ci-dessus selon la checklist systématique du skill review-protocol
+3. Produire le rapport structuré par sévérité : Critique → Majeur → Mineur → Suggestion → Points positifs
+```
+
+> L'agent `reviewer` ne modifie aucun fichier — il produit uniquement un rapport d'analyse.
+> Pour un diff vide (branche à jour avec `main`), le prompt l'indique explicitement.
+
+---
+
 ## `oc conventions`
 
 Génère ou met à jour le fichier `CONVENTIONS.md` à la racine d'un projet en

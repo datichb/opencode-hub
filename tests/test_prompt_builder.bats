@@ -277,3 +277,107 @@ EOF
   [ "$status" -eq 0 ]
   echo "$output" | grep -q "review"
 }
+
+# ── build_review_bootstrap_prompt ─────────────────────────────────────────────
+
+@test "build_review_bootstrap_prompt : contient la branche reviewée" {
+  # Mocker git pour retourner un diff minimal
+  git() {
+    if [ "${3:-}" = "diff" ]; then
+      echo "+ une ligne ajoutée"
+      return 0
+    fi
+    command git "$@"
+  }
+  export -f git
+  run build_review_bootstrap_prompt "$TEST_DIR" "TEST-PROJ" "feature/my-branch"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q "feature/my-branch"
+}
+
+@test "build_review_bootstrap_prompt : contient le diff injecté" {
+  git() {
+    if [ "${3:-}" = "diff" ]; then
+      echo "+ ligne ajoutée dans le diff"
+      return 0
+    fi
+    command git "$@"
+  }
+  export -f git
+  run build_review_bootstrap_prompt "$TEST_DIR" "TEST-PROJ" "feature/my-branch"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q "ligne ajoutée dans le diff"
+}
+
+@test "build_review_bootstrap_prompt : contient les instructions de workflow" {
+  git() {
+    if [ "${3:-}" = "diff" ]; then
+      echo "+ patch"
+      return 0
+    fi
+    command git "$@"
+  }
+  export -f git
+  run build_review_bootstrap_prompt "$TEST_DIR" "TEST-PROJ" "feature/my-branch"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q "Workflow"
+}
+
+@test "build_review_bootstrap_prompt : contient le projet et le chemin" {
+  git() {
+    if [ "${3:-}" = "diff" ]; then
+      echo "+ patch"
+      return 0
+    fi
+    command git "$@"
+  }
+  export -f git
+  run build_review_bootstrap_prompt "$TEST_DIR" "TEST-PROJ" "feature/my-branch"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q "TEST-PROJ"
+}
+
+@test "build_review_bootstrap_prompt : mentionne CONVENTIONS.md si le fichier existe" {
+  touch "$TEST_DIR/CONVENTIONS.md"
+  git() {
+    if [ "${3:-}" = "diff" ]; then
+      echo "+ patch"
+      return 0
+    fi
+    command git "$@"
+  }
+  export -f git
+  run build_review_bootstrap_prompt "$TEST_DIR" "TEST-PROJ" "feature/my-branch"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q "CONVENTIONS.md"
+  rm -f "$TEST_DIR/CONVENTIONS.md"
+}
+
+@test "build_review_bootstrap_prompt : ne mentionne pas l'hint CONVENTIONS.md si absent" {
+  git() {
+    if [ "${3:-}" = "diff" ]; then
+      echo "+ patch"
+      return 0
+    fi
+    command git "$@"
+  }
+  export -f git
+  run build_review_bootstrap_prompt "$TEST_DIR" "TEST-PROJ" "feature/my-branch"
+  [ "$status" -eq 0 ]
+  # L'hint contextuel "→ Lire CONVENTIONS.md" ne doit pas apparaître si le fichier est absent
+  ! echo "$output" | grep -q "→ Lire CONVENTIONS.md"
+}
+
+@test "build_review_bootstrap_prompt : diff vide → message explicite" {
+  git() {
+    if [ "${3:-}" = "diff" ]; then
+      echo ""
+      return 0
+    fi
+    command git "$@"
+  }
+  export -f git
+  run build_review_bootstrap_prompt "$TEST_DIR" "TEST-PROJ" "feature/my-branch"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q "aucune différence"
+}

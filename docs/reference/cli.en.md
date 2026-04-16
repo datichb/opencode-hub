@@ -259,6 +259,73 @@ Workflow:
 
 ---
 
+## `oc review`
+
+Launches an AI code review on a branch by invoking the `reviewer` agent with the full diff injected into the prompt.
+
+```bash
+oc review [PROJECT_ID] [--branch <branch>]
+```
+
+**Arguments:**
+
+| Argument | Description |
+|----------|-------------|
+| `[PROJECT_ID]` | Project ID — interactive selection if absent |
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--branch <branch>` | Branch to review. If absent: uses the project's current git branch |
+
+**Behaviour:**
+
+1. **Branch resolution** — if `--branch` is not provided, detects the current branch via `git branch --show-current` in the project directory
+2. **projects.md check** — if the project has a restrictive agent selection (not `all`), verifies that `reviewer` is included:
+   - If missing → offers to add it + redeploy
+3. **Physical deployment check** — if the agents folder is absent or `reviewer.md` is missing, offers `oc deploy`
+4. **Diff generation** — runs `git diff main...<branch>` and injects the full result into the bootstrap prompt
+5. **Launch** — opens the tool with `--agent reviewer` and the prompt containing the diff
+
+**Examples:**
+
+```bash
+oc review                              # interactive project selection, current branch
+oc review MY-APP                       # review current branch of MY-APP
+oc review MY-APP --branch feat/login   # review branch feat/login
+```
+
+**Injected prompt:**
+
+```
+Perform a code review of branch `feat/login`.
+
+Project: MY-APP
+Path: /Users/alice/workspace/my-app
+Branch reviewed: feat/login
+Diff command used: git diff main...feat/login
+
+→ Read CONVENTIONS.md at the project root before reviewing   ← if the file exists
+
+--- DIFF ---
+
+diff --git a/src/auth/login.ts b/src/auth/login.ts
+...
+
+--- END OF DIFF ---
+
+Workflow:
+1. If CONVENTIONS.md exists at the root → read it to apply real project conventions
+2. Analyse the diff above according to the systematic checklist in the review-protocol skill
+3. Produce the structured report by severity: Critical → Major → Minor → Suggestion → Positive points
+```
+
+> The `reviewer` agent does not modify any files — it only produces an analysis report.
+> For an empty diff (branch up to date with `main`), the prompt indicates this explicitly.
+
+---
+
 ## `oc conventions`
 
 Generates or updates the `CONVENTIONS.md` file at the root of a project by
