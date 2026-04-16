@@ -60,12 +60,33 @@ Cibler selon la nature de la demande :
 
 | Type de feature | Fichiers structurants à lire en priorité |
 |----------------|------------------------------------------|
-| API / Backend  | Routes, contrôleurs, services, modèles, migrations |
-| Frontend / UI  | Composants concernés, routeur, store, styles globaux |
+| API / Backend  | Routes, contrôleurs, services, use cases, modèles, migrations, DTOs |
+| Frontend / UI  | Composants concernés, pages, routeur, store Pinia, composables |
 | Data / ETL     | Pipelines existants, schémas, config sources/destinations |
 | DevOps / Infra | Dockerfiles, CI/CD, scripts de déploiement, config env |
 | Full-stack     | Combiner les deux colonnes API + Frontend |
-| Transversal    | Architecture overview, config globale, README |
+| Transversal    | Architecture overview, config globale, README, ADR existants |
+
+Pour chaque fichier lu, noter :
+- Le **pattern architectural** utilisé (use case, port/adapter, aggregate, value object, composant présentationnel/container, etc.)
+- Les **dépendances entre couches** (qui appelle qui)
+- Les **points d'extension** possibles (interfaces, abstractions existantes)
+- Les **tests existants** sur le périmètre concerné
+
+Pendant la lecture, **détecter les signaux design** :
+
+**Signaux UX** (au moins un → UX recommandé) :
+- La feature introduit ou modifie un parcours utilisateur multi-étapes
+- Elle change une interaction existante (ex : radio → checkbox, inline → modal, étape → page dédiée)
+- Elle touche un formulaire avec validation, soumission ou gestion d'erreurs non triviale
+- Elle implique un flow critique (inscription, paiement, confirmation irréversible)
+- Des questions sur "ce que voit l'utilisateur" restent ouvertes après l'exploration
+
+**Signaux UI** (au moins un → UI recommandé) :
+- Un composant Vue est modifié en profondeur (structure, props, événements)
+- Un nouveau composant visuel est à créer
+- Des variantes visuelles ou des états (hover, focus, disabled, error, loading) doivent être spécifiés
+- Le design system (DSFR ou interne) est sollicité et les bons composants à utiliser ne sont pas évidents
 
 Lire les fichiers, puis proposer d'aller plus loin si pertinent :
 > "J'ai lu [X, Y, Z]. Voulez-vous que j'explore aussi [A, B] ?"
@@ -81,7 +102,8 @@ Présenter ce qui a été détecté avant de poser des questions :
 
 ### Projet
 - Stack identifiée : [langages, frameworks, BDD]
-- Structure : [monorepo / microservices / monolithe / etc.]
+- Architecture : [clean arch / DDD / layered / etc.] — [monorepo / microservices / monolithe]
+- Patterns dominants : [use case / aggregate / value object / composant / store / etc.]
 
 ### Tickets existants liés
 - bd-X : [titre] — [lien avec la demande]
@@ -92,6 +114,10 @@ Présenter ce qui a été détecté avant de poser des questions :
 - [Ex : le module auth n'existe pas encore — à créer avant tout endpoint sécurisé]
 - [Ex : la migration users est en attente (bd-Z)]
 
+### Tests existants sur le périmètre
+- [Ex : 3 tests unitaires sur le use case concerné — à compléter]
+- [Ex : aucun test sur ce composant — à créer from scratch]
+
 ### Risques détectés
 - [Ex : conflit potentiel avec la feature en cours sur bd-W]
 - [Ex : couplage fort avec le module de notifications]
@@ -99,6 +125,10 @@ Présenter ce qui a été détecté avant de poser des questions :
 ### Points d'attention
 - [Ex : pas de tests sur le module concerné]
 - [Ex : la config prod est différente de la config dev sur ce point]
+
+### Signaux design détectés
+- **UX** : [oui ⚠️ / non] — [raison si oui : nouveau parcours multi-étapes / changement d'interaction / flow critique]
+- **UI** : [oui ⚠️ / non] — [raison si oui : nouveau composant / composant profondément modifié / variantes à spécifier]
 ```
 
 **⏸️ PAUSE — Valider le contexte :**
@@ -117,12 +147,19 @@ Les questions doivent être **contextualisées** — s'appuyer sur ce qui a ét�
 - Qui sont les utilisateurs concernés ? (rôles, personas)
 - Y a-t-il une contrainte de délai ou de périmètre à respecter ?
 - Qu'est-ce qui est **hors périmètre** pour cette itération ?
+- Y a-t-il des règles métier spécifiques ou des cas limites connus ?
 
 #### Questions techniques contextualisées (adapter selon l'exploration)
 Exemples :
 - "J'ai vu que le module [X] n'a pas de tests. Faut-il en prévoir dans ce périmètre ?"
 - "La migration [Y] est ouverte. Cette feature en dépend-elle ?"
 - "Le composant [Z] est partagé par 3 pages. La modification doit-elle rester rétrocompatible ?"
+- "Le pattern [use case / aggregate / etc.] est utilisé sur des features similaires. Faut-il s'y conformer ?"
+
+#### Questions de design / UX (pour les features avec une interface)
+- Y a-t-il des maquettes ou des specs UX disponibles ?
+- Quels composants du design system (DSFR ou autre) sont attendus ?
+- Y a-t-il des contraintes d'accessibilité spécifiques (RGAA, WCAG) ?
 
 #### Déduction des priorités
 
@@ -144,6 +181,120 @@ Toujours expliquer le raisonnement :
 
 ---
 
+## PHASE 1.5 — Délégation design (optionnelle, avant le plan)
+
+**Déclencher si au moins un signal UX ou UI a été détecté en PHASE 0.2.**
+
+Cette phase se place **avant** la PHASE 2 car les specs UX/UI influencent directement le découpage en tickets. Elle se traite en sessions séparées — le planner ne continue pas tant que l'utilisateur n'a pas rapporté les specs (ou explicitement décidé de les ignorer).
+
+---
+
+### Délégation UX
+
+**Condition** : signal UX détecté (parcours multi-étapes, changement d'interaction, formulaire complexe, flow critique).
+
+Présenter le message suivant :
+
+```
+## ⚠️ Spec UX recommandée avant planification
+
+Cette feature [modifie le parcours de sélection / introduit un flow multi-étapes / change une interaction existante].
+Planifier sans spec UX risque de découper les tickets selon la logique technique
+plutôt que selon la logique utilisateur.
+
+Je recommande d'invoquer l'UX Designer en premier pour :
+- Modéliser le user flow (nominal + alternatifs + états d'erreur)
+- Identifier les frictions et les cas limites du parcours
+- Produire des critères d'acceptance orientés utilisateur
+
+Ces éléments alimenteront directement le découpage en tickets et leurs critères d'acceptance.
+
+### Comment procéder
+
+1. Ouvrez une session avec l'agent **ux-designer**
+2. Donnez-lui ce contexte :
+   ---
+   Feature : [nom de la feature]
+   Contexte métier : [résumé du besoin collecté en PHASE 1]
+   Utilisateurs concernés : [rôles / personas identifiés]
+   Interaction à analyser : [description précise du parcours ou de l'écran concerné]
+   Tickets existants liés : [IDs si applicable]
+   ---
+3. Demandez : "Spec UX pour [nom de la feature]"
+4. Revenez ensuite ici avec sa spec en disant :
+   "Voici la spec UX produite — continue la planification avec ce contexte."
+
+### Si vous préférez continuer sans
+
+> Tapez "continuer sans UX" — je procéderai avec le contexte disponible
+> et signalerai les critères d'acceptance UX à compléter ticket par ticket.
+```
+
+**Reprise après spec UX** — quand l'utilisateur rapporte la spec UX :
+
+1. Lire le user flow nominal et les flows alternatifs
+2. En déduire les tickets supplémentaires si des étapes ou cas d'erreur non prévus apparaissent
+3. Intégrer les critères d'acceptance UX dans la section `## Comportement fonctionnel` des tickets concernés
+4. Mentionner dans les notes des tickets : `User flow : [résumé du flow nominal en 1-2 phrases]`
+5. Annoncer : "J'ai intégré la spec UX. Je continue vers le plan."
+
+---
+
+### Délégation UI
+
+**Condition** : signal UI détecté (nouveau composant, composant profondément modifié, variantes à spécifier).
+
+Présenter le message suivant **en même temps que la délégation UX** si les deux sont nécessaires, ou seul sinon :
+
+```
+## ⚠️ Spec UI recommandée avant planification
+
+Cette feature [crée un nouveau composant / modifie profondément [NomComposant] / nécessite des variantes visuelles].
+Sans spec UI, le champ `--design` des tickets sera incomplet et le développeur frontend
+devra prendre seul les décisions visuelles (composants DSFR, états, accessibilité).
+
+Je recommande d'invoquer l'UI Designer pour chaque composant concerné :
+- Identifier les composants DSFR à utiliser (et leurs variantes)
+- Spécifier les états visuels (default, hover, focus, disabled, error, loading)
+- Définir les règles d'accessibilité (ARIA, contraste, navigation clavier)
+
+### Comment procéder
+
+1. Ouvrez une session avec l'agent **ui-designer**
+2. Pour chaque composant concerné, donnez-lui ce contexte :
+   ---
+   Composant : [NomDuComposant.vue]
+   Feature : [nom de la feature]
+   Comportement attendu : [description fonctionnelle du composant]
+   Design system en place : [DSFR / autre — préciser si connu]
+   Spec UX associée : [coller le user flow si déjà produit]
+   ---
+3. Demandez : "Spec UI pour [NomComposant]"
+4. Revenez ensuite ici avec sa spec en disant :
+   "Voici la spec UI pour [composant] — continue la planification avec ce contexte."
+
+### Si vous préférez continuer sans
+
+> Tapez "continuer sans UI" — je remplirai le champ `--design` avec le contexte disponible
+> et ajouterai un commentaire `bd comments add` sur chaque ticket concerné
+> avec les instructions pour invoquer l'UI Designer ultérieurement.
+```
+
+**Reprise après spec UI** — quand l'utilisateur rapporte la spec UI :
+
+1. Identifier le(s) ticket(s) concerné(s) par cette spec
+2. Intégrer la spec dans le template `--design` du/des ticket(s) concerné(s)
+3. Compléter l'acceptance avec les critères visuels issus de la spec (états, contrastes, ARIA)
+4. Annoncer : "J'ai intégré la spec UI pour [composant]. Je continue."
+
+---
+
+### Si "continuer sans UX/UI"
+
+Appliquer la stratégie de traçabilité en PHASE 3 : pour chaque ticket concerné, ajouter un `bd comments add` avec les instructions d'invocation précises (voir PHASE 3 — Tickets sans spec design).
+
+---
+
 ## PHASE 2 — Plan hiérarchique
 
 ### Format de présentation
@@ -151,15 +302,26 @@ Toujours expliquer le raisonnement :
 ```
 ## Plan — [Nom de la feature]
 
+### Contexte métier
+[1-2 phrases : pourquoi cette feature, quelle valeur pour l'utilisateur]
+
 ### Epic 1 — [Nom de l'epic]
+*Objectif : [phrase courte décrivant la valeur de cet epic]*
+
   #### Story 1.1 — [Nom de la story] *(optionnel — omettre si granularité inutile)*
-  - [ ] Ticket 1.1.1 (P1, feature) — [Titre du ticket]
-    → [Description courte en 1 phrase]
-    → Acceptance : [critère 1] / [critère 2]
+
+  - [ ] Ticket 1.1.1 (P1, feature, ~[Xh]) — [Titre du ticket]
+    → [Description courte en 1 phrase : état actuel → état cible]
+    → Contexte métier : [pourquoi ce ticket existe]
+    → Couches touchées : [use case / DTO / API / composant / store / etc.]
+    → Tests attendus : [type de test + cas à couvrir]
+    → Acceptance : [critère 1] / [critère 2] / [critère 3]
     → Dépend de : —
 
-  - [ ] Ticket 1.1.2 (P2, task) — [Titre du ticket]
+  - [ ] Ticket 1.1.2 (P2, task, ~[Xh]) — [Titre du ticket]
     → [Description courte]
+    → Couches touchées : [...]
+    → Tests attendus : [...]
     → Acceptance : [critère]
     → Dépend de : Ticket 1.1.1
 
@@ -175,11 +337,11 @@ Toujours expliquer le raisonnement :
 ...
 
 ### Risques identifiés
-- [Risque 1 — impact potentiel]
-- [Risque 2 — mitigation suggérée]
+- [Risque 1 — impact potentiel + mitigation suggérée]
+- [Risque 2 — impact potentiel + mitigation suggérée]
 
 ### Résumé
-Epics : N | Tickets : M
+Epics : N | Tickets : M | Estimation totale : ~Xh
 Epics dans Beads : [oui / non / à confirmer]
 ```
 
@@ -213,82 +375,167 @@ Dans ce cas : proposer de scinder avant de valider le plan.
 
 ### Ordre de création
 
-1. Créer les epics en premier (si applicable)
+1. Créer les epics en premier (si applicable) et les enrichir immédiatement
 2. Créer les tickets fils avec `--parent`
-3. Enrichir chaque ticket avec description + acceptance + notes
+3. Enrichir chaque ticket avec description + acceptance + notes + design (si UI)
 4. Ajouter les dépendances via `bd dep add` après création
 5. Ajouter les labels pertinents (`-l` à la création ou `bd label add` après)
 
-### Commandes autorisées
+---
 
-**Création d'un epic :**
+### Template — Création et enrichissement d'un epic
+
 ```bash
 EPIC=$(bd create "Nom de l'epic" -t epic --json)
 EPIC_ID=$(echo $EPIC | jq -r '.id')
-bd update $EPIC_ID --description "Objectif de cet epic en langage naturel"
+bd update $EPIC_ID \
+  --description "## Objectif métier\n[Valeur apportée à l'utilisateur — pourquoi cet epic existe]\n\n## Périmètre\n[Ce qui est inclus dans cet epic]\n\n## Hors périmètre\n[Ce qui ne l'est pas pour cette itération]\n\n## Risques\n[Principaux risques identifiés sur cet epic]" \
+  --notes "## Ordre d'implémentation\n1. [ticket X] — bloquant\n2. [tickets Y, Z] — parallélisables après X\n\n## Dépendances inter-epics\n[Liens avec d'autres epics si applicable — sinon : aucun]\n\n## Estimation\n~[X] heures au total"
 ```
 
-**Création d'un ticket fils simple :**
+---
+
+### Template — Création d'un ticket fonctionnel (feature)
+
 ```bash
-T=$(bd create "Titre du ticket" -t feature -p 1 --parent $EPIC_ID --json)
+T=$(bd create "Titre du ticket" -t feature -p 1 --parent $EPIC_ID --estimate [minutes] --json)
 T_ID=$(echo $T | jq -r '.id')
 bd update $T_ID \
-  --description "Description détaillée en langage naturel" \
-  --acceptance "- Critère 1\n- Critère 2\n- Critère 3" \
-  --notes "Dépendances, contexte, risques, points d'attention"
+  --description "## Contexte métier\n[Pourquoi ce ticket existe — valeur pour l'utilisateur ou le système]\n\n## État actuel\n[Ce qui existe aujourd'hui — comportement, fichiers, structure]\n\n## État cible\n[Ce qui doit exister après — comportement attendu, ce qui change]\n\n## Contraintes et règles métier\n[Rétrocompatibilité, cas limites, règles de gestion à respecter]" \
+  --acceptance "## Comportement fonctionnel\n- [Critère observable 1]\n- [Critère observable 2]\n- [Critère observable 3]\n\n## Tests\n- [ ] Test unitaire (Vitest) : [cas nominal — décrire le scénario]\n- [ ] Test unitaire (Vitest) : [cas limite — décrire le scénario]\n- [ ] Pas de régression sur [fonctionnalité connexe]\n\n## Jeux de données représentatifs\n- Nominal : [exemple d'entrée → sortie attendue]\n- Limite : [exemple d'entrée limite → comportement attendu]" \
+  --notes "## Dépendances\n- Dépend de : [ID + titre des tickets bloquants]\n- Bloque : [ID + titre des tickets dépendants]\n\n## Architecture concernée\n- Couche(s) : [use case / service / API handler / composant / store / DTO / etc.]\n- Pattern(s) : [DDD aggregate / value object / port-adapter / composant présentationnel / etc.]\n- Fichiers structurants : [chemins relatifs]\n\n## Approches alternatives considérées\n| Approche | Avantage | Inconvénient | Retenue ? |\n|---|---|---|---|\n| [Approche A] | ... | ... | ✓ |\n| [Approche B] | ... | ... | ✗ |\n\n## Risques et points d'attention\n- [Risque technique, couplage, impact sur d'autres modules]"
 ```
 
-**Création d'un ticket avec labels et assignee :**
+---
+
+### Template — Création d'un ticket technique (task)
+
 ```bash
-T=$(bd create "Titre" -t task -p 2 -l ai-delegated -a dev-agent --parent $EPIC_ID --json)
+T=$(bd create "Titre du ticket" -t task -p 2 --parent $EPIC_ID --estimate [minutes] --json)
+T_ID=$(echo $T | jq -r '.id')
+bd update $T_ID \
+  --description "## Objectif technique\n[Pourquoi ce ticket technique est nécessaire — problème résolu ou dette adressée]\n\n## État actuel\n[Ce qui existe aujourd'hui — structure, comportement, limitation]\n\n## État cible\n[Ce qui doit exister après — nouvelle structure, interface, contrat]\n\n## Contraintes\n[Rétrocompatibilité, contrat d'interface à respecter, contraintes de performance]" \
+  --acceptance "## Contrat technique\n- [Interface ou comportement observable 1]\n- [Interface ou comportement observable 2]\n\n## Tests\n- [ ] Test unitaire (Vitest) : [cas nominal — décrire le scénario]\n- [ ] Test unitaire (Vitest) : [cas limite ou cas d'erreur]\n- [ ] Pas de régression : [ce qui ne doit pas changer]\n\n## Jeux de données représentatifs\n- Entrée : [structure d'entrée exemple]\n- Sortie : [structure de sortie attendue]" \
+  --notes "## Dépendances\n- Dépend de : [ID + titre]\n- Bloque : [ID + titre]\n\n## Architecture concernée\n- Couche(s) : [use case / DTO / port / adapter / repository / etc.]\n- Pattern(s) : [pattern DDD ou clean arch concerné]\n- Fichiers structurants : [chemins relatifs]\n\n## Approches alternatives considérées\n| Approche | Avantage | Inconvénient | Retenue ? |\n|---|---|---|---|\n| [Approche A] | ... | ... | ✓ |\n| [Approche B] | ... | ... | ✗ |\n\n## Risques et points d'attention\n- [Couplages, impacts en cascade, migrations nécessaires]"
 ```
 
-**Création d'un ticket avec dépendance :**
+---
+
+### Template — Ticket avec composant UI/frontend (ajouter --design)
+
+Pour tout ticket touchant un composant Vue, une page ou un composable :
+
+**Cas A — spec UI disponible (rapportée par l'UI Designer en PHASE 1.5) :**
+
 ```bash
-T=$(bd create "Titre" -t task -p 2 --parent $EPIC_ID --json)
+bd update $T_ID \
+  --design "## Composants du design system utilisés\n- [Nom du composant DSFR ou interne — variante utilisée]\n- [Autre composant si applicable]\n\n## Comportement UX\n- État initial : [ce que l'utilisateur voit au chargement]\n- Interaction(s) : [ce qui se passe au clic / saisie / survol]\n- État de chargement : [skeleton / spinner / disabled — préciser]\n- État d'erreur : [message, comportement du formulaire]\n- État vide : [ce qui s'affiche si aucune donnée]\n\n## Accessibilité\n- [aria-label, aria-describedby, rôles ARIA si applicable]\n- [Navigation clavier si applicable]\n- [Contrastes et lisibilité si applicable]\n\n## Responsive\n- [Comportement mobile / tablette si différent du desktop]"
+```
+
+**Cas B — spec UI non disponible (PHASE 1.5 ignorée ou non déclenchée) :**
+
+Remplir `--design` avec le contexte disponible (partiel), puis tracer la spec manquante via un commentaire :
+
+```bash
+bd update $T_ID \
+  --design "## À compléter par l'UI Designer\nVoir commentaire sur ce ticket pour les instructions d'invocation.\n\n## Contexte disponible\n- Composant(s) concerné(s) : [NomComposant.vue]\n- Comportement attendu : [description fonctionnelle extraite de la description du ticket]\n- Design system : [DSFR / autre]"
+
+bd comments add $T_ID "⚠️ Spec UI à compléter — ce ticket nécessite une spécification visuelle.
+
+Invoquer l'agent ui-designer avec ce contexte :
+---
+Composant : [NomComposant.vue]
+Feature : [nom de la feature]
+Comportement attendu : [coller la description du ticket]
+Design system : [DSFR / autre]
+Spec UX associée : [coller le user flow si disponible]
+---
+Demander : 'Spec UI pour [NomComposant]'
+
+Après la spec, mettre à jour ce ticket :
+  bd update $T_ID --design '...' (remplacer le contenu existant par la spec complète)
+  bd update $T_ID --acceptance '...' (compléter avec les critères visuels issus de la spec)"
+```
+
+---
+
+### Template — Création d'un ticket avec dépendance
+
+```bash
+T=$(bd create "Titre" -t task -p 2 --parent $EPIC_ID --estimate [minutes] --json)
 T_ID=$(echo $T | jq -r '.id')
 bd dep add $T_ID $T_PRECEDENT_ID
 bd update $T_ID \
-  --description "..." \
-  --acceptance "..." \
-  --notes "Dépend de $T_PRECEDENT_ID — ne pas démarrer avant que ce ticket soit clos."
+  --description "[...template selon type...]" \
+  --acceptance "[...template selon type...]" \
+  --notes "[...template selon type — dans la section Dépendances, indiquer explicitement : 'Ne pas démarrer avant que $T_PRECEDENT_ID soit clos.']"
 ```
 
-**Ajout d'une dépendance après création :**
+---
+
+### Template — Ticket issu d'une scission
+
 ```bash
-bd dep add $T_ID $AUTRE_ID
+T=$(bd create "Titre" -t task -p 2 -l split-from-$ORIGINAL_ID --parent $EPIC_ID --estimate [minutes] --json)
 ```
 
-**Ticket issu d'une scission :**
+---
+
+### Estimation — référence rapide
+
+| Estimation | Durée |
+|---|---|
+| `--estimate 30` | 30 min |
+| `--estimate 60` | 1h |
+| `--estimate 120` | 2h |
+| `--estimate 240` | demi-journée |
+| `--estimate 480` | 1 jour |
+
+Si l'estimation est incertaine, utiliser la borne haute et signaler dans les notes :
+> "Estimation haute — à affiner après exploration plus fine."
+
+---
+
+### Avec assignee et labels
+
 ```bash
-T=$(bd create "Titre" -t task -p 2 -l split-from-$ORIGINAL_ID --parent $EPIC_ID --json)
+T=$(bd create "Titre" -t task -p 2 -l ai-delegated -a dev-agent --parent $EPIC_ID --estimate [minutes] --json)
 ```
 
-**Avec estimation (si connue) :**
-```bash
-bd create "Titre" -t task -p 1 --parent $EPIC_ID --estimate 120 --json
-# --estimate en minutes : 60 = 1h, 120 = 2h, 480 = 1 jour
-```
+---
 
-**Types disponibles (5) :**
+### Types disponibles (5)
+
 - `-t epic` → epic (conteneur de tickets)
 - `-t feature` → nouvelle fonctionnalité
 - `-t task` → tâche technique (refactoring, migration, configuration, ADR)
 - `-t bug` → correction de bug
 - `-t chore` → maintenance, CI/CD, documentation, nettoyage
 
-**Priorités (4) — forme numérique uniquement :**
+---
+
+### Priorités (4) — forme numérique uniquement
+
 - `-p 0` → P0 critique / bloquant
 - `-p 1` → P1 haute priorité
 - `-p 2` → P2 normale (défaut)
 - `-p 3` → P3 basse priorité
 
-**Règles impératives :**
+---
+
+### Règles impératives
+
 - Toujours utiliser `--json` sur `bd create`
 - Toujours capturer l'ID via `jq -r '.id'`
 - Ne jamais utiliser `bd edit`
 - Les descriptions sont en langage naturel, jamais en code
 - Les critères d'acceptance sont observables et vérifiables
+- **Toujours renseigner `--estimate`** — même approximatif
+- **Toujours renseigner `--design`** pour tout ticket touchant un composant UI
+- **Toujours enrichir les epics** avec `--description` et `--notes` immédiatement après création
+- **Toujours inclure une section "Approches alternatives"** dans les notes quand un choix technique existe
+
+---
 
 ### Gestion des aléas en cours de création
 
@@ -299,6 +546,8 @@ bd create "Titre" -t task -p 1 --parent $EPIC_ID --estimate 120 --json
 | Dépendance découverte à la création | `bd dep add` sur le ticket en cours. Signaler dans les notes. |
 | Erreur sur un `bd create` | Signaler, ne pas créer de doublon, reprendre proprement. |
 | Doublon détecté | `bd duplicate <ID> --of <CANONICAL>` (auto-ferme le doublon). Signaler à l'utilisateur. |
+| Choix technique non tranché | Ajouter le label `needs-decision`. Documenter les options dans les notes. |
+| Infos manquantes pour rédiger | Ajouter le label `needs-clarification`. Indiquer ce qui manque dans les notes. |
 
 ---
 
@@ -341,12 +590,12 @@ Présenter le récapitulatif sous cette forme :
 ## Tickets créés
 
 ### Epic bd-X — [Nom de l'epic]
-  bd-Y  P1  feature  [Titre]
-  bd-Z  P2  task     [Titre]  → dépend de bd-Y
-  bd-W  P2  task     [Titre]  → dépend de bd-Y
+  bd-Y  P1  feature  ~2h   [Titre]
+  bd-Z  P2  task     ~4h   [Titre]  → dépend de bd-Y
+  bd-W  P2  task     ~1h   [Titre]  → dépend de bd-Y
 
 ### Epic bd-A — [Nom de l'epic]
-  bd-B  P1  feature  [Titre]  → dépend de bd-Z
+  bd-B  P1  feature  ~3h   [Titre]  → dépend de bd-Z
 
 ---
 Ordre d'implémentation :
@@ -354,7 +603,7 @@ Ordre d'implémentation :
 2. bd-Z, bd-W  (parallélisables après bd-Y)
 3. bd-B  (après bd-Z)
 
-Epics créés : N | Tickets créés : M
+Epics créés : N | Tickets créés : M | Estimation totale : ~Xh
 ```
 
 **⏸️ PAUSE — Demander :**
@@ -380,11 +629,17 @@ Epics créés : N | Tickets créés : M
 
 1. **Toujours explorer** le contexte avant de poser des questions
 2. **Toujours annoncer** ce qui va être lu avant de le lire
-3. **Toujours valider** le plan avant de créer les tickets
-4. **Toujours capturer l'ID** dynamiquement via `jq -r '.id'`
-5. **Jamais de code** dans les descriptions — langage naturel uniquement
-6. **Jamais `bd edit`** — uniquement les commandes listées dans ce skill
-7. **Toujours enrichir** chaque ticket : description + acceptance + notes
-8. **Toujours vérifier** avec `bd children` + `bd list` après la création
-9. **Jamais `ai-delegated` sans accord** — toujours demander avant de déléguer
-10. **Justifier les priorités** — toujours expliquer pourquoi un ticket est P0/P1/P2/P3
+3. **Toujours détecter** les signaux UX/UI pendant l'exploration (PHASE 0.2)
+4. **Toujours proposer** la délégation UX/UI avant la planification si signal détecté (PHASE 1.5)
+5. **Toujours valider** le plan avant de créer les tickets
+6. **Toujours capturer l'ID** dynamiquement via `jq -r '.id'`
+7. **Jamais de code** dans les descriptions — langage naturel uniquement
+8. **Jamais `bd edit`** — uniquement les commandes listées dans ce skill
+9. **Toujours enrichir** chaque ticket : description + acceptance + notes + estimate
+10. **Toujours enrichir les epics** : description + notes (jamais d'epic vide)
+11. **Toujours renseigner `--design`** pour tout ticket touchant un composant UI (spec complète si disponible, partielle + `bd comments add` sinon)
+12. **Toujours inclure les tests** dans l'acceptance (type, cas nominal, cas limite)
+13. **Toujours documenter les alternatives** dans les notes quand un choix technique existe
+14. **Toujours vérifier** avec `bd children` + `bd list` après la création
+15. **Jamais `ai-delegated` sans accord** — toujours demander avant de déléguer
+16. **Justifier les priorités** — toujours expliquer pourquoi un ticket est P0/P1/P2/P3
