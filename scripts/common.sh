@@ -9,15 +9,21 @@ PROJECTS_EXAMPLE_FILE="$HUB_DIR/projects/projects.example.md"
 PATHS_FILE="${PATHS_FILE:-$HUB_DIR/projects/paths.local.md}"
 API_KEYS_FILE="${API_KEYS_FILE:-$HUB_DIR/projects/api-keys.local.md}"
 SKILLS_DIR="$HUB_DIR/skills"
+export SKILLS_DIR
 SCRIPTS_DIR="${SCRIPTS_DIR:-$HUB_DIR/scripts}"
+export SCRIPTS_DIR
 
 # Phase 2+ : sources canoniques (agents/ et config/)
 CANONICAL_AGENTS_DIR="$HUB_DIR/agents"
+export CANONICAL_AGENTS_DIR
 HUB_CONFIG="${HUB_CONFIG:-$HUB_DIR/config/hub.json}"
 HUB_CONFIG_EXAMPLE="$HUB_DIR/config/hub.json.example"
 LIB_DIR="$HUB_DIR/scripts/lib"
+export LIB_DIR
 ADAPTERS_DIR="$HUB_DIR/scripts/adapters"
+export ADAPTERS_DIR
 EXTERNAL_SKILLS_DIR="$HUB_DIR/skills/external"
+export EXTERNAL_SKILLS_DIR
 
 # Load i18n string table (bash 3.2 compatible)
 # shellcheck source=scripts/lib/i18n.sh
@@ -39,6 +45,7 @@ CYAN='\033[96m'
 BOLD='\033[1m'
 DIM='\033[2m'
 RESET='\033[0m'
+export RED GREEN YELLOW BLUE CYAN BOLD DIM RESET
 
 # ─────────────────────────────────────────
 # LOGGERS

@@ -97,7 +97,8 @@ _render_column() {
     local i
     for (( i=0; i<count; i++ )); do
       local ticket
-      ticket=$(echo "$tickets_json" | jq -r ".[$i]" 2>/dev/null || continue)
+      ticket=$(echo "$tickets_json" | jq -r ".[$i]" 2>/dev/null)
+      [ -z "$ticket" ] && continue
 
       local id title priority type
       id=$(echo "$ticket"    | jq -r '.id    // "?"' 2>/dev/null)
@@ -106,13 +107,13 @@ _render_column() {
       type=$(echo "$ticket"  | jq -r '.type  // ""' 2>/dev/null)
 
       # Ligne 1 : id + priorité + type  (ex: "bd-12  P1  feature")
-      local meta_raw="${id}"
       local meta_color="${BOLD}${id}${RESET}"
       local p_badge; p_badge=$(_priority_badge "$priority")
       local t_badge; t_badge=$(_type_badge "$type")
 
       # Calcul de la longueur visible de la ligne meta (sans ANSI)
-      local meta_visible="${id}  $(printf 'P%s' "$priority")  ${type}"
+      local meta_visible
+      meta_visible="${id}  $(printf 'P%s' "$priority")  ${type}"
       local meta_len=${#meta_visible}
       local meta_pad=$(( inner_w - meta_len - 2 ))  # -2 pour les espaces de marge
       [ $meta_pad -lt 0 ] && meta_pad=0
