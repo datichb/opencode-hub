@@ -29,6 +29,22 @@ _trunc() {
   fi
 }
 
+# Tronque au milieu en gardant début et fin : "abc…xyz"
+# Utile pour les ids dont le suffixe numérique est la partie significative
+_trunc_mid() {
+  local str="$1" max="$2"
+  local len=${#str}
+  if [ "$len" -le "$max" ]; then
+    printf '%s' "$str"
+    return
+  fi
+  # max doit être >= 3 (au moins 1 char de chaque côté + "…")
+  [ "$max" -lt 3 ] && max=3
+  local tail=$(( (max - 1) / 2 ))   # partie droite (favorise la fin)
+  local head=$(( max - 1 - tail ))   # partie gauche
+  printf '%s…%s' "${str:0:$head}" "${str:$((len - tail))}"
+}
+
 # Répète un caractère N fois
 _repeat() {
   local char="$1" n="$2"
@@ -129,7 +145,7 @@ _render_column() {
       local id_max=$(( inner_w - 1 - 3 - 2 - 3 - type_len ))
       [ $id_max -lt 3 ] && id_max=3
       local id_trunc
-      id_trunc=$(_trunc "$id" "$id_max")
+      id_trunc=$(_trunc_mid "$id" "$id_max")
 
       # Longueur visible totale du contenu entre les bordures
       local meta_visible=" ${id_trunc} · P${priority} · ${type_trunc}"
