@@ -205,9 +205,10 @@ _render_board() {
   term_w=$(tput cols 2>/dev/null || echo 100)
 
   # 4 colonnes + 2 chars bordure par colonne (│…│) + 2 espaces entre chaque (×3)
-  local gaps=$(( 2 * 3 ))   # 6
+  local gaps=$(( 2 * 3 ))    # 6
   local borders=$(( 2 * 4 )) # 8
-  local available=$(( term_w - gaps - borders - 4 ))  # -4 pour indent (2 × "  ")
+  local indent=4              # "  " de chaque côté (2×2)
+  local available=$(( term_w - gaps - borders - indent + 4 ))  # +4 chars demandés
   local col_inner=$(( available / 4 ))
   [ $col_inner -lt 18 ] && col_inner=18
 
