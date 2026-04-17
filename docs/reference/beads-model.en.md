@@ -16,7 +16,7 @@ A ticket passes through a subset of these statuses during its lifecycle.
 |--------|----------|-------------|--------------|
 | `open` | no | Created, not yet taken up | Default state at creation |
 | `in_progress` | no | Being implemented | `bd update <ID> --claim` (atomic: assigns + sets `in_progress`) |
-| `review` | no | Implementation complete, awaiting review | `bd update <ID> -s review` |
+| `review` | no | Implementation complete, awaiting human reviewer validation. The reviewer either closes the ticket or sends it back to `in_progress` with feedback. | `bd update <ID> -s review` |
 | `blocked` | no | Blocked by a dependency or external factor | `bd update <ID> -s blocked` |
 | `cancelled` | **yes** | Abandoned — will not be implemented | `bd update <ID> -s cancelled` |
 | `closed` | **yes** | Completed and validated | `bd close <ID>` |
@@ -42,7 +42,11 @@ cancelled
   If additional work is needed, create a new ticket.
 - **`cancelled` does not use `bd close`** — use `bd update <ID> -s cancelled`.
 - **`review`** is a custom status natively accepted by `bd`.
-  Rejection from `review` moves back to `in_progress` for a correction cycle.
+  A ticket enters `review` when the developer considers their implementation complete.
+  The **human reviewer** (or reviewer agent) then either:
+  - **Accepts** → `bd close <ID> --reason "..."` — ticket moves to `closed`
+  - **Rejects** → leaves feedback via `bd comments add <ID> "Feedback: ..."`, then
+    `bd update <ID> -s in_progress` — ticket returns to the developer for a correction cycle
 - **`blocked`** can only occur from `in_progress`.
   Unblocking moves back to `in_progress`.
 
@@ -218,12 +222,12 @@ the ticket's description or notes.
  └──────────────────────────┬──────────────────────────────────┘
                             ↓
  ┌─────────────────────────────────────────────────────────────┐
- │  REVIEW (reviewer agent / human)                            │
- │                                                             │
- │  9a. Accepted  → bd close $ID --reason "..." → closed       │
- │  9b. Rejected  → bd update $ID -s in_progress               │
- │                  + bd comments add $ID "Corrections: ..."   │
- │                  → back to step 7                           │
+  │  REVIEW (reviewer agent / human)                            │
+  │                                                             │
+  │  9a. Accepted  → bd close $ID --reason "..." → closed       │
+  │  9b. Rejected  → bd comments add $ID "Feedback: ..."        │
+  │                  bd update $ID -s in_progress               │
+  │                  → back to step 7 (correction cycle)        │
  └──────────────────────────┬──────────────────────────────────┘
                             ↓
  ┌─────────────────────────────────────────────────────────────┐

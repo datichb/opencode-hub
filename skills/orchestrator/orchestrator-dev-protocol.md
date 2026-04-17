@@ -248,12 +248,15 @@ CP-2 est **toujours une pause, dans tous les modes**.
      `bd close <ID> --reason "Implemented in commit <hash>" --suggest-next`
   → étape 6
 
-- **corriger** → repasser en `in_progress` et retour à l'étape 2 avec le rapport de review
+- **corriger** → le reviewer a formulé des retours — repasser en `in_progress` avec le résumé du rapport :
 
   ```bash
+  bd comments add <ID> "Retours reviewer : <résumé du rapport de review>"
   bd update <ID> -s in_progress
-  bd comments add <ID> "Corrections demandées : <résumé du rapport de review>"
   ```
+
+  > **Ordre obligatoire :** poser le commentaire **avant** de repasser en `in_progress`,
+  > pour que le developer agent trouve les retours dès qu'il reprend le ticket via `bd show <ID>`.
 
   **Routing de la correction :**
   - Si le rapport de review contient un 🔴 Critique de nature **sécurité** (faille OWASP,

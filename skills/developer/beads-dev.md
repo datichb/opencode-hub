@@ -7,11 +7,13 @@ description: Workflow exécuteur Beads (bd) — clamer, implémenter, passer en 
 
 ```
 1. bd ready --label ai-delegated --json  → tickets délégués à l'agent
-2. bd show <ID>                          → lire le détail (description, acceptance, notes)
+2. bd show <ID>                          → lire le détail (description, acceptance, notes, commentaires reviewer)
 3. bd update <ID> --claim                → clamer avant de commencer
 4. [implémenter + tester]
-5. bd update <ID> -s review              → passer en review
+5. bd update <ID> -s review              → passer en review (attente reviewer)
 6. [review — accepté ou rejeté]
+   → accepté : bd close <ID> --suggest-next
+   → rejeté  : lire les retours (bd show <ID>), corriger, retour étape 5
 7. bd close <ID> --suggest-next          → clore et voir le ticket suivant
 ```
 
@@ -38,6 +40,9 @@ Après implémentation et tests, signaler que le travail est prêt pour relectur
 bd update <ID> -s review
 ```
 
+Le ticket est maintenant en attente de validation par le **reviewer humain**.
+Le reviewer consulte l'implémentation et décide :
+
 ### Si la review accepte :
 
 ```bash
@@ -47,16 +52,21 @@ bd close <ID> --reason "Implémenté dans le commit abc123" --suggest-next
 `--suggest-next` affiche les tickets qui viennent d'être débloqués par cette clôture,
 ce qui permet de choisir la prochaine tâche sans relancer `bd ready`.
 
-### Si la review rejette :
+### Si la review rejette (retours formulés) :
 
-Le ticket repasse en `in_progress` pour un cycle de correction :
+Le reviewer pose son commentaire et repasse le ticket en `in_progress` :
 
 ```bash
+bd comments add <ID> "Retours : <détail des corrections attendues>"
 bd update <ID> -s in_progress
-bd comments add <ID> "Corrections demandées : ..."
 ```
 
-Corriger, puis repasser en review (`bd update <ID> -s review`).
+En tant que developer agent, quand tu reprends un ticket rejeté :
+1. Lire le commentaire du reviewer : `bd show <ID>` (les commentaires sont visibles dans le détail)
+2. Appliquer les corrections demandées
+3. Repasser en review : `bd update <ID> -s review`
+
+> **Limite :** après 3 cycles de correction sans résolution, signaler le blocage à l'utilisateur.
 
 ---
 

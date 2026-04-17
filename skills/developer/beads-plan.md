@@ -63,7 +63,8 @@ bd children <EPIC_ID>
 
 **Transitions courantes :**
 - `open → in_progress → review → closed`
-- `review → in_progress` (rejet — retour en dev)
+- `review → in_progress` (rejet — reviewer formule ses retours via `bd comments add`, puis repasse en `in_progress`)
+- `in_progress → review` (après correction suite à rejet)
 - `in_progress → blocked → in_progress` (blocage/déblocage)
 - `open → cancelled` (abandon avant prise en charge)
 
