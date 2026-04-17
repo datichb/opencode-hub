@@ -66,11 +66,11 @@ _pad() {
 _priority_badge() {
   local p="$1"
   case "$p" in
-    0) printf "${RED}${BOLD}P0${RESET}" ;;
-    1) printf "${YELLOW}P1${RESET}" ;;
-    2) printf "${DIM}P2${RESET}" ;;
-    3) printf "${DIM}P3${RESET}" ;;
-    *) printf "${DIM}??${RESET}" ;;
+    0) printf '%b' "${RED}${BOLD}P0${RESET}" ;;
+    1) printf '%b' "${YELLOW}P1${RESET}" ;;
+    2) printf '%b' "${DIM}P2${RESET}" ;;
+    3) printf '%b' "${DIM}P3${RESET}" ;;
+    *) printf '%b' "${DIM}??${RESET}" ;;
   esac
 }
 
@@ -108,7 +108,8 @@ _render_column() {
   count=$(echo "$tickets_json" | jq 'length' 2>/dev/null || echo "0")
 
   # Ligne vide interne réutilisable (1 ligne de respiration)
-  local blank_line="${col_color}│${RESET}$(printf '%*s' "$inner_w" '')${col_color}│${RESET}"
+  local blank_line
+  blank_line="${col_color}│${RESET}$(printf '%*s' "$inner_w" '')${col_color}│${RESET}"
 
   if [ "$count" -eq 0 ]; then
     # Colonne vide — message centré
@@ -208,7 +209,7 @@ _render_board() {
   local gaps=$(( 2 * 3 ))    # 6
   local borders=$(( 2 * 4 )) # 8
   local indent=4              # "  " de chaque côté (2×2)
-  local available=$(( term_w - gaps - borders - indent + 4 ))  # +4 chars demandés
+  local available=$(( term_w - gaps - borders - indent + 16 ))  # +4 par colonne × 4
   local col_inner=$(( available / 4 ))
   [ $col_inner -lt 18 ] && col_inner=18
 
