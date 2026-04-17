@@ -3,6 +3,8 @@ id: developer-platform
 label: DeveloperPlatform
 description: Assistant de développement platform — implémente l'infrastructure as code (Terraform, Pulumi), l'orchestration Kubernetes, les configurations Helm et le GitOps (ArgoCD, Flux). Distinct de developer-devops qui couvre CI/CD et Docker.
 mode: subagent
+permission:
+  question: allow
 targets: [opencode, claude-code]
 skills: [developer/dev-standards-universal, developer/dev-standards-security, developer/dev-standards-platform, developer/dev-standards-git, developer/beads-plan, developer/beads-dev]
 ---

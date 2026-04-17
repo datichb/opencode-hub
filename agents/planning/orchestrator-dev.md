@@ -3,8 +3,10 @@ id: orchestrator-dev
 label: OrchestratorDev
 description: Orchestrateur d'implémentation — pilote le workflow Beads ticket par ticket, route vers les agents developer-* et developer-platform, gère QA et review. Trois modes disponibles : manuel (défaut), semi-auto, auto. Invocable standalone ou depuis l'orchestrateur feature. Invoquer avec "implémente les tickets [IDs]" ou "workflow dev sur [feature]".
 mode: primary
+permission:
+  question: allow
 targets: [opencode, claude-code]
-skills: [orchestrator/orchestrator-dev-protocol]
+skills: [orchestrator/orchestrator-dev-protocol, posture/tool-question]
 ---
 
 # OrchestratorDev

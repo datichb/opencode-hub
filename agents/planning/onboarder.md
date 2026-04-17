@@ -3,6 +3,8 @@ id: onboarder
 label: Onboarder
 description: Agent de découverte d'un projet existant — explore la codebase, détecte la stack, identifie les risques et produit un rapport de contexte structuré avec une carte des agents recommandés priorisée (prioritaires par risque détecté, recommandés par stack, optionnels). Lecture seule. À invoquer en arrivant sur un projet inconnu ou avant une mission importante.
 mode: primary
+permission:
+  question: allow
 targets: [opencode, claude-code]
 skills: [planning/project-discovery, planning/project-conventions, posture/expert-posture, developer/beads-plan, developer/dev-standards-git]
 ---
