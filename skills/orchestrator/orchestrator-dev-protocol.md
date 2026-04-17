@@ -20,7 +20,7 @@ Tu ne codes jamais, tu ne modifies jamais de fichiers.
 ❌ Tu n'implémentes JAMAIS du code toi-même
 ❌ Tu ne clores JAMAIS un ticket sans que le reviewer ait produit son rapport
 ❌ Tu ne passes JAMAIS en mode `semi-auto` ou `auto` sans que ce mode ait été choisi explicitement
-✅ **CP-2 (merge ou corriger ?) est une pause dans TOUS les modes sans exception**
+✅ **CP-2 (commit ou corriger ?) est une pause dans TOUS les modes sans exception**
 ✅ L'utilisateur peut taper "stop" à n'importe quel moment — tous les modes l'honorent
 ✅ Quand invoqué depuis l'orchestrateur feature, tu reçois le mode déjà choisi — tu ne le redemandes pas
 
@@ -133,7 +133,7 @@ Afficher le ticket :
   ```
   ⏸️ [CP-1] Démarrer l'implémentation de ce ticket ? (oui / passer / stop)
   ```
-  - **oui** → étape 2
+  - **oui** → proposition de branche (voir ci-dessous)
   - **passer** → ticket ignoré, ticket suivant
   - **stop** → récap de l'état courant et arrêt
 
@@ -141,6 +141,28 @@ Afficher le ticket :
   ```
   ▶️ [CP-1] Démarrage automatique.
   ```
+  → proposition de branche (voir ci-dessous)
+
+**Proposition de branche dédiée (tous modes) :**
+
+Calculer le nom de branche selon la convention `<type>/<ticket-id>-<description-courte>` à partir du type et du titre du ticket, puis proposer :
+
+```
+⏸️ [CP-1 — branche] Créer une branche dédiée pour ce ticket ?
+
+  Branche suggérée : <type>/<ticket-id>-<description-courte>
+
+  (oui / non — non = rester sur la branche courante)
+```
+
+⏸️ **Attendre la réponse. Cette pause est obligatoire dans tous les modes.**
+
+- **oui** → transmettre le nom de branche à l'agent développeur avec l'instruction :
+  > « Crée et bascule sur la branche `<nom>` avant de démarrer :
+  > `git checkout -b <nom>` »
+- **non** → continuer sur la branche courante, ne pas créer de branche
+
+→ étape 2
 
 ---
 
@@ -211,12 +233,21 @@ Fournir au reviewer :
 
 ---
 
-⏸️ [CP-2] Quelle suite ? (merge / corriger)
+⏸️ [CP-2] Quelle suite ? (commit / corriger)
 ```
 
 CP-2 est **toujours une pause, dans tous les modes**.
 
-- **merge** → clore le ticket (`bd close <ID> --reason "..." --suggest-next`) puis étape 6
+- **commit** →
+  1. Formuler le message de commit selon Conventional Commits :
+     `<type>(<scope>): <description>` — basé sur le type du ticket, l'ID et son titre
+  2. Transmettre l'instruction à l'agent développeur :
+     > « Crée le commit final :
+     > `git commit -m "<type>(<scope>): <description>"` »
+  3. Une fois le commit confirmé, clore le ticket :
+     `bd close <ID> --reason "Implemented in commit <hash>" --suggest-next`
+  → étape 6
+
 - **corriger** → repasser en `in_progress` et retour à l'étape 2 avec le rapport de review
 
   ```bash
@@ -313,7 +344,7 @@ Afficher en fin de workflow (tous les tickets traités ou suite à un **stop**) 
 **Statut global :** succès | partiel | bloqué
 ```
 
-- `succès` — tous les tickets traités ont été mergés sans blocage persistant
+- `succès` — tous les tickets traités ont été commités sans blocage persistant
 - `partiel` — au moins un ticket ignoré ou bloqué après 3 cycles de review
 - `bloqué` — au moins un ticket est resté bloqué et nécessite une intervention manuelle
 
@@ -378,6 +409,7 @@ Si résolu : `bd update <ID> -s in_progress` puis reprendre l'implémentation.
 - Implémenter du code toi-même, même pour "débloquer" une situation
 - Clore un ticket Beads sans que le reviewer ait validé
 - Automatiser CP-2 — cette pause est absolue dans tous les modes
+- Exécuter `git merge`, `git push` ou toute opération d'envoi/fusion de branches
 - Modifier les tickets Beads sans validation de l'utilisateur
 - Lancer plusieurs tickets en parallèle — traitement séquentiel uniquement
 - Résumer ou abréger les rapports de review — les transmettre dans leur intégralité

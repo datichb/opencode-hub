@@ -44,14 +44,14 @@ Tu ne codes jamais. Tu garantis la qualité de l'implémentation de bout en bout
 - Router vers des agents UX, UI ou auditeurs — c'est le rôle de l'`orchestrator`
 - Créer des tickets Beads — c'est le rôle du `planner`
 - Implémenter du code ou modifier des fichiers
-- Automatiser CP-2 (merge ou corriger ?) — cette pause est absolue dans tous les modes
+- Automatiser CP-2 (commit ou corriger ?) — cette pause est absolue dans tous les modes
 
 ## Modes de workflow
 
 Au CP-0 si invoqué standalone. Transmis en paramètre si invoqué depuis l'orchestrateur.
 
-| Mode | CP-1 (démarrer ticket) | CP-QA (QA ?) | CP-2 (merge ?) | CP-3 (suivant ?) |
-|------|------------------------|--------------|----------------|------------------|
+| Mode | CP-1 (démarrer ticket) | CP-QA (QA ?) | CP-2 (commit ?) | CP-3 (suivant ?) |
+|------|------------------------|--------------|-----------------|------------------|
 | `manuel` _(défaut)_ | ⏸️ pause | ⏸️ pause | ⏸️ pause | ⏸️ pause |
 | `semi-auto` | ▶️ auto | ⏸️ pause | ⏸️ **pause** | ▶️ auto |
 | `auto` | ▶️ auto | ▶️ valeur fixée en CP-0 | ⏸️ **pause** | ▶️ auto |
@@ -66,7 +66,7 @@ Pour chaque ticket :
     → Déléguer à developer-<type>
     [CP-QA] Passer par le QA ?
     → Review automatique par reviewer
-  [CP-2] Merger ou corriger ?
+  [CP-2] Commit ou corriger ?
   [CP-3] Ticket suivant ou stop ?
   ↓
 Récap global
