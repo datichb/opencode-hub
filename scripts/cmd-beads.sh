@@ -1,6 +1,19 @@
 #!/bin/bash
 set -euo pipefail
 
+# ── Charger le module board ───────────────
+# shellcheck source=scripts/cmd-board.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/cmd-board.sh"
+
+# ── Vérifier que bd est disponible ────────
+_require_bd() {
+  if ! command -v bd &>/dev/null; then
+    log_error "$(t beads.not_installed)"
+    log_info  "$(t beads.install_hint)"
+    exit 1
+  fi
+}
+
 # ── Aide interne ──────────────────────────
 _beads_usage() {
   echo ""
@@ -20,64 +33,13 @@ _beads_usage() {
   echo "  $(t help.beads_tracker_switch)"
   echo "  $(t help.beads_tracker_set_sync_mode)"
   echo ""
-  echo -e "${BOLD}$(t beads.ui.title)${RESET}"
-  echo "  $(t help.beads_ui_install)"
-  echo "  $(t help.beads_ui_start)"
-  echo "  $(t help.beads_ui_stop)"
-  echo "  $(t help.beads_ui_status)"
+  echo -e "${BOLD}$(t beads.board.title)${RESET}"
+  echo "  $(t help.beads_board)"
+  echo "  $(t help.beads_board_watch)"
   echo ""
 }
 
 # ── Vérifier que bd est disponible ────────
-_require_bd() {
-  if ! command -v bd &>/dev/null; then
-    log_error "$(t beads.not_installed)"
-    log_info  "$(t beads.install_hint)"
-    exit 1
-  fi
-}
-
-# ── Installer bdui (logique partagée) ────
-_install_bdui() {
-  if command -v bdui &>/dev/null; then
-    log_success "$(t beads.ui.already_installed)"
-    return 0
-  fi
-  if ! command -v npm &>/dev/null; then
-    log_error "$(t beads.ui.install_no_npm)"
-    return 1
-  fi
-  log_info "$(t beads.ui.installing)"
-  if npm install -g beads-ui; then
-    log_success "$(t beads.ui.installed)"
-    return 0
-  else
-    log_error "$(t beads.ui.install_failed)"
-    return 1
-  fi
-}
-
-# ── Vérifier que bdui est disponible ──────
-# Si bdui est absent et que stdin est un terminal, propose l'installation.
-_require_bdui() {
-  if command -v bdui &>/dev/null; then
-    return 0
-  fi
-  log_warn "$(t beads.ui.not_installed)"
-  if [ -t 0 ]; then
-    read -rp "  $(t beads.ui.install_prompt)" _bdui_install_choice </dev/tty
-    if [[ "${_bdui_install_choice:-Y}" =~ ^[Yy]$ ]]; then
-      _install_bdui || exit 1
-      return 0
-    else
-      log_info "$(t beads.ui.install_cancelled)"
-      exit 1
-    fi
-  else
-    log_info "$(t beads.ui.install_hint)"
-    exit 1
-  fi
-}
 
 # ── Vérifier que .beads/ existe ───────────
 _require_beads_init() {
@@ -759,58 +721,6 @@ cmd_create() {
   (cd "$path" && bd "${bd_args[@]}") || { log_error "$(t beads.create.failed)"; exit 1; }
 }
 
-# ══════════════════════════════════════════
-# Sous-commandes : ui *
-# ══════════════════════════════════════════
-
-# ui install — installe bdui
-cmd_ui_install() {
-  _install_bdui
-}
-
-# ui start — lance bdui dans le répertoire du projet
-cmd_ui_start() {
-  _require_bdui
-
-  local id="${1:-}"
-  local port="${2:-}"
-
-  local bdui_args=("start" "--open")
-  [ -n "$port" ] && bdui_args+=("--port" "$port")
-
-  if [ -n "$id" ]; then
-    id=$(normalize_project_id "$id")
-    local path
-    path=$(resolve_project_path "$id")
-    _require_beads_init "$path" "$id"
-    log_info "$(t beads.ui.starting) $id ($path)"
-    (cd "$path" && bdui "${bdui_args[@]}" &) || { log_error "Échec de bdui start"; exit 1; }
-  else
-    log_info "$(t beads.ui.starting) ."
-    (bdui "${bdui_args[@]}" &) || { log_error "Échec de bdui start"; exit 1; }
-  fi
-  log_success "$(t beads.ui.started)"
-}
-
-# ui stop — arrête bdui
-cmd_ui_stop() {
-  _require_bdui
-  log_info "$(t beads.ui.stopping)"
-  if bdui stop; then
-    log_success "$(t beads.ui.stopped)"
-  else
-    log_error "Échec de bdui stop"
-    exit 1
-  fi
-}
-
-# ui status — affiche le statut bdui
-cmd_ui_status() {
-  _require_bdui
-  log_info "$(t beads.ui.status_cmd)"
-  bdui status
-}
-
 # ── Dispatch (exécuté seulement si le script est lancé directement) ────────
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then  source "$(cd "$(dirname "$0")" && pwd)/common.sh"
   resolve_oc_lang
@@ -827,6 +737,7 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then  source "$(cd "$(dirname "$0")" && pw
     create)  cmd_create  "$PROJECT_ID" "${@:3}" ;;
     open)    cmd_open    "$PROJECT_ID" ;;
     sync)    cmd_sync    "$PROJECT_ID" "${@:3}" ;;
+    board)   cmd_board   "$PROJECT_ID" "${@:3}" ;;
     tracker)
       TRACKER_SUBCMD="${2:-}"
       TRACKER_PROJECT="${3:-}"
@@ -840,20 +751,6 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then  source "$(cd "$(dirname "$0")" && pw
           echo -e "${BOLD}$(t beads.tracker.usage)${RESET}"
           ;;
         *) log_error "$(t beads.tracker.unknown_subcmd) $TRACKER_SUBCMD"; exit 1 ;;
-      esac
-      ;;
-    ui)
-      UI_SUBCMD="${2:-}"
-      case "$UI_SUBCMD" in
-        install) cmd_ui_install ;;
-        start)  cmd_ui_start  "${3:-}" "${4:-}" ;;
-        stop)   cmd_ui_stop ;;
-        status) cmd_ui_status ;;
-        ""|--help|-h)
-          echo ""
-          echo -e "${BOLD}$(t beads.ui.usage)${RESET}"
-          ;;
-        *) log_error "$(t beads.ui.unknown_subcmd) $UI_SUBCMD"; exit 1 ;;
       esac
       ;;
     ""|--help|-h) _beads_usage ;;

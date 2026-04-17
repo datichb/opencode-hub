@@ -577,107 +577,50 @@ EOF
   ! grep -q "bd label create" "$BD_CALLS_LOG"
 }
 
-# ── cmd_ui_start / cmd_ui_stop / cmd_ui_status — guard bdui ──────────────────
+# ── cmd_board — vérifications de base ────────────────────────────────────────
 
-@test "cmd_ui_start : exit si bdui n'est pas installé" {
-  # Surcharger bdui pour simuler son absence
-  bdui() { return 127; }
-  export -f bdui
-  # Forcer _require_bdui à simuler l'absence (command -v bdui échouera grâce au override)
-  _require_bdui() { log_error "$(t beads.ui.not_installed)"; log_info "$(t beads.ui.install_hint)"; exit 1; }
-  export -f _require_bdui
+@test "cmd_board : exit si bd n'est pas disponible" {
+  _require_bd() { log_error "bd non installé"; exit 1; }
+  export -f _require_bd
 
-  run cmd_ui_start
-  [ "$status" -ne 0 ]
-  echo "$output" | grep -qi "bdui"
-}
-
-@test "cmd_ui_stop : exit si bdui n'est pas installé" {
-  _require_bdui() { log_error "$(t beads.ui.not_installed)"; exit 1; }
-  export -f _require_bdui
-
-  run cmd_ui_stop
+  run cmd_board "TEST-PROJECT"
   [ "$status" -ne 0 ]
 }
 
-@test "cmd_ui_status : exit si bdui n'est pas installé" {
-  _require_bdui() { log_error "$(t beads.ui.not_installed)"; exit 1; }
-  export -f _require_bdui
+@test "cmd_board : exit si .beads/ n'existe pas dans le projet" {
+  _require_bd() { return 0; }
+  export -f _require_bd
+  _require_beads_init() { log_error "Beads non initialisé"; exit 1; }
+  export -f _require_beads_init
 
-  run cmd_ui_status
+  run cmd_board "TEST-PROJECT"
   [ "$status" -ne 0 ]
 }
 
-@test "cmd_ui_start : appelle bdui start --open si bdui est disponible" {
-  # Mock bdui — enregistre les appels
-  BDUI_CALLS_LOG="$TEST_DIR/bdui_calls.log"
-  : > "$BDUI_CALLS_LOG"
-  bdui() {
-    echo "bdui $*" >> "$BDUI_CALLS_LOG"
-    return 0
+@test "cmd_board : appelle bd list pour les 4 statuts" {
+  BD_CALLS_LOG="$TEST_DIR/bd_board_calls.log"
+  : > "$BD_CALLS_LOG"
+
+  _require_bd() { return 0; }
+  export -f _require_bd
+  _require_beads_init() { return 0; }
+  export -f _require_beads_init
+  resolve_project_path() { echo "$TEST_DIR/fake-project"; }
+  export -f resolve_project_path
+
+  mkdir -p "$TEST_DIR/fake-project/.beads"
+
+  bd() {
+    echo "bd $*" >> "$BD_CALLS_LOG"
+    echo "[]"
   }
-  export -f bdui
-  export BDUI_CALLS_LOG
+  export -f bd
+  export BD_CALLS_LOG
 
-  _require_bdui() { return 0; }
-  export -f _require_bdui
-
-  run cmd_ui_start
-  [ "$status" -eq 0 ]
-  grep -q "bdui start --open" "$BDUI_CALLS_LOG"
-}
-
-@test "cmd_ui_start : passe --port si fourni" {
-  BDUI_CALLS_LOG="$TEST_DIR/bdui_calls.log"
-  : > "$BDUI_CALLS_LOG"
-  bdui() {
-    echo "bdui $*" >> "$BDUI_CALLS_LOG"
-    return 0
-  }
-  export -f bdui
-  export BDUI_CALLS_LOG
-
-  _require_bdui() { return 0; }
-  export -f _require_bdui
-
-  # cmd_ui_start <id> <port> — sans PROJECT_ID (vide), avec port
-  run cmd_ui_start "" "8080"
-  [ "$status" -eq 0 ]
-  grep -q "bdui start --open --port 8080" "$BDUI_CALLS_LOG"
-}
-
-@test "cmd_ui_stop : appelle bdui stop" {
-  BDUI_CALLS_LOG="$TEST_DIR/bdui_calls.log"
-  : > "$BDUI_CALLS_LOG"
-  bdui() {
-    echo "bdui $*" >> "$BDUI_CALLS_LOG"
-    return 0
-  }
-  export -f bdui
-  export BDUI_CALLS_LOG
-
-  _require_bdui() { return 0; }
-  export -f _require_bdui
-
-  run cmd_ui_stop
-  [ "$status" -eq 0 ]
-  grep -q "bdui stop" "$BDUI_CALLS_LOG"
-}
-
-@test "cmd_ui_status : appelle bdui status" {
-  BDUI_CALLS_LOG="$TEST_DIR/bdui_calls.log"
-  : > "$BDUI_CALLS_LOG"
-  bdui() {
-    echo "bdui $*" >> "$BDUI_CALLS_LOG"
-    return 0
-  }
-  export -f bdui
-  export BDUI_CALLS_LOG
-
-  _require_bdui() { return 0; }
-  export -f _require_bdui
-
-  run cmd_ui_status
-  [ "$status" -eq 0 ]
-  grep -q "bdui status" "$BDUI_CALLS_LOG"
+  run cmd_board "TEST-PROJECT"
+  # Vérifier que bd list a été appelé pour les 4 statuts actifs
+  grep -q "bd list -s open"        "$BD_CALLS_LOG"
+  grep -q "bd list -s in_progress" "$BD_CALLS_LOG"
+  grep -q "bd list -s review"      "$BD_CALLS_LOG"
+  grep -q "bd list -s blocked"     "$BD_CALLS_LOG"
 }

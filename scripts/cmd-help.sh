@@ -130,10 +130,8 @@ _cmd help.beads_tracker_status
 _cmd help.beads_tracker_setup
 _cmd help.beads_tracker_switch
 _cmd help.beads_tracker_set_sync_mode
-_cmd help.beads_ui_install
-_cmd help.beads_ui_start
-_cmd help.beads_ui_stop
-_cmd help.beads_ui_status
+_cmd help.beads_board
+_cmd help.beads_board_watch
 
 _section help.section.examples
 _note "./oc.sh skills search pdf"

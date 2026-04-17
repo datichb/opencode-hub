@@ -8,11 +8,9 @@ ensure_projects_file
 # ── Parsing des arguments (--dev, --onboard, --label, --assignee sont des flags libres) ───
 DEV_MODE=false
 ONBOARD_MODE=false
-UI_MODE=false
 DEV_LABEL=""
 DEV_ASSIGNEE=""
 AGENT_NAME=""
-UI_PORT=""
 ARGS=()
 _prev=""
 for arg in "$@"; do
@@ -20,13 +18,11 @@ for arg in "$@"; do
     --label)    DEV_LABEL="$arg";    _prev=""; continue ;;
     --assignee) DEV_ASSIGNEE="$arg"; _prev=""; continue ;;
     --agent)    AGENT_NAME="$arg";   _prev=""; continue ;;
-    --port)     UI_PORT="$arg";      _prev=""; continue ;;
   esac
   case "$arg" in
     --dev)      DEV_MODE=true ;;
     --onboard)  ONBOARD_MODE=true ;;
-    --ui)       UI_MODE=true ;;
-    --label|--assignee|--agent|--port) _prev="$arg" ;;
+    --label|--assignee|--agent) _prev="$arg" ;;
     *)          ARGS+=("$arg") ;;
   esac
 done
@@ -226,18 +222,6 @@ if [ "$ONBOARD_MODE" = true ]; then
   AGENT_NAME="${AGENT_NAME:-onboarder}"
   echo ""
   log_info "Mode --onboard  découverte projet activée  agent: ${AGENT_NAME}"
-fi
-
-# ── Mode --ui : lancer bdui en arrière-plan ───────────────────────────────────
-if [ "$UI_MODE" = true ]; then
-  if command -v bdui &>/dev/null; then
-    log_info "$(t start.ui_starting)"
-    _bdui_args=("start" "--open")
-    [ -n "$UI_PORT" ] && _bdui_args+=("--port" "$UI_PORT")
-    (cd "$PROJECT_PATH" && bdui "${_bdui_args[@]}" &)
-  else
-    log_warn "$(t start.ui_not_installed)"
-  fi
 fi
 
 # ── Confirmation avant lancement ──────────────────────────────────────────────

@@ -12,8 +12,7 @@ Ce guide vous permet d'installer le hub et de lancer votre premier agent en moin
 > Les autres dépendances (`jq`, `Node.js`, `opencode`, `bun`) sont proposées à l'installation — **chaque outil demande une confirmation explicite** avant d'être installé.
 >
 > **Beads (`bd`)** est proposé à l'installation par `oc install` (via `brew install beads` ou curl).
->
-> **Beads UI (`bdui`)** est également proposé par `oc install` (via `npm install -g beads-ui`). Il fournit une interface web locale pour visualiser et gérer les tickets Beads.
+> Le board kanban terminal (`oc beads board`) est intégré — aucune installation supplémentaire requise.
 
 ---
 
@@ -122,18 +121,11 @@ En mode développement (charge les tickets `ai-delegated` ouverts) :
 oc start MON-APP --dev
 ```
 
-Avec l'interface graphique Beads en parallèle :
+Avec le board kanban terminal ouvert dans un second volet :
 
 ```bash
-oc start MON-APP --ui         # lance l'outil + bdui en parallèle
-oc start MON-APP --dev --ui   # mode dev + bdui
-```
-
-Ou démarrer bdui indépendamment :
-
-```bash
-oc beads ui start MON-APP     # démarre bdui pour MON-APP
-oc beads ui stop              # arrête bdui
+oc beads board MON-APP            # affiche le board une fois
+oc beads board MON-APP --watch    # rafraîchissement en direct toutes les 5s
 ```
 
 ---
@@ -222,7 +214,6 @@ curl -fsSL https://raw.githubusercontent.com/datichb/opencode-hub/main/install.s
 | Agent absent dans l'outil | Relancer `oc deploy <target> MON-APP` |
 | Agent obsolète (`⚠ OBSOLÈTE`) | `oc deploy <target> MON-APP` pour resynchroniser |
 | `bd: command not found` | Installer Beads : `brew install beads` |
-| `bdui: command not found` | Installer Beads UI : `npm install -g beads-ui` |
 | Dossier d'install déjà existant | `OPENCODE_HUB_DIR=~/autre-chemin bash install.sh` |
 
 ---

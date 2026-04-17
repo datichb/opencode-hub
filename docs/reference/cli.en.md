@@ -143,7 +143,7 @@ oc sync --dry-run   # check without deploying
 Launches the default tool in a project's directory.
 
 ```bash
-oc start [PROJECT_ID] [prompt] [--dev [--label <label>] [--assignee <user>]] [--onboard] [--ui [--port <port>]]
+oc start [PROJECT_ID] [prompt] [--dev [--label <label>] [--assignee <user>]] [--onboard]
 ```
 
 **Arguments:**
@@ -161,11 +161,8 @@ oc start [PROJECT_ID] [prompt] [--dev [--label <label>] [--assignee <user>]] [--
 | `--dev --label <label>` | Like `--dev`, but filters tickets with label `<label>` |
 | `--dev --assignee <user>` | Like `--dev`, but filters tickets assigned to `<user>` |
 | `--onboard` | Injects a project discovery prompt to onboard the agent on the codebase |
-| `--ui` | Starts `bdui` (Beads graphical interface) in the background alongside the tool |
-| `--ui --port <port>` | Like `--ui`, but on a specific port (default: 3000) |
 
 > `--dev` and `--onboard` are mutually exclusive. `--label` and `--assignee` are mutually exclusive.
-> `--ui` requires `bdui` to be installed (`npm install -g beads-ui`). If absent, a warning is shown but the tool still launches.
 
 **Examples:**
 
@@ -177,9 +174,6 @@ oc start MY-APP --dev                           # load ai-delegated tickets
 oc start MY-APP --dev --label ai-delegated      # filter by label
 oc start MY-APP --dev --assignee alice          # filter by assignee
 oc start MY-APP --onboard                       # project discovery prompt
-oc start MY-APP --ui                            # launch tool + bdui side-by-side
-oc start MY-APP --dev --ui                      # dev mode + bdui
-oc start MY-APP --ui --port 8080                # bdui on port 8080
 ```
 
 **Launch display:**
@@ -715,43 +709,29 @@ oc beads create MY-APP "Fix race condition" --type fix --label bug  # with flags
 
 > `oc start` automatically warns if `.beads/` is not present in the project.
 
-### `oc beads ui` — Beads graphical interface
+### `oc beads board` — Terminal kanban board
 
-Manages the local `bdui` web interface for Beads. Requires `beads-ui` to be installed (`npm install -g beads-ui`).
+Displays a real-time kanban board in the terminal with 4 columns: **OPEN**, **IN PROGRESS**, **REVIEW**, **BLOCKED**.
+No external dependency — pure shell + `bd`.
 
 ```bash
-oc beads ui start [PROJECT_ID] [--port <port>]
-oc beads ui stop
-oc beads ui status
-oc beads ui install
+oc beads board [PROJECT_ID] [--watch] [--interval <sec>]
 ```
-
-| Sub-command | Description |
-|-------------|-------------|
-| `ui install` | Install `beads-ui` globally (`npm install -g beads-ui`) |
-| `ui start [PROJECT_ID]` | Start `bdui` in the background (opens browser automatically). Runs in the project directory if `PROJECT_ID` is provided. |
-| `ui stop` | Stop the running `bdui` server |
-| `ui status` | Show the current `bdui` server status |
-
-**Options for `ui start`:**
 
 | Option | Description |
 |--------|-------------|
-| `[PROJECT_ID]` | Run `bdui` in the project's directory (optional, uses current dir otherwise) |
-| `--port <port>` | Override the default port (default: 3000) |
+| `[PROJECT_ID]` | Project to display (auto-discovered from current directory if absent) |
+| `--watch` | Auto-refresh mode (Ctrl+C to quit) |
+| `--interval <sec>` | Refresh interval in seconds (default: 5) |
 
 **Examples:**
 
 ```bash
-oc beads ui install                      # install bdui
-oc beads ui start                        # start bdui in current directory
-oc beads ui start MY-APP                 # start bdui in MY-APP project directory
-oc beads ui start MY-APP --port 8080     # start bdui on port 8080
-oc beads ui stop                         # stop bdui
-oc beads ui status                       # show bdui status
+oc beads board MY-APP              # display board once
+oc beads board MY-APP --watch      # live refresh every 5s
+oc beads board MY-APP --watch --interval 10   # refresh every 10s
 ```
 
-> `bdui` provides Issues, Epics and Board views with live updates, keyboard navigation, and multi-workspace support.
-> It is a tool for the **human developer** only — AI agents continue to use the `bd` CLI directly.
-> Install: `oc beads ui install` or `npm install -g beads-ui` (also offered during `oc install`).
-> If `bdui` is not installed when running `oc beads ui start/stop/status`, the hub interactively proposes installation.
+> The board adapts to your terminal width. Ticket titles are truncated to fit.
+> Priority badges: **P0** in red, P1 in yellow, P2/P3 dimmed.
+> Column borders are colour-coded: dim (open), blue (in progress), yellow (review), red (blocked).
