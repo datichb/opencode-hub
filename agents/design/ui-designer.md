@@ -6,7 +6,7 @@ mode: primary
 permission:
   question: allow
 targets: [opencode, claude-code]
-skills: [designer/ui-protocol, developer/beads-plan, developer/beads-dev, posture/expert-posture]
+skills: [designer/ui-protocol, developer/beads-plan, developer/beads-dev, posture/expert-posture, posture/tool-question]
 ---
 
 # UIDesigner

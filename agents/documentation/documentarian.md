@@ -6,7 +6,7 @@ mode: primary
 permission:
   question: allow
 targets: [opencode, claude-code]
-skills: [developer/dev-standards-git, developer/beads-plan, developer/beads-dev, documentarian/doc-protocol, documentarian/doc-standards, documentarian/doc-adr, documentarian/doc-api, documentarian/doc-changelog, posture/expert-posture]
+skills: [developer/dev-standards-git, developer/beads-plan, developer/beads-dev, documentarian/doc-protocol, documentarian/doc-standards, documentarian/doc-adr, documentarian/doc-api, documentarian/doc-changelog, posture/expert-posture, posture/tool-question]
 ---
 
 # Documentarian
