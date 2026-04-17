@@ -286,6 +286,7 @@ t() {
       board.usage_hint)       printf '%s' "Usage : ./oc.sh beads board <PROJECT_ID>" ;;
       board.watch_mode)       printf '%s' "Mode watch activé — rafraîchissement toutes les 5s" ;;
       board.watch_quit)       printf '%s' "pour quitter" ;;
+      board.empty_column)     printf '%s' "— aucun ticket —" ;;
 
       # ── cmd-target.sh ──────────────────────────────────────────────────────
       target.title)           printf '%s' "oc target — Gestion des cibles de déploiement par projet" ;;
@@ -873,6 +874,7 @@ t_en() {
     board.usage_hint)       printf '%s' "Usage: ./oc.sh beads board <PROJECT_ID>" ;;
     board.watch_mode)       printf '%s' "Watch mode enabled — refreshing every 5s" ;;
     board.watch_quit)       printf '%s' "to quit" ;;
+    board.empty_column)     printf '%s' "— no tickets —" ;;
     help.beads_board.cmd)       printf '%s' "beads board [PROJECT_ID] [--watch]" ;;
     help.beads_board.desc)      printf '%s' "Display the kanban board in the terminal" ;;
     help.beads_board_watch.cmd) printf '%s' "beads board [PROJECT_ID] --watch [--interval N]" ;;
