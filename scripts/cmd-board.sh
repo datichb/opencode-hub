@@ -77,7 +77,42 @@ _priority_badge() {
 # Type en CYAN tronqué à 7 chars visibles
 _type_badge() {
   local t="$1"
-  printf "${CYAN}%s${RESET}" "$(_trunc "$t" 7)"
+  printf '%b%s%b' "${CYAN}" "$(_trunc "$t" 7)" "${RESET}"
+}
+
+# Wrap un titre sur 2 lignes maximum dans _WRAP_L1 et _WRAP_L2.
+# Priorité de coupure :
+#   1. Titre court (tient en 1 ligne)   → L1 = titre, L2 = ""
+#   2. Espace dans les max premiers chars → couper au dernier espace
+#   3. Aucun espace (mot trop long)       → couper à max-1 et ajouter "-"
+# La ligne 2 est tronquée avec "…" si elle dépasse encore max chars.
+_wrap_title() {
+  local str="$1"
+  local max="$2"
+  local len=${#str}
+
+  if [ "$len" -le "$max" ]; then
+    _WRAP_L1="$str"
+    _WRAP_L2=""
+    return
+  fi
+
+  # Chercher le dernier espace dans la fenêtre [0..max]
+  local window="${str:0:$max}"
+  # ${window% *} supprime le dernier mot → donne la partie avant le dernier espace
+  local before_last_space="${window% *}"
+
+  if [ "${#before_last_space}" -gt 0 ] && [ "$before_last_space" != "$window" ]; then
+    # Coupure sur espace
+    _WRAP_L1="$before_last_space"
+    local rest="${str:$(( ${#before_last_space} + 1 ))}"
+    _WRAP_L2="$(_trunc "$rest" "$max")"
+  else
+    # Aucun espace — coupure forcée avec tiret
+    _WRAP_L1="${str:0:$(( max - 1 ))}-"
+    local rest="${str:$(( max - 1 ))}"
+    _WRAP_L2="$(_trunc "$rest" "$max")"
+  fi
 }
 
 # ── Rendu d'une colonne ───────────────────────────────────────────────────────
@@ -159,14 +194,20 @@ _render_column() {
 
       _COL_LINES+=("${col_color}│${RESET} ${BOLD}${id_trunc}${RESET} ${DIM}·${RESET} ${p_badge} ${DIM}·${RESET} ${t_badge}$(printf '%*s' $meta_pad '')${col_color}│${RESET}")
 
-      # Ligne 2 : titre tronqué avec marge gauche 1 espace
-      # title_max = inner_w - 1 (espace gauche) - 1 (espace droit avant │)
+      # Lignes 2 & 3 : titre wrappé sur 2 lignes fixes
+      # title_max = inner_w - 1 (espace gauche) - 1 (espace droit)
       local title_max=$(( inner_w - 2 ))
-      local title_trunc
-      title_trunc=$(_trunc "$title" "$title_max")
-      local title_pad=$(( title_max - ${#title_trunc} ))
-      [ $title_pad -lt 0 ] && title_pad=0
-      _COL_LINES+=("${col_color}│${RESET} ${DIM}${title_trunc}${RESET}$(printf '%*s' $title_pad '') ${col_color}│${RESET}")
+      _WRAP_L1=""
+      _WRAP_L2=""
+      _wrap_title "$title" "$title_max"
+
+      local tl1_pad=$(( title_max - ${#_WRAP_L1} ))
+      [ $tl1_pad -lt 0 ] && tl1_pad=0
+      _COL_LINES+=("${col_color}│${RESET} ${DIM}${_WRAP_L1}${RESET}$(printf '%*s' $tl1_pad '') ${col_color}│${RESET}")
+
+      local tl2_pad=$(( title_max - ${#_WRAP_L2} ))
+      [ $tl2_pad -lt 0 ] && tl2_pad=0
+      _COL_LINES+=("${col_color}│${RESET} ${DIM}${_WRAP_L2}${RESET}$(printf '%*s' $tl2_pad '') ${col_color}│${RESET}")
 
       # Séparateur entre tickets (sauf après le dernier)
       if (( i < count - 1 )); then
@@ -206,10 +247,10 @@ _render_board() {
   term_w=$(tput cols 2>/dev/null || echo 100)
 
   # 4 colonnes + 2 chars bordure par colonne (│…│) + 2 espaces entre chaque (×3)
+  # gaps = 2 × 3 = 6 ; borders = 2 × 4 = 8 → colonnes occupent toute la largeur utile
   local gaps=$(( 2 * 3 ))    # 6
   local borders=$(( 2 * 4 )) # 8
-  local indent=4              # "  " de chaque côté (2×2)
-  local available=$(( term_w - gaps - borders - indent + 16 ))  # +4 par colonne × 4
+  local available=$(( term_w - gaps - borders ))
   local col_inner=$(( available / 4 ))
   [ $col_inner -lt 18 ] && col_inner=18
 
@@ -265,12 +306,11 @@ _render_board() {
     local l2="${lines_review[$i]:-$empty_filler}"
     local l3="${lines_blocked[$i]:-$empty_filler}"
 
-    printf '  %b  %b  %b  %b\n' "$l0" "$l1" "$l2" "$l3"
+    printf '%b  %b  %b  %b\n' "$l0" "$l1" "$l2" "$l3"
   done
 
   # ── Footer : compteurs ──
   echo ""
-  printf '  '
   printf '%b  ' "$(_pad "${DIM}${cnt_open} open${RESET}"           "$col_w")"
   printf '%b  ' "$(_pad "${BLUE}${cnt_inprog} in progress${RESET}" "$col_w")"
   printf '%b  ' "$(_pad "${YELLOW}${cnt_review} review${RESET}"    "$col_w")"
