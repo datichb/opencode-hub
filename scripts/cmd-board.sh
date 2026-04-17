@@ -120,12 +120,19 @@ _render_column() {
       type=$(echo "$ticket"     | jq -r '.type     // ""'  2>/dev/null)
 
       # Ligne 1 : id  ·  P1  ·  feature
-      # Calcul de la longueur visible : " id · P? · type" (avec espaces fixes)
+      # Parties fixes : " " (1) + " · P? · " (8) = 9 chars réservés pour les séparateurs/badge prio
+      # Plus type tronqué à 7 max → réservé = 9 + min(len(type),7)
       local type_trunc
       type_trunc=$(_trunc "$type" 7)
-      # format visible : " id · P? · type_trunc "
-      # marge gauche 1 + id + " · " (3) + "P?" (2) + " · " (3) + type + reste
-      local meta_visible=" ${id} · P${priority} · ${type_trunc}"
+      local type_len=${#type_trunc}
+      # Espace disponible pour l'id : inner_w - 1(espace) - 3(" · ") - 2("P?") - 3(" · ") - type_len
+      local id_max=$(( inner_w - 1 - 3 - 2 - 3 - type_len ))
+      [ $id_max -lt 3 ] && id_max=3
+      local id_trunc
+      id_trunc=$(_trunc "$id" "$id_max")
+
+      # Longueur visible totale du contenu entre les bordures
+      local meta_visible=" ${id_trunc} · P${priority} · ${type_trunc}"
       local meta_len=${#meta_visible}
       local meta_pad=$(( inner_w - meta_len ))
       [ $meta_pad -lt 0 ] && meta_pad=0
@@ -133,15 +140,16 @@ _render_column() {
       local p_badge; p_badge=$(_priority_badge "$priority")
       local t_badge; t_badge=$(_type_badge "$type_trunc")
 
-      _COL_LINES+=("${col_color}│${RESET} ${BOLD}${id}${RESET} ${DIM}·${RESET} ${p_badge} ${DIM}·${RESET} ${t_badge}$(printf '%*s' $meta_pad '')${col_color}│${RESET}")
+      _COL_LINES+=("${col_color}│${RESET} ${BOLD}${id_trunc}${RESET} ${DIM}·${RESET} ${p_badge} ${DIM}·${RESET} ${t_badge}$(printf '%*s' $meta_pad '')${col_color}│${RESET}")
 
-      # Ligne 2 : titre tronqué, marge gauche 1 + 1 espace de respiration
+      # Ligne 2 : titre tronqué avec marge gauche 1 espace
+      # title_max = inner_w - 1 (espace gauche) - 1 (espace droit avant │)
       local title_max=$(( inner_w - 2 ))
       local title_trunc
       title_trunc=$(_trunc "$title" "$title_max")
       local title_pad=$(( title_max - ${#title_trunc} ))
       [ $title_pad -lt 0 ] && title_pad=0
-      _COL_LINES+=("${col_color}│${RESET} ${DIM}${title_trunc}${RESET}$(printf '%*s' $title_pad '')${col_color} │${RESET}")
+      _COL_LINES+=("${col_color}│${RESET} ${DIM}${title_trunc}${RESET}$(printf '%*s' $title_pad '') ${col_color}│${RESET}")
 
       # Séparateur entre tickets (sauf après le dernier)
       if (( i < count - 1 )); then
