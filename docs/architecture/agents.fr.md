@@ -201,6 +201,11 @@ produit des user flows textuels et des spécifications UX actionnables avec crit
 d'acceptance. Pose au moins 2 questions de contexte avant de spécifier.
 Lit et clôt les tickets Beads. Ne produit pas de maquettes graphiques.
 
+Invocable directement, via l'`orchestrator`, ou via le `planner` (PHASE 1.5 —
+délégation design optionnelle). Quand invoqué depuis le `planner`, produit la spec
+au format standardisé `## SPEC UX — [feature]` pour permettre la réintégration
+automatique dans le plan (pas de `bd close` — le planner reprend la main).
+
 ---
 
 ### `ui-designer`
@@ -216,6 +221,11 @@ Expert en design d'interface. Définit les fondations d'un design system (tokens
 spécifie les composants visuels avec variants et états, produit des guidelines UI
 actionnables pour `developer-frontend`. Utilise uniquement des tokens — jamais de
 valeurs en dur. Propose toujours des options pour les décisions de direction artistique.
+
+Invocable directement, via l'`orchestrator`, ou via le `planner` (PHASE 1.5 —
+délégation design optionnelle). Quand invoqué depuis le `planner`, produit la spec
+au format standardisé `## SPEC UI — [NomComposant]` pour permettre la réintégration
+automatique dans le plan (pas de `bd close` — le planner reprend la main).
 
 ---
 
@@ -297,6 +307,14 @@ puis propose un plan hiérarchique (epics → tickets) avec priorités déduites
 Crée les epics dans Beads si > 5 tickets (demande sinon), utilise `--parent` et `--deps`
 pour la hiérarchie et les dépendances. Gère les aléas : scope change, ticket à scinder,
 dépendance tardive, doublon. Ne code jamais.
+
+**PHASE 1.5 — Délégation design (optionnelle) :** quand des signaux UX ou UI sont détectés
+en PHASE 0, le planner propose 3 options à l'utilisateur :
+- **Option A** (`"invoquer UX/UI"`) — invoque directement `ux-designer` / `ui-designer`
+  en sous-agent, attend le bloc structuré `## SPEC UX/UI — …` et intègre la spec dans le plan.
+- **Option B** — l'utilisateur invoque lui-même les agents et colle la spec.
+- **Option C** (`"continuer sans UX/UI"`) — poursuit avec le contexte disponible,
+  tickets `--design` partiels + `bd comments add` pour tracer la spec manquante.
 
 ---
 

@@ -18,6 +18,7 @@ Avant d'invoquer un agent, identifiez votre situation :
 | Bug en production avec stacktrace ou logs | `debugger` | `"Ce bug : [stacktrace]"` |
 | Review d'une PR développée manuellement | `reviewer` | `"Review de ma PR — diff : [...]"` |
 | Planifier une feature sans l'implémenter | `planner` | `"Décompose [feature] en tickets"` |
+| Planifier + déléguer les specs UX/UI au planner | `planner` | `"Planifie [feature]"` puis `"invoquer UX"` / `"invoquer UI"` |
 | Documenter une feature livrée ou une décision | `documentarian` | `"Documente [sujet]"` |
 
 **Règle de décision rapide :**
@@ -546,3 +547,151 @@ document :
 ```
 
 ---
+
+## Scénario 7 — Planification avec délégation design (planner → ux-designer / ui-designer)
+
+**Contexte :** vous voulez planifier une feature qui implique un parcours utilisateur
+ou de nouveaux composants visuels, et souhaitez que le planner prenne en charge la
+délégation aux agents de design — sans avoir à ouvrir des sessions manuellement.
+
+### Diagramme
+
+```mermaid
+sequenceDiagram
+    participant U as Utilisateur
+    participant PL as Planner
+    participant UX as ux-designer
+    participant UI as ui-designer
+
+    U->>PL: "Planifie la feature d'inscription"
+    PL->>PL: PHASE 0 — explore codebase + détecte signaux UX et UI
+    PL->>PL: PHASE 1 — questions de contexte
+    PL-->>U: ⚠️ Signaux UX et UI détectés — 3 options proposées
+    U->>PL: "invoquer UX"
+
+    PL->>UX: Délègue avec contexte complet (feature, métier, utilisateurs, interaction)
+    UX->>UX: Questions de contexte (min. 2) + production spec
+    UX-->>PL: ## SPEC UX — Inscription\n(user flow + alternatifs + erreurs + acceptance)
+
+    PL-->>U: ⚠️ Spec UI — 3 options proposées
+    U->>PL: "invoquer UI"
+
+    PL->>UI: Délègue avec contexte complet (composant, feature, spec UX)
+    UI->>UI: Exploration design system + production spec
+    UI-->>PL: ## SPEC UI — FormulaireInscription\n(composants + états + tokens + a11y)
+
+    PL->>PL: PHASE 2 — plan enrichi avec les specs
+    PL-->>U: Plan hiérarchique (epics → tickets avec critères UX/UI intégrés)
+    U->>PL: "Valider"
+    PL->>PL: PHASE 3 — bd create + enrichissement complet des tickets
+    PL-->>U: Récap — N epics, M tickets créés
+```
+
+### Étapes détaillées
+
+#### 1. Lancer le planner
+
+```
+Prompt : "Planifie la feature d'inscription utilisateur"
+```
+
+Le planner explore la codebase, détecte les signaux design (nouveau parcours multi-étapes → UX,
+nouveau composant formulaire → UI) et les présente dans son résumé de contexte (PHASE 0).
+
+#### 2. [PHASE 1.5] Le planner propose la délégation UX
+
+```
+## ⚠️ Spec UX recommandée avant planification
+
+Cette feature introduit un flow multi-étapes (saisie email → vérification → profil).
+...
+
+### Comment souhaitez-vous procéder ?
+
+Option A — Je l'invoque directement (recommandé)
+> Tapez "invoquer UX"
+
+Option B — Vous l'invoquez vous-même
+> ...
+
+Option C — Continuer sans spec UX
+> Tapez "continuer sans UX"
+```
+
+#### 3. Invocation directe de ux-designer (Option A)
+
+```
+Prompt : "invoquer UX"
+```
+
+Le planner annonce l'invocation et transmet le contexte complet à `ux-designer`.
+`ux-designer` pose ses questions, produit la spec, et la retourne au planner
+au format standardisé :
+
+```
+## SPEC UX — Inscription utilisateur
+
+### User flow nominal
+1. L'utilisateur saisit son email
+2. Il reçoit un email de vérification
+3. Il clique sur le lien → redirigé vers la page de complétion de profil
+4. Il saisit nom, prénom, mot de passe
+5. Il est redirigé vers son tableau de bord
+
+### Flows alternatifs
+- Email déjà existant → message d'erreur inline + lien "connexion"
+- Lien expiré → page d'erreur avec bouton "renvoyer l'email"
+
+### États d'erreur
+- Email invalide → validation inline (format)
+- Mot de passe trop faible → indicateur de force + règles affichées
+
+### Critères d'acceptance UX
+- Le flow nominal s'effectue en ≤ 4 étapes sans retour en arrière forcé
+- Chaque erreur est expliquée avec une action corrective claire
+- L'email de vérification arrive en < 30s
+```
+
+#### 4. Invocation directe de ui-designer (Option A)
+
+Même mécanique pour l'UI — le planner propose, l'utilisateur confirme avec `"invoquer UI"`.
+`ui-designer` reçoit le contexte composant + la spec UX déjà produite,
+et retourne la spec UI au format standardisé :
+
+```
+## SPEC UI — FormulaireInscription
+
+### Composants design system utilisés
+- DsfrInput — variante avec label flottant
+- DsfrButton — variante primary (soumission) + secondary (annuler)
+- DsfrAlert — variante error (inline)
+
+### États visuels
+- Default : champ vide, label visible
+- Focus : outline 2px token.color.focus
+- Error : bordure token.color.error + message inline
+- Loading : bouton disabled + spinner
+
+### Tokens utilisés
+- color.primary.main : fond bouton de soumission
+- color.error.main : bordure + texte d'erreur
+
+### Accessibilité
+- aria-describedby sur chaque champ → lié au message d'erreur
+- Navigation clavier : Tab entre champs, Entrée soumet le formulaire
+- Contraste : 4.5:1 minimum (WCAG AA)
+```
+
+#### 5. Plan enrichi + création des tickets
+
+Le planner intègre les deux specs dans son plan (PHASE 2) et crée les tickets (PHASE 3)
+avec les critères d'acceptance UX et le champ `--design` complet directement renseigné.
+
+```
+bd-12  P1  feature  ~3h   Implémentation formulaire d'inscription
+       → design : spec complète FormulaireInscription (tokens DSFR, états, a11y)
+       → acceptance : flow nominal ≤ 4 étapes, erreurs avec action corrective, ...
+
+bd-13  P1  feature  ~2h   Service de vérification email
+       → acceptance : email envoyé < 30s, lien expire après 24h, ...
+```

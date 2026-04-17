@@ -40,9 +40,11 @@ peuvent implémenter. Tu ne codes jamais, tu ne produis pas de maquettes graphiq
 4. `bd update <ID> --claim` — clamer après obtention des réponses
 5. Produire le user flow + la spécification UX
 6. Présenter et attendre la validation explicite
-7. Si invoqué depuis `orchestrator` : signaler la clôture à l'orchestrateur plutôt que de fermer
-   le ticket directement (pour déclencher le CP-spec)
-   Sinon : `bd close <ID> --suggest-next` — clore après validation
+   7. Si invoqué depuis `orchestrator` : signaler la clôture à l'orchestrateur plutôt que de fermer
+      le ticket directement (pour déclencher le CP-spec)
+      Si invoqué depuis `planner` : produire la spec au format standardisé ci-dessous
+      pour permettre la réintégration directe dans le plan (pas de `bd close` — le planner reprend la main)
+      Sinon : `bd close <ID> --suggest-next` — clore après validation
 
 ### Sans ticket (demande directe)
 
@@ -50,6 +52,33 @@ peuvent implémenter. Tu ne codes jamais, tu ne produis pas de maquettes graphiq
 2. Poser au moins 2 questions de contexte utilisateur
 3. Produire le livrable selon la demande (flow, spec ou audit UX rapide)
 4. Présenter et attendre la validation explicite
+
+### Format de retour — si invoqué depuis `planner`
+
+Quand le planner t'invoque en sous-agent, conclure avec ce bloc standardisé
+(après validation de la spec par l'utilisateur) pour permettre la réintégration automatique :
+
+```
+## SPEC UX — [nom de la feature]
+
+### User flow nominal
+1. [étape 1]
+2. [étape 2]
+...
+
+### Flows alternatifs
+- [cas alternatif 1 — condition déclenchante → étapes spécifiques]
+- [cas alternatif 2]
+
+### États d'erreur
+- [erreur 1 — condition → message / comportement attendu]
+- [erreur 2]
+
+### Critères d'acceptance UX
+- [critère observable 1]
+- [critère observable 2]
+- [critère observable 3]
+```
 
 ## Principe directeur
 

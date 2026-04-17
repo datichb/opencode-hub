@@ -20,6 +20,7 @@ Before invoking an agent, identify your situation:
 | Production bug with stacktrace or logs | `debugger` | `"This bug: [stacktrace]"` |
 | Review of a manually developed PR | `reviewer` | `"Review my PR — diff: [...]"` |
 | Plan a feature without implementing it | `planner` | `"Break down [feature] into tickets"` |
+| Plan + delegate UX/UI specs via the planner | `planner` | `"Plan [feature]"` then `"invoke UX"` / `"invoke UI"` |
 | Document a delivered feature or a decision | `documentarian` | `"Document [topic]"` |
 
 **Quick decision rule:**
@@ -545,4 +546,154 @@ document:
 
 ### Changed
 - `AuthController`: migration from cookie sessions to JWT Bearer
+```
+
+---
+
+## Scenario 7 — Planning with design delegation (planner → ux-designer / ui-designer)
+
+**Context:** you want to plan a feature that involves a user journey or new visual
+components, and want the planner to handle delegation to design agents — without
+having to open sessions manually.
+
+### Diagram
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant PL as Planner
+    participant UX as ux-designer
+    participant UI as ui-designer
+
+    U->>PL: "Plan the user registration feature"
+    PL->>PL: PHASE 0 — explores codebase + detects UX and UI signals
+    PL->>PL: PHASE 1 — context questions
+    PL-->>U: ⚠️ UX and UI signals detected — 3 options offered
+    U->>PL: "invoke UX"
+
+    PL->>UX: Delegates with full context (feature, business, users, interaction)
+    UX->>UX: Context questions (min. 2) + spec production
+    UX-->>PL: ## SPEC UX — Registration\n(user flow + alternatives + errors + acceptance)
+
+    PL-->>U: ⚠️ UI spec — 3 options offered
+    U->>PL: "invoke UI"
+
+    PL->>UI: Delegates with full context (component, feature, UX spec)
+    UI->>UI: Design system exploration + spec production
+    UI-->>PL: ## SPEC UI — RegistrationForm\n(components + states + tokens + a11y)
+
+    PL->>PL: PHASE 2 — enriched plan with both specs
+    PL-->>U: Hierarchical plan (epics → tickets with UX/UI criteria integrated)
+    U->>PL: "Validate"
+    PL->>PL: PHASE 3 — bd create + full ticket enrichment
+    PL-->>U: Recap — N epics, M tickets created
+```
+
+### Detailed steps
+
+#### 1. Launch the planner
+
+```
+Prompt: "Plan the user registration feature"
+```
+
+The planner explores the codebase, detects design signals (new multi-step flow → UX,
+new form component → UI) and presents them in its context summary (PHASE 0).
+
+#### 2. [PHASE 1.5] The planner proposes UX delegation
+
+```
+## ⚠️ UX spec recommended before planning
+
+This feature introduces a multi-step flow (email entry → verification → profile).
+...
+
+### How would you like to proceed?
+
+Option A — I invoke it directly (recommended)
+> Type "invoke UX"
+
+Option B — You invoke it yourself
+> ...
+
+Option C — Continue without UX spec
+> Type "continue without UX"
+```
+
+#### 3. Direct invocation of ux-designer (Option A)
+
+```
+Prompt: "invoke UX"
+```
+
+The planner announces the invocation and passes the full context to `ux-designer`.
+`ux-designer` asks its questions, produces the spec, and returns it to the planner
+in the standardized format:
+
+```
+## SPEC UX — User Registration
+
+### Nominal user flow
+1. User enters their email
+2. They receive a verification email
+3. They click the link → redirected to profile completion page
+4. They enter name, surname, password
+5. They are redirected to their dashboard
+
+### Alternative flows
+- Email already exists → inline error + "login" link
+- Expired link → error page with "resend email" button
+
+### Error states
+- Invalid email → inline validation (format)
+- Password too weak → strength indicator + rules displayed
+
+### UX acceptance criteria
+- Nominal flow completes in ≤ 4 steps without forced backtracking
+- Every error is explained with a clear corrective action
+- Verification email arrives in < 30s
+```
+
+#### 4. Direct invocation of ui-designer (Option A)
+
+Same mechanism for UI — the planner proposes, the user confirms with `"invoke UI"`.
+`ui-designer` receives the component context + the already-produced UX spec,
+and returns the UI spec in the standardized format:
+
+```
+## SPEC UI — RegistrationForm
+
+### Design system components used
+- DsfrInput — floating label variant
+- DsfrButton — primary variant (submit) + secondary (cancel)
+- DsfrAlert — error variant (inline)
+
+### Visual states
+- Default: empty field, label visible
+- Focus: outline 2px token.color.focus
+- Error: border token.color.error + inline message
+- Loading: disabled button + spinner
+
+### Tokens used
+- color.primary.main: submit button background
+- color.error.main: border + error text
+
+### Accessibility
+- aria-describedby on each field → linked to error message
+- Keyboard navigation: Tab between fields, Enter submits the form
+- Contrast: 4.5:1 minimum (WCAG AA)
+```
+
+#### 5. Enriched plan + ticket creation
+
+The planner integrates both specs into its plan (PHASE 2) and creates tickets (PHASE 3)
+with UX acceptance criteria and the `--design` field fully populated from the start.
+
+```
+bd-12  P1  feature  ~3h   Registration form implementation
+       → design: full RegistrationForm spec (DSFR tokens, states, a11y)
+       → acceptance: nominal flow ≤ 4 steps, errors with corrective action, ...
+
+bd-13  P1  feature  ~2h   Email verification service
+       → acceptance: email sent < 30s, link expires after 24h, ...
 ```

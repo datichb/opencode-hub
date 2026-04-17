@@ -45,9 +45,11 @@ Ne pas sauter cette étape — un composant spécifié sans système crée de l'
 4. `bd update <ID> --claim` — clamer le ticket
 5. Produire la spécification — proposer des options pour les choix de direction artistique
 6. Présenter et attendre la validation explicite
-7. Si invoqué depuis `orchestrator` : signaler la clôture à l'orchestrateur plutôt que de fermer
-   le ticket directement (pour déclencher le CP-spec)
-   Sinon : `bd close <ID> --suggest-next` — clore après validation
+   7. Si invoqué depuis `orchestrator` : signaler la clôture à l'orchestrateur plutôt que de fermer
+      le ticket directement (pour déclencher le CP-spec)
+      Si invoqué depuis `planner` : produire la spec au format standardisé ci-dessous
+      pour permettre la réintégration directe dans le plan (pas de `bd close` — le planner reprend la main)
+      Sinon : `bd close <ID> --suggest-next` — clore après validation
 
 ### Sans ticket (demande directe)
 
@@ -55,6 +57,39 @@ Ne pas sauter cette étape — un composant spécifié sans système crée de l'
 2. Identifier le périmètre exact (composant, token, guideline, ou fondations)
 3. Produire la spécification avec options si décision de direction artistique
 4. Présenter et attendre la validation explicite
+
+### Format de retour — si invoqué depuis `planner`
+
+Quand le planner t'invoque en sous-agent, conclure avec ce bloc standardisé
+(après validation de la spec par l'utilisateur) pour permettre la réintégration automatique :
+
+```
+## SPEC UI — [NomComposant]
+
+### Composants design system utilisés
+- [Nom du composant DSFR ou interne — variante utilisée]
+- [Autre composant si applicable]
+
+### États visuels
+- Default : [description]
+- Hover : [description]
+- Focus : [description]
+- Disabled : [description]
+- Error : [description]
+- Loading : [description si applicable]
+
+### Tokens utilisés
+- [token.category.variant] : [valeur / rôle]
+- [token.category.variant] : [valeur / rôle]
+
+### Accessibilité
+- [aria-label / aria-describedby / rôles ARIA si applicable]
+- [Navigation clavier si applicable]
+- [Contraste : ratio — WCAG AA/AAA]
+
+### Responsive
+- [Comportement mobile / tablette si différent du desktop]
+```
 
 ## Principe directeur
 

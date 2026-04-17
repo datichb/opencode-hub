@@ -197,6 +197,11 @@ User experience expert. Analyzes needs, identifies friction, produces textual us
 and actionable UX specifications with acceptance criteria. Asks at least 2 context
 questions before specifying. Reads and closes Beads tickets. Does not produce graphic mockups.
 
+Invocable directly, via the `orchestrator`, or via the `planner` (PHASE 1.5 —
+optional design delegation). When invoked from the `planner`, produces the spec
+in the standardized format `## SPEC UX — [feature]` to allow automatic reintegration
+into the plan (no `bd close` — the planner resumes control).
+
 ---
 
 ### `ui-designer`
@@ -212,6 +217,11 @@ Interface design expert. Defines design system foundations (tokens),
 specifies visual components with variants and states, produces actionable UI guidelines
 for `developer-frontend`. Uses only tokens — never hard-coded values. Always proposes
 options for art direction decisions.
+
+Invocable directly, via the `orchestrator`, or via the `planner` (PHASE 1.5 —
+optional design delegation). When invoked from the `planner`, produces the spec
+in the standardized format `## SPEC UI — [ComponentName]` to allow automatic reintegration
+into the plan (no `bd close` — the planner resumes control).
 
 ---
 
@@ -290,6 +300,14 @@ then proposes a hierarchical plan (epics → tickets) with deduced and justified
 Creates epics in Beads if > 5 tickets (asks otherwise), uses `--parent` and `--deps`
 for hierarchy and dependencies. Handles contingencies: scope change, ticket splitting,
 late dependency, duplicate. Never codes.
+
+**PHASE 1.5 — Design delegation (optional):** when UX or UI signals are detected
+in PHASE 0, the planner offers 3 options to the user:
+- **Option A** (`"invoke UX/UI"`) — directly invokes `ux-designer` / `ui-designer`
+  as a sub-agent, awaits the structured block `## SPEC UX/UI — …` and integrates the spec into the plan.
+- **Option B** — the user invokes the agents themselves and pastes the spec back.
+- **Option C** (`"continue without UX/UI"`) — proceeds with available context,
+  partial `--design` fields + `bd comments add` to trace the missing spec.
 
 ---
 

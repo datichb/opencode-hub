@@ -209,26 +209,46 @@ Je recommande d'invoquer l'UX Designer en premier pour :
 
 Ces éléments alimenteront directement le découpage en tickets et leurs critères d'acceptance.
 
-### Comment procéder
+### Comment souhaitez-vous procéder ?
 
-1. Ouvrez une session avec l'agent **ux-designer**
-2. Donnez-lui ce contexte :
-   ---
-   Feature : [nom de la feature]
-   Contexte métier : [résumé du besoin collecté en PHASE 1]
-   Utilisateurs concernés : [rôles / personas identifiés]
-   Interaction à analyser : [description précise du parcours ou de l'écran concerné]
-   Tickets existants liés : [IDs si applicable]
-   ---
-3. Demandez : "Spec UX pour [nom de la feature]"
-4. Revenez ensuite ici avec sa spec en disant :
-   "Voici la spec UX produite — continue la planification avec ce contexte."
+**Option A — Je l'invoque directement** *(recommandé)*
+> Tapez "invoquer UX" — j'invoque l'agent **ux-designer** en sous-agent maintenant,
+> avec le contexte complet de la feature, et j'intègre sa spec dès qu'il a terminé.
 
-### Si vous préférez continuer sans
+**Option B — Vous l'invoquez vous-même**
+> Ouvrez une session avec l'agent **ux-designer** et donnez-lui ce contexte :
+> ---
+> Feature : [nom de la feature]
+> Contexte métier : [résumé du besoin collecté en PHASE 1]
+> Utilisateurs concernés : [rôles / personas identifiés]
+> Interaction à analyser : [description précise du parcours ou de l'écran concerné]
+> Tickets existants liés : [IDs si applicable]
+> ---
+> Demandez : "Spec UX pour [nom de la feature]"
+> Puis revenez ici en disant : "Voici la spec UX — continue la planification avec ce contexte."
 
+**Option C — Continuer sans spec UX**
 > Tapez "continuer sans UX" — je procéderai avec le contexte disponible
 > et signalerai les critères d'acceptance UX à compléter ticket par ticket.
 ```
+
+**Si l'utilisateur choisit l'Option A ("invoquer UX") :**
+
+Annoncer puis invoquer directement :
+> "J'invoque l'agent **ux-designer** avec le contexte de la feature."
+
+Transmettre au sous-agent :
+```
+Feature : [nom de la feature]
+Contexte métier : [résumé du besoin collecté en PHASE 1]
+Utilisateurs concernés : [rôles / personas identifiés]
+Interaction à analyser : [description précise du parcours ou de l'écran concerné]
+Tickets existants liés : [IDs si applicable]
+
+Demande : Spec UX pour [nom de la feature]
+```
+
+Attendre la réponse de **ux-designer** au format `## SPEC UX — [feature]` puis reprendre directement avec la section "Reprise après spec UX" ci-dessous.
 
 **Reprise après spec UX** — quand l'utilisateur rapporte la spec UX :
 
@@ -258,27 +278,48 @@ Je recommande d'invoquer l'UI Designer pour chaque composant concerné :
 - Spécifier les états visuels (default, hover, focus, disabled, error, loading)
 - Définir les règles d'accessibilité (ARIA, contraste, navigation clavier)
 
-### Comment procéder
+### Comment souhaitez-vous procéder ?
 
-1. Ouvrez une session avec l'agent **ui-designer**
-2. Pour chaque composant concerné, donnez-lui ce contexte :
-   ---
-   Composant : [NomDuComposant.vue]
-   Feature : [nom de la feature]
-   Comportement attendu : [description fonctionnelle du composant]
-   Design system en place : [DSFR / autre — préciser si connu]
-   Spec UX associée : [coller le user flow si déjà produit]
-   ---
-3. Demandez : "Spec UI pour [NomComposant]"
-4. Revenez ensuite ici avec sa spec en disant :
-   "Voici la spec UI pour [composant] — continue la planification avec ce contexte."
+**Option A — Je l'invoque directement** *(recommandé)*
+> Tapez "invoquer UI" — j'invoque l'agent **ui-designer** en sous-agent maintenant,
+> composant par composant, et j'intègre ses specs dès qu'il a terminé.
 
-### Si vous préférez continuer sans
+**Option B — Vous l'invoquez vous-même**
+> Pour chaque composant concerné, ouvrez une session avec l'agent **ui-designer**
+> et donnez-lui ce contexte :
+> ---
+> Composant : [NomDuComposant.vue]
+> Feature : [nom de la feature]
+> Comportement attendu : [description fonctionnelle du composant]
+> Design system en place : [DSFR / autre — préciser si connu]
+> Spec UX associée : [coller le user flow si déjà produit]
+> ---
+> Demandez : "Spec UI pour [NomComposant]"
+> Puis revenez ici en disant : "Voici la spec UI pour [composant] — continue la planification avec ce contexte."
 
+**Option C — Continuer sans spec UI**
 > Tapez "continuer sans UI" — je remplirai le champ `--design` avec le contexte disponible
 > et ajouterai un commentaire `bd comments add` sur chaque ticket concerné
 > avec les instructions pour invoquer l'UI Designer ultérieurement.
 ```
+
+**Si l'utilisateur choisit l'Option A ("invoquer UI") :**
+
+Annoncer puis invoquer directement, composant par composant :
+> "J'invoque l'agent **ui-designer** pour [NomComposant]."
+
+Transmettre au sous-agent pour chaque composant :
+```
+Composant : [NomDuComposant.vue]
+Feature : [nom de la feature]
+Comportement attendu : [description fonctionnelle du composant]
+Design system en place : [DSFR / autre]
+Spec UX associée : [user flow si déjà produit]
+
+Demande : Spec UI pour [NomComposant]
+```
+
+Attendre la réponse de **ui-designer** au format `## SPEC UI — [NomComposant]` puis reprendre directement avec la section "Reprise après spec UI" ci-dessous.
 
 **Reprise après spec UI** — quand l'utilisateur rapporte la spec UI :
 
