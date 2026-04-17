@@ -121,6 +121,7 @@ Documentation skills. Used by the `documentarian` agent.
 |------|----------------|---------|
 | `planning/planner.md` | planner | Phase 0 (codebase exploration + existing tickets + context summary), Phase 1 (contextualised questions + justified priority deduction), Phase 2 (hierarchical plan epics → tickets, >5 tickets rule), Phase 3 (creation with `--parent`, `--deps`, `--estimate`), Phase 4 (`bd children` verification), edge case handling (scope change, split, late dependency, duplicate) |
 | `planning/project-discovery.md` | onboarder | Stack detection (manifests, CI, infra), adaptive exploration by profile (Vue, React, Node.js, Python, API, Data/ML, DevOps, Mobile), context report format (stack, architecture, patterns, 🔴/🟠/🟡, blind spots, questions, agent map), agent recommendation matrix (priority by risk + recommended by stack + optional), `projects.md` update protocol |
+| `planning/project-conventions.md` | onboarder | Project-specific naming conventions and contribution standards, rules detected from the codebase (branches, commits, PRs, tickets) |
 
 ---
 
@@ -137,40 +138,54 @@ Design skills. Used by the `ux-designer` and `ui-designer` agents.
 
 ## Domain — `posture/`
 
-Cross-cutting posture skills. Injectable into any agent requiring an expert posture.
+Cross-cutting posture skills. Injectable into any agent requiring an expert posture or structured interaction.
 
 | File | Agents using it | Content |
 |------|----------------|---------|
-| `posture/expert-posture.md` | auditor, auditor-security, auditor-performance, auditor-accessibility, auditor-ecodesign, auditor-architecture, auditor-privacy, auditor-observability, onboarder, ux-designer, ui-designer, planner, documentarian | Systematic exploration before responding (announcing artefacts consulted, identifying uncertainty areas), argued counter-recommendation (⚠️ format with problem/alternative/why/trade-offs, first-person phrasing), confirmation pause before any high-risk action (🛑 format with explicit binary question) |
+| `posture/expert-posture.md` | auditor-security, auditor-performance, auditor-accessibility, auditor-ecodesign, auditor-architecture, auditor-privacy, auditor-observability, onboarder, ux-designer, ui-designer, planner, documentarian, qa-engineer | Systematic exploration before responding (announcing artefacts consulted, identifying uncertainty areas), argued counter-recommendation (⚠️ format with problem/alternative/why/trade-offs, first-person phrasing), confirmation pause before any high-risk action (🛑 format with explicit binary question) |
+| `posture/tool-question.md` | orchestrator, orchestrator-dev, planner, onboarder, auditor, debugger, reviewer, qa-engineer, documentarian, ux-designer, ui-designer | Usage of OpenCode's `question` tool — when to call it (blocking multi-choice decisions, risky confirmations, ambiguous instructions), when not to call it, mandatory structure for every call (`header` ≤ 30 chars, `question`, `options` with `label` + `description`), rules: `multiple: true` for multi-select, recommended option first with `(Recommended)`, never add an "Other" option |
 
 ---
 
 ## Agent ↔ skills dependency matrix
 
 ```
-orchestrator          → orchestrator/orchestrator-protocol
-orchestrator-dev      → orchestrator/orchestrator-dev-protocol
-onboarder             → planning/project-discovery, posture/expert-posture,
-                         developer/beads-plan
-planner               → developer/beads-plan, planning/planner, posture/expert-posture
+orchestrator          → orchestrator/orchestrator-protocol,
+                         developer/beads-plan, posture/tool-question
+orchestrator-dev      → orchestrator/orchestrator-dev-protocol,
+                         posture/tool-question
+onboarder             → planning/project-discovery, planning/project-conventions,
+                         posture/expert-posture, posture/tool-question,
+                         developer/beads-plan, developer/dev-standards-git
+planner               → developer/beads-plan, planning/planner,
+                         posture/expert-posture, posture/tool-question
 reviewer              → dev-standards-universal, dev-standards-security,
                          dev-standards-backend,
                          dev-standards-frontend, dev-standards-frontend-a11y,
                          dev-standards-testing,
-                         dev-standards-git, reviewer/review-protocol
+                         dev-standards-git, reviewer/review-protocol,
+                         posture/tool-question
 qa-engineer           → dev-standards-universal, dev-standards-testing,
-                         dev-standards-git, qa/qa-protocol
-debugger              → debugger/debug-protocol
-auditor               → auditor/audit-protocol, posture/expert-posture
-auditor-security      → auditor/audit-protocol, auditor/audit-security, posture/expert-posture
-auditor-performance   → auditor/audit-protocol, auditor/audit-performance, posture/expert-posture
-auditor-accessibility → auditor/audit-protocol, auditor/audit-accessibility, posture/expert-posture
-auditor-ecodesign     → auditor/audit-protocol, auditor/audit-ecodesign, posture/expert-posture
-auditor-architecture  → auditor/audit-protocol, auditor/audit-architecture, posture/expert-posture
-auditor-privacy       → auditor/audit-protocol, auditor/audit-privacy, posture/expert-posture
-auditor-observability → auditor/audit-protocol, auditor/audit-observability, posture/expert-posture
-ux-designer           → designer/ux-protocol, developer/beads-plan, developer/beads-dev, posture/expert-posture
-ui-designer           → designer/ui-protocol, developer/beads-plan, developer/beads-dev, posture/expert-posture
+                         dev-standards-git, posture/expert-posture,
+                         posture/tool-question, qa/qa-protocol
+debugger              → debugger/debug-protocol, posture/tool-question
+auditor               → auditor/audit-protocol, posture/tool-question
+auditor-security      → auditor/audit-protocol-light, auditor/audit-security, posture/expert-posture
+auditor-performance   → auditor/audit-protocol-light, auditor/audit-performance, posture/expert-posture
+auditor-accessibility → auditor/audit-protocol-light, auditor/audit-accessibility, posture/expert-posture
+auditor-ecodesign     → auditor/audit-protocol-light, auditor/audit-ecodesign, posture/expert-posture
+auditor-architecture  → auditor/audit-protocol-light, auditor/audit-architecture, posture/expert-posture
+auditor-privacy       → auditor/audit-protocol-light, auditor/audit-privacy, posture/expert-posture
+auditor-observability → auditor/audit-protocol-light, auditor/audit-observability, posture/expert-posture
+ux-designer           → designer/ux-protocol, developer/beads-plan, developer/beads-dev,
+                         posture/expert-posture, posture/tool-question
+ui-designer           → designer/ui-protocol, developer/beads-plan, developer/beads-dev,
+                         posture/expert-posture, posture/tool-question
+documentarian         → dev-standards-git, beads-plan, beads-dev,
+                         documentarian/doc-protocol, documentarian/doc-standards,
+                         documentarian/doc-adr, documentarian/doc-api,
+                         documentarian/doc-changelog, posture/expert-posture,
+                         posture/tool-question
 developer-frontend    → dev-standards-universal, dev-standards-security,
                          dev-standards-frontend,
                          dev-standards-frontend-a11y, dev-standards-vuejs,
@@ -206,8 +221,4 @@ developer-security    → dev-standards-universal, dev-standards-security,
                          dev-standards-backend,
                          dev-standards-testing, dev-standards-git,
                          beads-plan, beads-dev
-documentarian         → dev-standards-git, beads-plan, beads-dev,
-                         documentarian/doc-protocol, documentarian/doc-standards,
-                         documentarian/doc-adr, documentarian/doc-api,
-                         documentarian/doc-changelog, posture/expert-posture
 ```

@@ -14,6 +14,8 @@ id: <identifiant-unique>
 label: <NomAffiché>
 description: <Description courte — visible dans les outils IA>
 mode: primary         # primary (défaut) | subagent
+permission:
+  question: allow     # optionnel — autorise l'outil question d'OpenCode (agents primary interactifs uniquement)
 targets: [opencode, claude-code]
 skills: [chemin/vers/skill, ...]
 ---
@@ -29,6 +31,7 @@ skills: [chemin/vers/skill, ...]
 | `label` | Nom affiché dans l'outil cible |
 | `description` | Phrase courte décrivant le rôle — apparaît dans les listes d'agents |
 | `mode` | `primary` (défaut) ou `subagent` — contrôle la visibilité dans les outils cibles |
+| `permission.question` | `allow` — active l'outil `question` d'OpenCode pour cet agent. Réservé aux agents `primary` interactifs. Toujours associé à la skill `posture/tool-question`. |
 | `targets` | Cibles supportées : `opencode`, `claude-code` |
 | `skills` | Chemins relatifs à `skills/` — injectés dans l'ordre de déclaration |
 
@@ -57,7 +60,7 @@ Agents qui pilotent d'autres agents sans jamais coder eux-mêmes.
 |--|--|
 | **Label** | Onboarder |
 | **Fichier** | `agents/planning/onboarder.md` |
-| **Skills** | `planning/project-discovery`, `posture/expert-posture`, `developer/beads-plan` |
+| **Skills** | `planning/project-discovery`, `planning/project-conventions`, `posture/expert-posture`, `posture/tool-question`, `developer/beads-plan`, `developer/dev-standards-git` |
 | **Invocation** | `"Onboarde-toi sur ce projet"` / `"Découvre ce projet"` / `"Avant de commencer, explore le projet"` |
 
 Agent de découverte de projet. Explore la codebase d'un projet existant et produit
@@ -81,7 +84,7 @@ Invocable directement, depuis `oc start` (suggestion affichée), ou depuis l'`or
 |--|--|
 | **Label** | Orchestrator |
 | **Fichier** | `agents/planning/orchestrator.md` |
-| **Skills** | `orchestrator/orchestrator-protocol` |
+| **Skills** | `orchestrator/orchestrator-protocol`, `developer/beads-plan`, `posture/tool-question` |
 | **Invocation** | `"Implémente [feature]"` / `"Prends en charge les tickets [IDs]"` |
 
 Chef de projet IA. Pilote la réalisation complète d'une feature en mobilisant tous
@@ -102,7 +105,7 @@ Ne route jamais directement vers les `developer-*` — délègue toujours à `or
 |--|--|
 | **Label** | OrchestratorDev |
 | **Fichier** | `agents/planning/orchestrator-dev.md` |
-| **Skills** | `orchestrator/orchestrator-dev-protocol` |
+| **Skills** | `orchestrator/orchestrator-dev-protocol`, `posture/tool-question` |
 | **Invocation** | `"Implémente les tickets [IDs]"` / `"Workflow dev sur [feature]"` |
 
 Tech lead IA spécialisé dans le pilotage de l'implémentation. Prend en charge une
@@ -110,7 +113,7 @@ liste de tickets Beads prêts à implémenter, route vers les 9 agents `develope
 supervise le QA optionnel et la review. Trois modes : `manuel` (défaut), `semi-auto`,
 `auto`. Invocable standalone ou depuis l'`orchestrator`.
 
-CP-2 (merge ou corriger ?) est toujours manuel dans tous les modes.
+CP-2 (commit ou corriger ?) est toujours manuel dans tous les modes.
 
 > Voir [ADR-006](./adr/006-orchestrator-configurable-mode.fr.md) — les modes s'appliquent à `orchestrator-dev` uniquement.
 
@@ -122,7 +125,7 @@ CP-2 (merge ou corriger ?) est toujours manuel dans tous les modes.
 |--|--|
 | **Label** | Auditeur |
 | **Fichier** | `agents/auditor/auditor.md` |
-| **Skills** | `auditor/audit-protocol` |
+| **Skills** | `auditor/audit-protocol`, `posture/tool-question` |
 | **Invocation** | `"Audite [projet/périmètre]"` / `"Audit [domaine]"` |
 
 Coordinateur d'audit multi-domaine. Qualifie la demande (audit complet / ciblé / express)
@@ -193,7 +196,7 @@ Ne codent jamais. Invocables directement ou via l'`orchestrator`.
 |--|--|
 | **Label** | UXDesigner |
 | **Fichier** | `agents/design/ux-designer.md` |
-| **Skills** | `designer/ux-protocol`, `developer/beads-plan`, `developer/beads-dev` |
+| **Skills** | `designer/ux-protocol`, `developer/beads-plan`, `developer/beads-dev`, `posture/expert-posture`, `posture/tool-question` |
 | **Invocation** | `"Analyse le flow de [feature]"` / `"Spec UX pour [ticket]"` / `"Audit UX de [écran]"` |
 
 Expert en expérience utilisateur. Analyse les besoins, identifie les frictions,
@@ -214,7 +217,7 @@ automatique dans le plan (pas de `bd close` — le planner reprend la main).
 |--|--|
 | **Label** | UIDesigner |
 | **Fichier** | `agents/design/ui-designer.md` |
-| **Skills** | `designer/ui-protocol`, `developer/beads-plan`, `developer/beads-dev` |
+| **Skills** | `designer/ui-protocol`, `developer/beads-plan`, `developer/beads-dev`, `posture/expert-posture`, `posture/tool-question` |
 | **Invocation** | `"Spec UI pour [composant]"` / `"Design system [projet]"` / `"Harmonise [écran]"` |
 
 Expert en design d'interface. Définit les fondations d'un design system (tokens),
@@ -239,7 +242,7 @@ Agents dédiés à la qualité du code, invocables standalone ou via l'orchestra
 |--|--|
 | **Label** | CodeReviewer |
 | **Fichier** | `agents/quality/reviewer.md` |
-| **Skills** | `dev-standards-universal`, `dev-standards-security`, `dev-standards-backend`, `dev-standards-frontend`, `dev-standards-frontend-a11y`, `dev-standards-testing`, `dev-standards-git`, `reviewer/review-protocol` |
+| **Skills** | `dev-standards-universal`, `dev-standards-security`, `dev-standards-backend`, `dev-standards-frontend`, `dev-standards-frontend-a11y`, `dev-standards-testing`, `dev-standards-git`, `reviewer/review-protocol`, `posture/tool-question` |
 | **Invocation** | Diff collé / nom de branche / URL de PR + optionnellement `bd show <ID>` |
 
 Analyse les diffs de PR/MR. Produit un rapport structuré par sévérité (Critique /
@@ -254,7 +257,7 @@ de fichiers.
 |--|--|
 | **Label** | QAEngineer |
 | **Fichier** | `agents/quality/qa-engineer.md` |
-| **Skills** | `dev-standards-universal`, `dev-standards-testing`, `dev-standards-git`, `qa/qa-protocol` |
+| **Skills** | `dev-standards-universal`, `dev-standards-testing`, `dev-standards-git`, `posture/expert-posture`, `posture/tool-question`, `qa/qa-protocol` |
 | **Invocation** | `"Écris les tests pour la branche [X]"` / `"QA sur le ticket [ID]"` |
 
 Écrit les tests manquants (unit / integration / E2E) à partir d'un diff ou d'un
@@ -276,7 +279,7 @@ ces tickets — le `qa-engineer` n'est pas invoqué.
 |--|--|
 | **Label** | Debugger |
 | **Fichier** | `agents/quality/debugger.md` |
-| **Skills** | `debugger/debug-protocol` |
+| **Skills** | `debugger/debug-protocol`, `posture/tool-question` |
 | **Invocation** | `"Ce bug : [stacktrace]"` / `"Analyse ces logs : [logs]"` |
 
 Diagnostique la cause racine d'un bug en 4 étapes (reproduction → isolation →
@@ -296,7 +299,7 @@ Ne corrige jamais le bug.
 |--|--|
 | **Label** | ProjectPlanner |
 | **Fichier** | `agents/planning/planner.md` |
-| **Skills** | `developer/beads-plan`, `planning/planner`, `posture/expert-posture` |
+| **Skills** | `developer/beads-plan`, `planning/planner`, `posture/expert-posture`, `posture/tool-question` |
 | **Invocation** | Description d'une feature en langage naturel |
 
 Consultant fonctionnel et technique qui analyse le contexte projet avant de planifier.
@@ -326,7 +329,7 @@ en PHASE 0, le planner propose 3 options à l'utilisateur :
 |--|--|
 | **Label** | Documentarian |
 | **Fichier** | `agents/documentation/documentarian.md` |
-| **Skills** | `developer/dev-standards-git`, `developer/beads-plan`, `developer/beads-dev`, `documentarian/doc-protocol`, `documentarian/doc-standards`, `documentarian/doc-adr`, `documentarian/doc-api`, `documentarian/doc-changelog`, `posture/expert-posture` |
+| **Skills** | `developer/dev-standards-git`, `developer/beads-plan`, `developer/beads-dev`, `documentarian/doc-protocol`, `documentarian/doc-standards`, `documentarian/doc-adr`, `documentarian/doc-api`, `documentarian/doc-changelog`, `posture/expert-posture`, `posture/tool-question` |
 | **Invocation** | `"Documente [sujet]"` / `"Crée un ADR pour [décision]"` / `"Mets à jour le CHANGELOG"` / `"Qu'est-ce qui manque dans la doc ?"` |
 
 Rédige et met à jour la documentation technique, fonctionnelle, architecturale, API

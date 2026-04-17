@@ -75,6 +75,7 @@ An agent that audits (read-only) goes in `auditor/`.
 | Auditor | `audit-protocol` + specific domain skill + `posture/expert-posture` |
 | Coordinator (read-only) | Its own protocol — no `beads-dev` |
 | Expert advisor agent | `posture/expert-posture` |
+| Interactive primary agent | `posture/tool-question` (+ `permission: question: allow` in frontmatter) |
 | Agent managing tickets | `beads-plan` (read + create), `beads-dev` (execution) |
 | Agent producing code to test | `dev-standards-testing` |
 | Agent that commits | `dev-standards-git` |
@@ -155,6 +156,7 @@ This skill defines... It complements <other-skill> if applicable.
 - [ ] The body contains: identity + what it does + what it does NOT do + workflow
 - [ ] Explicit limits point to the correct alternative agent if applicable
 - [ ] `posture/expert-posture` is injected if the agent has an advisory or expert role
+- [ ] `posture/tool-question` is injected **and** `permission: question: allow` is in the frontmatter if the `primary` agent needs to ask structured questions to the user
 - [ ] `beads-plan` is injected if the agent reads or creates Beads tickets
 - [ ] `beads-dev` is additionally injected if the agent executes (claims, implements, closes) tickets
 - [ ] The dependency matrix in `docs/architecture/skills.en.md` is updated
