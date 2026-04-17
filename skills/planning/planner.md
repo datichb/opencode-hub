@@ -430,8 +430,32 @@ Dans ce cas : proposer de scinder avant de valider le plan.
 EPIC=$(bd create "Nom de l'epic" -t epic --json)
 EPIC_ID=$(echo $EPIC | jq -r '.id')
 bd update $EPIC_ID \
-  --description "## Objectif métier\n[Valeur apportée à l'utilisateur — pourquoi cet epic existe]\n\n## Périmètre\n[Ce qui est inclus dans cet epic]\n\n## Hors périmètre\n[Ce qui ne l'est pas pour cette itération]\n\n## Risques\n[Principaux risques identifiés sur cet epic]" \
-  --notes "## Ordre d'implémentation\n1. [ticket X] — bloquant\n2. [tickets Y, Z] — parallélisables après X\n\n## Dépendances inter-epics\n[Liens avec d'autres epics si applicable — sinon : aucun]\n\n## Estimation\n~[X] heures au total"
+  --description "$(cat <<'EOF'
+## Objectif métier
+[Valeur apportée à l'utilisateur — pourquoi cet epic existe]
+
+## Périmètre
+[Ce qui est inclus dans cet epic]
+
+## Hors périmètre
+[Ce qui ne l'est pas pour cette itération]
+
+## Risques
+[Principaux risques identifiés sur cet epic]
+EOF
+)" \
+  --notes "$(cat <<'EOF'
+## Ordre d'implémentation
+1. [ticket X] — bloquant
+2. [tickets Y, Z] — parallélisables après X
+
+## Dépendances inter-epics
+[Liens avec d'autres epics si applicable — sinon : aucun]
+
+## Estimation
+~[X] heures au total
+EOF
+)"
 ```
 
 ---
@@ -442,9 +466,56 @@ bd update $EPIC_ID \
 T=$(bd create "Titre du ticket" -t feature -p 1 --parent $EPIC_ID --estimate [minutes] --json)
 T_ID=$(echo $T | jq -r '.id')
 bd update $T_ID \
-  --description "## Contexte métier\n[Pourquoi ce ticket existe — valeur pour l'utilisateur ou le système]\n\n## État actuel\n[Ce qui existe aujourd'hui — comportement, fichiers, structure]\n\n## État cible\n[Ce qui doit exister après — comportement attendu, ce qui change]\n\n## Contraintes et règles métier\n[Rétrocompatibilité, cas limites, règles de gestion à respecter]" \
-  --acceptance "## Comportement fonctionnel\n- [Critère observable 1]\n- [Critère observable 2]\n- [Critère observable 3]\n\n## Tests\n- [ ] Test unitaire (Vitest) : [cas nominal — décrire le scénario]\n- [ ] Test unitaire (Vitest) : [cas limite — décrire le scénario]\n- [ ] Pas de régression sur [fonctionnalité connexe]\n\n## Jeux de données représentatifs\n- Nominal : [exemple d'entrée → sortie attendue]\n- Limite : [exemple d'entrée limite → comportement attendu]" \
-  --notes "## Dépendances\n- Dépend de : [ID + titre des tickets bloquants]\n- Bloque : [ID + titre des tickets dépendants]\n\n## Architecture concernée\n- Couche(s) : [use case / service / API handler / composant / store / DTO / etc.]\n- Pattern(s) : [DDD aggregate / value object / port-adapter / composant présentationnel / etc.]\n- Fichiers structurants : [chemins relatifs]\n\n## Approches alternatives considérées\n| Approche | Avantage | Inconvénient | Retenue ? |\n|---|---|---|---|\n| [Approche A] | ... | ... | ✓ |\n| [Approche B] | ... | ... | ✗ |\n\n## Risques et points d'attention\n- [Risque technique, couplage, impact sur d'autres modules]"
+  --description "$(cat <<'EOF'
+## Contexte métier
+[Pourquoi ce ticket existe — valeur pour l'utilisateur ou le système]
+
+## État actuel
+[Ce qui existe aujourd'hui — comportement, fichiers, structure]
+
+## État cible
+[Ce qui doit exister après — comportement attendu, ce qui change]
+
+## Contraintes et règles métier
+[Rétrocompatibilité, cas limites, règles de gestion à respecter]
+EOF
+)" \
+  --acceptance "$(cat <<'EOF'
+## Comportement fonctionnel
+- [Critère observable 1]
+- [Critère observable 2]
+- [Critère observable 3]
+
+## Tests
+- [ ] Test unitaire (Vitest) : [cas nominal — décrire le scénario]
+- [ ] Test unitaire (Vitest) : [cas limite — décrire le scénario]
+- [ ] Pas de régression sur [fonctionnalité connexe]
+
+## Jeux de données représentatifs
+- Nominal : [exemple d'entrée → sortie attendue]
+- Limite : [exemple d'entrée limite → comportement attendu]
+EOF
+)" \
+  --notes "$(cat <<'EOF'
+## Dépendances
+- Dépend de : [ID + titre des tickets bloquants]
+- Bloque : [ID + titre des tickets dépendants]
+
+## Architecture concernée
+- Couche(s) : [use case / service / API handler / composant / store / DTO / etc.]
+- Pattern(s) : [DDD aggregate / value object / port-adapter / composant présentationnel / etc.]
+- Fichiers structurants : [chemins relatifs]
+
+## Approches alternatives considérées
+| Approche | Avantage | Inconvénient | Retenue ? |
+|---|---|---|---|
+| [Approche A] | ... | ... | ✓ |
+| [Approche B] | ... | ... | ✗ |
+
+## Risques et points d'attention
+- [Risque technique, couplage, impact sur d'autres modules]
+EOF
+)"
 ```
 
 ---
@@ -455,9 +526,55 @@ bd update $T_ID \
 T=$(bd create "Titre du ticket" -t task -p 2 --parent $EPIC_ID --estimate [minutes] --json)
 T_ID=$(echo $T | jq -r '.id')
 bd update $T_ID \
-  --description "## Objectif technique\n[Pourquoi ce ticket technique est nécessaire — problème résolu ou dette adressée]\n\n## État actuel\n[Ce qui existe aujourd'hui — structure, comportement, limitation]\n\n## État cible\n[Ce qui doit exister après — nouvelle structure, interface, contrat]\n\n## Contraintes\n[Rétrocompatibilité, contrat d'interface à respecter, contraintes de performance]" \
-  --acceptance "## Contrat technique\n- [Interface ou comportement observable 1]\n- [Interface ou comportement observable 2]\n\n## Tests\n- [ ] Test unitaire (Vitest) : [cas nominal — décrire le scénario]\n- [ ] Test unitaire (Vitest) : [cas limite ou cas d'erreur]\n- [ ] Pas de régression : [ce qui ne doit pas changer]\n\n## Jeux de données représentatifs\n- Entrée : [structure d'entrée exemple]\n- Sortie : [structure de sortie attendue]" \
-  --notes "## Dépendances\n- Dépend de : [ID + titre]\n- Bloque : [ID + titre]\n\n## Architecture concernée\n- Couche(s) : [use case / DTO / port / adapter / repository / etc.]\n- Pattern(s) : [pattern DDD ou clean arch concerné]\n- Fichiers structurants : [chemins relatifs]\n\n## Approches alternatives considérées\n| Approche | Avantage | Inconvénient | Retenue ? |\n|---|---|---|---|\n| [Approche A] | ... | ... | ✓ |\n| [Approche B] | ... | ... | ✗ |\n\n## Risques et points d'attention\n- [Couplages, impacts en cascade, migrations nécessaires]"
+  --description "$(cat <<'EOF'
+## Objectif technique
+[Pourquoi ce ticket technique est nécessaire — problème résolu ou dette adressée]
+
+## État actuel
+[Ce qui existe aujourd'hui — structure, comportement, limitation]
+
+## État cible
+[Ce qui doit exister après — nouvelle structure, interface, contrat]
+
+## Contraintes
+[Rétrocompatibilité, contrat d'interface à respecter, contraintes de performance]
+EOF
+)" \
+  --acceptance "$(cat <<'EOF'
+## Contrat technique
+- [Interface ou comportement observable 1]
+- [Interface ou comportement observable 2]
+
+## Tests
+- [ ] Test unitaire (Vitest) : [cas nominal — décrire le scénario]
+- [ ] Test unitaire (Vitest) : [cas limite ou cas d'erreur]
+- [ ] Pas de régression : [ce qui ne doit pas changer]
+
+## Jeux de données représentatifs
+- Entrée : [structure d'entrée exemple]
+- Sortie : [structure de sortie attendue]
+EOF
+)" \
+  --notes "$(cat <<'EOF'
+## Dépendances
+- Dépend de : [ID + titre]
+- Bloque : [ID + titre]
+
+## Architecture concernée
+- Couche(s) : [use case / DTO / port / adapter / repository / etc.]
+- Pattern(s) : [pattern DDD ou clean arch concerné]
+- Fichiers structurants : [chemins relatifs]
+
+## Approches alternatives considérées
+| Approche | Avantage | Inconvénient | Retenue ? |
+|---|---|---|---|
+| [Approche A] | ... | ... | ✓ |
+| [Approche B] | ... | ... | ✗ |
+
+## Risques et points d'attention
+- [Couplages, impacts en cascade, migrations nécessaires]
+EOF
+)"
 ```
 
 ---
@@ -470,7 +587,27 @@ Pour tout ticket touchant un composant Vue, une page ou un composable :
 
 ```bash
 bd update $T_ID \
-  --design "## Composants du design system utilisés\n- [Nom du composant DSFR ou interne — variante utilisée]\n- [Autre composant si applicable]\n\n## Comportement UX\n- État initial : [ce que l'utilisateur voit au chargement]\n- Interaction(s) : [ce qui se passe au clic / saisie / survol]\n- État de chargement : [skeleton / spinner / disabled — préciser]\n- État d'erreur : [message, comportement du formulaire]\n- État vide : [ce qui s'affiche si aucune donnée]\n\n## Accessibilité\n- [aria-label, aria-describedby, rôles ARIA si applicable]\n- [Navigation clavier si applicable]\n- [Contrastes et lisibilité si applicable]\n\n## Responsive\n- [Comportement mobile / tablette si différent du desktop]"
+  --design "$(cat <<'EOF'
+## Composants du design system utilisés
+- [Nom du composant DSFR ou interne — variante utilisée]
+- [Autre composant si applicable]
+
+## Comportement UX
+- État initial : [ce que l'utilisateur voit au chargement]
+- Interaction(s) : [ce qui se passe au clic / saisie / survol]
+- État de chargement : [skeleton / spinner / disabled — préciser]
+- État d'erreur : [message, comportement du formulaire]
+- État vide : [ce qui s'affiche si aucune donnée]
+
+## Accessibilité
+- [aria-label, aria-describedby, rôles ARIA si applicable]
+- [Navigation clavier si applicable]
+- [Contrastes et lisibilité si applicable]
+
+## Responsive
+- [Comportement mobile / tablette si différent du desktop]
+EOF
+)"
 ```
 
 **Cas B — spec UI non disponible (PHASE 1.5 ignorée ou non déclenchée) :**
@@ -479,7 +616,16 @@ Remplir `--design` avec le contexte disponible (partiel), puis tracer la spec ma
 
 ```bash
 bd update $T_ID \
-  --design "## À compléter par l'UI Designer\nVoir commentaire sur ce ticket pour les instructions d'invocation.\n\n## Contexte disponible\n- Composant(s) concerné(s) : [NomComposant.vue]\n- Comportement attendu : [description fonctionnelle extraite de la description du ticket]\n- Design system : [DSFR / autre]"
+  --design "$(cat <<'EOF'
+## À compléter par l'UI Designer
+Voir commentaire sur ce ticket pour les instructions d'invocation.
+
+## Contexte disponible
+- Composant(s) concerné(s) : [NomComposant.vue]
+- Comportement attendu : [description fonctionnelle extraite de la description du ticket]
+- Design system : [DSFR / autre]
+EOF
+)"
 
 bd comments add $T_ID "⚠️ Spec UI à compléter — ce ticket nécessite une spécification visuelle.
 
