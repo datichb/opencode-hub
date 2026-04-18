@@ -119,7 +119,6 @@ else
 ## $PROJECT_ID
 - Nom : ${PROJECT_NAME:-$PROJECT_ID}
 - Stack : ${PROJECT_STACK:-N/A}
-- Board Beads : $PROJECT_ID
 - Tracker : ${PROJECT_TRACKER}
 - Labels : ${PROJECT_LABELS:-feature,fix}
 - Agents : all
@@ -176,7 +175,7 @@ if command -v bd &>/dev/null && [ -d "$PROJECT_PATH" ] && [ ! -d "$PROJECT_PATH/
   echo ""
   _prompt init_beads "Initialiser Beads dans le projet ? [Y/n] : "
   if [[ "${init_beads:-Y}" =~ ^[Yy]$ ]]; then
-    if (cd "$PROJECT_PATH" && bd init); then
+    if (cd "$PROJECT_PATH" && bd init --prefix "$PROJECT_ID"); then
       log_success "Beads initialisé dans $PROJECT_PATH"
       BEADS_OK=1
 

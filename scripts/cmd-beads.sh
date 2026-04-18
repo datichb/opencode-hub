@@ -161,7 +161,7 @@ cmd_init() {
   fi
 
   log_info "Initialisation de Beads dans : $path"
-  (cd "$path" && bd init) || { log_error "$(t beads.init_failed)"; exit 1; }
+  (cd "$path" && bd init --prefix "$id") || { log_error "$(t beads.init_failed)"; exit 1; }
   log_success "$(t beads.initialized) $id ($path/.beads)"
 
   # Proposer de configurer l'upstream git si absent (ni upstream ni origin trouvé)
