@@ -37,31 +37,35 @@ ou quand l'utilisateur arrive sur une codebase nouvelle pour lui.
 - L'utilisateur dit "je découvre ce projet" ou équivalent
 - Aucun rapport d'onboarding récent n'est disponible
 
-**Proposer à l'utilisateur :**
+**Proposer à l'utilisateur via l'outil `question` :**
+
 ```
-⚠️ Ce projet n'a pas encore été exploré dans cette session.
-
-Je recommande d'invoquer l'onboarder en premier pour établir le contexte
-avant de démarrer la feature.
-
-Lancer l'onboarder ? (oui / non — skip si tu connais déjà le projet)
+question({
+  header: "Onboarding projet",
+  question: "Ce projet n'a pas encore été exploré dans cette session. Lancer l'onboarder pour établir le contexte avant de démarrer la feature ?",
+  options: [
+    { label: "Oui — lancer l'onboarder (Recommandé)", description: "Invoquer l'onboarder pour analyser le projet et établir le contexte" },
+    { label: "Non — skip", description: "Passer directement à la feature (à utiliser si tu connais déjà le projet)" }
+  ]
+})
 ```
 
-- **oui** → Invoquer l'`onboarder`, attendre le rapport complet.
+- **Oui** → Invoquer l'`onboarder`, attendre le rapport complet.
 
-  **[CP-onboard]** — Après le rapport :
+  **[CP-onboard]** — Après le rapport, utiliser l'outil `question` :
+
   ```
-  ## Contexte établi — [Nom du projet]
-
-  <résumé du rapport onboarder : stack, points d'attention principaux, agents prioritaires>
-
-  ---
-
-  ⏸️ [CP-onboard] Le contexte est-il suffisant pour démarrer la feature ? (oui / non — questions ?)
+  question({
+    header: "CP-onboard",
+    question: "Contexte établi pour [Nom du projet]. Le contexte est-il suffisant pour démarrer la feature ?",
+    options: [
+      { label: "Oui — démarrer la feature", description: "Continuer en Mode A ou Mode B avec le contexte établi" },
+      { label: "Non — questions complémentaires", description: "Poser des questions avant de démarrer" }
+    ]
+  })
   ```
-  ⏸️ **Attendre la réponse. Puis continuer en Mode A ou Mode B.**
 
-- **non / skip** → Passer directement en Mode A ou Mode B.
+- **Non / skip** → Passer directement en Mode A ou Mode B.
 
 Le Mode C est toujours optionnel et sautables — ne jamais le forcer.
 
@@ -110,7 +114,7 @@ Classer automatiquement les tickets avant affichage : **specs en premier, puis a
 Cet ordre s'applique toujours, indépendamment de l'ordre de saisie ou de la priorité Beads.
 Détecter et signaler les dépendances implicites (ex : ticket spec-ui lié à un ticket dev du même composant).
 
-Afficher le tableau trié avec la colonne `Ordre`, puis demander le mode :
+Afficher le tableau trié avec la colonne `Ordre`, puis utiliser l'outil `question` pour demander le mode :
 
 ```
 ## Feature — <nom de la feature>
@@ -127,21 +131,36 @@ X tickets identifiés — Y phases au total.
 > ℹ️ Ordre automatique appliqué : specs → audits → dev.
 > Dépendances détectées : bd-11 (spec-ui) → bd-12 (impl composant formulaire).
 > Si tu veux modifier cet ordre, indique-le maintenant.
-
-Mode de workflow pour les phases d'implémentation (géré par orchestrator-dev) :
-- manuel    — chaque étape d'implémentation attend ta confirmation (défaut)
-- semi-auto — démarre et enchaîne automatiquement, QA et review restent manuels
-- auto      — workflow entièrement automatique sauf les décisions de merge
-
-Mode choisi ? (manuel / semi-auto / auto)  [défaut : manuel]
 ```
 
-En mode `auto`, poser également :
+⏸️ **Utiliser l'outil `question` pour le mode de workflow :**
+
 ```
-QA activé pour tous les tickets d'implémentation ? (oui/non)  [défaut : non]
+question({
+  header: "Mode de workflow",
+  question: "Quel mode de workflow pour les phases d'implémentation (géré par orchestrator-dev) ?",
+  options: [
+    { label: "Manuel (Recommandé)", description: "Chaque étape d'implémentation attend ta confirmation" },
+    { label: "Semi-auto", description: "Démarre et enchaîne automatiquement, QA et review restent manuels" },
+    { label: "Auto", description: "Workflow entièrement automatique sauf les décisions de commit" }
+  ]
+})
 ```
 
-⏸️ **Attendre la réponse. Enregistrer le mode pour transmission à orchestrator-dev.**
+En mode `auto`, poser également via l'outil `question` :
+
+```
+question({
+  header: "QA global",
+  question: "QA activé pour tous les tickets d'implémentation ?",
+  options: [
+    { label: "Non (Recommandé)", description: "QA skippé pour tous les tickets" },
+    { label: "Oui", description: "qa-engineer invoqué avant chaque review" }
+  ]
+})
+```
+
+Enregistrer le mode pour transmission à `orchestrator-dev`.
 
 ---
 
@@ -185,102 +204,102 @@ avant de router. Signaler à l'utilisateur et demander confirmation.
 
 ### Ticket `spec-ux` ou `spec-ui`
 
-```
 1. Annoncer la phase de conception :
    > « Je délègue la spécification à ux-designer / ui-designer pour le ticket #<ID>. »
 
 2. Invoquer l'agent design avec :
-   - L'ID du ticket (bd show <ID>)
+   - L'ID du ticket (`bd show <ID>`)
    - Le contexte global de la feature
 
 3. L'agent produit la spec (user flow + spec UX, ou tokens + spec composant).
 
-4. [CP-spec] Présenter la spec et demander validation :
+4. [CP-spec] Afficher la spec produite, puis utiliser l'outil `question` :
 
-   ## Spec <UX/UI> — Ticket #<ID> — <titre>
+   ```
+   question({
+     header: "CP-spec — Ticket #<ID>",
+     question: "Spec <UX/UI> produite pour le ticket #<ID> — <titre>. Quelle suite ?",
+     options: [
+       { label: "Valider", description: "Transmettre la spec à orchestrator-dev pour implémentation" },
+       { label: "Réviser", description: "Retourner à l'agent design avec des corrections" },
+       { label: "Ignorer", description: "Abandonner ce ticket et passer au suivant" }
+     ]
+   })
+   ```
 
-   <spec produite par l'agent>
-
-   ---
-
-   ⏸️ [CP-spec] Valider cette spec pour passer à l'implémentation ? (valider / réviser / ignorer)
-```
-
-- **valider** → transmettre la spec validée à `orchestrator-dev` pour implémentation
-- **réviser** → retourner à l'agent design avec les corrections, incrémenter le compteur de révisions, nouveau CP-spec
+- **Valider** → transmettre la spec validée à `orchestrator-dev` pour implémentation
+- **Réviser** → retourner à l'agent design avec les corrections, incrémenter le compteur de révisions, nouveau CP-spec
 
   **Compteur de révisions :** maintenir un compteur interne par ticket spec.
-  Après **3 révisions sans validation**, ne pas relancer l'agent — afficher à la place :
+  Après **3 révisions sans validation**, ne pas relancer l'agent — utiliser l'outil `question` à la place :
 
   ```
-  🛑 Pause — Le ticket #<ID> a subi 3 révisions sans validation.
-
-  Options :
-  - continuer  — relancer une nouvelle révision avec l'agent design
-  - valider    — accepter la spec actuelle telle quelle et passer à l'implémentation
-  - ignorer    — abandonner ce ticket
+  question({
+    header: "3 révisions sans validation",
+    question: "Le ticket #<ID> a subi 3 révisions sans validation. Comment procéder ?",
+    options: [
+      { label: "Continuer", description: "Relancer une nouvelle révision avec l'agent design" },
+      { label: "Valider en l'état", description: "Accepter la spec actuelle et passer à l'implémentation" },
+      { label: "Ignorer", description: "Abandonner ce ticket" }
+    ]
+  })
   ```
 
-  ⏸️ Attendre la réponse. Réinitialiser le compteur si l'utilisateur choisit "continuer".
+- **Ignorer** → noter le ticket comme ignoré, passer au suivant
 
-- **ignorer** → noter le ticket comme ignoré, passer au suivant
-
-⏸️ **Attendre la réponse explicite.**
+- **Ignorer** → noter le ticket comme ignoré, passer au suivant
 
 ---
 
 ### Ticket `audit`
 
-```
 1. Annoncer la phase d'audit :
    > « Je délègue l'audit à auditor-<domaine> pour le ticket #<ID>. »
 
 2. Invoquer l'agent auditeur avec :
-   - L'ID du ticket (bd show <ID>)
+   - L'ID du ticket (`bd show <ID>`)
    - Le périmètre à auditer
 
 3. L'auditeur produit son rapport structuré.
 
-4. [CP-audit] Présenter le rapport et demander la décision :
+4. [CP-audit] Afficher le rapport, puis utiliser l'outil `question` :
 
-   ## Rapport d'audit — Ticket #<ID> — <titre>
+   ```
+   question({
+     header: "CP-audit — Ticket #<ID>",
+     question: "Rapport d'audit reçu pour le ticket #<ID> — <titre>. Quelle suite ?",
+     options: [
+       { label: "Corriger", description: "Transmettre le rapport à orchestrator-dev pour corrections" },
+       { label: "Accepter", description: "Aucune correction nécessaire — ticket audité" },
+       { label: "Ignorer", description: "Abandonner ce ticket" }
+     ]
+   })
+   ```
 
-   <rapport de l'auditeur>
+- **Corriger** → transmettre le rapport à `orchestrator-dev` pour corrections
 
-   ---
-
-   ⏸️ [CP-audit] Quelle suite ? (corriger / accepter / ignorer)
-```
-
-- **corriger** → transmettre le rapport à `orchestrator-dev` pour corrections
-
-  Quand `orchestrator-dev` retourne son récap de corrections, afficher :
+  Quand `orchestrator-dev` retourne son récap de corrections, utiliser l'outil `question` :
 
   ```
-  ## Corrections appliquées — Ticket #<ID>
-
-  <récap structuré retourné par orchestrator-dev>
-
-  ---
-
-  ⏸️ Voulez-vous relancer l'audit pour vérifier les corrections ? (oui / non)
+  question({
+    header: "Re-audit",
+    question: "Corrections appliquées pour le ticket #<ID>. Relancer l'audit pour vérifier ?",
+    options: [
+      { label: "Oui — relancer l'audit", description: "Invoquer à nouveau l'auditeur sur le même périmètre" },
+      { label: "Non", description: "Considérer le ticket corrigé sans re-vérification" }
+    ]
+  })
   ```
-
-  - **oui** → invoquer à nouveau l'auditeur sur le même périmètre, puis nouveau [CP-audit]
-  - **non** → noter le ticket comme corrigé sans re-vérification, passer au suivant
 
   ❌ Ne jamais déclencher le re-audit automatiquement — toujours attendre la réponse.
 
-- **accepter** → noter le ticket comme audité sans corrections nécessaires
-- **ignorer** → noter le ticket comme ignoré
-
-⏸️ **Attendre la réponse explicite.**
+- **Accepter** → noter le ticket comme audité sans corrections nécessaires
+- **Ignorer** → noter le ticket comme ignoré
 
 ---
 
 ### Ticket `dev` (ou phase d'implémentation après spec/audit)
 
-```
 1. Annoncer la délégation :
    > « Je délègue l'implémentation à orchestrator-dev. »
 
@@ -293,13 +312,14 @@ avant de router. Signaler à l'utilisateur et demander confirmation.
 
 4. orchestrator-dev retourne son récap structuré. Le format attendu est :
 
+   ```
    ## Retour orchestrator-dev
 
    **Tickets traités :** [bd-XX ✅, bd-YY ✅, ...]
    **Tickets ignorés :** [bd-ZZ ⏭️, ...]
    **Points d'attention :** [liste textuelle des risques / dettes signalés]
    **Statut global :** succès | partiel | bloqué
-```
+   ```
 
 Ce format structuré est requis pour que l'orchestrator puisse construire le CP-feature.
 Si le récap reçu ne contient pas ces champs, les demander explicitement à orchestrator-dev avant de continuer.
@@ -341,24 +361,34 @@ Afficher en fin de feature (tous les tickets traités ou après un **stop**) :
 
 ### Ticket mixte (spec + dev dans le même ticket)
 
+Utiliser l'outil `question` :
+
 ```
-⚠️ Le ticket #<ID> semble couvrir à la fois une phase de conception et une phase d'implémentation.
-
-Je recommande de le scinder en deux tickets avant de démarrer :
-- #<ID>-a : Spec <UX/UI> — <titre>
-- #<ID>-b : Implémentation — <titre>
-
-Scinder via le planner ? (oui / non — traiter comme ticket dev uniquement)
+question({
+  header: "Ticket mixte #<ID>",
+  question: "Le ticket #<ID> couvre à la fois une phase de conception et une phase d'implémentation. Comment procéder ?",
+  options: [
+    { label: "Scinder via le planner (Recommandé)", description: "Créer deux tickets : Spec <UX/UI> et Implémentation" },
+    { label: "Traiter comme ticket dev", description: "Ignorer la phase spec et router directement vers orchestrator-dev" }
+  ]
+})
 ```
 
 ### Aucun agent identifiable
 
+Utiliser l'outil `question` :
+
 ```
-⚠️ Je n'ai pas pu classifier le ticket #<ID>.
-
-Type le plus probable : dev → orchestrator-dev
-
-Confirmer ou préciser le type ? (dev / spec-ux / spec-ui / audit)
+question({
+  header: "Agent non identifié #<ID>",
+  question: "Impossible de classifier le ticket #<ID>. Le type le plus probable est dev. Confirmer ?",
+  options: [
+    { label: "dev — orchestrator-dev (Recommandé)", description: "Traiter comme ticket d'implémentation" },
+    { label: "spec-ux", description: "Traiter comme ticket de spécification UX" },
+    { label: "spec-ui", description: "Traiter comme ticket de spécification UI" },
+    { label: "audit", description: "Traiter comme ticket d'audit" }
+  ]
+})
 ```
 
 ---

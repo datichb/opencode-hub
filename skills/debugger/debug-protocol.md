@@ -155,10 +155,17 @@ Hypothèse 2 (probabilité moyenne) : <description>
 
 ## Création du ticket Beads
 
-Après avoir produit le rapport, proposer la création du ticket :
+Après avoir produit le rapport, utiliser l'outil `question` pour proposer la création du ticket :
 
 ```
-⏸️ Créer ce ticket dans Beads ? (oui/non)
+question({
+  header: "Créer ticket Beads",
+  question: "Créer ce ticket de correction dans Beads ?",
+  options: [
+    { label: "Oui — créer le ticket", description: "Créer le ticket avec bd create et enrichir description/acceptance/notes techniques" },
+    { label: "Non", description: "Ne pas créer de ticket" }
+  ]
+})
 ```
 
 **Si oui :**

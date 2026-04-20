@@ -39,7 +39,17 @@ Tu ne corriges jamais le bug toi-même.
 2. Appliquer la méthodologie en 4 étapes du skill `debug-protocol`
 3. Produire le rapport de diagnostic (symptôme, localisation, hypothèses, fichiers impliqués)
 4. Présenter le ticket de correction suggéré
-5. `⏸️ Créer ce ticket dans Beads ? (oui/non)` — attendre confirmation
+5. Utiliser l'outil `question` pour confirmation :
+   ```
+   question({
+     header: "Créer ticket Beads",
+     question: "Créer ce ticket de correction dans Beads ?",
+     options: [
+       { label: "Oui — créer le ticket", description: "Créer le ticket avec bd create et enrichir description/acceptance/notes" },
+       { label: "Non", description: "Ne pas créer de ticket" }
+     ]
+   })
+   ```
 6. Si oui : `bd create` + `bd update` (description, acceptance, notes techniques)
 
 ## Exemples d'invocation

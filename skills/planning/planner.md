@@ -131,8 +131,18 @@ Présenter ce qui a été détecté avant de poser des questions :
 - **UI** : [oui ⚠️ / non] — [raison si oui : nouveau composant / composant profondément modifié / variantes à spécifier]
 ```
 
-**⏸️ PAUSE — Valider le contexte :**
-> "Ce contexte correspond-il à votre projet ? Des corrections ou précisions avant de continuer ?"
+**⏸️ PAUSE — Valider le contexte via l'outil `question` :**
+
+```
+question({
+  header: "Validation du contexte",
+  question: "Ce contexte correspond-il à votre projet ? Des corrections ou précisions avant de continuer ?",
+  options: [
+    { label: "Oui — continuer", description: "Lancer la phase de discovery" },
+    { label: "Corrections à apporter", description: "Préciser ou corriger le contexte avant de continuer" }
+  ]
+})
+```
 
 ---
 
@@ -176,8 +186,18 @@ Toujours expliquer le raisonnement :
 > "Je mets ce ticket en P1 car il bloque les tickets d'authentification."
 > "Ce ticket est P3 — vous l'avez mentionné comme optionnel pour cette itération."
 
-**⏸️ PAUSE — Valider la compréhension :**
-> "Ai-je bien compris le besoin ? Des corrections avant que je propose un découpage ?"
+**⏸️ PAUSE — Valider la compréhension via l'outil `question` :**
+
+```
+question({
+  header: "Validation de la compréhension",
+  question: "Ai-je bien compris le besoin ? Des corrections avant que je propose un découpage ?",
+  options: [
+    { label: "Oui — proposer le découpage", description: "Lancer la phase de planification" },
+    { label: "Corrections à apporter", description: "Corriger la compréhension avant de continuer" }
+  ]
+})
+```
 
 ---
 
@@ -403,8 +423,18 @@ Un ticket est trop gros si l'un de ces critères est vrai :
 
 Dans ce cas : proposer de scinder avant de valider le plan.
 
-**⏸️ PAUSE — Validation explicite du plan :**
-> "Est-ce que ce découpage vous convient ? Souhaitez-vous modifier, ajouter ou supprimer des éléments avant que je crée les tickets ?"
+**⏸️ PAUSE — Validation explicite du plan via l'outil `question` :**
+
+```
+question({
+  header: "Validation du plan",
+  question: "Est-ce que ce découpage vous convient ? Souhaitez-vous modifier, ajouter ou supprimer des éléments avant que je crée les tickets ?",
+  options: [
+    { label: "Oui — créer les tickets", description: "Lancer la création des tickets dans Beads" },
+    { label: "Modifier le plan", description: "Apporter des modifications au découpage avant de créer" }
+  ]
+})
+```
 
 **Ne pas continuer tant que l'utilisateur n'a pas validé.**
 
@@ -740,9 +770,19 @@ T=$(bd create "Titre" -t task -p 2 -l ai-delegated -a dev-agent --parent $EPIC_I
 
 ## PHASE 3.5 — Délégation ai-delegated (optionnelle)
 
-**⏸️ PAUSE — Demander explicitement :**
-> "Souhaitez-vous déléguer certains tickets à l'agent IA (label `ai-delegated`) ?
-> Si oui, indiquez les IDs ou dites 'tous'."
+**⏸️ PAUSE — Délégation ai-delegated via l'outil `question` :**
+
+```
+question({
+  header: "Délégation ai-delegated",
+  question: "Souhaitez-vous déléguer certains tickets à l'agent IA (label ai-delegated) ?",
+  options: [
+    { label: "Non", description: "Aucun ticket délégué à l'IA" },
+    { label: "Oui — certains tickets", description: "Indiquer les IDs dans la réponse libre" },
+    { label: "Oui — tous les tickets", description: "Déléguer tous les tickets créés à l'IA" }
+  ]
+})
+```
 
 **Uniquement si l'utilisateur valide :**
 ```bash
@@ -793,8 +833,18 @@ Ordre d'implémentation :
 Epics créés : N | Tickets créés : M | Estimation totale : ~Xh
 ```
 
-**⏸️ PAUSE — Demander :**
-> "Les tickets correspondent-ils à vos attentes ? Souhaitez-vous des ajustements ?"
+**⏸️ PAUSE — Validation finale via l'outil `question` :**
+
+```
+question({
+  header: "Validation finale",
+  question: "Les tickets correspondent-ils à vos attentes ? Souhaitez-vous des ajustements ?",
+  options: [
+    { label: "Oui — c'est bon", description: "Planning terminé" },
+    { label: "Ajustements à faire", description: "Apporter des modifications aux tickets créés" }
+  ]
+})
+```
 
 ---
 

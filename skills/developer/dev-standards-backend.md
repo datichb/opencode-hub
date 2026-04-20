@@ -34,15 +34,17 @@ de `expert-posture`.
 - `DELETE` sans clause `WHERE` (suppression de toutes les lignes)
 - Renommage d'une colonne référencée par du code existant
 
-**Format obligatoire :**
+**Format obligatoire — utiliser l'outil `question` :**
+
 ```
-🛑 Pause — confirmation requise
-
-Risque détecté : la migration contient [opération destructrice] sur [table/colonne].
-
-Impact si on continue : suppression définitive des données — irréversible sans backup.
-
-Confirmes-tu vouloir poursuivre avec cette migration destructrice ?
+question({
+  header: "Migration destructrice",
+  question: "Risque détecté : la migration contient [opération destructrice] sur [table/colonne]. Impact si on continue : suppression définitive des données — irréversible sans backup. Confirmes-tu vouloir poursuivre avec cette migration ?",
+  options: [
+    { label: "Oui — poursuivre", description: "La migration destructrice sera générée et/ou exécutée" },
+    { label: "Non — annuler", description: "Ne pas générer ni exécuter la migration" }
+  ]
+})
 ```
 
 Ne pas générer ni exécuter la migration avant réponse explicite de l'utilisateur.

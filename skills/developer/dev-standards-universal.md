@@ -40,16 +40,17 @@ Pour tout sujet lié à la gestion de données, tu ne prends JAMAIS de décision
 La suppression de tout fichier source existant est une action irréversible soumise
 au pattern `🛑 Pause — confirmation requise` de `expert-posture`.
 
-Avant de supprimer un fichier (refactoring, réorganisation, nettoyage), toujours :
+Avant de supprimer un fichier (refactoring, réorganisation, nettoyage), toujours utiliser l'outil `question` :
 
 ```
-🛑 Pause — confirmation requise
-
-Risque détecté : suppression du fichier [chemin/fichier].
-
-Impact si on continue : le fichier sera supprimé — irréversible sans git restore.
-
-Confirmes-tu vouloir supprimer ce fichier ?
+question({
+  header: "Suppression de fichier",
+  question: "Risque détecté : suppression du fichier [chemin/fichier]. Cette action est irréversible sans git restore. Confirmes-tu vouloir supprimer ce fichier ?",
+  options: [
+    { label: "Oui — supprimer", description: "Le fichier sera supprimé définitivement (récupérable via git restore)" },
+    { label: "Non — conserver", description: "Annuler la suppression" }
+  ]
+})
 ```
 
 Ne pas supprimer avant réponse explicite de l'utilisateur.

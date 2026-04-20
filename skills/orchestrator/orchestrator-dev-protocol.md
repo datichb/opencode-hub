@@ -71,6 +71,8 @@ Afficher les tickets à traiter et demander le mode.
 
 Pour chaque ticket, lire ses labels via `bd show <ID>` et noter la présence du label `tdd`.
 
+Afficher le tableau récapitulatif :
+
 ```
 ## Tickets à implémenter
 
@@ -81,21 +83,36 @@ Pour chaque ticket, lire ses labels via `bd show <ID>` et noter la présence du 
 | bd-14 | ...  | P2 | feature | developer-platform | —   |
 
 X tickets identifiés. Y en TDD (tests écrits avant l'implémentation — QA skippé).
-
-Mode de workflow :
-- manuel    — chaque étape attend ta confirmation (défaut)
-- semi-auto — démarre et enchaîne les tickets automatiquement, QA et review restent manuels
-- auto      — workflow entièrement automatique sauf les décisions de merge
-
-Mode choisi ? (manuel / semi-auto / auto)  [défaut : manuel]
 ```
 
-En mode `auto`, poser également :
+⏸️ **Utiliser l'outil `question` pour demander le mode :**
+
 ```
-QA activé pour tous les tickets ? (oui/non)  [défaut : non]
+question({
+  header: "Mode de workflow",
+  question: "Quel mode de workflow pour cette session ?",
+  options: [
+    { label: "Manuel (Recommandé)", description: "Chaque étape attend ta confirmation — CP-1, CP-QA, CP-2, CP-3 tous en pause" },
+    { label: "Semi-auto", description: "Démarre et enchaîne les tickets automatiquement, CP-QA et CP-2 restent manuels" },
+    { label: "Auto", description: "Workflow entièrement automatique sauf CP-2 (commit) — QA configurable au démarrage" }
+  ]
+})
 ```
 
-⏸️ **Attendre la réponse. Enregistrer le mode pour toute la session.**
+Enregistrer le mode pour toute la session.
+
+En mode `auto`, poser également via l'outil `question` :
+
+```
+question({
+  header: "QA global",
+  question: "QA activé pour tous les tickets d'implémentation ?",
+  options: [
+    { label: "Non (Recommandé)", description: "QA skippé pour tous les tickets — review directe après implémentation" },
+    { label: "Oui", description: "QA activé pour tous les tickets — qa-engineer invoqué avant chaque review" }
+  ]
+})
+```
 
 ### Invoqué depuis l'orchestrateur feature
 
@@ -129,13 +146,22 @@ Afficher le ticket :
 
 **Selon le mode :**
 
-- **`manuel`** → pause CP-1 :
+- **`manuel`** → pause CP-1 via l'outil `question` :
+
   ```
-  ⏸️ [CP-1] Démarrer l'implémentation de ce ticket ? (oui / passer / stop)
+  question({
+    header: "CP-1 — Ticket #<ID>",
+    question: "Démarrer l'implémentation du ticket #<ID> — <titre> ?",
+    options: [
+      { label: "Oui — démarrer", description: "Déléguer l'implémentation à <developer-xxx>" },
+      { label: "Passer", description: "Ignorer ce ticket et passer au suivant" },
+      { label: "Stop", description: "Arrêter le workflow et afficher le récap de l'état courant" }
+    ]
+  })
   ```
-  - **oui** → proposition de branche (voir ci-dessous)
-  - **passer** → ticket ignoré, ticket suivant
-  - **stop** → récap de l'état courant et arrêt
+  - **Oui — démarrer** → proposition de branche (voir ci-dessous)
+  - **Passer** → ticket ignoré, ticket suivant
+  - **Stop** → récap de l'état courant et arrêt
 
 - **`semi-auto` / `auto`** → enchaîner directement :
   ```
@@ -145,17 +171,20 @@ Afficher le ticket :
 
 **Proposition de branche dédiée (tous modes) :**
 
-Calculer le nom de branche selon la convention `<type>/<ticket-id>-<description-courte>` à partir du type et du titre du ticket, puis proposer :
+Calculer le nom de branche selon la convention `<type>/<ticket-id>-<description-courte>` à partir du type et du titre du ticket, puis utiliser l'outil `question` :
 
 ```
-⏸️ [CP-1 — branche] Créer une branche dédiée pour ce ticket ?
-
-  Branche suggérée : <type>/<ticket-id>-<description-courte>
-
-  (oui / non — non = rester sur la branche courante)
+question({
+  header: "CP-1 — Branche dédiée",
+  question: "Créer une branche dédiée pour le ticket #<ID> ?",
+  options: [
+    { label: "Oui (Recommandé)", description: "Créer et basculer sur <type>/<ticket-id>-<description-courte> avant de démarrer" },
+    { label: "Non", description: "Rester sur la branche courante" }
+  ]
+})
 ```
 
-⏸️ **Attendre la réponse. Cette pause est obligatoire dans tous les modes.**
+⏸️ **Cette pause est obligatoire dans tous les modes.**
 
 - **oui** → transmettre le nom de branche à l'agent développeur avec l'instruction :
   > « Crée et bascule sur la branche `<nom>` avant de démarrer :
@@ -194,12 +223,20 @@ Calculer le nom de branche selon la convention `<type>/<ticket-id>-<description-
 
 **Sinon, selon le mode :**
 
-- **`manuel` / `semi-auto`** → pause CP-QA :
+- **`manuel` / `semi-auto`** → pause CP-QA via l'outil `question` :
+
   ```
-  ⏸️ [CP-QA] Passer par le QA avant la review ? (oui/non)
+  question({
+    header: "CP-QA — Ticket #<ID>",
+    question: "Passer par le QA avant la review pour le ticket #<ID> ?",
+    options: [
+      { label: "Non (Recommandé)", description: "Passer directement à la review" },
+      { label: "Oui", description: "Invoquer qa-engineer avec le diff et l'ID du ticket" }
+    ]
+  })
   ```
-  - **non** (défaut) → étape 4
-  - **oui** → invoquer `qa-engineer` avec le diff + l'ID du ticket
+  - **Non** (défaut) → étape 4
+  - **Oui** → invoquer `qa-engineer` avec le diff + l'ID du ticket
 
 - **`auto`** → utiliser la valeur fixée en CP-0 :
   ```
@@ -226,14 +263,17 @@ Fournir au reviewer :
 
 ### Étape 5 — Décision après review
 
+Afficher le rapport de review, puis utiliser l'outil `question` pour CP-2 :
+
 ```
-## Rapport de review — Ticket #<ID>
-
-<rapport du reviewer>
-
----
-
-⏸️ [CP-2] Quelle suite ? (commit / corriger)
+question({
+  header: "CP-2 — Ticket #<ID>",
+  question: "Le rapport de review est affiché ci-dessus. Quelle suite pour le ticket #<ID> ?",
+  options: [
+    { label: "Commit", description: "Formuler le message Conventional Commits et demander au developer de commiter" },
+    { label: "Corriger", description: "Retourner le ticket au developer avec les retours du reviewer" }
+  ]
+})
 ```
 
 CP-2 est **toujours une pause, dans tous les modes**.
@@ -270,7 +310,7 @@ CP-2 est **toujours une pause, dans tous les modes**.
 
   ⚠️ Limite : après 3 cycles sans résolution, signaler le blocage et demander si une intervention manuelle est nécessaire.
 
-⏸️ **Attendre la réponse explicite.**
+⏸️ **Attendre la réponse explicite via l'outil `question`.**
 
 ---
 
@@ -290,17 +330,33 @@ CP-2 est **toujours une pause, dans tous les modes**.
 **Tickets restants :** <N> | **Traités :** <M> | **Ignorés :** <K>
 ```
 
-Si le ticket est de type `feature` ou `fix` (visible utilisateur), proposer :
+Si le ticket est de type `feature` ou `fix` (visible utilisateur), utiliser l'outil `question` :
+
 ```
-📝 Voulez-vous que j'invoque le documentarian pour mettre à jour le CHANGELOG ? (oui/non)
+question({
+  header: "CHANGELOG",
+  question: "Ce ticket est de type feature/fix. Mettre à jour le CHANGELOG via le documentarian ?",
+  options: [
+    { label: "Non (Recommandé)", description: "Passer au ticket suivant sans mettre à jour le CHANGELOG" },
+    { label: "Oui", description: "Invoquer le documentarian pour mettre à jour le CHANGELOG" }
+  ]
+})
 ```
-Invoquer `documentarian` uniquement si l'utilisateur répond "oui".
+Invoquer `documentarian` uniquement si l'utilisateur répond "Oui".
 
 **Selon le mode :**
 
-- **`manuel`** → pause CP-3 :
+- **`manuel`** → pause CP-3 via l'outil `question` :
+
   ```
-  ⏸️ [CP-3] Passer au ticket suivant ? (suivant / stop)
+  question({
+    header: "CP-3 — Suite",
+    question: "Ticket #<ID> terminé. Passer au ticket suivant ?",
+    options: [
+      { label: "Suivant", description: "Passer au ticket suivant dans la liste" },
+      { label: "Stop", description: "Arrêter le workflow et afficher le récap global" }
+    ]
+  })
   ```
 
 - **`semi-auto` / `auto`** → enchaîner directement :
@@ -357,31 +413,48 @@ Afficher en fin de workflow (tous les tickets traités ou suite à un **stop**) 
 
 ### Ticket avec dépendance non résolue
 
-```
-⚠️ Le ticket #<ID> dépend de #<ID-parent> qui n'est pas encore terminé.
+Utiliser l'outil `question` :
 
-Voulez-vous (a) attendre, (b) traiter le ticket parent en premier, (c) continuer quand même ?
+```
+question({
+  header: "Dépendance non résolue",
+  question: "Le ticket #<ID> dépend de #<ID-parent> qui n'est pas encore terminé. Comment procéder ?",
+  options: [
+    { label: "Attendre", description: "Suspendre ce ticket jusqu'à la résolution du ticket parent" },
+    { label: "Traiter le parent d'abord", description: "Réorganiser pour traiter #<ID-parent> avant #<ID>" },
+    { label: "Continuer quand même", description: "Ignorer la dépendance et démarrer l'implémentation maintenant" }
+  ]
+})
 ```
 
 ### Ticket sans agent identifiable
 
+Utiliser l'outil `question` :
+
 ```
-⚠️ Je n'ai pas pu identifier l'agent le plus adapté pour #<ID>.
-
-Suggestion : `developer-fullstack` (agent généraliste)
-
-Confirmer ou indiquer l'agent à utiliser ?
+question({
+  header: "Agent non identifié",
+  question: "Aucun agent clairement identifié pour le ticket #<ID>. Quel agent utiliser ?",
+  options: [
+    { label: "developer-fullstack (Recommandé)", description: "Agent généraliste — couvre les cas ambigus front + back" },
+    { label: "Préciser manuellement", description: "Indiquer l'agent à utiliser dans la réponse libre" }
+  ]
+})
 ```
 
 ### Blocage après 3 cycles de review
 
+Afficher les problèmes persistants, puis utiliser l'outil `question` :
+
 ```
-Le ticket #<ID> a subi 3 cycles de review sans résolution.
-
-Problèmes persistants :
-<liste des points bloquants du dernier rapport>
-
-Une intervention manuelle est recommandée. Continuer avec ce ticket ou le passer ?
+question({
+  header: "Blocage après 3 cycles",
+  question: "Le ticket #<ID> a subi 3 cycles de review sans résolution. Une intervention manuelle est recommandée. Comment procéder ?",
+  options: [
+    { label: "Continuer", description: "Tenter un nouveau cycle de correction" },
+    { label: "Passer ce ticket", description: "Ignorer ce ticket et passer au suivant" }
+  ]
+})
 ```
 
 ### Ticket bloqué en cours d'implémentation
@@ -397,10 +470,18 @@ Ajouter un label système si applicable :
 - `needs-decision` — en attente d'une décision humaine
 - `needs-clarification` — description ou acceptance insuffisants
 
-```
-Le ticket #<ID> est bloqué : <raison>.
+Utiliser l'outil `question` :
 
-Voulez-vous (a) résoudre le blocage maintenant, (b) passer au ticket suivant, (c) stop ?
+```
+question({
+  header: "Ticket bloqué #<ID>",
+  question: "Le ticket #<ID> est bloqué : <raison>. Comment procéder ?",
+  options: [
+    { label: "Résoudre maintenant", description: "Traiter le blocage avant de continuer l'implémentation" },
+    { label: "Passer au suivant", description: "Ignorer ce ticket et passer au ticket suivant" },
+    { label: "Stop", description: "Arrêter le workflow et afficher le récap de l'état courant" }
+  ]
+})
 ```
 
 Si résolu : `bd update <ID> -s in_progress` puis reprendre l'implémentation.

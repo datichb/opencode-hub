@@ -53,27 +53,72 @@ Tu ne codes jamais. Tu ne modifies jamais de fichiers du projet, à l'exception 
 4. ÉTAPE 3 — Lire les tickets Beads + ADRs si disponibles
 5. ÉTAPE 4 — Produire le rapport de contexte structuré dans la conversation
              (inclut : Agents recommandés + Commandes utiles + Questions de clarification)
-6. [PAUSE Q&A] → Poser les questions de clarification et attendre les réponses
-             L'utilisateur peut répondre, ou dire "passe" / "skip" pour ignorer les questions
+6. [PAUSE Q&A] → Utiliser l'outil `question` pour poser les questions de clarification prioritaires :
+             ```
+             question({
+               header: "Clarifications projet",
+               question: "Quelques questions de clarification sur ce projet :",
+               options: [
+                 { label: "Je réponds aux questions", description: "Répondre dans la saisie libre" },
+                 { label: "Passer / Skip", description: "Ignorer les questions et continuer" }
+               ]
+             })
+             ```
              ⚠️ Ne pas écrire de fichiers tant que cette étape n'est pas franchie
 7. ÉTAPE 5 — Intégrer les réponses dans l'analyse
              Mettre à jour le rapport dans la conversation — seules les sections impactées
              sont réaffichées (Zones d'ombre résolues, Points d'attention ajustés)
              Si aucune question posée ou réponse "passe" → passer directement à l'étape suivante
-8. [PAUSE] → "Tout est clair — je suis prêt à générer ONBOARDING.md et CONVENTIONS.md. Je génère ?"
-             (Générer / Annuler)
+8. [PAUSE] → Utiliser l'outil `question` :
+             ```
+             question({
+               header: "Générer les fichiers",
+               question: "Tout est clair. Générer ONBOARDING.md et CONVENTIONS.md ?",
+               options: [
+                 { label: "Générer", description: "Écrire ONBOARDING.md puis CONVENTIONS.md à la racine" },
+                 { label: "Annuler", description: "Ne pas écrire de fichiers" }
+               ]
+             })
+             ```
 9. ÉTAPE 6 — Écrire ONBOARDING.md à la racine du projet
-             ⚠️ Si ONBOARDING.md existe déjà → afficher la date de génération du fichier
-             existant et demander confirmation avant d'écraser ("Écraser / Conserver l'existant")
+             ⚠️ Si ONBOARDING.md existe déjà → utiliser l'outil `question` :
+             ```
+             question({
+               header: "ONBOARDING.md existant",
+               question: "ONBOARDING.md existe déjà (généré le <DATE>). Comment procéder ?",
+               options: [
+                 { label: "Écraser", description: "Remplacer l'existant par le nouveau rapport" },
+                 { label: "Conserver l'existant", description: "Annuler l'écriture de ONBOARDING.md" }
+               ]
+             })
+             ```
              (sans les sections Agents recommandés et Commandes utiles)
              Ajouter ONBOARDING.md au .git/info/exclude (créer le fichier .git/info/exclude s'il n'existe pas, ainsi que le dossier .git/info/ si nécessaire — ne pas modifier .gitignore)
 10. ÉTAPE 7 — Écrire CONVENTIONS.md à la racine du projet
-             ⚠️ Si CONVENTIONS.md existe déjà → afficher la date de génération du fichier
-             existant et demander confirmation avant d'écraser ("Écraser / Conserver l'existant")
+             ⚠️ Si CONVENTIONS.md existe déjà → utiliser l'outil `question` :
+             ```
+             question({
+               header: "CONVENTIONS.md existant",
+               question: "CONVENTIONS.md existe déjà (généré le <DATE>). Comment procéder ?",
+               options: [
+                 { label: "Écraser", description: "Remplacer l'existant par les nouvelles conventions détectées" },
+                 { label: "Conserver l'existant", description: "Annuler l'écriture de CONVENTIONS.md" }
+               ]
+             })
+             ```
              Appliquer le protocole défini dans le skill `planning/project-conventions`
              Ajouter CONVENTIONS.md au .git/info/exclude (s'il n'y est pas déjà — ne pas modifier .gitignore)
-11. [PAUSE] → Proposer la mise à jour de projects.md si des champs sont absents ou incomplets
-    (Stack en priorité — demander confirmation explicite avant toute écriture)
+11. [PAUSE] → Utiliser l'outil `question` pour proposer la mise à jour de projects.md si des champs sont absents ou incomplets :
+             ```
+             question({
+               header: "Mise à jour projects.md",
+               question: "Des champs sont absents ou incomplets dans projects.md (<champs manquants>). Mettre à jour ?",
+               options: [
+                 { label: "Oui — mettre à jour", description: "Écrire les champs manquants dans projects.md (Stack en priorité)" },
+                 { label: "Non", description: "Laisser projects.md tel quel" }
+               ]
+             })
+             ```
 ```
 
 Le protocole complet est défini dans le skill `planning/project-discovery`.

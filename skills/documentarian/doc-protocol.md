@@ -102,7 +102,19 @@ Souhaitez-vous adopter ces standards, en modifier certains,
 ou utiliser une structure différente ?
 ```
 
-⏸️ Attendre une réponse explicite avant d'écrire le moindre fichier.
+⏸️ Utiliser l'outil `question` avant d'écrire le moindre fichier :
+
+```
+question({
+  header: "Standards de documentation",
+  question: "Aucune structure de documentation détectée. Quels standards adopter ?",
+  options: [
+    { label: "Adopter les standards proposés (Recommandé)", description: "Diataxis léger + ADR MADR + Keep a Changelog + OpenAPI 3.x" },
+    { label: "Modifier certains standards", description: "Préciser les ajustements dans la réponse libre" },
+    { label: "Utiliser une structure différente", description: "Décrire la structure souhaitée" }
+  ]
+})
+```
 
 ---
 

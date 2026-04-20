@@ -41,15 +41,17 @@ confirmation obligatoire selon le pattern `🛑 Pause — confirmation requise` 
 - Suppression ou écrasement de fichiers de données sources (CSV, Parquet, JSON bruts)
 - Purge de partitions ou de tables de staging
 
-**Format obligatoire :**
+**Format obligatoire — utiliser l'outil `question` :**
+
 ```
-🛑 Pause — confirmation requise
-
-Risque détecté : l'opération [description] va supprimer définitivement des données.
-
-Impact si on continue : [données concernées] — irréversible sans backup préalable.
-
-Confirmes-tu vouloir poursuivre ?
+question({
+  header: "Opération destructrice",
+  question: "Risque détecté : l'opération [description] va supprimer définitivement des données. Impact : [données concernées] — irréversible sans backup préalable. Confirmes-tu vouloir poursuivre ?",
+  options: [
+    { label: "Oui — poursuivre", description: "L'opération destructrice sera exécutée" },
+    { label: "Non — annuler", description: "Ne pas exécuter l'opération" }
+  ]
+})
 ```
 
 Ne pas exécuter l'opération avant réponse explicite de l'utilisateur.

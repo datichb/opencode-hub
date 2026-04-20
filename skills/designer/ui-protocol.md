@@ -243,19 +243,17 @@ Toujours doubler avec une icône ou un texte.
 
 ### Si aucun design system n'existe
 
-Avant de spécifier le moindre composant, proposer de poser les fondations :
+Avant de spécifier le moindre composant, utiliser l'outil `question` pour proposer de poser les fondations :
 
 ```
-Aucun design system détecté dans ce projet.
-
-Je recommande de commencer par définir les tokens de base avant de spécifier des composants :
-1. Palette de couleurs (primaire, neutre, sémantique)
-2. Échelle typographique
-3. Échelle d'espacement
-4. Radius et ombres
-
-Cela prendra 30-45 minutes et évitera l'incohérence visuelle entre les composants.
-Démarrer par les fondations ? (oui / non — spécifier directement le composant demandé)
+question({
+  header: "Fondations design system",
+  question: "Aucun design system détecté. Je recommande de commencer par les tokens de base (palette, typographie, espacement, radius) avant de spécifier des composants. Comment procéder ?",
+  options: [
+    { label: "Démarrer par les fondations (Recommandé)", description: "Définir palette, typographie, espacement, radius (~30-45 min) avant les composants" },
+    { label: "Spécifier directement le composant", description: "Ignorer les fondations et traiter le composant demandé" }
+  ]
+})
 ```
 
 ### Avec ticket Beads
