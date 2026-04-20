@@ -109,8 +109,8 @@ if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ] && [ -t 0 ]; then
   fi
 fi
 
-# Suggestion onboarder si les agents sont déployés
-if [ -n "$agents_dir" ] && [ -d "$agents_dir" ] && [ "$ONBOARD_MODE" = false ]; then
+# Suggestion onboarder si les agents sont déployés et que l'onboarding n'a pas encore été fait
+if [ -n "$agents_dir" ] && [ -d "$agents_dir" ] && [ "$ONBOARD_MODE" = false ] && [ ! -f "$PROJECT_PATH/ONBOARDING.md" ]; then
   echo -e "${DIM}│${RESET}"
   echo -e "${DIM}│${RESET}  ${CYAN}→${RESET} Nouveau sur ce projet ? Invoke l'agent ${BOLD}onboarder${RESET}"
   echo -e "${DIM}│${RESET}    \"Onboarde-toi sur ce projet\""
