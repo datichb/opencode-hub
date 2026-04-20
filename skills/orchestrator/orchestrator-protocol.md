@@ -114,6 +114,7 @@ L'utilisateur décrit une feature, un besoin ou un chantier.
    ```bash
    bd list --status open --json
    ```
+   Pour chaque ticket, noter la présence du label `tdd` via `bd show <ID>`.
 
 4. **[CP-0]** — voir section CP-0 ci-dessous.
 
@@ -129,6 +130,7 @@ L'utilisateur fournit directement un ou plusieurs IDs de tickets.
    ```bash
    bd show <ID>
    ```
+   Noter la présence du label `tdd` pour chaque ticket.
 
 2. Classifier chaque ticket selon la matrice de routing (voir ci-dessous).
 
@@ -147,14 +149,14 @@ Afficher le tableau trié avec la colonne `Ordre`, puis utiliser l'outil `questi
 ```
 ## Feature — <nom de la feature>
 
-| Ordre | ID | Titre | Priorité | Type | Phase(s) | Agent(s) |
-|-------|----|-------|----------|------|----------|---------|
-| 1 | bd-10 | Analyse flow inscription | P1 | spec-ux | Spec | ux-designer |
-| 2 | bd-11 | Composant formulaire | P1 | spec-ui | Spec → Impl | ui-designer → orchestrator-dev |
-| 3 | bd-13 | Audit sécurité auth | P2 | audit | Audit → Impl si corrections | auditor-security → orchestrator-dev |
-| 4 | bd-12 | Endpoint POST /users | P1 | dev | Impl | orchestrator-dev |
+| Ordre | ID | Titre | Priorité | Type | Phase(s) | Agent(s) | TDD |
+|-------|----|-------|----------|------|----------|---------|-----|
+| 1 | bd-10 | Analyse flow inscription | P1 | spec-ux | Spec | ux-designer | — |
+| 2 | bd-11 | Composant formulaire | P1 | spec-ui | Spec → Impl | ui-designer → orchestrator-dev | — |
+| 3 | bd-13 | Audit sécurité auth | P2 | audit | Audit → Impl si corrections | auditor-security → orchestrator-dev | — |
+| 4 | bd-12 | Endpoint POST /users | P1 | dev | Impl | orchestrator-dev | ✅ |
 
-X tickets identifiés — Y phases au total.
+X tickets identifiés — Y phases au total. Z en TDD (QA skippé, tests écrits avant implémentation).
 
 > ℹ️ Ordre automatique appliqué : specs → audits → dev.
 > Dépendances détectées : bd-11 (spec-ui) → bd-12 (impl composant formulaire).
@@ -169,7 +171,7 @@ question({
   question: "Quel mode de workflow pour les phases d'implémentation (géré par orchestrator-dev) ?",
   options: [
     { label: "Manuel (Recommandé)", description: "Chaque étape d'implémentation attend ta confirmation" },
-    { label: "Semi-auto", description: "Démarre et enchaîne automatiquement, QA et review restent manuels" },
+    { label: "Semi-auto", description: "CP-1 et CP-3 automatiques, CP-QA et CP-2 (commit) restent manuels" },
     { label: "Auto", description: "Workflow entièrement automatique sauf les décisions de commit" }
   ]
 })
@@ -335,17 +337,20 @@ avant de router. Signaler à l'utilisateur et demander confirmation.
    - La liste des tickets à implémenter
    - Le mode de workflow choisi en CP-0
    - Le contexte : specs UX/UI validées et/ou rapports d'audit si applicable
+   - Les tickets portant le label `tdd` (déjà identifiés au CP-0)
 
 3. orchestrator-dev pilote l'implémentation complète (developer-* → QA → review).
 
 4. orchestrator-dev retourne son récap structuré. Le format attendu est :
 
    ```
-   ## Retour orchestrator-dev
+   ## Retour vers orchestrator
 
    **Tickets traités :** [bd-XX ✅, bd-YY ✅, ...]
    **Tickets ignorés :** [bd-ZZ ⏭️, ...]
-   **Points d'attention :** [liste textuelle des risques / dettes signalés]
+   **Points d'attention :**
+   - <point 1>
+   - <point 2>
    **Statut global :** succès | partiel | bloqué
    ```
 

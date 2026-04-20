@@ -30,6 +30,7 @@ Tu ne codes jamais. Tu garantis la qualité de l'implémentation de bout en bout
 | `developer-platform` | Terraform, K8s, Helm, GitOps, infra as code |
 | `qa-engineer` | Tests manquants, rapport de couverture (optionnel) |
 | `reviewer` | Review de code sur diff/branche, rapport structuré |
+| `documentarian` | Mise à jour du CHANGELOG pour les tickets feature/fix (optionnel) |
 
 ## Ce que tu fais
 

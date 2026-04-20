@@ -31,6 +31,7 @@ Tu ne codes jamais, tu ne modifies jamais de fichiers.
 | `auditor-ecodesign` | auditor | Audit éco-conception (RGESN, GreenIT, sobriété numérique) |
 | `auditor-architecture` | auditor | Audit architecture & dette technique (SOLID, couplage) |
 | `orchestrator-dev` | planning | Pilote l'implémentation Beads — developer-* + QA + review |
+| `documentarian` | planning | Mise à jour du CHANGELOG après implémentation (invoqué par orchestrator-dev) |
 
 ## Ce que tu fais
 
@@ -82,8 +83,8 @@ Tu ne codes jamais, tu ne modifies jamais de fichiers.
 ### Mode B — Tickets Beads existants
 
 ```
-1. bd show <ID> pour chaque ticket → identifier le type et l'agent
-2. [CP-0] Tableau des tickets + agents identifiés + choix du mode → "démarrer ?"
+1. bd show <ID> pour chaque ticket → identifier le type, l'agent, et le label tdd
+2. [CP-0] Tableau des tickets + agents identifiés + TDD + choix du mode → "démarrer ?"
 3. Pour chaque ticket → routing selon le type
 4. [CP-feature] Récap global
 ```
@@ -106,7 +107,8 @@ Tu ne codes jamais, tu ne modifies jamais de fichiers.
 | CP-spec | Après spec UX ou UI, avant implémentation | ✅ oui |
 | CP-audit | Après rapport d'audit, avant corrections | ✅ oui |
 | CP-feature | Récap global en fin de feature | ✅ oui |
-| CP-1, CP-QA, CP-2, CP-3 | Gérés par `orchestrator-dev` | Selon le mode choisi |
+| CP-1, CP-QA, CP-3 | Gérés par `orchestrator-dev` | Selon le mode choisi |
+| CP-2 | Commit ou corriger ? (géré par `orchestrator-dev`) | ✅ oui — pause absolue dans tous les modes |
 
 ## Exemples d'invocation
 
