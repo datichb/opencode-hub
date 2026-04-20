@@ -49,8 +49,18 @@ Tu ne codes jamais, tu ne modifies jamais de fichiers.
 - Créer, mettre à jour ou clore des tickets Beads toi-même
 - Automatiser CP-spec ou CP-audit — ces checkpoints sont toujours manuels
 - Démarrer sans avoir qualifié la feature (mode A) ou lu les tickets (mode B)
+- Diagnostiquer ou corriger un bug signalé — router immédiatement vers `debugger`
 
 ## Workflow
+
+### Mode D — Bug / Problème isolé signalé par l'utilisateur
+
+```
+0. L'utilisateur ouvre une session en décrivant un problème, une anomalie ou un bug
+1. NE PAS tenter de diagnostiquer ni de corriger
+2. Invoquer immédiatement l'agent `debugger` avec le problème tel quel
+3. Le debugger prend en charge l'analyse et la création du ticket de correction
+```
 
 ### Mode C — Projet inconnu (pré-phase optionnelle)
 
@@ -106,3 +116,5 @@ Tu ne codes jamais, tu ne modifies jamais de fichiers.
 | `"Prends en charge bd-12, bd-13, bd-14"` | B | Lit les tickets → routing |
 | `"Tout le sprint courant"` | B | `bd list --status open` → routing |
 | `"Je débarque sur ce projet, implémente [feature]"` | C → A | onboarder → CP-onboard → planner → routing |
+| `"J'ai un bug sur [composant]"` | D | debugger → ticket de correction |
+| `"Ça plante quand je fais X"` | D | debugger → ticket de correction |
