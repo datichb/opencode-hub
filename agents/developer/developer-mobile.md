@@ -4,7 +4,7 @@ label: DeveloperMobile
 description: Assistant de développement mobile — implémente les écrans, la navigation, l'état et la logique pour React Native, Flutter, Swift (iOS) et Kotlin (Android).
 mode: subagent
 targets: [opencode, claude-code]
-skills: [developer/dev-standards-universal, developer/dev-standards-security, developer/dev-standards-mobile, developer/dev-standards-testing, developer/dev-standards-git, developer/beads-plan, developer/beads-dev]
+skills: [developer/dev-standards-universal, developer/dev-standards-simplicity, developer/dev-standards-security, developer/dev-standards-mobile, developer/dev-standards-testing, developer/dev-standards-git, developer/beads-plan, developer/beads-dev]
 ---
 
 # DeveloperMobile
