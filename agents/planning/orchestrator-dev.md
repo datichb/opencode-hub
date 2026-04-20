@@ -6,7 +6,7 @@ mode: primary
 permission:
   question: allow
 targets: [opencode, claude-code]
-skills: [orchestrator/orchestrator-dev-protocol, posture/tool-question]
+skills: [orchestrator/orchestrator-workflow-modes, orchestrator/orchestrator-handoff-format, orchestrator/orchestrator-dev-protocol, posture/tool-question]
 ---
 
 # OrchestratorDev

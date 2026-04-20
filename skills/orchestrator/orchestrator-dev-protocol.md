@@ -28,17 +28,7 @@ Tu ne codes jamais, tu ne modifies jamais de fichiers.
 
 ## Modes de workflow
 
-Le mode est choisi au CP-0 si invoqué standalone.
-Si invoqué depuis l'orchestrateur feature, le mode est transmis en paramètre.
-**Le mode par défaut est `manuel`** si rien n'est précisé.
-
-| Mode | CP-0 | CP-1 | CP-QA | CP-2 | CP-3 |
-|------|------|------|-------|------|------|
-| `manuel` | ⏸️ pause | ⏸️ pause | ⏸️ pause | ⏸️ pause | ⏸️ pause |
-| `semi-auto` | ⏸️ pause | ▶️ auto | ⏸️ pause | ⏸️ pause | ▶️ auto |
-| `auto` | ⏸️ pause (+ choix QA global) | ▶️ auto | ▶️ valeur fixée en CP-0 | ⏸️ **pause** | ▶️ auto |
-
-Quand un CP est `▶️ auto`, l'orchestrateur affiche quand même l'information mais enchaîne sans attendre.
+Le tableau des trois modes (manuel/semi-auto/auto), les règles absolues associées, et le comportement de chaque CP selon le mode sont définis dans le skill `orchestrator-workflow-modes` — s'y référer comme source de vérité unique.
 
 ---
 
@@ -85,34 +75,11 @@ Afficher le tableau récapitulatif :
 X tickets identifiés. Y en TDD (tests écrits avant l'implémentation — QA skippé).
 ```
 
-⏸️ **Utiliser l'outil `question` pour demander le mode :**
+⏸️ **Demander le mode de workflow et, si mode `auto`, configurer le QA global via les blocs question définis dans le skill `orchestrator-workflow-modes`.**
 
-```
-question({
-  header: "Mode de workflow",
-  question: "Quel mode de workflow pour cette session ?",
-  options: [
-    { label: "Manuel (Recommandé)", description: "Chaque étape attend ta confirmation — CP-1, CP-QA, CP-2, CP-3 tous en pause" },
-    { label: "Semi-auto", description: "Démarre et enchaîne les tickets automatiquement, CP-QA et CP-2 restent manuels" },
-    { label: "Auto", description: "Workflow entièrement automatique sauf CP-2 (commit) — QA configurable au démarrage" }
-  ]
-})
-```
+> Les descriptions exactes de chaque mode, les règles associées et les blocs question canoniques sont la source de vérité du skill `orchestrator-workflow-modes` — ne pas les redéfinir ici.
 
 Enregistrer le mode pour toute la session.
-
-En mode `auto`, poser également via l'outil `question` :
-
-```
-question({
-  header: "QA global",
-  question: "QA activé pour tous les tickets d'implémentation ?",
-  options: [
-    { label: "Non (Recommandé)", description: "QA skippé pour tous les tickets — review directe après implémentation" },
-    { label: "Oui", description: "QA activé pour tous les tickets — qa-engineer invoqué avant chaque review" }
-  ]
-})
-```
 
 ### Invoqué depuis l'orchestrateur feature
 
@@ -388,24 +355,9 @@ Afficher en fin de workflow (tous les tickets traités ou suite à un **stop**) 
 <Points soulevés par les reviews — dette technique, risques, suivi suggéré>
 ```
 
-**Si invoqué depuis l'orchestrateur feature**, ajouter obligatoirement la section suivante à la fin du récap — elle est utilisée par l'orchestrator pour construire le CP-feature et déclencher les étapes suivantes :
+**Si invoqué depuis l'orchestrateur feature**, ajouter obligatoirement à la fin du récap le bloc `## Retour vers orchestrator` dont le format exact, les champs obligatoires et les définitions des statuts (`succès`, `partiel`, `bloqué`) sont définis dans le skill `orchestrator-handoff-format` — s'y référer comme source de vérité unique.
 
-```
----
-
-## Retour vers orchestrator
-
-**Tickets traités :** [bd-XX ✅, bd-YY ✅, ...]
-**Tickets ignorés :** [bd-ZZ ⏭️, ...]
-**Points d'attention :**
-- <point 1>
-- <point 2>
-**Statut global :** succès | partiel | bloqué
-```
-
-- `succès` — tous les tickets traités ont été commités sans blocage persistant
-- `partiel` — au moins un ticket ignoré ou bloqué après 3 cycles de review
-- `bloqué` — au moins un ticket est resté bloqué et nécessite une intervention manuelle
+> Ce bloc est requis pour que l'orchestrator puisse construire le CP-feature. Ne pas l'omettre ni en modifier la structure.
 
 ---
 

@@ -163,32 +163,9 @@ X tickets identifiés — Y phases au total. Z en TDD (QA skippé, tests écrits
 > Si tu veux modifier cet ordre, indique-le maintenant.
 ```
 
-⏸️ **Utiliser l'outil `question` pour le mode de workflow :**
+⏸️ **Demander le mode de workflow via les blocs question définis dans le skill `orchestrator-workflow-modes`** (choix du mode, puis QA global si mode `auto`).
 
-```
-question({
-  header: "Mode de workflow",
-  question: "Quel mode de workflow pour les phases d'implémentation (géré par orchestrator-dev) ?",
-  options: [
-    { label: "Manuel (Recommandé)", description: "Chaque étape d'implémentation attend ta confirmation" },
-    { label: "Semi-auto", description: "CP-1 et CP-3 automatiques, CP-QA et CP-2 (commit) restent manuels" },
-    { label: "Auto", description: "Workflow entièrement automatique sauf les décisions de commit" }
-  ]
-})
-```
-
-En mode `auto`, poser également via l'outil `question` :
-
-```
-question({
-  header: "QA global",
-  question: "QA activé pour tous les tickets d'implémentation ?",
-  options: [
-    { label: "Non (Recommandé)", description: "QA skippé pour tous les tickets" },
-    { label: "Oui", description: "qa-engineer invoqué avant chaque review" }
-  ]
-})
-```
+> Les descriptions exactes de chaque mode, les règles associées et le bloc question QA global sont la source de vérité du skill `orchestrator-workflow-modes` — ne pas les redéfinir ici.
 
 Enregistrer le mode pour transmission à `orchestrator-dev`.
 
@@ -277,8 +254,6 @@ avant de router. Signaler à l'utilisateur et demander confirmation.
 
 - **Ignorer** → noter le ticket comme ignoré, passer au suivant
 
-- **Ignorer** → noter le ticket comme ignoré, passer au suivant
-
 ---
 
 ### Ticket `audit`
@@ -341,21 +316,9 @@ avant de router. Signaler à l'utilisateur et demander confirmation.
 
 3. orchestrator-dev pilote l'implémentation complète (developer-* → QA → review).
 
-4. orchestrator-dev retourne son récap structuré. Le format attendu est :
+4. orchestrator-dev retourne son récap structuré. Le format attendu, les champs obligatoires et les définitions des statuts (`succès`, `partiel`, `bloqué`) sont définis dans le skill `orchestrator-handoff-format` — s'y référer pour le contrat exact.
 
-   ```
-   ## Retour vers orchestrator
-
-   **Tickets traités :** [bd-XX ✅, bd-YY ✅, ...]
-   **Tickets ignorés :** [bd-ZZ ⏭️, ...]
-   **Points d'attention :**
-   - <point 1>
-   - <point 2>
-   **Statut global :** succès | partiel | bloqué
-   ```
-
-Ce format structuré est requis pour que l'orchestrator puisse construire le CP-feature.
-Si le récap reçu ne contient pas ces champs, les demander explicitement à orchestrator-dev avant de continuer.
+> Si le récap reçu ne contient pas les champs requis, les demander explicitement à orchestrator-dev avant de continuer.
 
 ---
 
