@@ -8,7 +8,8 @@
 # Ce script :
 #   1. Valide le format X.Y.Z
 #   2. Vérifie que le working tree est propre et qu'on est sur main
-#   3. Met à jour config/hub.json (.version)
+#   3. Met à jour config/hub.json (.version) — local, non tracké
+#      et config/hub.json.example (.version) — tracké par git
 #   4. Crée le commit "chore(release): vX.Y.Z" et le tag annoté vX.Y.Z
 #   5. Propose de pusher (ou affiche la commande à lancer manuellement)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -17,6 +18,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HUB_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 HUB_CONFIG="$HUB_DIR/config/hub.json"
+HUB_CONFIG_EXAMPLE="$HUB_DIR/config/hub.json.example"
 
 # ── Couleurs ──────────────────────────────────────────────────────────────────
 RED='\033[91m'
@@ -42,7 +44,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   echo "Ce script :"
   echo "  1. Valide le format X.Y.Z"
   echo "  2. Vérifie que le working tree est propre et qu'on est sur main"
-  echo "  3. Met à jour config/hub.json (.version)"
+  echo "  3. Met à jour config/hub.json (.version) et config/hub.json.example (.version)"
   echo "  4. Crée le commit chore(release): vX.Y.Z + le tag annoté vX.Y.Z"
   echo "  5. Propose de pusher ou affiche la commande"
   exit 0
@@ -127,14 +129,19 @@ fi
 
 echo ""
 
-# ── Mise à jour de hub.json ───────────────────────────────────────────────────
+# ── Mise à jour de hub.json + hub.json.example ───────────────────────────────
 tmp=$(mktemp)
 jq --arg v "$VERSION" '.version = $v' "$HUB_CONFIG" > "$tmp"
 mv "$tmp" "$HUB_CONFIG"
-log_success "config/hub.json mis à jour → version = ${VERSION}"
+log_success "config/hub.json         mis à jour → version = ${VERSION}"
+
+tmp=$(mktemp)
+jq --arg v "$VERSION" '.version = $v' "$HUB_CONFIG_EXAMPLE" > "$tmp"
+mv "$tmp" "$HUB_CONFIG_EXAMPLE"
+log_success "config/hub.json.example mis à jour → version = ${VERSION}"
 
 # ── Commit + tag ──────────────────────────────────────────────────────────────
-git -C "$HUB_DIR" add config/hub.json
+git -C "$HUB_DIR" add config/hub.json.example
 git -C "$HUB_DIR" commit -m "chore(release): ${TAG}"
 log_success "Commit créé : chore(release): ${TAG}"
 
