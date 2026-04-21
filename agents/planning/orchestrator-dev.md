@@ -5,6 +5,12 @@ description: Orchestrateur d'implémentation — pilote le workflow Beads ticket
 mode: primary
 permission:
   question: allow
+  task:
+    "*": deny
+    "developer-*": allow
+    "reviewer": allow
+    "qa-engineer": allow
+    "documentarian": allow
 targets: [opencode, claude-code]
 skills: [orchestrator/orchestrator-workflow-modes, orchestrator/orchestrator-handoff-format, orchestrator/orchestrator-dev-protocol, posture/tool-question]
 ---

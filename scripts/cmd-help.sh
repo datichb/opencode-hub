@@ -123,6 +123,7 @@ _section help.section.beads
 _cmd help.beads_status
 _cmd help.beads_init
 _cmd help.beads_list
+_cmd help.beads_show
 _cmd help.beads_create
 _cmd help.beads_open
 _cmd help.beads_sync

@@ -665,6 +665,7 @@ oc beads <sub-command>
 | `status [PROJECT_ID]` | Check Beads on all projects (or just one) |
 | `init <PROJECT_ID>` | Initialise `.beads/` in the project |
 | `list <PROJECT_ID>` | List open tickets in the project |
+| `show <PROJECT_ID> <TICKET_ID>` | Show the full detail of a ticket |
 | `create <PROJECT_ID> [title] [--label <l>] [--type <t>] [--desc <d>]` | Create a ticket in the project |
 | `open <PROJECT_ID>` | Display the path to use `bd` manually |
 | `sync <PROJECT_ID> [options]` | Synchronise with an external tracker |

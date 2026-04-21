@@ -192,17 +192,40 @@ adapter_deploy() {
   fi
 
   # Construire le bloc "agent": pour les agents dont le mode n'est pas "primary"
-  # (primary = comportement par défaut d'OpenCode, pas besoin de l'écrire)
+  # ou qui ont des permissions à injecter (ex: permission.question: allow)
   local agent_block=""
   local _ai=0
   while [ "$_ai" -lt "${#_agent_modes_keys[@]}" ]; do
     local _aid="${_agent_modes_keys[$_ai]}"
     local _amode="${_agent_modes_vals[$_ai]}"
-    if [ "$_amode" != "primary" ]; then
-      if [ -n "$agent_block" ]; then
-        agent_block="${agent_block},"$'\n'
+
+    # Extraire le bloc permission depuis le fichier source de l'agent
+    local _agent_source_file=""
+    while IFS= read -r _f; do
+      [ -f "$_f" ] || continue
+      local _fid; _fid=$(get_agent_id "$_f")
+      if [ "$_fid" = "$_aid" ]; then
+        _agent_source_file="$_f"
+        break
       fi
-      agent_block="${agent_block}    \"${_aid}\": { \"mode\": \"${_amode}\" }"
+    done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
+
+    local _perm_json=""
+    [ -n "$_agent_source_file" ] && _perm_json=$(extract_permission_json "$_agent_source_file")
+
+    # Construire l'entrée JSON pour cet agent
+    local _entry=""
+    if [ "$_amode" != "primary" ] && [ -n "$_perm_json" ]; then
+      _entry="{ \"mode\": \"${_amode}\", ${_perm_json} }"
+    elif [ "$_amode" != "primary" ]; then
+      _entry="{ \"mode\": \"${_amode}\" }"
+    elif [ -n "$_perm_json" ]; then
+      _entry="{ ${_perm_json} }"
+    fi
+
+    if [ -n "$_entry" ]; then
+      [ -n "$agent_block" ] && agent_block="${agent_block},"$'\n'
+      agent_block="${agent_block}    \"${_aid}\": ${_entry}"
     fi
     _ai=$((_ai + 1))
   done

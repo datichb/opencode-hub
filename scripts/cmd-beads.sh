@@ -21,6 +21,7 @@ _beads_usage() {
   echo "  $(t help.beads_status)"
   echo "  $(t help.beads_init)"
   echo "  $(t help.beads_list)"
+  echo "  $(t help.beads_show)"
   echo "  $(t help.beads_create)"
   echo "  $(t help.beads_create_desc)"
   echo "  $(t help.beads_open)"
@@ -236,6 +237,28 @@ cmd_list() {
   log_title "$(t beads.status.open_tickets) $id"
   echo ""
   (cd "$path" && bd list -s open) || { log_error "Échec de bd list"; exit 1; }
+}
+
+# ══════════════════════════════════════════
+# Sous-commande : show
+# ══════════════════════════════════════════
+cmd_show() {
+  require_project_id "$1"
+  _require_bd
+
+  local id
+  id=$(normalize_project_id "$1")
+  local path
+  path=$(resolve_project_path "$id")
+  _require_beads_init "$path" "$id"
+
+  local ticket_id="${2:-}"
+  if [ -z "$ticket_id" ]; then
+    log_error "Usage : oc beads show <PROJECT_ID> <TICKET_ID>"
+    exit 1
+  fi
+
+  (cd "$path" && bd show "$ticket_id") || { log_error "Ticket introuvable : $ticket_id"; exit 1; }
 }
 
 # ══════════════════════════════════════════
@@ -734,6 +757,7 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then  source "$(cd "$(dirname "$0")" && pw
     status)  cmd_status  "$PROJECT_ID" ;;
     init)    cmd_init    "$PROJECT_ID" ;;
     list)    cmd_list    "$PROJECT_ID" ;;
+    show)    cmd_show    "$PROJECT_ID" "${3:-}" ;;
     create)  cmd_create  "$PROJECT_ID" "${@:3}" ;;
     open)    cmd_open    "$PROJECT_ID" ;;
     sync)    cmd_sync    "$PROJECT_ID" "${@:3}" ;;

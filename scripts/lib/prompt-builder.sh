@@ -38,6 +38,78 @@ extract_frontmatter_list() {
     | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$'
 }
 
+# Extrait le bloc permission du frontmatter et le convertit en JSON inline
+# Supporte : permission.question (scalaire) et permission.task (map multi-ligne)
+# Retourne une chaîne JSON partielle, ex: "\"permission\": { \"question\": \"allow\" }"
+# ou vide si aucune permission n'est déclarée
+extract_permission_json() {
+  local file="$1"
+  # Extraire uniquement le bloc frontmatter
+  local frontmatter
+  frontmatter=$(sed -n '/^---$/,/^---$/p' "$file" | sed '1d;$d')
+  [ -z "$frontmatter" ] && return 0
+
+  # Détecter si un bloc permission: existe
+  echo "$frontmatter" | grep -q '^permission:' || return 0
+
+  local question_val=""
+  local task_json=""
+
+  # Extraire permission.question (ligne directe sous permission:)
+  question_val=$(echo "$frontmatter" \
+    | awk '/^permission:/{f=1;next} f && /^  question:/{print $2;exit} f && /^[^ ]/{exit}')
+
+  # Extraire permission.task (bloc map sous permission:)
+  # Format attendu dans les frontmatters : lignes "    \"clé\": \"valeur\""
+  # On extrait les lignes indentées à 4 espaces sous "  task:"
+  local in_permission=0 in_task=0 task_entries=""
+  while IFS= read -r line; do
+    if echo "$line" | grep -q '^permission:'; then
+      in_permission=1; in_task=0; continue
+    fi
+    if [ "$in_permission" = "1" ]; then
+      if echo "$line" | grep -q '^  task:'; then
+        in_task=1; continue
+      fi
+      if [ "$in_task" = "1" ]; then
+        # Ligne d'entrée task : "    \"*\": \"deny\"" ou "    \"developer-*\": \"allow\""
+        if echo "$line" | grep -qE '^    '; then
+          # Extraire clé et valeur (format YAML : "clé": valeur ou clé: valeur)
+          local kv; kv=$(echo "$line" | sed 's/^[[:space:]]*//')
+          # Clé : peut être quotée ("*") ou non (reviewer) — on strip les guillemets
+          local k; k=$(echo "$kv" | cut -d: -f1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/^"//;s/"$//')
+          local v; v=$(echo "$kv" | cut -d: -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+          if [ -n "$k" ] && [ -n "$v" ]; then
+            [ -n "$task_entries" ] && task_entries="${task_entries}, "
+            task_entries="${task_entries}\"${k}\": \"${v}\""
+          fi
+        else
+          # Fin du bloc task
+          in_task=0
+        fi
+      fi
+      # Quitter le bloc permission si on revient à l'indentation racine
+      if echo "$line" | grep -qE '^[^ ]'; then
+        in_permission=0; in_task=0
+      fi
+    fi
+  done <<< "$frontmatter"
+
+  # Construire le JSON de permission
+  local perm_fields=""
+  if [ -n "$question_val" ]; then
+    perm_fields="\"question\": \"${question_val}\""
+  fi
+  if [ -n "$task_entries" ]; then
+    [ -n "$perm_fields" ] && perm_fields="${perm_fields}, "
+    perm_fields="${perm_fields}\"task\": { ${task_entries} }"
+  fi
+
+  if [ -n "$perm_fields" ]; then
+    echo "\"permission\": { ${perm_fields} }"
+  fi
+}
+
 # Retourne le contenu d'un fichier Markdown en ignorant le bloc frontmatter YAML
 strip_frontmatter() {
   local file="$1"

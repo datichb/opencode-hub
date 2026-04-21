@@ -170,6 +170,8 @@ t() {
       help.beads_init.desc)   printf '%s' "Initialise .beads/ dans le projet" ;;
       help.beads_list.cmd)    printf '%s' "beads list <PROJECT_ID>" ;;
       help.beads_list.desc)   printf '%s' "Liste les tickets ouverts du projet" ;;
+      help.beads_show.cmd)    printf '%s' "beads show <PROJECT_ID> <TICKET_ID>" ;;
+      help.beads_show.desc)   printf '%s' "Affiche le détail d'un ticket" ;;
       help.beads_create.cmd)  printf '%s' "beads create <PROJECT_ID> [titre] [--label l] [--type t] [--desc d]" ;;
       help.beads_create.desc) printf '%s' "Crée un ticket (non-interactif si titre fourni)" ;;
       help.beads_open.cmd)    printf '%s' "beads open <PROJECT_ID>" ;;
@@ -753,6 +755,8 @@ t_en() {
     help.beads_init.desc)   printf '%s' "Initialize .beads/ in the project" ;;
     help.beads_list.cmd)    printf '%s' "beads list <PROJECT_ID>" ;;
     help.beads_list.desc)   printf '%s' "List open tickets in the project" ;;
+    help.beads_show.cmd)    printf '%s' "beads show <PROJECT_ID> <TICKET_ID>" ;;
+    help.beads_show.desc)   printf '%s' "Show ticket details" ;;
     help.beads_create.cmd)  printf '%s' "beads create <PROJECT_ID> [title] [--label l] [--type t] [--desc d]" ;;
     help.beads_create.desc) printf '%s' "Create a ticket (non-interactive if title provided)" ;;
     help.beads_open.cmd)    printf '%s' "beads open <PROJECT_ID>" ;;
