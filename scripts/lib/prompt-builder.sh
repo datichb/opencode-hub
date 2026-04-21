@@ -53,7 +53,6 @@ extract_permission_json() {
   echo "$frontmatter" | grep -q '^permission:' || return 0
 
   local question_val=""
-  local task_json=""
 
   # Extraire permission.question (ligne directe sous permission:)
   question_val=$(echo "$frontmatter" \
@@ -75,6 +74,7 @@ extract_permission_json() {
         # Ligne d'entrée task : "    \"*\": \"deny\"" ou "    \"developer-*\": \"allow\""
         if echo "$line" | grep -qE '^    '; then
           # Extraire clé et valeur (format YAML : "clé": valeur ou clé: valeur)
+          # shellcheck disable=SC2001
           local kv; kv=$(echo "$line" | sed 's/^[[:space:]]*//')
           # Clé : peut être quotée ("*") ou non (reviewer) — on strip les guillemets
           local k; k=$(echo "$kv" | cut -d: -f1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/^"//;s/"$//')
