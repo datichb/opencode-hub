@@ -116,7 +116,8 @@ L'utilisateur décrit une feature, un besoin ou un chantier.
 **Étapes :**
 
 1. Déléguer au `planner` :
-   > « Je délègue la planification au planner — il va décomposer la feature en tickets. »
+   > « Je délègue la planification au `planner` pour la feature : <nom de la feature>.
+   > Le planner va explorer le projet et poser des questions de contexte — elles apparaîtront ici avec leur contexte identifié. »
 
 2. Le planner crée les tickets et présente son récapitulatif.
 
@@ -222,7 +223,8 @@ avant de router. Signaler à l'utilisateur et demander confirmation.
 ### Ticket `spec-ux` ou `spec-ui`
 
 1. Annoncer la phase de conception :
-   > « Je délègue la spécification à ux-designer / ui-designer pour le ticket #<ID>. »
+   > « Je délègue la spécification à `ux-designer` / `ui-designer` pour le ticket #<ID> — <titre>.
+   > Si des questions apparaissent ici, elles viennent de cet agent et incluront leur contexte. »
 
 2. Invoquer l'agent design avec :
    - L'ID du ticket (`bd show <ID>`)
@@ -269,7 +271,8 @@ avant de router. Signaler à l'utilisateur et demander confirmation.
 ### Ticket `audit`
 
 1. Annoncer la phase d'audit :
-   > « Je délègue l'audit à auditor-<domaine> pour le ticket #<ID>. »
+   > « Je délègue l'audit à `auditor-<domaine>` pour le ticket #<ID> — <titre>.
+   > Si des questions apparaissent ici, elles viennent de cet agent et incluront leur contexte. »
 
 2. Invoquer l'agent auditeur avec :
    - L'ID du ticket (`bd show <ID>`)
@@ -316,7 +319,8 @@ avant de router. Signaler à l'utilisateur et demander confirmation.
 ### Ticket `dev` (ou phase d'implémentation après spec/audit)
 
 1. Annoncer la délégation :
-   > « Je délègue l'implémentation à orchestrator-dev. »
+   > « Je délègue l'implémentation à `orchestrator-dev` pour les tickets : <liste des IDs>.
+   > Si des questions apparaissent ici pendant l'implémentation, elles viennent d'`orchestrator-dev` ou de ses sous-agents et incluront leur contexte. »
 
 2. Invoquer orchestrator-dev en transmettant :
    - La liste des tickets à implémenter

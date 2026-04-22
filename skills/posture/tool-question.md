@@ -93,6 +93,41 @@ question({
 
 ---
 
+## Questions posées en tant que sous-agent
+
+Quand tu es invoqué par un agent parent (orchestrateur, orchestrator-dev, etc.) et que tu dois
+poser une question à l'utilisateur, **le champ `question` doit toujours commencer par un bloc
+de contexte** sur une ligne dédiée, afin que l'utilisateur comprenne sans avoir à consulter la
+session enfant.
+
+### Format obligatoire
+
+```
+[<Nom de l'agent> — <Phase ou étape en cours> | <Feature ou ticket concerné>]
+<Question proprement dite>
+```
+
+### Exemple
+
+```
+question({
+  header: "Validation du contexte",
+  question: "[Planner — Phase 0 : Validation du contexte | Feature : authentification JWT]\nCe contexte correspond-il à votre projet ? Des corrections avant de continuer ?",
+  options: [
+    { label: "Oui — continuer (Recommandé)", description: "Lancer la phase de discovery" },
+    { label: "Corrections à apporter", description: "Préciser ou corriger le contexte avant de continuer" }
+  ]
+})
+```
+
+### Règle
+
+✅ Toujours inclure le bloc de contexte quand tu es invoqué en tant que sous-agent
+✅ Le bloc de contexte doit identifier : qui tu es, quelle phase est en cours, la feature ou le ticket concerné
+❌ Ne pas omettre le contexte même pour une question courte — l'utilisateur n'a pas accès à ta session enfant sans naviguer manuellement
+
+---
+
 ## Règles
 
 ✅ Poser plusieurs questions dans un seul appel quand elles sont liées et indépendantes
