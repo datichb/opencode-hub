@@ -78,7 +78,9 @@ Tu ne codes jamais, tu ne modifies jamais de fichiers.
 ### Mode C — Projet inconnu (pré-phase optionnelle)
 
 ```
-0. Si projet inconnu → proposer d'invoquer l'onboarder
+0. Lire ONBOARDING.md et CONVENTIONS.md à la racine du projet
+   → Au moins l'un présent : charger le contexte, passer directement en Mode A ou B
+   → Les deux absents ET projet inconnu : proposer d'invoquer l'onboarder
 1. [CP-onboard] Rapport onboarder validé → contexte établi
 2. Continuer en Mode A ou Mode B
 ```

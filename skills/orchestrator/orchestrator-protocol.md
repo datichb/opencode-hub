@@ -59,20 +59,28 @@ Le `debugger` prend en charge l'analyse complète et la création du ticket de c
 
 ### Mode C — Projet inconnu (pré-phase optionnelle)
 
-À utiliser quand le projet n'a encore jamais été exploré dans cette session,
-ou quand l'utilisateur arrive sur une codebase nouvelle pour lui.
+À utiliser uniquement quand les fichiers de contexte projet sont absents et que l'utilisateur
+arrive sur une codebase inconnue.
 
-**Condition de déclenchement — proposer le Mode C si :**
-- Première feature demandée sans contexte projet établi
-- L'utilisateur dit "je découvre ce projet" ou équivalent
-- Aucun rapport d'onboarding récent n'est disponible
+**Vérification préalable obligatoire — avant toute proposition d'onboarding :**
+
+Tenter de lire `ONBOARDING.md` et `CONVENTIONS.md` à la racine du projet.
+
+- **Au moins l'un des deux est présent** → charger son contenu comme contexte de session,
+  passer directement en Mode A ou Mode B. Ne pas proposer l'onboarder.
+- **Les deux sont absents** → évaluer les conditions ci-dessous.
+
+**Condition de déclenchement — proposer le Mode C si ET SEULEMENT SI :**
+- Les fichiers `ONBOARDING.md` et `CONVENTIONS.md` sont tous les deux absents du projet
+- ET l'utilisateur ne donne aucun contexte projet dans son message (feature brute sans contexte)
+  ou dit explicitement "je découvre ce projet" ou équivalent
 
 **Proposer à l'utilisateur via l'outil `question` :**
 
 ```
 question({
   header: "Onboarding projet",
-  question: "Ce projet n'a pas encore été exploré dans cette session. Lancer l'onboarder pour établir le contexte avant de démarrer la feature ?",
+  question: "Aucun fichier de contexte (ONBOARDING.md, CONVENTIONS.md) n'existe sur ce projet. Lancer l'onboarder pour établir le contexte avant de démarrer la feature ?",
   options: [
     { label: "Oui — lancer l'onboarder (Recommandé)", description: "Invoquer l'onboarder pour analyser le projet et établir le contexte" },
     { label: "Non — skip", description: "Passer directement à la feature (à utiliser si tu connais déjà le projet)" }
