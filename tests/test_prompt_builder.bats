@@ -437,3 +437,34 @@ EOF
   grep -q 'Afficher dans le texte de la discussion' "$skill_file"
   grep -q 'Demander le mode via l.*outil.*question' "$skill_file"
 }
+
+# ── Intégrité release.sh ──────────────────────────────────────────────────────
+
+@test "release.sh : met à jour CHANGELOG.md lors d'une release" {
+  local release_script="$BATS_TEST_DIRNAME/../scripts/release.sh"
+  grep -q 'CHANGELOG' "$release_script"
+  grep -q 'Unreleased' "$release_script"
+  grep -q 'perl' "$release_script"
+}
+
+@test "release.sh : ajoute CHANGELOG.md au commit de release" {
+  local release_script="$BATS_TEST_DIRNAME/../scripts/release.sh"
+  grep -q 'git.*add.*CHANGELOG' "$release_script"
+}
+
+@test "CHANGELOG : contient les versions 1.1.0, 1.2.0 et 1.3.0 versionnées" {
+  local changelog="$BATS_TEST_DIRNAME/../CHANGELOG.md"
+  grep -q '## \[1\.1\.0\]' "$changelog"
+  grep -q '## \[1\.2\.0\]' "$changelog"
+  grep -q '## \[1\.3\.0\]' "$changelog"
+}
+
+@test "CHANGELOG : section [Unreleased] présente et en tête de fichier" {
+  local changelog="$BATS_TEST_DIRNAME/../CHANGELOG.md"
+  grep -q '## \[Unreleased\]' "$changelog"
+  # [Unreleased] doit apparaître avant [1.3.0]
+  local line_unreleased line_v13
+  line_unreleased=$(grep -n '## \[Unreleased\]' "$changelog" | head -1 | cut -d: -f1)
+  line_v13=$(grep -n '## \[1\.3\.0\]' "$changelog" | head -1 | cut -d: -f1)
+  [ "$line_unreleased" -lt "$line_v13" ]
+}

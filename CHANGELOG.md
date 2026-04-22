@@ -11,93 +11,84 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 
 ### Added
 
-- Désactivation des agents natifs OpenCode (`build`, `plan`, `general`, `explore`) :
-  - `config/hub.json` : nouveau champ `opencode.disabled_native_agents` (tableau JSON) —
-    défaut : `["build", "plan"]`
-  - `projects/projects.md` : nouveau champ optionnel `- Disable agents :` (CSV) — surcharge
-    la valeur hub pour un projet donné ; piloté depuis `oc init` via sélecteur interactif
-  - `scripts/adapters/opencode.adapter.sh` : injection automatique de `"disable": true` dans
-    le bloc `"agent":` de `opencode.json` pour chaque agent désactivé (résolution : projet > hub)
-  - `scripts/common.sh` : fonctions `get_hub_disabled_native_agents`, `get_project_disabled_native_agents`, `_set_project_disabled_native_agents`
-  - `scripts/lib/agent-picker.sh` : nouveau picker `_pick_native_agents` + renderer `_render_native_agents_page`
-  - `scripts/cmd-init.sh` : nouvelle question après le sélecteur de cibles — affiche les agents désactivés par le hub, propose de surcharger par projet si opencode est une cible active
-  - `projects/projects.example.md` : champs `Agents`, `Targets` et `Disable agents` documentés dans le bloc FORMAT
-  - `docs/reference/config.md` : `opencode.disabled_native_agents` documenté, exemple `opencode.json` mis à jour, champ `Disable agents` dans la référence `projects.md`
-
-- Commande `oc audit [PROJECT_ID] [--type <type>]` : lance un audit IA sur un projet
-  en invoquant l'agent `auditor` (audit global) ou `auditor-<type>` pour un domaine précis
-  (`security`, `accessibility`, `architecture`, `ecodesign`, `observability`, `performance`,
-  `privacy`) — vérifie la présence des agents requis dans `projects.md` et propose l'ajout +
-  redéploiement si manquants ; affiche un menu des agents audit physiquement déployés si l'ajout
-  est refusé ; bloque explicitement pour la cible `vscode` (pas de support `--agent`) ;
-  propose `oc deploy` si le dossier agents est absent ou les fichiers manquants
-- `scripts/cmd-audit.sh` : implémentation complète de la commande
-- `scripts/lib/prompt-builder.sh` : nouvelle fonction `build_audit_bootstrap_prompt(project_path, project_id, audit_type)` —
-  prompt structuré avec périmètre conditionnel selon `--type`
-- `oc.sh` : case `audit)` ajouté dans le dispatcher
-- `docs/reference/cli.md` : section `oc audit` ajoutée
+- Skill `developer/dev-standards-simplicity` : KISS (solution la plus directe), YAGNI
+  (n'implémenter que ce qui est dans le ticket actif), pas d'abstraction prématurée
+  (3 cas concrets avant d'abstraire), limites mesurables (fonction ≤ 20 lignes,
+  complexité cyclomatique ≤ 10, params ≤ 4, imbrication ≤ 3 niveaux)
 
 ### Changed
 
-- `oc start` : nouveau flag `--agent <nom>` — passe l'agent directement à l'outil au lancement ;
-  `--onboard` force l'agent `onboarder` ; `--dev` force l'agent `orchestrator-dev`
-- `scripts/adapters/opencode.adapter.sh`, `claude-code.adapter.sh` : `adapter_start` accepte
-  le 4e argument `agent_name` et le passe via `--agent` à la CLI cible
-- Agent `onboarder` : ne se présente plus avec "Tu es l'Onboarder" (rôle chargé via `--agent`) ;
-  génère `ONBOARDING.md` à la racine du projet en fin d'exploration ; ajoute `ONBOARDING.md`
-  au `.gitignore` du projet
-- `scripts/lib/prompt-builder.sh` : `build_onboard_bootstrap_prompt` ne contient plus
-  l'auto-présentation de rôle
-- `scripts/cmd-init.sh`, `scripts/cmd-beads.sh` : remote git vérifié sur `origin` OU `upstream`
-  (pas seulement `upstream`) ; confirmations dans le fil du wizard ; récap final enrichi
+- Agent `orchestrator` : permissions techniques `bash: deny`, `edit: deny`, `write: deny`
+  ajoutées dans le frontmatter — l'agent agit uniquement via `task` et `question` ;
+  `task` restreint à une allowlist exhaustive (`planner`, `onboarder`, `ux-designer`,
+  `ui-designer`, `auditor-*`, `orchestrator-dev`, `debugger`)
+- Skill `orchestrator/orchestrator-protocol` :
+  - Mode C conditionné à l'absence des fichiers `ONBOARDING.md` et `CONVENTIONS.md` sur
+    disque — si l'un des deux est présent, le contexte est chargé directement sans
+    proposer l'onboarder
+  - Questions des sous-agents contextualisées : règle ajoutée pour qu'un sous-agent
+    invoqué depuis un parent inclue toujours un bloc `[Agent — Phase | Feature]` en
+    tête de son champ `question`
+  - CP-0 : séparation explicite entre l'affichage du tableau des tickets (dans la
+    discussion) et la demande de mode de workflow (outil `question` court, sans tableau)
+  - Gestion des agents non déployés : nouvelle section avec table de substitution par
+    domaine (`auditor-security → developer-security`, `auditor-accessibility →
+    developer-frontend`, `auditor-architecture/performance → developer-fullstack`,
+    `auditor-privacy/ecodesign/observability/ux-designer/ui-designer → aucun substitut`),
+    question structurée avec option de déploiement via `!oc deploy opencode <PROJECT_ID>`
+    sans quitter OpenCode
+  - Annonces de délégation enrichies : chaque invocation de sous-agent (planner,
+    ux-designer, ui-designer, auditor-*, orchestrator-dev) annonce explicitement que
+    les questions remonteront avec leur contexte
+  - Mode D — router les bugs vers `debugger` sans tentative de correction autonome
+- Skill `posture/tool-question` : nouvelle section "Questions posées en tant que
+  sous-agent" — format obligatoire `[Nom — Phase | Feature]` en tête du champ `question`
+  quand l'agent est invoqué par un parent
+- Skill `orchestrator/orchestrator-workflow-modes` : extrait en source de vérité
+  autonome (précédemment intégré dans `orchestrator-dev-protocol`)
+- Skill `orchestrator/orchestrator-handoff-format` : extrait en source de vérité
+  autonome pour le format de retour `orchestrator-dev → orchestrator`
+- `agents/planning/orchestrator.md` : skills mis à jour (`orchestrator-workflow-modes`,
+  `orchestrator-handoff-format` ajoutés)
+- `docs/architecture/agents.fr.md` / `agents.en.md` : section `orchestrator` enrichie
+  (4 modes d'entrée D/C/A/B, permissions techniques, Mode C conditionnel, gestion des
+  agents manquants)
+- `docs/guides/workflows.fr.md` / `workflows.en.md` : CP-0 clarifié (tableau dans la
+  discussion, question courte), notes sur les questions contextualisées des sous-agents
+  et sur le comportement face aux agents manquants
+- `tests/test_prompt_builder.bats` : 8 nouveaux tests d'intégrité couvrant les
+  permissions du frontmatter, la table de substitution, le déploiement sans quitter
+  OpenCode, la condition Mode C et la règle de contexte de `tool-question`
 
- — sous-commandes
-  `set` (flux interactif avec saisie masquée de la clé), `get`, `list`, `unset` ; stockage
-  local dans `projects/api-keys.local.md` (non versionné) au format INI-like ; providers
-  supportés : `anthropic` (clé directe) et `litellm` / compatible OpenAI (avec `base_url`)
-- `scripts/cmd-config.sh` : implémentation complète de la commande — parser INI-like,
-  affichage masqué des clés (8 premiers caractères + `***`), proposition automatique de
-  re-déploiement après `set`
-- `scripts/common.sh` : parser INI-like (`_api_keys_get`), fonctions `get_project_api_model`,
-  `get_project_api_provider`, `get_project_api_key`, `get_project_api_base_url`,
-  `api_keys_entry_exists` ; constante `API_KEYS_FILE`
+### Fixed
 
-### Changed
+- `scripts/lib/prompt-builder.sh` : suppression de la variable `task_json` inutilisée
+  (avertissement ShellCheck SC2034)
+- Agent `orchestrator-dev` : délégation et outil `question` corrigés — alignement
+  avec le protocole `orchestrator-dev-protocol`
+- `orchestrator/orchestrator-protocol` et `orchestrator-dev-protocol` : alignement
+  des deux protocoles (checkpoints, format handoff, modes de workflow)
 
-- `scripts/adapters/opencode.adapter.sh` : `_get_opencode_model()` lit désormais
-  `api-keys.local.md` en priorité (niveau 1 avant `$OPENCODE_MODEL` et `hub.json`) ;
-  `adapter_deploy()` génère le bloc `provider` complet dans `opencode.json` si une clé est
-  configurée pour le projet, régénère le fichier à chaque déploiement dans ce cas,
-  applique `chmod 600` et ajoute `opencode.json` au `.gitignore` du projet cible
-- `scripts/adapters/claude-code.adapter.sh` : `adapter_start()` injecte `ANTHROPIC_API_KEY`
-  depuis `api-keys.local.md` si une clé est configurée pour le projet
-- `oc.sh` : ajout du case `config)` dans le dispatcher
-- `scripts/cmd-help.sh` : section "Configuration API" avec les 4 sous-commandes
-- `docs/reference/config.md` : sections `projects/api-keys.local.md`, `oc config` et
-  `opencode.json` mises à jour (formats avec/sans clé, règle `.gitignore`, priorité modèle)
-- `.gitignore` : ajout de `projects/api-keys.local.md`
+---
 
-- Agent `onboarder` (famille planning/) : découverte d'un projet existant en lecture
-  seule — détecte la stack, explore adaptativement les fichiers structurants selon le
-  profil (Vue, React, Node.js, Python, API, Data/ML, DevOps/Platform, Mobile), lit les
-  tickets Beads et ADRs existants, produit un rapport de contexte structuré (stack,
-  architecture, patterns, points d'attention 🔴/🟠/🟡, zones d'ombre, questions de
-  clarification) et une carte des agents recommandés à double entrée (prioritaires par
-  risques détectés + recommandés par stack + optionnels avec invocations suggérées) —
-  invocable directement, depuis `oc start` (suggestion affichée) ou depuis l'orchestrator
-  (Mode C — pré-phase sur projet inconnu)
-- Skill `planning/project-discovery` : protocole complet d'exploration adaptative —
-  détection de stack (manifestes, CI, infra), tableaux de fichiers structurants par profil
-  (8 profils couverts), format du rapport de contexte imposé, matrice de recommandation
-  des agents (13 signaux → agents prioritaires, 14 stacks → agents recommandés, 4 cas →
-  agents optionnels), règles de conduite (honnêteté sur les zones d'ombre, citations
-  concrètes pour les 🔴/🟠, invocations suggérées jamais exécutées), protocole de mise
-  à jour `projects.md` avec confirmation explicite
-- `docs/guides/onboarding.md` : guide utilisateur complet — quand invoquer l'onboarder
-  (4 situations), session complète annotée (invocation → exploration → rapport → carte
-  agents), interprétation du rapport (niveaux 🔴/🟠/🟡, zones d'ombre, carte agents),
-  intégration dans le workflow orchestrator (Mode C avec exemple), cas d'usage avancés
-  (onboarder + planner en séquence, onboarder + auditor en séquence, re-onboarding)
+## [1.3.0] — 2026-04-20
+
+### Added
+
+- Commande `oc review [PROJECT_ID] [--branch <branche>] [--agent <agent>]` : lance
+  une review IA sur un projet en invoquant l'agent `reviewer` avec le diff injecté ;
+  détecte automatiquement la branche courante si `--branch` absent ; vérifie la
+  présence du reviewer dans `projects.md` ; injecte `CONVENTIONS.md` si présent
+- `scripts/cmd-review.sh` : implémentation complète de la commande
+- `scripts/lib/prompt-builder.sh` : `build_review_bootstrap_prompt` injecte le diff
+  `git diff <branche>` et l'hint `CONVENTIONS.md` conditionnel
+- `oc.sh` : case `review)` ajouté dans le dispatcher
+- `docs/reference/cli.md` : section `oc review` ajoutée
+- Skill `orchestrator/orchestrator-workflow-modes` : source de vérité unique pour
+  les 3 modes (manuel/semi-auto/auto) — injecté dans `orchestrator` et
+  `orchestrator-dev` pour garantir la cohérence
+- Skill `orchestrator/orchestrator-handoff-format` : source de vérité unique pour
+  le format de retour `orchestrator-dev → orchestrator`
 
 ### Changed
 
@@ -107,145 +98,80 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 - Skill `orchestrator/orchestrator-protocol` : Mode C documenté avec condition de
   déclenchement, proposition à l'utilisateur, format du `[CP-onboard]` et règle
   "toujours optionnel et sautables"
-- `scripts/cmd-start.sh` : suggestion d'invocation de l'onboarder affichée au
-  démarrage quand les agents sont déployés dans le projet
-- `docs/architecture/agents.md` : total mis à jour (27 agents), `onboarder` ajouté
-  dans la famille Coordinateurs, nouvelle règle "Agents de découverte" en bas du fichier
-- `docs/architecture/skills.md` : `planning/project-discovery` ajouté dans le domaine
-  planning/, matrice de dépendances mise à jour pour `onboarder`
+- Agent `planner` : invocation autonome optionnelle des agents `ux-designer` et
+  `ui-designer` ajoutée (PHASE 1.5) — 3 options : invoquer directement (Option A),
+  laisser l'utilisateur invoquer (Option B), continuer sans (Option C)
+- Agent `orchestrator-dev` : création de branche dédiée par ticket avant implémentation —
+  pause obligatoire à l'étape 1b dans tous les modes
+- Agents (tous) : outil `question` OpenCode activé sur tous les agents — remplacement
+  des pauses textuelles par des appels structurés à l'outil `question`
+- `docs(beads)` : état review et cycle de feedback clarifiés
+- `docs/architecture/agents.md` : total mis à jour, `onboarder` ajouté dans la
+  famille Coordinateurs, nouvelle règle "Agents de découverte"
+- `docs/architecture/skills.md` : `planning/project-discovery` ajouté, matrice
+  de dépendances mise à jour pour `onboarder`
+- `scripts/cmd-help.sh` : refonte avec `.cmd`/`.desc` séparés dans `i18n`,
+  section `beads ui` et `tracker set-sync-mode` ajoutées
 
-- Agent `developer-security` (famille developer/) : hardening applicatif post-audit —
-  implémente CORS restrictif, headers HTTP de sécurité (CSP, HSTS, X-Frame-Options),
-  hashing des mots de passe (bcrypt, argon2id), gestion sécurisée des tokens JWT
-  (rotation, révocation), sessions (httpOnly, secure, sameSite), rate limiting sur les
-  endpoints sensibles, chiffrement AES-256-GCM — intervient après `auditor-security`
-  dans l'ordre de criticité 🔴 → 🟠 → 🟡
-- Skill `developer/dev-standards-security-hardening` : patterns concrets de hardening
-  applicatif — configuration CORS (origines explicites, méthodes autorisées, headers
-  exposés), headers HTTP (CSP, HSTS, X-Frame-Options, X-Content-Type-Options,
-  Permissions-Policy), bcrypt/argon2id (coût, upgrade legacy), JWT (algorithme HS256
-  interdit, rotation, révocation via liste de révocation), sessions (régénération après
-  auth, expiration), rate limiting (throttling par IP/user/endpoint), chiffrement
-  AES-256-GCM (IV aléatoire, séparation clé de chiffrement / clé d'authentification)
-- Skill `developer/dev-standards-api` : standards de conception et d'implémentation
-  d'API — versioning (préfixe d'URL, stratégie de dépréciation et sunset), pagination
-  (cursor-based et offset/limit avec métadonnées), format de réponse uniforme
-  (`{ data, meta, error }`), codes HTTP sémantiques, idempotence (PUT/DELETE/PATCH +
-  clé d'idempotence pour POST), OpenAPI 3.x (contrat first, schémas réutilisables),
-  breaking changes (audit préalable, période de double support), webhooks (signature
-  HMAC, réponse immédiate, traitement asynchrone, retry), rate limiting côté API
-  (headers `X-RateLimit-*`, réponse 429 avec `Retry-After`)
-- `docs/guides/authoring.md` : guide de création d'agents et de skills — décision
-  agent vs skill (5 critères), checklist de qualité (frontmatter, corps, testabilité),
-  exemples commentés d'agent et de skill bien formés, anti-patterns courants
+### Fixed
 
-### Changed
-
-- Agent `developer-api` : skill `developer/dev-standards-api` ajouté dans le frontmatter
-- Skill `developer/dev-standards-data` : section `Tests data` enrichie avec patterns
-  dbt (tests natifs schema.yml + tests SQL personnalisés dans `tests/`), tests Airflow
-  (structure DAG + tasks isolées avec mock des connexions), tests PySpark (fixtures
-  locales SparkSession + `assertDataFrameEqual`), tests ML (shape des sorties,
-  reproductibilité avec `random_state`, robustesse aux nulls)
-- Agent `documentarian` : skill `posture/expert-posture` ajouté dans le frontmatter
-- Agent `orchestrator` : skills `auditor/audit-ecodesign` et `auditor/audit-architecture`
-  ajoutés dans la liste des domaines d'audit délégués
-- Agent `reviewer` : skill `dev-standards-vuejs` retiré du frontmatter (le reviewer
-  n'est pas spécialisé Vue.js — il applique les standards universels)
-- Skill `orchestrator/orchestrator-protocol` : labels `auditor-ecodesign` et
-  `auditor-architecture` ajoutés dans la table de routing d'audit
-- `docs/architecture/agents.md` : total mis à jour (26 agents), ajout `developer-security`
-  dans la famille developer/, note de distinction avec `developer-backend`
-- `docs/architecture/skills.md` : ajout `dev-standards-api` et
-  `dev-standards-security-hardening` dans le domaine developer/, matrice de dépendances
-  mise à jour pour `developer-api` et `developer-security`
+- `scripts/lib/prompt-builder.sh` : sauts de ligne dans les templates `bd update`
+  pour le planner corrigés
+- `scripts/cmd-help.sh` : commandes `agent select` et `mode` manquantes ajoutées
+- Agent `planner` : sauts de ligne dans les templates `bd update` corrigés
+- `fix(onboarding)` : ne pas proposer l'onboarding si `ONBOARDING.md` existe déjà
+- `fix(release)` : bumper `hub.json.example` (tracké) au lieu de `hub.json` (ignoré)
+- Agents `orchestrator`/`orchestrator-dev` : synchronisation de la permission
+  `question` et du skill `tool-question`
+- CI : avertissements ShellCheck corrigés dans `cmd-board` et `common`
 
 ---
 
+## [1.2.0] — 2026-04-15
 
 ### Added
 
-- Skill `posture/expert-posture` :
-  exploration systématique des artefacts avant de répondre (annonce de ce qui a été consulté,
-  identification des zones d'incertitude), recommandation contraire argumentée au format ⚠️
-  (problème / alternative / pourquoi / trade-offs, formulation à la première personne),
-  pause de confirmation 🛑 avant toute action irréversible ou structurellement impactante —
-  injecté dans 11 agents : `auditor`, `auditor-security`, `auditor-performance`,
-  `auditor-accessibility`, `auditor-ecodesign`, `auditor-architecture`, `auditor-privacy`,
-  `auditor-observability`, `ux-designer`, `ui-designer`, `planner`
-- `docs/guides/workflows.md` : refonte complète — guide de choix d'entrée (8 situations →
-  agent recommandé), Scénario 1 réécrit pour l'architecture deux niveaux
-  (orchestrator → phases design/audit → orchestrator-dev → developer-*), Scénario 2 mis à
-  jour (7 sous-agents dont `auditor-observability`), Scénario 5 ajouté (designers standalone
-  → orchestrator-dev), Scénario 6 ajouté (documentarian — documentation d'une feature livrée)
-- `docs/architecture/overview.md` : diagramme "Workflow orchestrateur" mis à jour —
-  architecture deux niveaux avec phases conception (ux/ui-designer), audit (auditor-*),
-  implémentation (orchestrator-dev → developer-*) et CP-2 toujours pause absolue
-- Skill `developer/dev-standards-security` : pratiques de sécurité préventives
-  (secrets/config, validation des inputs, injections SQL/shell/LDAP, auth/autorisation,
-  logs sans données sensibles, audit des dépendances) — injecté dans tous les developer-* et reviewer
-- Adaptation linguistique des agents (ADR-005) : champ optionnel `Langue` dans `projects.md`
-  — si présent, une instruction de langue est injectée en tête de chaque agent déployé via
-  `build_agent_content` ; comportement par défaut (champ absent) inchangé — rétrocompatible
-- Mode de workflow configurable pour l'orchestrateur dev (ADR-006) : trois modes disponibles au
-  démarrage de chaque session `orchestrator-dev` — `manuel` (défaut, comportement existant inchangé),
-  `semi-auto` (CP-1 et CP-3 automatiques, QA et review restent manuels), `auto` (CP-1/CP-3
-  automatiques, CP-QA fixé au démarrage) — CP-2 (merge ou corriger ?) reste une pause absolue
-  dans tous les modes — modes applicables à `orchestrator-dev` uniquement — rétrocompatible
-- Nouvelle famille `design/` avec 2 agents :
-  - Agent `ux-designer` : analyse des flows utilisateur, identification des frictions, user flows
-    textuels, spécifications UX avec critères d'acceptance, audit UX (heuristiques Nielsen)
-  - Agent `ui-designer` : fondations design system (tokens), spécification de composants
-    (variants, états, do/don't), guidelines visuelles, direction artistique multi-options
-- Skill `designer/ux-protocol` : heuristiques Nielsen, grille des 5 questions UX, format user flow,
-  format spec UX, protocole d'audit friction
-- Skill `designer/ui-protocol` : tokens de design, format spec composant, règles de cohérence
-  visuelle, protocole d'audit d'incohérences, échelle modulaire typographique
-- Agent `developer-platform` (famille developer/) : infrastructure as code (Terraform, Pulumi),
-  orchestration Kubernetes, Helm charts, GitOps (ArgoCD, Flux), gestion des secrets à l'échelle
-  (Vault, External Secrets Operator) — distinct de `developer-devops`
-- Skill `developer/dev-standards-platform` : Terraform (modules versionnés, state remote,
-  workspaces), K8s (Kustomize, RBAC minimal, probes), Helm (charts SemVer, ESO uniquement),
-  GitOps (sync auto staging / manuel prod), validation (`terraform plan`, `helm diff`)
-- Agent `auditor-observability` (famille auditor/) : méthode RED, logs structurés, traces
-  distribuées (OpenTelemetry), SLOs/error budget, alerting (actionnable, runbooks), dashboards,
-  grille des 5 questions d'observabilité
-- Skill `auditor/audit-observability` : méthode RED complète, grille des 5 questions, format
-  de rapport par pilier (métriques → logs → traces → SLOs → alerting → dashboards)
-- Agent `orchestrator-dev` (famille planning/) : tech lead IA d'implémentation — pilote le
-  workflow Beads ticket par ticket, route vers 9 agents developer-*, supervise QA optionnel
-  et review, 3 modes (manuel/semi-auto/auto), invocable standalone ou depuis l'orchestrator
-- Skill `orchestrator/orchestrator-dev-protocol` : workflow Beads d'implémentation, matrice
-  de routing developer-* (9 signaux → 9 agents), format checkpoints CP-1/CP-QA/CP-2/CP-3,
-  3 modes de workflow, format compte rendu d'étape et récap global
+- Support natif AWS Bedrock (`amazon-bedrock`) : détection automatique du provider
+  dans `opencode.adapter.sh`, sync `opencode.json` avec region et token
+  `AWS_BEARER_TOKEN_BEDROCK` ; différencié du mode litellm
+- Support région AWS pour le provider `amazon-bedrock` dans `providers.json`
+- `feat(beads)` : ajout de `.beads/` au `.git/info/exclude` à l'init
+- `feat(i18n)` : clés `beads.gitignore_added` et `beads.gitignore_exists` ajoutées
+- `feat(beads-ui)` : intégration de `bdui` dans `oc install`, `oc update` et la
+  documentation
+- Import automatique des labels tracker (GitLab / Jira) à l'init Beads
 
 ### Changed
 
-- Tous les developer-* et reviewer : `dev-standards-security` ajouté après `dev-standards-universal`
-  dans le frontmatter `skills`
-- `scripts/lib/prompt-builder.sh` : `build_agent_content` accepte un 3e paramètre `lang` (optionnel)
-- `scripts/common.sh` : nouvelle fonction `get_project_language` (lecture du champ `Langue` dans `projects.md`)
-- `scripts/adapters/opencode.adapter.sh`, `claude-code.adapter.sh`, `vscode.adapter.sh` :
-  lecture de la langue via `get_project_language` et passage à `build_agent_content`
-- `projects/projects.example.md` et `docs/reference/config.md` : champ `Langue` documenté
-- `docs/architecture/adr/005-agent-language-adaptation.md` : statut Proposé → Accepté,
-  sections Décision, Implémentation et Options rejetées ajoutées
-- Agent `orchestrator` refondu en chef de projet feature : délègue conception (ux-designer,
-  ui-designer), audits (auditor-*) et implémentation (orchestrator-dev) — ne route plus
-  directement vers les developer-*
-- Skill `orchestrator/orchestrator-protocol` refondu : workflow feature complet, matrice de
-  routing 3 familles (design/auditor/dev via orchestrator-dev), checkpoints CP-0/CP-spec/
-  CP-audit/CP-feature
-- `agents/auditor/auditor.md` : ajout de `auditor-observability` dans la table des sous-agents,
-  tableau de synthèse multi-domaines et exemples d'invocation
-- `docs/architecture/agents.md` : mise à jour du total (25 agents, 7 familles), ajout famille
-  design/, `orchestrator-dev`, `developer-platform`, `auditor-observability`, refonte description
-  `orchestrator`
-- `docs/architecture/skills.md` : ajout domaine `designer/`, `dev-standards-platform`,
-  `audit-observability`, `orchestrator-dev-protocol` dans le domaine orchestrator/ ; matrice
-  de dépendances complétée
-- `docs/architecture/adr/006-orchestrator-configurable-mode.md` : titre et texte clarifiés —
-  les modes s'appliquent à `orchestrator-dev` uniquement, pas à l'`orchestrator` feature
+- `feat(deploy)` : utilisation de `.git/info/exclude` au lieu de `.gitignore` dans
+  les projets cibles — évite de polluer le `.gitignore` versionné des projets
+- `chore(config)` : `hub.json` et `opencode.json` retirés du tracking git, ajoutés
+  à `.gitignore`
+- `docs` : section prérequis retirée du README (EN + FR)
+
+### Fixed
+
+- `fix(beads)` : remplacement de `bd label add` par `bd label create` dans
+  `cmd-init.sh` — alignement avec l'API Beads actuelle
+- `fix(tests)` : stabilisation des tests BATS pour CI sans `hub.json`
+- `test` : assertions BATS corrigées (`bd label add` → `bd label create`)
+
+---
+
+## [1.1.0] — 2026-04-13
+
+### Added
+
+- `feat(beads)` : champ `Sync mode` dans `projects.md` et commande
+  `oc beads tracker set-sync-mode` pour configurer le mode de synchronisation
+  du tracker
+- Commande `oc init` : proposition d'ajout de `opencode.json` et `.opencode/` au
+  `.gitignore` du projet à l'étape 5
+
+### Fixed
+
+- `fix(init)` : suppression des déclarations `local` invalides hors scope de fonction
+- `fix(help)` : commandes `agent select` et `mode` manquantes ajoutées dans l'aide
 
 ---
 

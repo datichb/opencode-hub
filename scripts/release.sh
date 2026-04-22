@@ -10,6 +10,7 @@
 #   2. Vérifie que le working tree est propre et qu'on est sur main
 #   3. Met à jour config/hub.json (.version) — local, non tracké
 #      et config/hub.json.example (.version) — tracké par git
+#   3.5. Met à jour CHANGELOG.md : insère ## [X.Y.Z] — date sous [Unreleased]
 #   4. Crée le commit "chore(release): vX.Y.Z" et le tag annoté vX.Y.Z
 #   5. Propose de pusher (ou affiche la commande à lancer manuellement)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -45,6 +46,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   echo "  1. Valide le format X.Y.Z"
   echo "  2. Vérifie que le working tree est propre et qu'on est sur main"
   echo "  3. Met à jour config/hub.json (.version) et config/hub.json.example (.version)"
+  echo "  3.5. Met à jour CHANGELOG.md : insère [X.Y.Z] — date sous [Unreleased]"
   echo "  4. Crée le commit chore(release): vX.Y.Z + le tag annoté vX.Y.Z"
   echo "  5. Propose de pusher ou affiche la commande"
   exit 0
@@ -140,8 +142,22 @@ jq --arg v "$VERSION" '.version = $v' "$HUB_CONFIG_EXAMPLE" > "$tmp"
 mv "$tmp" "$HUB_CONFIG_EXAMPLE"
 log_success "config/hub.json.example mis à jour → version = ${VERSION}"
 
+# ── Étape 3.5 — Mise à jour de CHANGELOG.md ──────────────────────────────────
+CHANGELOG="$HUB_DIR/CHANGELOG.md"
+
+if [ ! -f "$CHANGELOG" ]; then
+  log_warn "CHANGELOG.md introuvable — étape ignorée"
+else
+  TODAY=$(date +%Y-%m-%d)
+  # Insérer ## [X.Y.Z] — date juste après la ligne ## [Unreleased]
+  # perl est disponible sur macOS et Linux — gère les sauts de ligne multi-plateforme
+  perl -i -0pe "s|^(## \[Unreleased\])|\\1\n\n---\n\n## [${VERSION}] — ${TODAY}|m" "$CHANGELOG"
+  log_success "CHANGELOG.md               mis à jour → ## [${VERSION}] — ${TODAY}"
+fi
+
 # ── Commit + tag ──────────────────────────────────────────────────────────────
 git -C "$HUB_DIR" add config/hub.json.example
+[ -f "$HUB_DIR/CHANGELOG.md" ] && git -C "$HUB_DIR" add CHANGELOG.md
 git -C "$HUB_DIR" commit -m "chore(release): ${TAG}"
 log_success "Commit créé : chore(release): ${TAG}"
 
