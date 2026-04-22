@@ -9,6 +9,10 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 
 ## [Unreleased]
 
+---
+
+## [1.4.0] — 2026-04-22
+
 ### Added
 
 - Skill `developer/dev-standards-simplicity` : KISS (solution la plus directe), YAGNI
