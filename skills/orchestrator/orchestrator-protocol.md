@@ -155,7 +155,7 @@ Classer automatiquement les tickets avant affichage : **specs en premier, puis a
 Cet ordre s'applique toujours, indépendamment de l'ordre de saisie ou de la priorité Beads.
 Détecter et signaler les dépendances implicites (ex : ticket spec-ui lié à un ticket dev du même composant).
 
-Afficher le tableau trié avec la colonne `Ordre`, puis utiliser l'outil `question` pour demander le mode :
+**Étape 1 — Afficher dans le texte de la discussion** (ne pas inclure dans l'outil `question`) :
 
 ```
 ## Feature — <nom de la feature>
@@ -174,7 +174,9 @@ X tickets identifiés — Y phases au total. Z en TDD (QA skippé, tests écrits
 > Si tu veux modifier cet ordre, indique-le maintenant.
 ```
 
-⏸️ **Demander le mode de workflow via les blocs question définis dans le skill `orchestrator-workflow-modes`** (choix du mode, puis QA global si mode `auto`).
+**Étape 2 — Demander le mode via l'outil `question`** — le champ `question` doit être court, sans répéter le tableau :
+
+⏸️ **Utiliser les blocs question définis dans le skill `orchestrator-workflow-modes`** (choix du mode, puis QA global si mode `auto`).
 
 > Les descriptions exactes de chaque mode, les règles associées et le bloc question QA global sont la source de vérité du skill `orchestrator-workflow-modes` — ne pas les redéfinir ici.
 
