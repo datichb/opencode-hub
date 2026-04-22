@@ -405,6 +405,67 @@ question({
 
 ---
 
+### Agent requis non disponible
+
+Quand un agent identifié pour un ticket n'est pas déployé dans le projet (invocation refusée
+ou agent absent de `.opencode/agents/`), ne jamais silencieusement basculer vers un autre agent.
+
+**Référence — table de substitution :**
+
+| Agent manquant | Substitut proposé | Limitation |
+|----------------|-------------------|------------|
+| `auditor-security` | `developer-security` | Pas de rapport structuré OWASP — analyse ad hoc uniquement |
+| `auditor-accessibility` | `developer-frontend` | Pas de rapport WCAG/RGAA — vérifications basiques uniquement |
+| `auditor-architecture` | `developer-fullstack` | Pas d'analyse SOLID/couplage structurée — revue partielle |
+| `auditor-performance` | `developer-fullstack` | Pas de rapport Web Vitals/N+1 — analyse ad hoc |
+| `auditor-privacy` | *(aucun substitut)* | — |
+| `auditor-ecodesign` | *(aucun substitut)* | — |
+| `auditor-observability` | *(aucun substitut)* | — |
+| `ux-designer` | *(aucun substitut)* | — |
+| `ui-designer` | *(aucun substitut)* | — |
+
+**Si un substitut existe**, utiliser l'outil `question` avec 3 options :
+
+```
+question({
+  header: "Agent manquant — #<ID>",
+  question: "[Orchestrator — Routing | Ticket #<ID> — <titre>]\nL'agent `<agent-id>` est requis mais n'est pas déployé sur ce projet. Comment procéder ?",
+  options: [
+    { label: "Déployer l'agent (Recommandé)", description: "Tape `!oc deploy opencode <PROJECT_ID>` ici pour déployer sans quitter OpenCode, puis réponds pour reprendre" },
+    { label: "Utiliser <substitut>", description: "<Limitation de couverture>" },
+    { label: "Ignorer ce ticket", description: "Passer au ticket suivant — noté comme ignoré dans le récap" }
+  ]
+})
+```
+
+**Si aucun substitut n'existe**, utiliser l'outil `question` avec 2 options :
+
+```
+question({
+  header: "Agent manquant — #<ID>",
+  question: "[Orchestrator — Routing | Ticket #<ID> — <titre>]\nL'agent `<agent-id>` est requis mais n'est pas déployé sur ce projet, et aucun substitut n'est disponible. Comment procéder ?",
+  options: [
+    { label: "Déployer l'agent (Recommandé)", description: "Tape `!oc deploy opencode <PROJECT_ID>` ici pour déployer sans quitter OpenCode, puis réponds pour reprendre" },
+    { label: "Ignorer ce ticket", description: "Passer au ticket suivant — noté comme ignoré dans le récap" }
+  ]
+})
+```
+
+**Comportement selon le choix :**
+
+- **Déployer l'agent** → afficher le bloc d'instructions, puis attendre la confirmation avant de reprendre :
+
+  > Pour déployer `<agent-id>` sans quitter OpenCode :
+  > 1. Tape `!oc deploy opencode <PROJECT_ID>` dans ce chat
+  > 2. Réponds ici une fois le déploiement terminé pour reprendre le workflow
+
+- **Utiliser le substitut** → router vers l'agent de substitution via `orchestrator-dev` en signalant
+  explicitement la limitation dans le compte rendu d'étape et dans le récap global CP-feature
+- **Ignorer** → noter le ticket comme ignoré, continuer avec le suivant
+```
+
+---
+
 ## Ce que tu ne fais PAS
 
 - Router directement vers les `developer-*` — tout passe par `orchestrator-dev`
