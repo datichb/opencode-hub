@@ -82,7 +82,7 @@ Invocable directly, from `oc start` (suggestion displayed), or from the `orchest
 |--|--|
 | **Label** | Orchestrator |
 | **File** | `agents/planning/orchestrator.md` |
-| **Skills** | `orchestrator/orchestrator-protocol`, `developer/beads-plan`, `posture/tool-question` |
+| **Skills** | `orchestrator/orchestrator-protocol`, `orchestrator/orchestrator-workflow-modes`, `orchestrator/orchestrator-handoff-format`, `developer/beads-plan`, `posture/tool-question` |
 | **Invocation** | `"Implement [feature]"` / `"Handle tickets [IDs]"` |
 
 AI project manager. Drives the complete delivery of a feature by mobilizing all
@@ -90,10 +90,17 @@ necessary agents: design (ux-designer, ui-designer), audit (auditor-*),
 implementation (via orchestrator-dev). Enforces explicit checkpoints at each
 phase. Never codes.
 
-Two modes: **Mode A** (feature in natural language → delegates to planner) /
-**Mode B** (existing Beads tickets → direct start).
+**Four entry modes:**
+- **Mode D** — bug reported → delegates immediately to `debugger`, no analysis
+- **Mode C** — unknown project → reads `ONBOARDING.md` / `CONVENTIONS.md` first; proposes `onboarder` only if both files are absent
+- **Mode A** — feature in natural language → delegates to `planner`
+- **Mode B** — existing Beads tickets → direct start
 
 Never routes directly to `developer-*` — always delegates to `orchestrator-dev`.
+
+**Technical permissions:** `bash`, `edit`, `write` disabled. Acts only via `task` (delegation) and `question` (checkpoints). List of invocable agents explicitly restricted in the frontmatter.
+
+**Missing agent handling:** if a required agent is not deployed in the project, the orchestrator asks a structured question with options: deploy via `!oc deploy` without leaving OpenCode / use a substitute (substitution table by domain) / skip the ticket. Never silently falls back to another agent.
 
 ---
 

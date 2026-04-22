@@ -381,3 +381,59 @@ EOF
   [ "$status" -eq 0 ]
   echo "$output" | grep -q "aucune différence"
 }
+
+# ── Intégrité des règles orchestrateur ────────────────────────────────────────
+
+@test "orchestrator : bash, edit et write sont bien à deny dans le frontmatter" {
+  local agent_file="$BATS_TEST_DIRNAME/../agents/planning/orchestrator.md"
+  grep -q 'bash: deny' "$agent_file"
+  grep -q 'edit: deny' "$agent_file"
+  grep -q 'write: deny' "$agent_file"
+}
+
+@test "orchestrator : task deny par défaut avec allowlist explicite" {
+  local agent_file="$BATS_TEST_DIRNAME/../agents/planning/orchestrator.md"
+  grep -q '"*": deny' "$agent_file"
+  grep -q '"planner": allow' "$agent_file"
+  grep -q '"orchestrator-dev": allow' "$agent_file"
+  grep -q '"debugger": allow' "$agent_file"
+}
+
+@test "orchestrator protocol : section 'Agent requis non disponible' présente" {
+  local skill_file="$BATS_TEST_DIRNAME/../skills/orchestrator/orchestrator-protocol.md"
+  grep -q 'Agent requis non disponible' "$skill_file"
+}
+
+@test "orchestrator protocol : table de substitution complète (7 auditor-*)" {
+  local skill_file="$BATS_TEST_DIRNAME/../skills/orchestrator/orchestrator-protocol.md"
+  grep -q 'auditor-security' "$skill_file"
+  grep -q 'auditor-accessibility' "$skill_file"
+  grep -q 'auditor-architecture' "$skill_file"
+  grep -q 'auditor-performance' "$skill_file"
+  grep -q 'auditor-privacy' "$skill_file"
+  grep -q 'auditor-ecodesign' "$skill_file"
+  grep -q 'auditor-observability' "$skill_file"
+}
+
+@test "orchestrator protocol : instruction de déploiement sans quitter OpenCode présente" {
+  local skill_file="$BATS_TEST_DIRNAME/../skills/orchestrator/orchestrator-protocol.md"
+  grep -q 'oc deploy opencode' "$skill_file"
+}
+
+@test "orchestrator protocol : Mode C conditionné à l'absence des fichiers de contexte" {
+  local skill_file="$BATS_TEST_DIRNAME/../skills/orchestrator/orchestrator-protocol.md"
+  grep -q 'ONBOARDING.md' "$skill_file"
+  grep -q 'CONVENTIONS.md' "$skill_file"
+}
+
+@test "tool-question skill : règle de contexte pour les sous-agents présente" {
+  local skill_file="$BATS_TEST_DIRNAME/../skills/posture/tool-question.md"
+  grep -q 'sous-agent' "$skill_file"
+  grep -q 'bloc de contexte' "$skill_file"
+}
+
+@test "orchestrator protocol : CP-0 sépare l'affichage du tableau et l'outil question" {
+  local skill_file="$BATS_TEST_DIRNAME/../skills/orchestrator/orchestrator-protocol.md"
+  grep -q 'Afficher dans le texte de la discussion' "$skill_file"
+  grep -q 'Demander le mode via l.*outil.*question' "$skill_file"
+}

@@ -84,7 +84,7 @@ Invocable directement, depuis `oc start` (suggestion affichée), ou depuis l'`or
 |--|--|
 | **Label** | Orchestrator |
 | **Fichier** | `agents/planning/orchestrator.md` |
-| **Skills** | `orchestrator/orchestrator-protocol`, `developer/beads-plan`, `posture/tool-question` |
+| **Skills** | `orchestrator/orchestrator-protocol`, `orchestrator/orchestrator-workflow-modes`, `orchestrator/orchestrator-handoff-format`, `developer/beads-plan`, `posture/tool-question` |
 | **Invocation** | `"Implémente [feature]"` / `"Prends en charge les tickets [IDs]"` |
 
 Chef de projet IA. Pilote la réalisation complète d'une feature en mobilisant tous
@@ -92,10 +92,17 @@ les agents nécessaires : conception (ux-designer, ui-designer), audit (auditor-
 implémentation (via orchestrator-dev). Impose des checkpoints explicites à chaque
 phase. Ne code jamais.
 
-Deux modes : **Mode A** (feature en langage naturel → délègue au planner) /
-**Mode B** (tickets Beads existants → démarrage direct).
+**Quatre modes d'entrée :**
+- **Mode D** — bug signalé → délègue immédiatement au `debugger`, sans analyse
+- **Mode C** — projet inconnu → lit `ONBOARDING.md` / `CONVENTIONS.md` en premier ; propose l'`onboarder` uniquement si les deux fichiers sont absents
+- **Mode A** — feature en langage naturel → délègue au `planner`
+- **Mode B** — tickets Beads existants → démarrage direct
 
 Ne route jamais directement vers les `developer-*` — délègue toujours à `orchestrator-dev`.
+
+**Permissions techniques :** `bash`, `edit`, `write` désactivés. Agit uniquement via `task` (délégation) et `question` (checkpoints). Liste des agents invocables explicitement restreinte dans le frontmatter.
+
+**Gestion des agents manquants :** si un agent requis n'est pas déployé dans le projet, l'orchestrateur pose une question structurée avec les options : déployer via `!oc deploy` sans quitter OpenCode / utiliser un substitut (table de substitution par domaine) / ignorer le ticket. Ne bascule jamais silencieusement vers un autre agent.
 
 ---
 

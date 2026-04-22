@@ -121,6 +121,9 @@ questions, then proposes a plan:
 
 #### 3. [CP-0] Plan validation + mode selection
 
+The orchestrator displays the ticket table **in the discussion** (not inside the question),
+then asks a short question for the workflow mode:
+
 ```
 ## Planned tickets — JWT Authentication
 
@@ -133,9 +136,10 @@ questions, then proposes a plan:
 | bd-5 | JWT service                     | feature       | developer-backend |
 | bd-6 | Login/logout/refresh endpoints  | feature       | developer-backend |
 
-Workflow mode: manual / semi-auto / auto?
-(semi-auto: CP-1 and CP-3 automatic, CP-2 always manual)
+ℹ️ Automatic order applied: specs → audits → dev.
 ```
+
+Then a short structured question: **"Which workflow mode?"** — Manual / Semi-auto / Auto.
 
 #### 4. Design and audit phases
 
@@ -157,6 +161,14 @@ The orchestrator passes dev tickets to `orchestrator-dev` with the chosen mode.
 4. Launches review automatically after implementation (± QA)
 5. Presents the review report `[CP-2]` — **always a pause, no exception**
 6. Closes and moves to the next `[CP-3]` (automatic in semi-auto/auto)
+
+> **Subagent questions:** when a subagent (planner, ux-designer, reviewer…) asks a question,
+> it surfaces in the parent session with a context block identifying the agent and current phase —
+> e.g. `[Planner — Phase 0 | Feature: JWT authentication]`. No need to navigate to the child session.
+
+> **Missing agent:** if a required agent is not deployed in the project, the orchestrator displays
+> a structured question: deploy via `!oc deploy opencode <PROJECT_ID>` directly in OpenCode / use a
+> substitute (table by domain) / skip the ticket. Never falls back silently.
 
 #### 6. [CP-feature] Global recap
 
