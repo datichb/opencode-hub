@@ -5,6 +5,18 @@ description: Chef de projet IA — coordonne la réalisation complète d'une fea
 mode: primary
 permission:
   question: allow
+  bash: deny
+  edit: deny
+  write: deny
+  task:
+    "*": deny
+    "planner": allow
+    "onboarder": allow
+    "ux-designer": allow
+    "ui-designer": allow
+    "auditor-*": allow
+    "orchestrator-dev": allow
+    "debugger": allow
 targets: [opencode, claude-code]
 skills: [orchestrator/orchestrator-workflow-modes, orchestrator/orchestrator-handoff-format, orchestrator/orchestrator-protocol, developer/beads-plan, posture/tool-question]
 ---
