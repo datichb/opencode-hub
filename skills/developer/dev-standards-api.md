@@ -1,6 +1,6 @@
 ---
 name: dev-standards-api
-description: Standards spécifiques aux APIs publiques et d'intégration — versioning, pagination, gestion des erreurs, rate limiting, idempotence, contrats OpenAPI, breaking changes, webhooks.
+description: Standards spécifiques aux APIs publiques et d'intégration — versioning, pagination, gestion des erreurs, rate limiting, idempotence, contrat schema-first, breaking changes, webhooks.
 ---
 
 # Skill — Standards API
@@ -137,53 +137,25 @@ Ne jamais retourner 200 avec un corps contenant `{ success: false }`.
 Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000
 ```
 
-```typescript
-// ✅ Gestion de la clé d'idempotence
-async function createOrder(dto: CreateOrderDto, idempotencyKey: string) {
-  const existing = await cache.get(`idem:${idempotencyKey}`)
-  if (existing) return JSON.parse(existing) // replay de la réponse précédente
+```
+// ✅ Gestion de la clé d'idempotence (pseudocode)
+function createOrder(dto, idempotencyKey):
+  existing = cache.get("idem:" + idempotencyKey)
+  if existing: return existing  // replay de la réponse précédente
 
-  const result = await orderService.create(dto)
-  await cache.set(`idem:${idempotencyKey}`, JSON.stringify(result), { ttl: 86400 })
+  result = orderService.create(dto)
+  cache.set("idem:" + idempotencyKey, result, ttl: 86400)
   return result
-}
 ```
 
 ---
 
-## Contrat OpenAPI
+## Contrat d'API (schema-first)
 
 - Définir le contrat **avant** d'implémenter (schema-first)
 - Chaque endpoint a une description, des paramètres typés et des réponses documentées
-- Utiliser `$ref` pour réutiliser les schémas communs — pas de copier-coller
-
-```yaml
-# ✅ Endpoint documenté avec tous les cas
-paths:
-  /v1/users/{id}:
-    get:
-      summary: Récupérer un utilisateur
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Utilisateur trouvé
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-```
+- Réutiliser les schémas communs par référence — pas de copier-coller
+- Les spécificités du format de contrat (OpenAPI, GraphQL SDL, AsyncAPI, etc.) sont définies dans le skill dédié à la stack du projet
 
 ---
 
@@ -211,26 +183,22 @@ Un breaking change est toute modification qui casse un consommateur existant :
 
 ## Webhooks sortants
 
-```typescript
-// ✅ Webhook sécurisé et fiable
-async function sendWebhook(url: string, payload: object, secret: string) {
-  const body = JSON.stringify(payload)
-  const timestamp = Date.now().toString()
-  const signature = createHmac('sha256', secret)
-    .update(`${timestamp}.${body}`)
-    .digest('hex')
+```
+// ✅ Webhook sécurisé et fiable (pseudocode)
+function sendWebhook(url, payload, secret):
+  body      = serialize(payload)
+  timestamp = now().toString()
+  signature = hmac_sha256(secret, timestamp + "." + body)
 
-  await fetch(url, {
-    method: 'POST',
+  http.post(url,
     headers: {
-      'Content-Type': 'application/json',
-      'X-Webhook-Timestamp': timestamp,
-      'X-Webhook-Signature': `sha256=${signature}`,
+      "Content-Type": "application/json",
+      "X-Webhook-Timestamp": timestamp,
+      "X-Webhook-Signature": "sha256=" + signature,
     },
-    body,
-    signal: AbortSignal.timeout(5000), // timeout 5s
-  })
-}
+    body: body,
+    timeout: 5s
+  )
 ```
 
 - Signer les payloads (HMAC-SHA256) — permettre aux consommateurs de vérifier l'authenticité
@@ -251,7 +219,7 @@ async function sendWebhook(url: string, payload: object, secret: string) {
   Retry-After: 60
   ```
 - Différencier les limites par tier (free, pro, enterprise)
-- Documenter les limites dans l'OpenAPI et le guide d'intégration
+- Documenter les limites dans la documentation d'intégration
 
 ---
 
@@ -261,4 +229,4 @@ async function sendWebhook(url: string, payload: object, secret: string) {
 - Retourner des données non nécessaires dans les réponses (over-fetching)
 - Exposer des IDs internes séquentiels — utiliser des UUID ou des identifiants opaques
 - Implémenter une auth maison — déléguer à un middleware d'authentification éprouvé
-- Livrer un endpoint sans documentation OpenAPI à jour
+- Livrer un endpoint sans contrat à jour

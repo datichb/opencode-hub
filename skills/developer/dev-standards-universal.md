@@ -1,6 +1,6 @@
 ---
 name: dev-standards-universal
-description: Socle commun de qualité applicables à tous les projets — Clean Code, SOLID, TypeScript strict, gestion de données avec validation explicite.
+description: Socle commun de qualité applicables à tous les projets — Clean Code, SOLID, gestion de données avec validation explicite.
 ---
 
 # Skill — Standards Universels de Développement
@@ -75,17 +75,6 @@ Ne pas supprimer avant réponse explicite de l'utilisateur.
 - **L** — Liskov Substitution : un sous-type doit pouvoir remplacer son type parent sans altérer le comportement attendu
 - **I** — Interface Segregation : préférer plusieurs interfaces spécifiques à une interface générale — un client ne doit pas dépendre de méthodes qu'il n'utilise pas
 - **D** — Dependency Inversion : dépendre des abstractions, pas des implémentations concrètes
-
----
-
-## TypeScript
-
-- Typage strict activé — pas de `any`
-- `unknown` si le type est réellement indéterminé, avec narrowing explicite
-- Interfaces pour les contrats publics, types pour les unions et utilitaires
-- Enums pour les valeurs constantes métier
-- Inférence de type utilisée quand elle est évidente et non ambiguë
-- Types partagés centralisés — pas de duplication de types entre couches
 
 ---
 

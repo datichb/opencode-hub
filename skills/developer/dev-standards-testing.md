@@ -17,7 +17,7 @@ couverture minimale, organisation, nomenclature et règles de non-régression.
 
 ❌ Tu ne livres JAMAIS une fonctionnalité sans tests unitaires sur la logique métier
 ❌ Tu ne supprimes JAMAIS un test existant sans justification explicite de l'utilisateur
-❌ Tu n'utilises JAMAIS `any` TypeScript dans les types de test pour contourner des erreurs
+❌ Tu n'utilises JAMAIS le typage dynamique non contrôlé dans les types de test pour contourner des erreurs
 ✅ Si une fonctionnalité n'est pas testable telle qu'elle est conçue, tu le signales avant d'implémenter
 
 ---
@@ -52,18 +52,15 @@ couverture minimale, organisation, nomenclature et règles de non-régression.
 
 ### Structure AAA (Arrange / Act / Assert)
 
-```typescript
-it('doit retourner le prix TTC quand la TVA est fournie', () => {
-  // Arrange
-  const prixHT = 100
-  const tva = 0.2
+```
+// Arrange
+[préparer les données et dépendances nécessaires]
 
-  // Act
-  const result = calculerPrixTTC(prixHT, tva)
+// Act
+[appeler la fonction ou déclencher le comportement]
 
-  // Assert
-  expect(result).toBe(120)
-})
+// Assert
+[vérifier le résultat attendu]
 ```
 
 ### Nommage
@@ -75,7 +72,7 @@ it('doit retourner le prix TTC quand la TVA est fournie', () => {
 ### Couverture minimale
 
 - Logique métier : **100 %** des branches (y compris les cas d'erreur)
-- Composants Vue/React : les comportements visibles (rendu conditionnel, émission d'événements)
+- Composants UI : les comportements visibles (rendu conditionnel, émission d'événements)
 - Utilitaires : **100 %**
 - Controllers/Routes : couverture par tests d'intégration, pas unitaires
 
@@ -84,7 +81,7 @@ it('doit retourner le prix TTC quand la TVA est fournie', () => {
 ## Tests d'intégration
 
 - Tester les interactions réelles entre modules (service + repository, controller + service)
-- Utiliser des bases de données in-memory (SQLite, testcontainers) ou des mocks de couche IO
+- Utiliser des bases de données in-memory ou des mocks de couche IO
 - Chaque appel API exposé doit avoir au moins un test d'intégration couvrant :
   - Le cas nominal (200 OK)
   - Un cas d'erreur métier (400 / 422)
@@ -95,9 +92,9 @@ it('doit retourner le prix TTC quand la TVA est fournie', () => {
 ## Tests E2E
 
 - Réservés aux parcours utilisateurs critiques : inscription, connexion, achat, etc.
-- Utiliser Playwright (web) ou Cypress en dernier recours
+- Utiliser l'outil E2E adapté à la stack du projet
 - Chaque test E2E doit être **idempotent** : nettoyage en beforeEach/afterEach
-- Pas de `cy.wait(1000)` ni de `page.waitForTimeout()` — utiliser les waits sémantiques
+- Pas d'attentes temporelles fixes — utiliser les waits sémantiques (attente d'un élément, d'un état)
 
 ---
 
@@ -105,7 +102,7 @@ it('doit retourner le prix TTC quand la TVA est fournie', () => {
 
 ### Ce qu'on mocke
 
-- Les appels réseau (fetch, axios, HTTP)
+- Les appels réseau (HTTP, bibliothèque cliente)
 - Les accès fichier système
 - Les dépendances externes (email, SMS, paiement)
 - Le temps (`Date.now()`, `new Date()`) quand il influence la logique
@@ -116,19 +113,19 @@ it('doit retourner le prix TTC quand la TVA est fournie', () => {
 - Les transformations de données pures (pas de dépendance externe)
 - Les composants UI quand on teste le comportement de rendu
 
-### Syntaxe Vitest / Jest
+### Syntaxe de mocking
 
-```typescript
-vi.mock('../services/emailService', () => ({
-  sendEmail: vi.fn().mockResolvedValue({ success: true }),
-}))
+Utiliser l'API de mocking fournie par le framework de test du projet. Le principe général :
 
-// Dans le test :
-expect(emailService.sendEmail).toHaveBeenCalledWith({
-  to: 'user@example.com',
-  subject: expect.stringContaining('Bienvenue'),
-})
 ```
+// Remplacer une dépendance par une implémentation contrôlée
+mock('<chemin/dependance>', retourner: { fonction: stub })
+
+// Vérifier les interactions
+vérifier que fonction a été appelée avec les bons arguments
+```
+
+Les spécificités syntaxiques (vi.mock, jest.mock, unittest.mock, etc.) sont définies dans le skill dédié au framework de test du projet.
 
 ---
 
@@ -228,7 +225,7 @@ src/
 │   └── __tests__/
 │       └── paiement.service.test.ts   ← co-localisé avec la source
 ├── components/
-│   ├── PaiementForm.vue
+│   ├── PaiementForm.ts
 │   └── __tests__/
 │       └── PaiementForm.test.ts
 tests/
@@ -257,6 +254,6 @@ Quand l'utilisateur demande un audit, une review ou utilise le mot-clé **"audit
 
 1. Lister les fonctions/modules sans tests ou avec couverture insuffisante
 2. Identifier les tests qui testent l'implémentation plutôt que le comportement
-3. Signaler les `vi.mock`/`jest.mock` qui masquent du code jamais exécuté
+3. Signaler les mocks qui masquent du code jamais exécuté
 4. Vérifier la nomenclature et la structure AAA
 5. Proposer un plan de correction priorisé

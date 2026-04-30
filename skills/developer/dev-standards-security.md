@@ -23,7 +23,7 @@ Pour un audit exhaustif, utiliser l'agent `auditor-security` (OWASP Top 10, CVE,
 - Un secret commité par erreur est révoqué immédiatement — changer le fichier ne suffit pas
 
 ❌ `const API_KEY = "sk-prod-abc123"`
-✅ `const API_KEY = process.env.API_KEY`
+✅ `const API_KEY = env("API_KEY")` — lire depuis les variables d'environnement
 
 ---
 
@@ -73,7 +73,7 @@ Pour un audit exhaustif, utiliser l'agent `auditor-security` (OWASP Top 10, CVE,
 
 ## Dépendances
 
-- Vérifier `npm audit` / `composer audit` / `pip-audit` avant d'ajouter une nouvelle dépendance
+- Auditer les dépendances avec l'outil fourni par le gestionnaire de paquets du projet avant d'en ajouter une nouvelle
 - Les versions sont épinglées dans le lockfile — pas de wildcard `*` ou `latest` en production
 - Préférer les dépendances maintenues activement avec une communauté documentée
 - Une dépendance avec des vulnérabilités critiques non corrigées est un bloquant
