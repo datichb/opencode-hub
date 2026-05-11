@@ -253,25 +253,25 @@ detect_stack() {
   fi
 
   # ── Infrastructure (fichiers de config) ──────────────────────────────────
-  [ -f "${project_path}/Dockerfile" ] || [ -f "${project_path}/docker-compose.yml" ] || \
-  [ -f "${project_path}/docker-compose.yaml" ] && echo "docker"
-  [ -d "${project_path}/.github/workflows" ] && echo "github-actions"
-  [ -f "${project_path}/.gitlab-ci.yml" ] && echo "gitlab-ci"
+  { [ -f "${project_path}/Dockerfile" ] || [ -f "${project_path}/docker-compose.yml" ] || \
+    [ -f "${project_path}/docker-compose.yaml" ]; } && echo "docker" || true
+  { [ -d "${project_path}/.github/workflows" ]; } && echo "github-actions" || true
+  { [ -f "${project_path}/.gitlab-ci.yml" ]; } && echo "gitlab-ci" || true
 
   # Terraform
-  find "$project_path" -maxdepth 3 -name "*.tf" 2>/dev/null | grep -q . && echo "terraform"
+  { find "$project_path" -maxdepth 3 -name "*.tf" 2>/dev/null | grep -q .; } && echo "terraform" || true
 
   # Kubernetes
-  find "$project_path" -maxdepth 4 \( -name "*.yaml" -o -name "*.yml" \) 2>/dev/null | \
-    xargs grep -l 'kind: Deployment\|kind: Service\|kind: Ingress' 2>/dev/null | grep -q . && echo "kubernetes"
+  { find "$project_path" -maxdepth 4 \( -name "*.yaml" -o -name "*.yml" \) 2>/dev/null | \
+    xargs grep -l 'kind: Deployment\|kind: Service\|kind: Ingress' 2>/dev/null | grep -q .; } && echo "kubernetes" || true
 
   # Helm
-  [ -f "${project_path}/Chart.yaml" ] || \
-  find "$project_path" -maxdepth 3 -name "Chart.yaml" 2>/dev/null | grep -q . && echo "helm"
+  { [ -f "${project_path}/Chart.yaml" ] || \
+    find "$project_path" -maxdepth 3 -name "Chart.yaml" 2>/dev/null | grep -q .; } && echo "helm" || true
 
   # ArgoCD
-  find "$project_path" -maxdepth 4 \( -name "*.yaml" -o -name "*.yml" \) 2>/dev/null | \
-    xargs grep -l 'argoproj.io\|kind: Application' 2>/dev/null | grep -q . && echo "argocd"
+  { find "$project_path" -maxdepth 4 \( -name "*.yaml" -o -name "*.yml" \) 2>/dev/null | \
+    xargs grep -l 'argoproj.io\|kind: Application' 2>/dev/null | grep -q .; } && echo "argocd" || true
 }
 
 # Résout la liste des skills stack à injecter pour un agent donné.
@@ -368,7 +368,7 @@ build_agent_content() {
 
     if [ -f "$stack_skills_config" ]; then
       local detected_stacks
-      detected_stacks=$(detect_stack "$project_path" | sort -u)
+      detected_stacks=$(detect_stack "$project_path" | sort -u || true)
 
       if [ -n "$detected_stacks" ]; then
         while IFS= read -r stack_skill; do
