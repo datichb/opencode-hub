@@ -38,6 +38,50 @@ extract_frontmatter_list() {
     | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$'
 }
 
+# Lit le frontmatter d'un agent en une seule passe et expose les variables :
+#   _fm_id      : valeur du champ id
+#   _fm_targets : valeur brute du champ targets (ex: "[opencode, claude-code]")
+#   _fm_skills  : valeur brute du champ skills  (ex: "[skill/a, skill/b]")
+# Utilise uniquement des builtins bash (read, while) — pas de subprocess.
+# @param $1 — chemin absolu du fichier agent
+read_agent_frontmatter() {
+  local file="$1"
+  _fm_id="" _fm_targets="" _fm_skills=""
+  local in_fm=0 fm_done=0
+  while IFS= read -r line; do
+    if [ "$in_fm" -eq 0 ] && [ "$line" = "---" ]; then
+      in_fm=1
+      continue
+    fi
+    if [ "$in_fm" -eq 1 ] && [ "$line" = "---" ]; then
+      fm_done=1
+      break
+    fi
+    if [ "$in_fm" -eq 1 ]; then
+      case "$line" in
+        id:*)      _fm_id="${line#id:}";      _fm_id="${_fm_id# }"      ;;
+        targets:*) _fm_targets="${line#targets:}"; _fm_targets="${_fm_targets# }" ;;
+        skills:*)  _fm_skills="${line#skills:}";  _fm_skills="${_fm_skills# }"  ;;
+      esac
+    fi
+    # Arrêter dès qu'on a tout (optimisation : les champs utiles sont dans les 10 premières lignes)
+    [ -n "$_fm_id" ] && [ -n "$_fm_targets" ] && [ -n "$_fm_skills" ] && break
+  done < "$file"
+}
+
+# Retourne les items d'une liste frontmatter déjà lue en mémoire (valeur brute)
+# Usage : _fm_list_items "[a, b, c]" → affiche a / b / c une par ligne
+# Utilise tr + bash — pas de sed subprocess supplémentaire
+_fm_list_items() {
+  local raw="$1"
+  # Supprimer [ et ], remplacer virgules par newlines, strip espaces
+  printf '%s' "$raw" | tr -d '[]' | tr ',' '\n' | \
+    while IFS= read -r item; do
+      item="${item# }"; item="${item% }"
+      [ -n "$item" ] && printf '%s\n' "$item"
+    done
+}
+
 # Extrait le bloc permission du frontmatter et le convertit en JSON inline
 # Supporte : permission.question (scalaire) et permission.task (map multi-ligne)
 # Retourne une chaîne JSON partielle, ex: "\"permission\": { \"question\": \"allow\" }"
@@ -169,6 +213,12 @@ detect_stack() {
   local pom_xml="${project_path}/pom.xml"
   local pubspec="${project_path}/pubspec.yaml"
 
+  # Répertoires à exclure des find (node_modules, dist, build, .git, .nuxt...)
+  # shellcheck disable=SC2054
+  local _prune_args=( \( -name "node_modules" -o -name ".git" -o -name "dist" -o -name "build"
+                         -o -name ".nuxt" -o -name ".output" -o -name ".next" -o -name "__pycache__"
+                         -o -name ".venv" -o -name "venv" -o -name "vendor" \) -prune -o )
+
   # ── JavaScript / TypeScript (package.json) ──────────────────────────────
   if [ -f "$pkg_json" ]; then
     local deps=""
@@ -176,30 +226,30 @@ detect_stack() {
            grep -oE '"[a-zA-Z@][a-zA-Z0-9@/_-]*"[[:space:]]*:' | tr -d '"' | tr -d ':' | tr -d ' ')
 
     # Langage
-    echo "$deps" | grep -q 'typescript' && echo "typescript"
+    echo "$deps" | grep -q 'typescript' && echo "typescript" || true
 
     # Frontend frameworks
-    echo "$deps" | grep -qE '^next$' && echo "next" && echo "react"
-    echo "$deps" | grep -qE '^nuxt$' && echo "nuxt" && echo "vue"
-    echo "$deps" | grep -qE '^@vue/core$|^vue$' && ! echo "$deps" | grep -q '^nuxt$' && echo "vue"
-    echo "$deps" | grep -qE '^react$' && ! echo "$deps" | grep -q '^next$' && echo "react"
-    echo "$deps" | grep -qE '^@angular/core$' && echo "angular"
+    { echo "$deps" | grep -qE '^next$'; } && echo "next" && echo "react" || true
+    { echo "$deps" | grep -qE '^nuxt$'; } && echo "nuxt" && echo "vue" || true
+    { echo "$deps" | grep -qE '^@vue/core$|^vue$' && ! echo "$deps" | grep -q '^nuxt$'; } && echo "vue" || true
+    { echo "$deps" | grep -qE '^react$' && ! echo "$deps" | grep -q '^next$'; } && echo "react" || true
+    echo "$deps" | grep -qE '^@angular/core$' && echo "angular" || true
 
     # Backend frameworks
-    echo "$deps" | grep -qE '^@nestjs/core$' && echo "nestjs"
-    echo "$deps" | grep -qE '^express$' && echo "express"
-    echo "$deps" | grep -qE '^fastify$' && echo "fastify"
+    echo "$deps" | grep -qE '^@nestjs/core$' && echo "nestjs" || true
+    echo "$deps" | grep -qE '^express$' && echo "express" || true
+    echo "$deps" | grep -qE '^fastify$' && echo "fastify" || true
 
     # ORMs / BDD
-    echo "$deps" | grep -qE '^@prisma/client$|^prisma$' && echo "prisma"
-    echo "$deps" | grep -qE '^typeorm$' && echo "typeorm"
-    echo "$deps" | grep -qE '^mongoose$' && echo "mongoose"
+    echo "$deps" | grep -qE '^@prisma/client$|^prisma$' && echo "prisma" || true
+    echo "$deps" | grep -qE '^typeorm$' && echo "typeorm" || true
+    echo "$deps" | grep -qE '^mongoose$' && echo "mongoose" || true
 
     # Outils de test
-    echo "$deps" | grep -qE '^vitest$' && echo "vitest"
-    echo "$deps" | grep -qE '^jest$|^@jest/core$' && echo "jest"
-    echo "$deps" | grep -qE '^@playwright/test$|^playwright$' && echo "playwright"
-    echo "$deps" | grep -qE '^cypress$' && echo "cypress"
+    echo "$deps" | grep -qE '^vitest$' && echo "vitest" || true
+    echo "$deps" | grep -qE '^jest$|^@jest/core$' && echo "jest" || true
+    echo "$deps" | grep -qE '^@playwright/test$|^playwright$' && echo "playwright" || true
+    echo "$deps" | grep -qE '^cypress$' && echo "cypress" || true
 
     # Spec API
     if [ -f "${project_path}/openapi.yaml" ] || \
@@ -211,7 +261,7 @@ detect_stack() {
     fi
 
     # Mobile
-    echo "$deps" | grep -qE '^react-native$' && echo "react-native"
+    echo "$deps" | grep -qE '^react-native$' && echo "react-native" || true
   fi
 
   # ── Python (pyproject.toml / requirements.txt) ──────────────────────────
@@ -222,18 +272,18 @@ detect_stack() {
     [ -f "$pyproject" ] && py_deps=$(cat "$pyproject" 2>/dev/null)
     [ -f "$requirements" ] && py_deps="${py_deps}$(cat "$requirements" 2>/dev/null)"
 
-    echo "$py_deps" | grep -qiE 'django' && echo "django"
-    echo "$py_deps" | grep -qiE 'fastapi' && echo "fastapi"
-    echo "$py_deps" | grep -qiE 'sqlalchemy' && echo "sqlalchemy"
-    echo "$py_deps" | grep -qiE '^pandas|pandas==' && echo "pandas"
-    echo "$py_deps" | grep -qiE '^dbt-|dbt==' && echo "dbt"
-    echo "$py_deps" | grep -qiE 'apache-airflow|airflow' && echo "airflow"
-    echo "$py_deps" | grep -qiE 'pyspark' && echo "pyspark"
+    echo "$py_deps" | grep -qiE 'django' && echo "django" || true
+    echo "$py_deps" | grep -qiE 'fastapi' && echo "fastapi" || true
+    echo "$py_deps" | grep -qiE 'sqlalchemy' && echo "sqlalchemy" || true
+    echo "$py_deps" | grep -qiE '^pandas|pandas==' && echo "pandas" || true
+    echo "$py_deps" | grep -qiE '^dbt-|dbt==' && echo "dbt" || true
+    echo "$py_deps" | grep -qiE 'apache-airflow|airflow' && echo "airflow" || true
+    echo "$py_deps" | grep -qiE 'pyspark' && echo "pyspark" || true
   fi
 
   # ── Ruby (Gemfile) ───────────────────────────────────────────────────────
   if [ -f "$gemfile" ]; then
-    grep -q 'rails' "$gemfile" 2>/dev/null && echo "rails"
+    grep -q 'rails' "$gemfile" 2>/dev/null && echo "rails" || true
   fi
 
   # ── Java / Kotlin (build.gradle / pom.xml) ───────────────────────────────
@@ -243,13 +293,13 @@ detect_stack() {
     [ -f "$build_gradle_kts" ] && jvm_deps="${jvm_deps}$(cat "$build_gradle_kts" 2>/dev/null)"
     [ -f "$pom_xml" ] && jvm_deps="${jvm_deps}$(cat "$pom_xml" 2>/dev/null)"
 
-    echo "$jvm_deps" | grep -qiE 'spring-boot|spring.boot' && echo "spring"
-    echo "$jvm_deps" | grep -qiE 'jetpack.compose|compose.bom' && echo "kotlin"
+    echo "$jvm_deps" | grep -qiE 'spring-boot|spring.boot' && echo "spring" || true
+    echo "$jvm_deps" | grep -qiE 'jetpack.compose|compose.bom' && echo "kotlin" || true
   fi
 
   # ── Dart / Flutter (pubspec.yaml) ────────────────────────────────────────
   if [ -f "$pubspec" ]; then
-    grep -q 'flutter' "$pubspec" 2>/dev/null && echo "flutter"
+    grep -q 'flutter' "$pubspec" 2>/dev/null && echo "flutter" || true
   fi
 
   # ── Infrastructure (fichiers de config) ──────────────────────────────────
@@ -258,19 +308,19 @@ detect_stack() {
   { [ -d "${project_path}/.github/workflows" ]; } && echo "github-actions" || true
   { [ -f "${project_path}/.gitlab-ci.yml" ]; } && echo "gitlab-ci" || true
 
-  # Terraform
-  { find "$project_path" -maxdepth 3 -name "*.tf" 2>/dev/null | grep -q .; } && echo "terraform" || true
+  # Terraform — prune les dossiers lourds
+  { find "$project_path" "${_prune_args[@]}" -name "*.tf" -print 2>/dev/null | grep -q .; } && echo "terraform" || true
 
-  # Kubernetes
-  { find "$project_path" -maxdepth 4 \( -name "*.yaml" -o -name "*.yml" \) 2>/dev/null | \
+  # Kubernetes — prune + limiter à maxdepth 4
+  { find "$project_path" "${_prune_args[@]}" \( -name "*.yaml" -o -name "*.yml" \) -print 2>/dev/null | \
     xargs grep -l 'kind: Deployment\|kind: Service\|kind: Ingress' 2>/dev/null | grep -q .; } && echo "kubernetes" || true
 
-  # Helm
+  # Helm — prune
   { [ -f "${project_path}/Chart.yaml" ] || \
-    find "$project_path" -maxdepth 3 -name "Chart.yaml" 2>/dev/null | grep -q .; } && echo "helm" || true
+    find "$project_path" "${_prune_args[@]}" -name "Chart.yaml" -print 2>/dev/null | grep -q .; } && echo "helm" || true
 
-  # ArgoCD
-  { find "$project_path" -maxdepth 4 \( -name "*.yaml" -o -name "*.yml" \) 2>/dev/null | \
+  # ArgoCD — prune
+  { find "$project_path" "${_prune_args[@]}" \( -name "*.yaml" -o -name "*.yml" \) -print 2>/dev/null | \
     xargs grep -l 'argoproj.io\|kind: Application' 2>/dev/null | grep -q .; } && echo "argocd" || true
 }
 
@@ -330,6 +380,50 @@ resolve_stack_skills() {
       done <<< "$skills"
     done <<< "$allowed_categories"
   done <<< "$stacks_list"
+}
+
+# Précalcule en une seule passe jq tous les stack skills pour une liste de stacks détectées.
+# Retourne une chaîne "agent_id:skill_path\n..." utilisable par _get_precomputed_stack_skills.
+# Signature : precompute_stack_skills STACKS_NEWLINE_SEP CONFIG_FILE
+# Exemple d'usage :
+#   _cached=$(precompute_stack_skills "$detected_stacks" config/stack-skills.json)
+#   while IFS= read -r sk; do ...; done < <(_get_precomputed_stack_skills "developer-api" "$_cached")
+precompute_stack_skills() {
+  local stacks_list="$1"
+  local config_file="$2"
+
+  [ -z "$stacks_list" ] && return 0
+  [ -f "$config_file" ] || return 0
+  command -v jq &>/dev/null || return 0
+
+  # Construire un tableau jq de stacks depuis la liste bash
+  local stacks_json
+  stacks_json=$(printf '%s\n' "$stacks_list" | jq -R . | jq -s .)
+
+  # En une seule invocation jq : pour chaque agent qui a un _agent_scope,
+  # parcourir les catégories autorisées, puis les stacks détectées,
+  # et émettre "agent_id:skill_path" pour chaque skill trouvé.
+  jq -r --argjson stacks "$stacks_json" '
+    . as $conf |
+    ($conf._agent_scope // {}) | to_entries[] |
+    .key as $agent |
+    .value[] as $cat |
+    $stacks[] as $stack |
+    ($conf[$cat][$stack] // [])[] |
+    "\($agent):\(.)"
+  ' "$config_file" 2>/dev/null | sort -u
+}
+
+# Filtre les lignes "agent_id:skill" précalculées pour un agent donné.
+# Signature : _get_precomputed_stack_skills AGENT_ID PRECOMPUTED_STRING
+_get_precomputed_stack_skills() {
+  local agent_id="$1"
+  local precomputed="$2"
+  [ -z "$precomputed" ] && return 0
+  local prefix="${agent_id}:"
+  while IFS= read -r line; do
+    [ "${line#"$prefix"}" != "$line" ] && printf '%s\n' "${line#"$prefix"}"
+  done <<< "$precomputed"
 }
 
 # Construit le contenu final : corps de l'agent + skills injectés → stdout

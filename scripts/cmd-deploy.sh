@@ -73,10 +73,14 @@ _cmd_deploy_check() {
     return 0
   fi
 
-  # Détecter les stacks une seule fois pour le projet (invariant pour tous les agents)
-  local _check_detected_stacks=""
+  # Détecter les stacks et précalculer les stack skills — une seule passe jq pour tout le projet
+  local _check_detected_stacks="" _check_precomputed_stack_skills=""
   if [ -n "$project_id" ] && [ -f "$HUB_DIR/config/stack-skills.json" ]; then
     _check_detected_stacks=$(detect_stack "$deploy_dir" 2>/dev/null | sort -u || true)
+    if [ -n "$_check_detected_stacks" ]; then
+      _check_precomputed_stack_skills=$(precompute_stack_skills \
+        "$_check_detected_stacks" "$HUB_DIR/config/stack-skills.json")
+    fi
   fi
 
   for tgt in "${targets[@]}"; do
@@ -94,69 +98,65 @@ _cmd_deploy_check() {
     while IFS= read -r agent_file; do
       [ -f "$agent_file" ] || continue
 
-      # Vérifier si l'agent supporte cette cible
-      agent_supports_target "$agent_file" "$tgt" || continue
+      # Lire le frontmatter en une seule passe (builtins bash uniquement — pas de subprocess)
+      read_agent_frontmatter "$agent_file"
 
-      local agent_id; agent_id=$(get_agent_id "$agent_file")
+      # Vérifier si l'agent supporte cette cible via _fm_targets (pas de subprocess)
+      case "$_fm_targets" in *"$tgt"*) ;; *) continue ;; esac
+
+      local agent_id="$_fm_id"
+      [ -z "$agent_id" ] && agent_id=$(basename "$agent_file" .md)
 
       # Filtrer les agents non sélectionnés pour ce projet
       should_deploy_agent "$project_id" "$agent_id" || continue
 
       # Nom du fichier généré selon la cible
-      local gen_file=""
-      case "$tgt" in
-        opencode|claude-code) gen_file="$gen_dir/${agent_id}.md" ;;
-      esac
+      local gen_file="$gen_dir/${agent_id}.md"
 
       if [ ! -f "$gen_file" ]; then
-        echo -e "  ${RED}✗ MANQUANT${RESET}  $agent_id → $(basename "$gen_file")"
+        echo -e "  ${RED}✗ MANQUANT${RESET}  $agent_id → ${agent_id}.md"
         stale_count=$((stale_count + 1))
         continue
       fi
 
-      # Timestamp du fichier généré
-      local gen_mtime; gen_mtime=$(_get_mtime "$gen_file")
-
-      # Timestamp le plus récent parmi : agent source + tous ses skills
-      local max_src_mtime=0
+      # Vérifier si une source quelconque est plus récente que le fichier généré
+      # Utilise l'opérateur bash -nt (newer than) : builtin, pas de subprocess
       local stale_reason=""
 
-      local agent_mtime; agent_mtime=$(_get_mtime "$agent_file")
-      [ "$agent_mtime" -gt "$max_src_mtime" ] && max_src_mtime=$agent_mtime
+      # Agent source plus récent que le déployé ?
+      if [ "$agent_file" -nt "$gen_file" ]; then
+        stale_reason="agent source modifié"
+      fi
 
-      # Vérifier chaque skill de l'agent (déclarés dans le frontmatter)
-      while IFS= read -r skill; do
-        [ -z "$skill" ] && continue
-        local skill_file="$SKILLS_DIR/${skill}.md"
-        [ -f "$skill_file" ] || continue
-        local skill_mtime; skill_mtime=$(_get_mtime "$skill_file")
-        if [ "$skill_mtime" -gt "$max_src_mtime" ]; then
-          max_src_mtime=$skill_mtime
-          stale_reason="skill: $skill"
-        fi
-      done < <(extract_frontmatter_list "$agent_file" "skills")
+      # Un skill déclaré dans le frontmatter est-il plus récent ?
+      # _fm_skills est déjà en mémoire — _fm_list_items utilise tr (pas de sed)
+      if [ -z "$stale_reason" ] && [ -n "$_fm_skills" ]; then
+        while IFS= read -r skill; do
+          [ -z "$skill" ] && continue
+          local skill_file="$SKILLS_DIR/${skill}.md"
+          [ -f "$skill_file" ] || continue
+          if [ "$skill_file" -nt "$gen_file" ]; then
+            stale_reason="skill: $skill"
+            break
+          fi
+        done < <(_fm_list_items "$_fm_skills")
+      fi
 
-      # Vérifier les stack skills dynamiques si un projet est ciblé
-      if [ -n "$project_id" ] && [ -n "$_check_detected_stacks" ]; then
-        local stack_skill
+      # Un stack skill dynamique est-il plus récent ?
+      if [ -z "$stale_reason" ] && [ -n "$_check_precomputed_stack_skills" ]; then
         while IFS= read -r stack_skill; do
           [ -z "$stack_skill" ] && continue
           local sf="$SKILLS_DIR/${stack_skill}.md"
           [ -f "$sf" ] || continue
-          local sf_mtime; sf_mtime=$(_get_mtime "$sf")
-          if [ "$sf_mtime" -gt "$max_src_mtime" ]; then
-            max_src_mtime=$sf_mtime
+          if [ "$sf" -nt "$gen_file" ]; then
             stale_reason="stack-skill: $stack_skill"
+            break
           fi
-        done < <(resolve_stack_skills "$agent_id" "$_check_detected_stacks" "$HUB_DIR/config/stack-skills.json")
+        done < <(_get_precomputed_stack_skills "$agent_id" "$_check_precomputed_stack_skills")
       fi
 
-      if [ "$agent_mtime" -gt "$gen_mtime" ] && [ "$max_src_mtime" -eq "$agent_mtime" ]; then
-        stale_reason="agent source modifié"
-      fi
-
-      if [ "$max_src_mtime" -gt "$gen_mtime" ]; then
-        echo -e "  ${YELLOW}⚠ OBSOLÈTE${RESET}  $agent_id → $(basename "$gen_file")  (${stale_reason:-source modifié})"
+      if [ -n "$stale_reason" ]; then
+        echo -e "  ${YELLOW}⚠ OBSOLÈTE${RESET}  $agent_id → $(basename "$gen_file")  ($stale_reason)"
         stale_count=$((stale_count + 1))
       else
         echo -e "  ${GREEN}✓ À JOUR${RESET}    $agent_id → $(basename "$gen_file")"
