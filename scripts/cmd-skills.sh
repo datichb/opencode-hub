@@ -177,6 +177,8 @@ cmd_add() {
 
 ##
 # Liste tous les skills disponibles : locaux (skills/) et externes (skills/external/).
+# Les skills génériques et les skills spécifiques aux stacks (developer/stacks/)
+# sont affichés dans des groupes distincts pour une meilleure lisibilité.
 ##
 cmd_list() {
   log_title "$(t skills.available)"
@@ -184,11 +186,75 @@ cmd_list() {
 
   echo -e "${BOLD}$(t skills.local)${RESET}"
   local found_local=0
+
+  # Collecter tous les skills locaux (hors external/)
+  local all_local_skills=()
   while IFS= read -r f; do
-    echo "  ${f#$HUB_DIR/skills/}" | sed 's/\.md$//'
+    all_local_skills+=("${f#$HUB_DIR/skills/}")
     found_local=1
   done < <(find "$HUB_DIR/skills" -name "*.md" -not -path "*/external/*" -type f 2>/dev/null | sort)
-  [ "$found_local" -eq 0 ] && echo "  $(t skills.none_local)"
+
+  if [ "$found_local" -eq 0 ]; then
+    echo "  $(t skills.none_local)"
+  else
+    # Séparer les skills stacks des skills génériques
+    local generic_skills=()
+    local stack_skills=()
+    for skill in "${all_local_skills[@]}"; do
+      skill="${skill%.md}"
+      if [[ "$skill" == *"/stacks/"* ]]; then
+        stack_skills+=("$skill")
+      else
+        generic_skills+=("$skill")
+      fi
+    done
+
+    # Afficher les skills génériques groupés par domaine de premier niveau
+    local current_domain=""
+    for skill in "${generic_skills[@]}"; do
+      local domain
+      domain=$(echo "$skill" | cut -d'/' -f1)
+      if [ "$domain" != "$current_domain" ]; then
+        [ -n "$current_domain" ] && echo ""
+        echo -e "  ${BOLD}${domain}/${RESET}"
+        current_domain="$domain"
+      fi
+      echo "    ${skill}"
+    done
+
+    # Afficher les skills spécifiques aux stacks dans une section dédiée
+    if [ "${#stack_skills[@]}" -gt 0 ]; then
+      echo ""
+      echo -e "  ${BOLD}developer/stacks/${RESET}  ${YELLOW}(injection dynamique à oc deploy)${RESET}"
+
+      local current_category=""
+      for skill in "${stack_skills[@]}"; do
+        # Extraire la catégorie depuis le nom du fichier
+        local filename
+        filename=$(basename "$skill")
+        local category=""
+        case "$filename" in
+          dev-standards-typescript*|dev-standards-python*)  category="langages" ;;
+          dev-standards-vue*|dev-standards-react*|dev-standards-next*|dev-standards-nuxt*|dev-standards-angular*) category="frontend" ;;
+          dev-standards-nestjs*|dev-standards-express*|dev-standards-django*|dev-standards-fastapi*|dev-standards-laravel*|dev-standards-rails*|dev-standards-springboot*) category="backend" ;;
+          dev-standards-prisma*|dev-standards-typeorm*|dev-standards-sqlalchemy*|dev-standards-mongodb*) category="orm / bdd" ;;
+          dev-standards-openapi*) category="api-spec" ;;
+          dev-standards-vitest*|dev-standards-jest*|dev-standards-playwright*|dev-standards-cypress*) category="test" ;;
+          dev-standards-react-native*|dev-standards-flutter*|dev-standards-swift*|dev-standards-kotlin*) category="mobile" ;;
+          dev-standards-pandas*|dev-standards-dbt*|dev-standards-airflow*|dev-standards-pyspark*) category="data / ml" ;;
+          dev-standards-docker*|dev-standards-github-actions*|dev-standards-gitlab-ci*) category="devops / ci-cd" ;;
+          dev-standards-terraform*|dev-standards-kubernetes*|dev-standards-helm*|dev-standards-argocd*) category="platform / infra" ;;
+          *) category="autres" ;;
+        esac
+
+        if [ "$category" != "$current_category" ]; then
+          echo -e "    ${DIM}── ${category}${RESET}"
+          current_category="$category"
+        fi
+        echo "      ${skill}"
+      done
+    fi
+  fi
 
   echo ""
   echo -e "${BOLD}$(t skills.external)${RESET}"
