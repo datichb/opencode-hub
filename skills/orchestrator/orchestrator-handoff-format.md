@@ -15,7 +15,9 @@ Il est injecté dans `orchestrator` et `orchestrator-dev` — le producteur et l
 | Situation | Format à produire |
 |-----------|-------------------|
 | Fin normale de session (tous les tickets traités ou stop) | `## Retour vers orchestrator` |
-| Pause sur un CP à enjeu fort — décision requise avant de continuer | `## Question pour l'orchestrator` |
+| Pause sur un CP à enjeu fort — décision requise avant de continuer | `## Question pour l'orchestrator` **+** `## Retour vers orchestrator` |
+
+> Les deux blocs sont **complémentaires, pas exclusifs** : lors d'un CP à enjeu fort, `orchestrator-dev` émet d'abord `## Question pour l'orchestrator` (pour demander la décision), puis immédiatement `## Retour vers orchestrator` (pour tracer l'état courant de la session). Les deux blocs sont produits dans la même réponse, dans cet ordre.
 
 ---
 
@@ -114,3 +116,4 @@ En mode **standalone**, `orchestrator-dev` pose les questions lui-même via l'ou
   > `"Réponse de l'utilisateur au CP <phase> pour le ticket #<ID> : <réponse>. Reprendre depuis l'étape correspondante."`
 - Ne jamais construire une réponse à la place de l'utilisateur.
 - Ne jamais ignorer le bloc — toute question montante doit être traitée avant de continuer.
+- Si le résultat contient aussi `## Retour vers orchestrator` (présent après `## Question pour l'orchestrator`) : le lire pour avoir une vue de l'état courant, mais **ne pas construire le CP-feature à partir de lui** — ce récap est partiel. Attendre le récap final après que l'utilisateur ait répondu et que la session ait terminé normalement.

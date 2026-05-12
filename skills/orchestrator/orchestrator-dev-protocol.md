@@ -121,6 +121,11 @@ Enregistrer le mode pour toute la session.
 
 ### Invoqué depuis l'orchestrateur feature
 
+**Détection obligatoire au démarrage :** si le prompt contient `[CONTEXTE] Invoqué depuis l'orchestrateur feature`, alors :
+1. Mémoriser : **CONTEXTE = orchestrateur_feature** — cette valeur reste active pour toute la session.
+2. Confirmer explicitement :
+   > `[orchestrator-dev] Contexte détecté : invoqué depuis l'orchestrateur feature. Le bloc ## Retour vers orchestrator sera produit en fin de session.`
+
 Le mode et la liste des tickets sont transmis en paramètre.
 Afficher le récapitulatif des tickets reçus et démarrer directement sans redemander le mode.
 
@@ -168,7 +173,7 @@ Afficher le ticket :
   - **Oui — démarrer** → passer à l'étape 1b
   - **Voir le détail** → exécuter `bd show <ID>`, afficher la sortie intégrale, puis re-poser CP-1 (boucle — l'utilisateur peut demander le détail autant de fois que nécessaire)
   - **Passer** → ticket ignoré, ticket suivant
-  - **Stop** → récap de l'état courant et arrêt
+  - **Stop** → aller directement à la section **Récap global — Fin de session** (afficher le récap et produire le bloc `## Retour vers orchestrator` si CONTEXTE = orchestrateur_feature)
 
 - **`semi-auto` / `auto`** → enchaîner directement :
   ```
@@ -321,6 +326,8 @@ question({
 ```
 
 **En mode invoqué depuis l'orchestrator** → produire le bloc `## Question pour l'orchestrator` et arrêter la session.
+
+> ⚠️ **Si CONTEXTE = orchestrateur_feature** : ajouter le bloc `## Retour vers orchestrator` **immédiatement après** le bloc `## Question pour l'orchestrator`, avant de clore la session. Les deux blocs sont émis ensemble.
 
 Pour remplir le `### Contexte complet` du bloc, utiliser :
 - Le rapport de review intégral
@@ -537,6 +544,8 @@ question({
 
 **En mode invoqué depuis l'orchestrator** → produire le bloc `## Question pour l'orchestrator` et arrêter :
 
+> ⚠️ **Si CONTEXTE = orchestrateur_feature** : ajouter le bloc `## Retour vers orchestrator` **immédiatement après** le bloc `## Question pour l'orchestrator`, avant de clore la session. Les deux blocs sont émis ensemble.
+
 ```
 ---
 
@@ -596,6 +605,8 @@ question({
 ```
 
 **En mode invoqué depuis l'orchestrator** → produire le bloc `## Question pour l'orchestrator` et arrêter :
+
+> ⚠️ **Si CONTEXTE = orchestrateur_feature** : ajouter le bloc `## Retour vers orchestrator` **immédiatement après** le bloc `## Question pour l'orchestrator`, avant de clore la session. Les deux blocs sont émis ensemble.
 
 ```
 ---
@@ -657,6 +668,8 @@ question({
 ```
 
 **En mode invoqué depuis l'orchestrator** → produire le bloc `## Question pour l'orchestrator` et arrêter :
+
+> ⚠️ **Si CONTEXTE = orchestrateur_feature** : ajouter le bloc `## Retour vers orchestrator` **immédiatement après** le bloc `## Question pour l'orchestrator`, avant de clore la session. Les deux blocs sont émis ensemble.
 
 ```
 ---

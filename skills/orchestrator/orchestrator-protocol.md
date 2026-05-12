@@ -347,6 +347,8 @@ avant de router. Signaler à l'utilisateur et demander confirmation.
    - Le mode de workflow choisi en CP-0
    - Le contexte complet : specs UX/UI validées (champ `### Spec produite`) + contraintes d'implémentation (champ `### Contraintes d'implémentation`) + rapports d'audit (champ `### Recommandations priorisées`) si applicable — transmettre intégralement, sans résumer
    - Les tickets portant le label `tdd` (déjà identifiés au CP-0)
+   - **Le marqueur de contexte d'invocation (obligatoire) :**
+     > `[CONTEXTE] Invoqué depuis l'orchestrateur feature. Tu dois produire le bloc ## Retour vers orchestrator à la fin de ta session — sans exception, même en cas de stop, de ticket bloqué ou de session partielle.`
 
 3. orchestrator-dev pilote l'implémentation complète (developer-* → QA → review).
 
