@@ -330,11 +330,11 @@ in PHASE 0, the planner offers 3 options to the user:
 |--|--|
 | **Label** | Documentarian |
 | **File** | `agents/documentation/documentarian.md` |
-| **Skills** | `developer/dev-standards-git`, `developer/beads-plan`, `developer/beads-dev`, `documentarian/doc-protocol`, `documentarian/doc-standards`, `documentarian/doc-adr`, `documentarian/doc-api`, `documentarian/doc-changelog`, `posture/expert-posture`, `posture/tool-question` |
-| **Invocation** | `"Document [topic]"` / `"Create an ADR for [decision]"` / `"Update the CHANGELOG"` / `"What's missing in the docs?"` |
+| **Skills** | `developer/dev-standards-git`, `developer/beads-plan`, `developer/beads-dev`, `documentarian/doc-protocol`, `documentarian/doc-standards`, `documentarian/doc-adr`, `documentarian/doc-api`, `documentarian/doc-changelog`, `documentarian/doc-slides`, `posture/expert-posture`, `posture/tool-question` |
+| **Invocation** | `"Document [topic]"` / `"Create an ADR for [decision]"` / `"Update the CHANGELOG"` / `"What's missing in the docs?"` / `"Create a presentation for [topic]"` |
 
 Writes and updates technical, functional, architectural documentation, API docs,
-and changelogs. Systematically explores existing structure before writing.
+changelogs, and Marp presentations. Systematically explores existing structure before writing.
 Adapts to the format in place — recommends improvements without imposing them.
 Never changes a format without explicit confirmation.
 

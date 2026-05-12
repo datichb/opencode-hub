@@ -337,12 +337,12 @@ en PHASE 0, le planner propose 3 options à l'utilisateur :
 |--|--|
 | **Label** | Documentarian |
 | **Fichier** | `agents/documentation/documentarian.md` |
-| **Skills** | `developer/dev-standards-git`, `developer/beads-plan`, `developer/beads-dev`, `documentarian/doc-protocol`, `documentarian/doc-standards`, `documentarian/doc-adr`, `documentarian/doc-api`, `documentarian/doc-changelog`, `posture/expert-posture`, `posture/tool-question` |
-| **Invocation** | `"Documente [sujet]"` / `"Crée un ADR pour [décision]"` / `"Mets à jour le CHANGELOG"` / `"Qu'est-ce qui manque dans la doc ?"` |
+| **Skills** | `developer/dev-standards-git`, `developer/beads-plan`, `developer/beads-dev`, `documentarian/doc-protocol`, `documentarian/doc-standards`, `documentarian/doc-adr`, `documentarian/doc-api`, `documentarian/doc-changelog`, `documentarian/doc-slides`, `posture/expert-posture`, `posture/tool-question` |
+| **Invocation** | `"Documente [sujet]"` / `"Crée un ADR pour [décision]"` / `"Mets à jour le CHANGELOG"` / `"Qu'est-ce qui manque dans la doc ?"` / `"Crée une présentation pour [sujet]"` |
 
-Rédige et met à jour la documentation technique, fonctionnelle, architecturale, API
-et les changelogs. Explore systématiquement la structure existante avant d'écrire.
-S'adapte au format en place — recommande des améliorations sans les imposer.
+Rédige et met à jour la documentation technique, fonctionnelle, architecturale, API,
+les changelogs et les présentations Marp. Explore systématiquement la structure existante
+avant d'écrire. S'adapte au format en place — recommande des améliorations sans les imposer.
 Ne change jamais un format sans confirmation explicite.
 
 Principe directeur : **explorer → adapter ou proposer → attendre si nécessaire → écrire**.

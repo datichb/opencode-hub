@@ -11,7 +11,30 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 
 ### Added
 
-- **Système de handoff inter-agents** — 9 skills de contrat de communication formalisés (voir [ADR-009](docs/architecture/adr/009-inter-agent-handoff-contracts.fr.md)) :
+- **Skill `documentarian/doc-slides`** — capacité de génération de présentations Marp pour l'agent `documentarian` :
+  - 4 templates prêts à l'emploi : `tech-demo`, `product-pitch`, `retrospective`, `onboarding`
+  - Directives Marp complètes : frontmatter (`marp: true`, `theme`, `paginate`, `size`), directives locales (`_class`, `_backgroundColor`, `_paginate: false`), séparateurs `---`
+  - Bonnes pratiques intégrées : 1 idée par slide, max 5 bullets, titres actionnables, taille recommandée par type de présentation
+  - Exploration obligatoire avant génération : slides existants, thème custom, `.marprc`
+  - Détection automatique de Marp CLI post-génération (`which marp` / `npx @marp-team/marp-cli`) — proposition de compilation HTML/PDF via `question()` si disponible
+  - Fallback si Marp absent : instructions claires (npx, installation globale, extension VS Code, web.marp.app)
+  - Nommage normalisé (`kebab-case` + date ISO courte) et emplacement adaptatif (`docs/presentations/`, `docs/slides/`, ou racine)
+
+### Changed
+
+- **Agent `documentarian`** — frontmatter `skills:` enrichi avec `documentarian/doc-slides`
+- **Agent `documentarian`** — section "Ce que tu fais" : ajout de la génération de présentations Marp
+- **Agent `documentarian`** — table d'exemples : 2 nouveaux cas (`"Crée une présentation pour la démo v2.0"`, `"Slides de retrospective sprint 42"`)
+- **Skill `documentarian/doc-protocol`** — tableau de routing : ajout de la ligne `slides, présentation, deck, pitch, diaporama, démo visuelle, retro, onboarding formation` → `doc-slides`
+
+### Documentation
+
+- `docs/architecture/skills.fr.md` et `skills.en.md` : ajout de `documentarian/doc-slides` dans le domaine `documentarian/`, mise à jour de la matrice de dépendances
+- `docs/architecture/agents.fr.md` et `agents.en.md` : mise à jour des skills et de la description de l'agent `documentarian`
+
+---
+
+ — 9 skills de contrat de communication formalisés (voir [ADR-009](docs/architecture/adr/009-inter-agent-handoff-contracts.fr.md)) :
   - `auditor/audit-handoff-format` : bloc structuré `## Retour vers orchestrator` pour les 7 agents `auditor-*` — périmètre audité, tableau des vulnérabilités par sévérité, recommandations priorisées avec effort estimé, risque résiduel, statut (`corrections-requises` / `acceptable` / `bloquant`)
   - `design/design-handoff-format` : bloc structuré pour `ux-designer` et `ui-designer` — spec produite intégrale, contraintes d'implémentation, points ouverts, alternatives écartées, statut (`spec-complète` / `spec-partielle` / `bloqué`)
   - `developer/developer-handoff-format` : bloc structuré pour les 9 `developer-*` → `orchestrator-dev` — fichiers modifiés, tests écrits, critères d'acceptance cochés, points d'attention pour la review, blocages rencontrés, statut (`implémenté` / `partiellement-implémenté` / `bloqué`)

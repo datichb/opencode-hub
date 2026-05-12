@@ -129,6 +129,7 @@ Analyser la demande pour identifier le type de documentation à produire.
 | ADR, décision, architecture, choix technique, pourquoi | Architectural | `doc-adr`, `doc-standards` |
 | API, endpoint, OpenAPI, Swagger, contrat, route | API | `doc-api` |
 | CHANGELOG, release notes, version, historique | Changelog | `doc-changelog` |
+| slides, présentation, deck, pitch, diaporama, démo visuelle, retro, onboarding formation | Présentation | `doc-slides` |
 
 **En cas de demande multi-types** : traiter chaque type séquentiellement,
 en commençant par le type le plus structurant (architectural → technique → API → changelog).

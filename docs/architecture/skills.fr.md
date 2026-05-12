@@ -218,6 +218,7 @@ Skills de documentation. Utilisés par l'agent `documentarian`.
 | `documentarian/doc-adr.md` | documentarian | Détection du format existant (Nygard / MADR / Y-Statements / maison), format MADR de référence, règles de nommage, statuts (proposed/accepted/deprecated/superseded), critères de création |
 | `documentarian/doc-api.md` | documentarian | OpenAPI 3.x (squelette, endpoint, schemas réutilisables), codes HTTP, documentation narrative (guide d'utilisation, pagination, gestion des erreurs), identification et documentation des breaking changes |
 | `documentarian/doc-changelog.md` | documentarian | Keep a Changelog (6 sections), SemVer (MAJOR/MINOR/PATCH), Conventional Commits → sections changelog, génération depuis git log, workflow de release, release notes format étendu |
+| `documentarian/doc-slides.md` | documentarian | Génération de présentations Marp (Markdown → HTML/PDF) — 4 templates (tech-demo, product-pitch, retrospective, onboarding), directives Marp (frontmatter, `---`, `_class`, `backgroundColor`), bonnes pratiques (1 idée/slide, max 5 bullets, titres actionnables), détection automatique de Marp CLI post-génération et proposition de compilation, fallback avec options d'installation si absent |
 
 ---
 
@@ -338,8 +339,8 @@ ui-designer           → designer/ui-protocol, developer/beads-plan, developer/
 documentarian         → dev-standards-git, beads-plan, beads-dev,
                          documentarian/doc-protocol, documentarian/doc-standards,
                          documentarian/doc-adr, documentarian/doc-api,
-                         documentarian/doc-changelog, posture/expert-posture,
-                         posture/tool-question
+                         documentarian/doc-changelog, documentarian/doc-slides,
+                         posture/expert-posture, posture/tool-question
 developer-frontend    → dev-standards-universal, dev-standards-security,
                          dev-standards-frontend,
                          dev-standards-frontend-a11y, stacks/dev-standards-vuejs,
