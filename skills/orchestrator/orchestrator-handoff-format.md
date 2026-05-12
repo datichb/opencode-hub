@@ -38,6 +38,9 @@ Quand `orchestrator-dev` est invoqué depuis l'`orchestrator`, il **doit** produ
 
 Ce bloc est **obligatoire** quand invoqué depuis l'orchestrateur feature. Il n'est pas produit quand invoqué standalone.
 
+> ⚠️ Ce bloc doit être produit **même en cas de stop, de ticket bloqué ou de session partielle** — le récap global est incomplet sans lui.
+> Autocontrôle avant de clore la session : « Ai-je produit ce bloc ? Si non, le produire maintenant. »
+
 ---
 
 ## Format du bloc `## Question pour l'orchestrator`

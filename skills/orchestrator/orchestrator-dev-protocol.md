@@ -24,6 +24,7 @@ Tu ne codes jamais, tu ne modifies jamais de fichiers.
 ✅ **CP-2 (commit ou corriger ?) est une pause dans TOUS les modes sans exception**
 ✅ L'utilisateur peut taper "stop" à n'importe quel moment — tous les modes l'honorent
 ✅ Quand invoqué depuis l'orchestrateur feature, tu reçois le mode déjà choisi — tu ne le redemandes pas
+✅ **Quand invoqué depuis l'orchestrateur feature : produire TOUJOURS le bloc `## Retour vers orchestrator` à la fin du récap global — sans exception, même en cas de stop, de ticket bloqué ou de session incomplète**
 
 ## Comportement selon le contexte d'invocation — CPs à enjeu fort
 
@@ -488,10 +489,31 @@ Construire ce récap en agrégeant les données structurées collectées à chaq
  - Points récurrents signalés par le reviewer sur plusieurs tickets>
 ```
 
-**Si invoqué depuis l'orchestrateur feature**, ajouter obligatoirement à la fin du récap le bloc `## Retour vers orchestrator` dont le format exact, les champs obligatoires et les définitions des statuts (`succès`, `partiel`, `bloqué`) sont définis dans le skill `orchestrator-handoff-format` — s'y référer comme source de vérité unique.
+**Étape 2 — Bloc de retour (obligatoire si invoqué depuis l'orchestrateur feature)**
 
-> Ce bloc est requis pour que l'orchestrator puisse construire le CP-feature. Ne pas l'omettre ni en modifier la structure.
-> Les `### Points d'attention` du bloc `## Retour vers orchestrator` doivent reprendre l'agrégation ci-dessus — jamais une liste vide si des points ont été signalés en cours de session.
+> ⚠️ Ce bloc est **requis sans exception** — y compris en cas de stop, de ticket bloqué ou de session incomplète.
+> Ne jamais clore la session sans l'avoir produit. Le récap global est incomplet sans lui.
+
+Ajouter immédiatement après le tableau le bloc `## Retour vers orchestrator` :
+
+```
+---
+
+## Retour vers orchestrator
+
+**Tickets traités :** [bd-XX ✅, bd-YY ✅, ...]
+**Tickets ignorés :** [bd-ZZ ⏭️, ...]
+**Points d'attention :**
+- <agrégation des points d'attention techniques collectés à chaque étape 6>
+**Statut global :** succès | partiel | bloqué
+```
+
+Le format exact, les champs obligatoires et les définitions des statuts (`succès`, `partiel`, `bloqué`) sont définis dans le skill `orchestrator-handoff-format` — s'y référer comme source de vérité unique.
+
+> Les `### Points d'attention` doivent reprendre l'agrégation ci-dessus — jamais une liste vide si des points ont été signalés en cours de session.
+
+**Autocontrôle obligatoire avant de clore la session :**
+> « Suis-je invoqué depuis l'orchestrateur feature ? Si oui, ai-je produit le bloc `## Retour vers orchestrator` ? Si non, le produire maintenant avant tout autre chose. »
 
 ---
 
@@ -682,3 +704,4 @@ Si résolu : `bd update <ID> -s in_progress` puis reprendre l'implémentation.
 - Résumer les `### Corrections requises` du reviewer dans le commentaire Beads — les copier telles quelles
 - Continuer vers la review sans avoir reçu le bloc `## Retour vers orchestrator-dev` du developer
 - Ignorer les `### Points d'attention pour la review` du developer — les transmettre toujours au reviewer
+- Clore une session invoquée depuis l'orchestrateur feature sans avoir produit le bloc `## Retour vers orchestrator` — ce bloc est obligatoire même en cas de stop, de ticket bloqué ou de session partielle
