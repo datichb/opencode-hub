@@ -96,24 +96,26 @@ extract_permission_json() {
   # Détecter si un bloc permission: existe
   echo "$frontmatter" | grep -q '^permission:' || return 0
 
-  local question_val=""
+  # Extraire tous les scalaires directs sous permission: (indentation 2 espaces)
+  # et le sous-bloc task: (indentation 4 espaces)
+  # Scalaires supportés : question, bash, edit, write, et tout futur scalaire
+  local in_permission=0 in_task=0
+  local scalar_fields="" task_entries=""
 
-  # Extraire permission.question (ligne directe sous permission:)
-  question_val=$(echo "$frontmatter" \
-    | awk '/^permission:/{f=1;next} f && /^  question:/{print $2;exit} f && /^[^ ]/{exit}')
-
-  # Extraire permission.task (bloc map sous permission:)
-  # Format attendu dans les frontmatters : lignes "    \"clé\": \"valeur\""
-  # On extrait les lignes indentées à 4 espaces sous "  task:"
-  local in_permission=0 in_task=0 task_entries=""
   while IFS= read -r line; do
     if echo "$line" | grep -q '^permission:'; then
       in_permission=1; in_task=0; continue
     fi
     if [ "$in_permission" = "1" ]; then
+      # Quitter le bloc permission si on revient à l'indentation racine
+      if echo "$line" | grep -qE '^[^ ]'; then
+        in_permission=0; in_task=0; continue
+      fi
+
       if echo "$line" | grep -q '^  task:'; then
         in_task=1; continue
       fi
+
       if [ "$in_task" = "1" ]; then
         # Ligne d'entrée task : "    \"*\": \"deny\"" ou "    \"developer-*\": \"allow\""
         if echo "$line" | grep -qE '^    '; then
@@ -132,18 +134,21 @@ extract_permission_json() {
           in_task=0
         fi
       fi
-      # Quitter le bloc permission si on revient à l'indentation racine
-      if echo "$line" | grep -qE '^[^ ]'; then
-        in_permission=0; in_task=0
+
+      # Scalaire direct sous permission: (2 espaces, pas task:, pas sous-bloc)
+      if [ "$in_task" = "0" ] && echo "$line" | grep -qE '^  [a-zA-Z][a-zA-Z0-9_-]*: '; then
+        local sk; sk=$(echo "$line" | sed 's/^  //;s/:.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        local sv; sv=$(echo "$line" | cut -d: -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        if [ -n "$sk" ] && [ -n "$sv" ]; then
+          [ -n "$scalar_fields" ] && scalar_fields="${scalar_fields}, "
+          scalar_fields="${scalar_fields}\"${sk}\": \"${sv}\""
+        fi
       fi
     fi
   done <<< "$frontmatter"
 
   # Construire le JSON de permission
-  local perm_fields=""
-  if [ -n "$question_val" ]; then
-    perm_fields="\"question\": \"${question_val}\""
-  fi
+  local perm_fields="${scalar_fields}"
   if [ -n "$task_entries" ]; then
     [ -n "$perm_fields" ] && perm_fields="${perm_fields}, "
     perm_fields="${perm_fields}\"task\": { ${task_entries} }"
