@@ -63,6 +63,20 @@ Formalize **all** inter-agent communication contracts as dedicated skills, follo
 - **Reliable checkpoints:** CP-spec, CP-audit, CP-onboard are built from structured blocks with mandatory fields — an absent or incomplete block triggers an explicit request before continuing.
 - **Zero desynchronization:** by injecting the same skill into producer and consumer, any format change automatically propagates to both sides.
 
+---
+
+## Amendment — Full implementation recap visible in the orchestrator thread
+
+**Context:** after initial deployment, a gap was identified at the `orchestrator-dev` → `orchestrator` boundary: the structured `## Return to orchestrator` block contained only a minimal summary (handled tickets, attention points, global status). The orchestrator had no visibility into implementation details (files modified, review cycles, acceptance criteria coverage) before presenting the [CP-feature] to the user.
+
+**Decision:** extend the `orchestrator/orchestrator-handoff-format` and `orchestrator-dev-protocol` skills to formalize a **mandatory two-step return**:
+
+1. `orchestrator-dev` must emit a **full narrative recap** (text + per-ticket table: agent, QA, review cycles, acceptance criteria covered, status + aggregated attention points) **before** the structured `## Return to orchestrator` block — on the same pattern as developer-* emitting a full implementation report before their handoff block.
+2. The structured `## Return to orchestrator` block gains a new `### Per-ticket detail` table field, making the structured data self-sufficient.
+3. The `orchestrator` consumer rule is updated: it must **display the full narrative recap in its discussion thread** before building [CP-feature] — symmetric with how the review report is displayed before [CP-2].
+
+**Impact:** the orchestrator's discussion thread now shows the complete implementation summary before every [CP-feature], giving the user full visibility into what was done across all dev tickets before being asked any question.
+
 ### Negative / trade-offs
 
 - **More skills injected:** agents now receive more skills, increasing the size of assembled agent files at deploy time. This is acceptable given that the skills are injected once at deploy and not at inference time.

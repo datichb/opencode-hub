@@ -63,6 +63,20 @@ Formaliser **tous** les contrats de communication inter-agents comme skills déd
 - **Checkpoints fiables :** les CP-spec, CP-audit, CP-onboard sont construits à partir de blocs structurés avec champs obligatoires — un bloc absent ou incomplet déclenche une demande explicite avant de continuer.
 - **Zéro désynchronisation :** en injectant le même skill dans producteur et consommateur, tout changement de format se propage automatiquement aux deux côtés.
 
+---
+
+## Amendement — Récap d'implémentation complet visible dans le fil de l'orchestrateur
+
+**Contexte :** après le déploiement initial, un manque a été identifié à la frontière `orchestrator-dev` → `orchestrator` : le bloc structuré `## Retour vers orchestrator` ne contenait qu'un résumé minimal (tickets traités, points d'attention, statut global). L'orchestrateur n'avait aucune visibilité sur le détail de l'implémentation (fichiers modifiés, cycles de review, couverture des critères d'acceptance) avant de présenter le [CP-feature] à l'utilisateur.
+
+**Décision :** étendre les skills `orchestrator/orchestrator-handoff-format` et `orchestrator-dev-protocol` pour formaliser un **retour en deux étapes obligatoires** :
+
+1. `orchestrator-dev` doit émettre un **récap narratif complet** (texte + tableau par ticket : agent, QA, cycles de review, critères couverts, statut + points d'attention agrégés) **avant** le bloc structuré `## Retour vers orchestrator` — sur le même pattern que les developer-* émettent un compte rendu d'implémentation complet avant leur bloc handoff.
+2. Le bloc structuré `## Retour vers orchestrator` gagne un nouveau champ `### Détail par ticket`, rendant les données structurées auto-suffisantes.
+3. La règle consommateur de l'`orchestrator` est mise à jour : il doit **afficher le récap narratif complet dans son fil de discussion** avant de construire le [CP-feature] — symétrique avec l'affichage du rapport de review avant le [CP-2].
+
+**Impact :** le fil de discussion de l'orchestrateur affiche désormais le récap d'implémentation complet avant chaque [CP-feature], donnant à l'utilisateur une visibilité totale sur ce qui a été réalisé sur tous les tickets dev avant de lui poser une question.
+
 ### Négatives / compromis
 
 - **Plus de skills injectés :** les agents reçoivent désormais davantage de skills, augmentant la taille des fichiers agents assemblés au déploiement. Ce surcoût est acceptable étant donné que les skills sont injectés une seule fois au déploiement et non à l'inférence.

@@ -111,7 +111,7 @@ sequenceDiagram
         OD->>U: [CP-2] Merger ou corriger ? ← TOUJOURS PAUSE
         OD->>U: [CP-3] Ticket suivant ou stop ?
     end
-    OD-->>O: Récap implémentation
+    OD-->>O: Récap narratif complet (texte + tableau par ticket) + bloc structuré
 
     O->>U: [CP-feature] Récap global de la feature
 ```
