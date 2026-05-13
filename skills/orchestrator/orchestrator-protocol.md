@@ -401,8 +401,10 @@ avant de router. Signaler à l'utilisateur et demander confirmation.
 4. À la réception du résultat de l'invocation, **détecter le type de retour** :
 
    **Cas A — retour normal** : le résultat contient `## Retour vers orchestrator`
-   → Lire le récap structuré. Le format attendu, les champs obligatoires et les définitions des statuts (`succès`, `partiel`, `bloqué`) sont définis dans le skill `orchestrator-handoff-format` — s'y référer pour le contrat exact.
-   > Si le récap reçu ne contient pas les champs requis, les demander explicitement à orchestrator-dev avant de continuer.
+   → **Afficher intégralement dans le fil de discussion le récap global complet produit par orchestrator-dev** (texte libre + tableau des tickets traités avec agent, QA, cycles de review, critères couverts, statut + points d'attention agrégés) — ne jamais résumer ni omettre. Ce contenu doit être visible avant le CP-feature.
+   → Si le récap global complet (texte précédant le bloc structuré) est absent, le demander explicitement à orchestrator-dev avant de continuer.
+   → Lire ensuite le bloc structuré `## Retour vers orchestrator`. Le format attendu, les champs obligatoires et les définitions des statuts (`succès`, `partiel`, `bloqué`) sont définis dans le skill `orchestrator-handoff-format` — s'y référer pour le contrat exact.
+   > Si le bloc structuré ne contient pas les champs requis, les demander explicitement à orchestrator-dev avant de continuer.
 
    **Cas B — question montante** : le résultat contient `## Question pour l'orchestrator`
    → Voir section ci-dessous.
