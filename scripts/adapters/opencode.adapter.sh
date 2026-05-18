@@ -195,6 +195,27 @@ adapter_deploy() {
       _entry_json=$(jq -n --argjson perm "{${_perm_json}}" '$perm')
     fi
 
+    # Résoudre le modèle pour cet agent
+    local _agent_model=""
+    if [ -n "$_asource" ]; then
+      _agent_model=$(resolve_agent_model "$_asource" "$project_id")
+    fi
+
+    # N'injecter que si différent du modèle global
+    local _model_json=""
+    if [ -n "$_agent_model" ] && [ "$_agent_model" != "$model" ]; then
+      _model_json="$_agent_model"
+    fi
+
+    # Fusionner le champ model si nécessaire
+    if [ -n "$_model_json" ]; then
+      if [ -n "$_entry_json" ]; then
+        _entry_json=$(jq -n --argjson base "$_entry_json" --arg m "$_model_json" '$base + {model: $m}')
+      else
+        _entry_json=$(jq -n --arg m "$_model_json" '{model: $m}')
+      fi
+    fi
+
     if [ -n "$_entry_json" ]; then
       agent_obj_json=$(jq -n \
         --argjson base "$agent_obj_json" \
