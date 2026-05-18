@@ -116,6 +116,69 @@ clamp_model() {
   fi
 }
 
+# Retourne la famille d'un agent (nom du dossier parent dans agents/)
+# Ex: agents/planning/orchestrator.md → "planning"
+_get_agent_family() {
+  local agent_file="$1"
+  local dir
+  dir=$(dirname "$agent_file")
+  basename "$dir"
+}
+
+# Résout le modèle à utiliser pour un agent via une cascade à 7 niveaux + clamp.
+# $1 = agent_file (chemin du fichier .md)
+# $2 = project_id (optionnel)
+# Affiche le modèle résolu sur stdout.
+resolve_agent_model() {
+  local agent_file="$1"
+  local project_id="${2:-}"
+
+  # Lire le frontmatter pour obtenir id et model (plancher)
+  read_agent_frontmatter "$agent_file"
+  local agent_id="${_fm_id:-$(basename "$agent_file" .md)}"
+  local floor_model="${_fm_model:-}"
+  local family
+  family=$(_get_agent_family "$agent_file")
+
+  local resolved=""
+
+  # Niveaux 1-3 : projet (seulement si project_id non vide)
+  if [ -n "$project_id" ]; then
+    # 1. P.agents.X
+    [ -z "$resolved" ] && resolved=$(_api_keys_get "$project_id" "agent_models.agents.${agent_id}")
+    # 2. P.families.F
+    [ -z "$resolved" ] && resolved=$(_api_keys_get "$project_id" "agent_models.families.${family}")
+    # 3. P.model
+    [ -z "$resolved" ] && resolved=$(_api_keys_get "$project_id" "model")
+  fi
+
+  # Niveaux 4-6 : hub.json
+  if [ -z "$resolved" ] && [ -f "$HUB_CONFIG" ]; then
+    if command -v jq &>/dev/null; then
+      # 4. hub.agents.X
+      [ -z "$resolved" ] && resolved=$(jq -r ".agent_models.agents.\"${agent_id}\" // empty" "$HUB_CONFIG" 2>/dev/null)
+      # 5. hub.families.F
+      [ -z "$resolved" ] && resolved=$(jq -r ".agent_models.families.\"${family}\" // empty" "$HUB_CONFIG" 2>/dev/null)
+      # 6. hub.model
+      [ -z "$resolved" ] && resolved=$(jq -r '.opencode.model // empty' "$HUB_CONFIG" 2>/dev/null)
+    else
+      # Fallback sans jq : grep/sed
+      # 4. hub.agents.X
+      [ -z "$resolved" ] && resolved=$(grep "\"${agent_id}\"" "$HUB_CONFIG" 2>/dev/null | head -1 | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/' | grep -v '{' || true)
+      # 5. hub.families.F
+      [ -z "$resolved" ] && resolved=$(grep "\"${family}\"" "$HUB_CONFIG" 2>/dev/null | head -1 | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/' | grep -v '{' || true)
+      # 6. hub.model — chercher "model" dans la section opencode
+      [ -z "$resolved" ] && resolved=$(sed -n '/"opencode"/,/}/p' "$HUB_CONFIG" 2>/dev/null | grep '"model"' | head -1 | sed 's/.*"model"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || true)
+    fi
+  fi
+
+  # 7. Fallback hardcodé
+  [ -z "$resolved" ] && resolved="claude-sonnet-4-5"
+
+  # Clamp
+  clamp_model "$resolved" "$floor_model" "$agent_id"
+}
+
 # Extrait le bloc permission du frontmatter et le convertit en JSON inline
 # Supporte : permission.question (scalaire) et permission.task (map multi-ligne)
 # Retourne une chaîne JSON partielle, ex: "\"permission\": { \"question\": \"allow\" }"
