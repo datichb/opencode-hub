@@ -914,18 +914,18 @@ Chemin : ${project_path}"
     project_info="Chemin : ${project_path}"
   fi
 
-  # Vérifier l'existence de ONBOARDING.md
-  local onboarding_hint=""
-  if [ -f "${project_path}/ONBOARDING.md" ]; then
-    onboarding_hint="
-→ ONBOARDING.md disponible — consulter pour le contexte du projet"
+  # Vérifier l'existence de CONVENTIONS.md
+  local conventions_hint=""
+  if [ -f "${project_path}/CONVENTIONS.md" ]; then
+    conventions_hint="
+→ CONVENTIONS.md disponible — consulter pour les conventions du projet"
   fi
 
   cat <<EOF
 Session de debug sur le projet.
 
 ${project_info}
-${onboarding_hint}
+${conventions_hint}
 
 Attends les instructions de l'utilisateur pour commencer le debug.
 L'utilisateur décrira le bug ou le comportement inattendu à investiguer.
