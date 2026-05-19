@@ -24,6 +24,28 @@ _get_opencode_model() {
   echo "${model:-$DEFAULT_MODEL}"
 }
 
+# Résout le modèle pour un agent et retourne vide si identique au modèle global du projet.
+# $1 = agent_file (chemin .md), $2 = project_id (optionnel)
+# Retourne le modèle résolu sur stdout, ou rien si == modèle global projet.
+_get_agent_model() {
+  local agent_file="$1"
+  local project_id="${2:-}"
+
+  [ -z "$agent_file" ] && return 0
+
+  local resolved
+  resolved=$(resolve_agent_model "$agent_file" "$project_id")
+
+  local global_model
+  global_model=$(_get_opencode_model "$project_id")
+
+  if [ "$resolved" = "$global_model" ]; then
+    return 0
+  fi
+
+  echo "$resolved"
+}
+
 # Génère un objet JSON complet {"provider": {...}} selon le provider et ses paramètres
 # Utilise jq end-to-end pour garantir un JSON valide même avec des valeurs spéciales
 # Retourne le JSON complet ou rien si les paramètres sont insuffisants
@@ -195,17 +217,13 @@ adapter_deploy() {
       _entry_json=$(jq -n --argjson perm "{${_perm_json}}" '$perm')
     fi
 
-    # Résoudre le modèle pour cet agent
+    # Résoudre le modèle pour cet agent (vide si == modèle global)
     local _agent_model=""
     if [ -n "$_asource" ]; then
-      _agent_model=$(resolve_agent_model "$_asource" "$project_id")
+      _agent_model=$(_get_agent_model "$_asource" "$project_id")
     fi
 
-    # N'injecter que si différent du modèle global
-    local _model_json=""
-    if [ -n "$_agent_model" ] && [ "$_agent_model" != "$model" ]; then
-      _model_json="$_agent_model"
-    fi
+    local _model_json="$_agent_model"
 
     # Fusionner le champ model si nécessaire
     if [ -n "$_model_json" ]; then

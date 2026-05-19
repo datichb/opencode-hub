@@ -162,11 +162,17 @@ resolve_agent_model() {
       # 6. hub.model
       [ -z "$resolved" ] && resolved=$(jq -r '.opencode.model // empty' "$HUB_CONFIG" 2>/dev/null)
     else
-      # Fallback sans jq : grep/sed
-      # 4. hub.agents.X
-      [ -z "$resolved" ] && resolved=$(grep "\"${agent_id}\"" "$HUB_CONFIG" 2>/dev/null | head -1 | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/' | grep -v '{' || true)
-      # 5. hub.families.F
-      [ -z "$resolved" ] && resolved=$(grep "\"${family}\"" "$HUB_CONFIG" 2>/dev/null | head -1 | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/' | grep -v '{' || true)
+      # Fallback sans jq : sed pour extraire les sections puis grep la clé
+      # 4. hub.agents.X — chercher agent_id dans la section "agents" de "agent_models"
+      [ -z "$resolved" ] && resolved=$(sed -n '/"agent_models"/,/^[[:space:]]*}/p' "$HUB_CONFIG" 2>/dev/null \
+        | sed -n '/"agents"/,/}/p' \
+        | grep "\"${agent_id}\"" | head -1 \
+        | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/' | grep -v '{' || true)
+      # 5. hub.families.F — chercher family dans la section "families" de "agent_models"
+      [ -z "$resolved" ] && resolved=$(sed -n '/"agent_models"/,/^[[:space:]]*}/p' "$HUB_CONFIG" 2>/dev/null \
+        | sed -n '/"families"/,/}/p' \
+        | grep "\"${family}\"" | head -1 \
+        | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/' | grep -v '{' || true)
       # 6. hub.model — chercher "model" dans la section opencode
       [ -z "$resolved" ] && resolved=$(sed -n '/"opencode"/,/}/p' "$HUB_CONFIG" 2>/dev/null | grep '"model"' | head -1 | sed 's/.*"model"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || true)
     fi
