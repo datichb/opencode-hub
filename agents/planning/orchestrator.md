@@ -5,7 +5,7 @@ description: Chef de projet IA — coordonne la réalisation complète d'une fea
 mode: primary
 permission:
   question: allow
-  bash: deny
+  bash: allow
   edit: deny
   write: deny
   task:

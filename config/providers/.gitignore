@@ -1,0 +1,4 @@
+# Fichiers de configuration provider — contiennent des clés API en clair
+*.json
+# Autoriser les fichiers d'exemple
+!*.example.json
