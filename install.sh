@@ -323,6 +323,30 @@ fi
 
 _outro "Alias configuré"
 
+# ── Alias ocp (provider switcher) ──────────────────────────────────────────
+# Note : $_rc_file est défini dans la section alias oc ci-dessus (lignes ~258-264) — dépendance implicite intentionnelle.
+_intro "Configuration de l'alias 'ocp'"
+echo ""
+
+_ocp_line="alias ocp=\"$INSTALL_DIR/ocp.sh\""
+
+if [ -n "$_rc_file" ]; then
+  if grep -qF "alias ocp=" "$_rc_file" 2>/dev/null; then
+    log_info "Alias 'ocp' déjà présent dans $_rc_file — mis à jour"
+    sed -i.bak "s|^alias ocp=.*|$_ocp_line|" "$_rc_file"
+    rm -f "$_rc_file.bak"
+    log_success "Alias 'ocp' mis à jour dans $_rc_file"
+  else
+    echo "" >> "$_rc_file"
+    echo "$_ocp_line" >> "$_rc_file"
+    log_success "Alias 'ocp' ajouté dans $_rc_file"
+  fi
+else
+  log_warn "Shell non reconnu — ajouter manuellement : alias ocp=\"$INSTALL_DIR/ocp.sh\""
+fi
+
+_outro "Alias 'ocp' configuré"
+
 # ─────────────────────────────────────────
 # ÉTAPE 4 — INIT CONFIG LOCAUX
 # ─────────────────────────────────────────
