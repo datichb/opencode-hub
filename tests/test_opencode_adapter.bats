@@ -556,3 +556,59 @@ HUBEOF
   result=$(jq -r '.["$schema"]' "$DEPLOY_DIR/opencode.json")
   [ "$result" = "https://opencode.ai/config.json" ]
 }
+
+# ── _apply_provider_prefix ────────────────────────────────────────────────────
+
+@test "_apply_provider_prefix : model vide → return 0 sans sortie" {
+  run _apply_provider_prefix "" "anthropic"
+  [ "$status" -eq 0 ]
+  [ "$output" = "" ]
+}
+
+@test "_apply_provider_prefix : provider vide → echo du model brut" {
+  run _apply_provider_prefix "claude-opus-4" ""
+  [ "$status" -eq 0 ]
+  [ "$output" = "claude-opus-4" ]
+}
+
+@test "_apply_provider_prefix : provider inconnu (absent de providers.json) → echo du model brut" {
+  # HUB_DIR pointe vers le projet réel qui contient providers.json
+  # Le provider 'unknown-provider' n'existe pas dans ce fichier
+  HUB_DIR="$BATS_TEST_DIRNAME/.."
+  command -v jq &>/dev/null || skip "jq non disponible"
+  run _apply_provider_prefix "claude-opus-4" "unknown-provider"
+  [ "$status" -eq 0 ]
+  [ "$output" = "claude-opus-4" ]
+}
+
+@test "_apply_provider_prefix : anthropic sans alias → 'anthropic/claude-opus-4'" {
+  command -v jq &>/dev/null || skip "jq non disponible"
+  HUB_DIR="$BATS_TEST_DIRNAME/.."
+  run _apply_provider_prefix "claude-opus-4" "anthropic"
+  [ "$status" -eq 0 ]
+  [ "$output" = "anthropic/claude-opus-4" ]
+}
+
+@test "_apply_provider_prefix : bedrock avec alias → 'amazon-bedrock/anthropic.claude-sonnet-4-5-20250929-v1:0'" {
+  command -v jq &>/dev/null || skip "jq non disponible"
+  HUB_DIR="$BATS_TEST_DIRNAME/.."
+  run _apply_provider_prefix "claude-sonnet-4-5" "bedrock"
+  [ "$status" -eq 0 ]
+  [ "$output" = "amazon-bedrock/anthropic.claude-sonnet-4-5-20250929-v1:0" ]
+}
+
+@test "_apply_provider_prefix : mammouth (prefix null) → model inchangé" {
+  command -v jq &>/dev/null || skip "jq non disponible"
+  HUB_DIR="$BATS_TEST_DIRNAME/.."
+  run _apply_provider_prefix "claude-sonnet-4-5" "mammouth"
+  [ "$status" -eq 0 ]
+  [ "$output" = "claude-sonnet-4-5" ]
+}
+
+@test "_apply_provider_prefix : github-copilot avec alias → 'github-copilot/claude-sonnet-4.5'" {
+  command -v jq &>/dev/null || skip "jq non disponible"
+  HUB_DIR="$BATS_TEST_DIRNAME/.."
+  run _apply_provider_prefix "claude-sonnet-4-5" "github-copilot"
+  [ "$status" -eq 0 ]
+  [ "$output" = "github-copilot/claude-sonnet-4.5" ]
+}
