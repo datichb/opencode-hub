@@ -15,30 +15,31 @@ OpenCode Hub supporte plusieurs fournisseurs LLM, vous permettant de choisir la 
 | **GitHub Models** | OpenAI-compatible (litellm) | OpenCode | Clé API | `https://models.inference.ai.azure.com` |
 | **AWS Bedrock** | Natif (`amazon-bedrock`) | OpenCode | Bearer token | N/A |
 | **Ollama** | OpenAI-compatible (litellm) | OpenCode | Optionnel | `http://localhost:11434/v1` |
+| **GitHub Copilot** | Natif (`github-copilot`) | OpenCode | OAuth (aucune clé API) | N/A |
 
 ### Notes importantes
 
 - **Limitation Claude Code** : Claude Code ne supporte que le fournisseur `anthropic` (contrainte architecturale). L'utilisation d'autres fournisseurs déclenchera un avertissement.
 - **Priorité des modèles** : Les modèles sont résolus dans cet ordre : 1) Config projet → 2) Hub par défaut → 3) Variable d'env → 4) Hub opencode.model → 5) Fallback par défaut
 
-## Configuration Levels
+## Niveaux de configuration
 
-OpenCode Hub supports provider configuration at two levels:
+OpenCode Hub supporte la configuration du provider à deux niveaux :
 
-### 1. Hub Level (Default for All Projects)
+### 1. Niveau Hub (par défaut pour tous les projets)
 
-Set a provider that applies to all projects by default:
+Définir un provider appliqué à tous les projets par défaut :
 
 ```bash
 ./oc.sh provider set-default
 ```
 
-This prompts you to:
-- Select a provider (1-5 or skip)
-- Provide API credentials (if required)
-- Optionally set a custom base URL
+Vous serez invité à :
+- Sélectionner un provider (1-5 ou ignorer)
+- Fournir les credentials API (si requis)
+- Saisir optionnellement une URL de base personnalisée
 
-The configuration is stored in `config/hub.json` in the `default_provider` block:
+La configuration est stockée dans `config/hub.json` dans le bloc `default_provider` :
 
 ```json
 {
@@ -51,27 +52,27 @@ The configuration is stored in `config/hub.json` in the `default_provider` block
 }
 ```
 
-**Note**: If an API key is configured, `config/hub.json` is automatically added to `.gitignore`.
+**Note** : Si une clé API est configurée, `config/hub.json` est automatiquement ajouté au `.gitignore`.
 
-### 2. Project Level (Per-Project Override)
+### 2. Niveau Projet (surcharge par projet)
 
-Configure a different provider for a specific project:
+Configurer un provider différent pour un projet spécifique :
 
 ```bash
 ./oc.sh init MY-PROJECT
-# or
+# ou
 ./oc.sh config set MY-PROJECT
 ```
 
-During `oc init`, you'll be prompted for an optional project-level provider (step 4).
+Lors de `oc init`, vous serez invité à configurer un provider optionnel au niveau projet (étape 4).
 
-During `oc config set`, you can specify `--provider` and related flags:
+Lors de `oc config set`, vous pouvez spécifier `--provider` et les flags associés :
 
 ```bash
 ./oc.sh config set MY-PROJECT --provider github-models --api-key sk-xxx
 ```
 
-Project-level config is stored in `projects/api-keys.local.md` (not committed to git):
+La configuration au niveau projet est stockée dans `projects/api-keys.local.md` (non commité dans git) :
 
 ```
 [MY-PROJECT]
@@ -81,17 +82,17 @@ base_url=https://models.inference.ai.azure.com
 model=claude-opus
 ```
 
-## Command Reference
+## Référence des commandes
 
 ### `oc provider list`
 
-Display all available providers with their status (default, configured, supported targets):
+Affiche tous les providers disponibles avec leur statut (par défaut, configuré, cibles supportées) :
 
 ```bash
 ./oc.sh provider list
 ```
 
-Example output:
+Exemple de sortie :
 ```
 Fournisseurs LLM disponibles
 
@@ -124,29 +125,29 @@ La configuration est écrite dans `config/hub.json` **et `opencode.json` est ré
 
 ### `oc provider set <PROJECT_ID> [PROVIDER] [API_KEY] [BASE_URL]`
 
-Configure a provider for a specific project:
+Configure un provider pour un projet spécifique :
 
 ```bash
-# Interactive
+# Interactif
 ./oc.sh provider set MY-PROJECT
 
-# Non-interactive (direct)
+# Non-interactif (direct)
 ./oc.sh provider set MY-PROJECT mammouth "sk-xxx" "https://api.mammouth.ai/v1"
 ```
 
-If `PROVIDER`, `API_KEY`, or `BASE_URL` are omitted, you'll be prompted.
+Si `PROVIDER`, `API_KEY` ou `BASE_URL` sont omis, vous serez invité à les saisir.
 
-The configuration is written to `projects/api-keys.local.md`.
+La configuration est écrite dans `projects/api-keys.local.md`.
 
 ### `oc provider get <PROJECT_ID>`
 
-Display the effective provider configuration for a project:
+Affiche la configuration effective du provider pour un projet :
 
 ```bash
 ./oc.sh provider get MY-PROJECT
 ```
 
-Example output:
+Exemple de sortie :
 ```
 Configuration effective pour MY-PROJECT
 
@@ -156,48 +157,48 @@ Configuration effective pour MY-PROJECT
   Base URL : https://api.mammouth.ai/v1
 ```
 
-Shows the resolved configuration after merging project-level and hub-level settings.
+Affiche la configuration résolue après fusion des paramètres projet et hub.
 
-## Provider Setup Guides
+## Guides de configuration par fournisseur
 
-### Anthropic (Default)
+### Anthropic (par défaut)
 
-**Supported targets**: OpenCode, Claude Code
+**Cibles supportées** : OpenCode, Claude Code
 
-1. Get your API key from [console.anthropic.com](https://console.anthropic.com)
-2. Run `./oc.sh provider set-default` or `./oc.sh config set <PROJECT_ID>`
-3. Choose "Anthropic" and enter your API key
+1. Obtenez votre clé API depuis [console.anthropic.com](https://console.anthropic.com)
+2. Lancez `./oc.sh provider set-default` ou `./oc.sh config set <PROJECT_ID>`
+3. Choisissez "Anthropic" et entrez votre clé API
 
 ### MammouthAI
 
-**Supported targets**: OpenCode
+**Cibles supportées** : OpenCode
 
-MammouthAI is an OpenAI-compatible proxy hosted in France that works with Anthropic models.
+MammouthAI est un proxy OpenAI-compatible hébergé en France, compatible avec les modèles Anthropic.
 
-1. Get your API key from [mammouth.ai](https://mammouth.ai)
-2. Run `./oc.sh provider set-default`
-3. Choose "MammouthAI" (option 2)
-4. Enter your API key (default base URL will be used: `https://api.mammouth.ai/v1`)
+1. Obtenez votre clé API depuis [mammouth.ai](https://mammouth.ai)
+2. Lancez `./oc.sh provider set-default`
+3. Choisissez "MammouthAI" (option 2)
+4. Entrez votre clé API (l'URL de base par défaut sera utilisée : `https://api.mammouth.ai/v1`)
 
 ```bash
-# Or via config:
+# Ou via config :
 ./oc.sh config set MY-PROJECT --provider mammouth --api-key sk-xxx
 ```
 
 ### GitHub Models
 
-**Supported targets**: OpenCode
+**Cibles supportées** : OpenCode
 
-GitHub Models provides access to various models via the GitHub/Copilot API.
+GitHub Models fournit un accès à divers modèles via l'API GitHub/Copilot.
 
-1. Get your token from [github.com/settings/tokens](https://github.com/settings/tokens)
-2. Run `./oc.sh provider set-default`
-3. Choose "GitHub Models" (option 3)
-4. Enter your GitHub token
-5. Optionally override the base URL (default: `https://models.inference.ai.azure.com`)
+1. Obtenez votre token depuis [github.com/settings/tokens](https://github.com/settings/tokens)
+2. Lancez `./oc.sh provider set-default`
+3. Choisissez "GitHub Models" (option 3)
+4. Entrez votre token GitHub
+5. Surchargez optionnellement l'URL de base (par défaut : `https://models.inference.ai.azure.com`)
 
 ```bash
-# Or via config:
+# Ou via config :
 ./oc.sh config set MY-PROJECT \
   --provider github-models \
   --api-key ghp_xxx \
@@ -243,73 +244,136 @@ AWS_BEARER_TOKEN_BEDROCK=<token> opencode
 
 ### Ollama (Local)
 
-**Supported targets**: OpenCode
+**Cibles supportées** : OpenCode
 
-Ollama allows you to run LLMs locally.
+Ollama vous permet d'exécuter des LLM localement.
 
-1. Install Ollama from [ollama.ai](https://ollama.ai)
-2. Start the Ollama server: `ollama serve`
-3. Run `./oc.sh provider set-default`
-4. Choose "Ollama" (option 5)
-5. The default base URL (`http://localhost:11434/v1`) will be used
+1. Installez Ollama depuis [ollama.ai](https://ollama.ai)
+2. Démarrez le serveur Ollama : `ollama serve`
+3. Lancez `./oc.sh provider set-default`
+4. Choisissez "Ollama" (option 5)
+5. L'URL de base par défaut (`http://localhost:11434/v1`) sera utilisée
 
 ```bash
-# Or via config:
+# Ou via config :
 ./oc.sh config set MY-PROJECT \
   --provider ollama \
   --base-url http://localhost:11434/v1
 ```
 
-Note: Ollama doesn't require an API key, but one can be set for custom authentication layers.
+Note : Ollama ne requiert pas de clé API, mais une peut être définie pour des couches d'authentification personnalisées.
 
-## Workflows
+### GitHub Copilot
 
-### Using Different Providers for Different Projects
+**Cibles supportées** : OpenCode
+
+GitHub Copilot utilise une **authentification OAuth** — aucune clé API n'est requise. L'authentification se fait via `opencode auth`, qui ouvre un flux OAuth avec GitHub directement.
+
+**Prérequis :** disposer d'un abonnement GitHub Copilot actif.
+
+**Fonctionnement :**
+- Pas de clé API à gérer — le token OAuth est géré par OpenCode
+- Le `opencode_prefix` est `github-copilot` dans la configuration générée
+- `config/hub.json` n'a pas besoin de champ `api_key` pour ce provider
+
+**Configuration :**
+
+1. Authentifiez-vous via `opencode auth` (une seule fois, peut être fait avant ou après la configuration du hub) :
 
 ```bash
-# Set hub default to Anthropic
-./oc.sh provider set-default
-# → Choose Anthropic
+opencode auth
+# Suit le flux OAuth GitHub — ouvre un navigateur pour autoriser
+```
 
-# Override specific project to use GitHub Models
+2. Configurez GitHub Copilot comme provider par défaut du hub :
+
+```bash
+./oc.sh provider set-default
+# → Choisissez "GitHub Copilot"
+```
+
+3. Ou configurez-le pour un projet spécifique :
+
+```bash
+./oc.sh config set MON-PROJET --provider github-copilot
+# Pas de --api-key requis
+```
+
+Le `opencode.json` généré ressemblera à :
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "github-copilot/claude-sonnet-4.5",
+  "provider": {
+    "github-copilot": {}
+  }
+}
+```
+
+> **Note technique :** Le hub accepte à la fois `claude-sonnet-4-5` (format interne) et `claude-sonnet-4.5` (format API GitHub Copilot). Les `model_aliases` du provider effectuent la transformation automatiquement.
+
+**Modèles disponibles via GitHub Copilot :**
+
+| Nom interne (hub) | Nom API GitHub Copilot |
+|-------------------|------------------------|
+| `claude-sonnet-4-5` | `claude-sonnet-4.5` |
+| `claude-sonnet-4-5-v2` | `claude-sonnet-4.5-v2` |
+| `claude-opus-4` | `claude-opus-4` |
+| `claude-haiku-3-5` | `claude-haiku-3.5` |
+
+> Ces noms de modèles sont automatiquement transformés depuis le format interne du hub (ex. `claude-sonnet-4-5`) grâce aux `model_aliases`.
+
+**Remarque :** contrairement aux autres providers, `config/hub.json` ne contient pas de champ `api_key` pour GitHub Copilot. Le fichier `hub.json` est toujours gitignored par sécurité.
+
+## Flux de travail
+
+### Utiliser différents providers pour différents projets
+
+```bash
+# Définir Anthropic comme provider par défaut du hub
+./oc.sh provider set-default
+# → Choisir Anthropic
+
+# Surcharger un projet spécifique avec GitHub Models
 ./oc.sh config set MY-PYTHON-PROJECT --provider github-models --api-key ghp_xxx
 
-# Another project uses MammouthAI
+# Un autre projet utilise MammouthAI
 ./oc.sh config set MY-JS-PROJECT --provider mammouth --api-key sk-xxx
 ```
 
-### Switching Providers
+### Changer de provider
 
-To change a provider configuration:
+Pour modifier une configuration de provider :
 
 ```bash
-# For hub default:
+# Pour le provider par défaut du hub :
 ./oc.sh provider set-default
 
-# For a project:
+# Pour un projet :
 ./oc.sh config set MY-PROJECT
-# → Follow prompts to update provider/key/model
+# → Suivre les invites pour mettre à jour le provider/clé/modèle
 ```
 
-### Using Local Ollama for Development
+### Utiliser Ollama en local pour le développement
 
 ```bash
-# Start Ollama (in a separate terminal):
+# Démarrer Ollama (dans un terminal séparé) :
 ollama serve
 
-# Configure your project to use Ollama:
+# Configurer votre projet pour utiliser Ollama :
 ./oc.sh config set MY-PROJECT --provider ollama
 
-# Deploy and start:
+# Déployer et démarrer :
 ./oc.sh deploy all MY-PROJECT
 ./oc.sh start MY-PROJECT
 ```
 
-## Security
+## Sécurité
 
-- **API Keys**: All API keys are stored in local files (`.gitignore`d) and never committed to git.
-- **Masking**: When viewing configurations, API keys are masked to show only the first 8 characters.
-- **Environment-specific**: Each environment can have different provider configurations.
+- **Clés API** : Toutes les clés API sont stockées dans des fichiers locaux (ajoutés au `.gitignore`) et ne sont jamais commitées dans git.
+- **Masquage** : Lors de la consultation des configurations, les clés API sont masquées pour n'afficher que les 8 premiers caractères.
+- **Spécifique à l'environnement** : Chaque environnement peut avoir des configurations de provider différentes.
 
 ### Fichiers avec secrets
 
@@ -328,29 +392,30 @@ Un template sans secret est commité dans `config/hub.json.example`. Au premier 
 ./oc.sh provider set-default
 ```
 
-## Troubleshooting
+## Dépannage
 
 ### "Provider not supported"
 
-If you see this error, ensure you're using one of the 5 supported providers:
+Si vous voyez cette erreur, assurez-vous d'utiliser l'un des providers supportés :
 - `anthropic`
 - `mammouth`
 - `github-models`
 - `bedrock`
 - `ollama`
+- `github-copilot`
 
-### Claude Code shows "provider not supported" warning
+### Claude Code affiche un avertissement "provider not supported"
 
-This is expected. Claude Code only supports Anthropic. If you need to use Claude Code:
-1. Configure an Anthropic API key at the hub level, or
-2. Override your project to use `anthropic` provider
+C'est un comportement attendu. Claude Code ne supporte que Anthropic. Si vous avez besoin d'utiliser Claude Code :
+1. Configurez une clé API Anthropic au niveau hub, ou
+2. Surchargez votre projet pour utiliser le provider `anthropic`
 
-### Model not found / API errors
+### Modèle introuvable / Erreurs API
 
-1. Verify your API key is correct: `./oc.sh provider get <PROJECT_ID>`
-2. Check the base URL is correct for your provider
-3. Ensure the provider service is running (especially for Ollama)
-4. Test your API key directly with the provider's CLI or API
+1. Vérifiez que votre clé API est correcte : `./oc.sh provider get <PROJECT_ID>`
+2. Vérifiez que l'URL de base est correcte pour votre provider
+3. Assurez-vous que le service provider est en cours d'exécution (notamment pour Ollama)
+4. Testez votre clé API directement avec la CLI ou l'API du provider
 
 ### Les changements de provider ne sont pas appliqués
 
@@ -362,10 +427,10 @@ Pour les changements au niveau projet (`oc config set` ou `oc provider set`), re
 ./oc.sh deploy all MON-PROJET
 ```
 
-## Related Commands
+## Commandes associées
 
-- `./oc.sh config set` — Manage project-level provider and model configuration
-- `./oc.sh config get` — View effective configuration for a project
-- `./oc.sh deploy all` — Deploy agents with current provider config
-- `./oc.sh start` — Start OpenCode with the configured provider
-- `./oc.sh init` — Set up a new project (includes provider step)
+- `./oc.sh config set` — Gérer la configuration du provider et du modèle au niveau projet
+- `./oc.sh config get` — Afficher la configuration effective d'un projet
+- `./oc.sh deploy all` — Déployer les agents avec la configuration provider actuelle
+- `./oc.sh start` — Démarrer OpenCode avec le provider configuré
+- `./oc.sh init` — Initialiser un nouveau projet (inclut l'étape de configuration du provider)

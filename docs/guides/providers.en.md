@@ -15,6 +15,7 @@ OpenCode Hub supports multiple LLM providers, enabling you to choose the best so
 | **GitHub Models** | OpenAI-compatible (litellm) | OpenCode | API key | `https://models.inference.ai.azure.com` |
 | **AWS Bedrock** | Native (`amazon-bedrock`) | OpenCode | Bearer token | N/A |
 | **Ollama** | OpenAI-compatible (litellm) | OpenCode | Optional | `http://localhost:11434/v1` |
+| **GitHub Copilot** | Native (`github-copilot`) | OpenCode | OAuth (no API key) | N/A |
 
 ### Important Notes
 
@@ -262,6 +263,69 @@ Ollama allows you to run LLMs locally.
 
 Note: Ollama doesn't require an API key, but one can be set for custom authentication layers.
 
+### GitHub Copilot
+
+**Supported targets**: OpenCode
+
+GitHub Copilot uses **OAuth authentication** — no API key is required. Authentication is handled via `opencode auth`, which opens an OAuth flow with GitHub directly.
+
+**Prerequisite:** an active GitHub Copilot subscription.
+
+**How it works:**
+- No API key to manage — the OAuth token is handled by OpenCode
+- The `opencode_prefix` is `github-copilot` in the generated configuration
+- `config/hub.json` does not need an `api_key` field for this provider
+
+**Setup:**
+
+1. Authenticate via `opencode auth` (once, can be done before or after configuring the hub):
+
+```bash
+opencode auth
+# Follows the GitHub OAuth flow — opens a browser to authorize
+```
+
+2. Set GitHub Copilot as the hub default provider:
+
+```bash
+./oc.sh provider set-default
+# → Choose "GitHub Copilot"
+```
+
+3. Or configure it for a specific project:
+
+```bash
+./oc.sh config set MY-PROJECT --provider github-copilot
+# No --api-key required
+```
+
+The generated `opencode.json` will look like:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "github-copilot/claude-sonnet-4.5",
+  "provider": {
+    "github-copilot": {}
+  }
+}
+```
+
+> **Technical note:** The hub accepts both `claude-sonnet-4-5` (internal format) and `claude-sonnet-4.5` (GitHub Copilot API format). The provider's `model_aliases` perform the transformation automatically.
+
+**Available models via GitHub Copilot:**
+
+| Internal name (hub) | GitHub Copilot API name |
+|---------------------|------------------------|
+| `claude-sonnet-4-5` | `claude-sonnet-4.5` |
+| `claude-sonnet-4-5-v2` | `claude-sonnet-4.5-v2` |
+| `claude-opus-4` | `claude-opus-4` |
+| `claude-haiku-3-5` | `claude-haiku-3.5` |
+
+> These model names are automatically transformed from the hub's internal format (e.g. `claude-sonnet-4-5`) via `model_aliases`.
+
+**Note:** unlike other providers, `config/hub.json` does not contain an `api_key` field for GitHub Copilot. The `hub.json` file is still gitignored as a security measure.
+
 ## Workflows
 
 ### Using Different Providers for Different Projects
@@ -332,12 +396,13 @@ A safe, secret-free template is committed at `config/hub.json.example`. On first
 
 ### "Provider not supported"
 
-If you see this error, ensure you're using one of the 5 supported providers:
+If you see this error, ensure you're using one of the supported providers:
 - `anthropic`
 - `mammouth`
 - `github-models`
 - `bedrock`
 - `ollama`
+- `github-copilot`
 
 ### Claude Code shows "provider not supported" warning
 
