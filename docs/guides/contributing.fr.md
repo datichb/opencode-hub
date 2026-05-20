@@ -200,6 +200,15 @@ my_function() {
 # ❌ Jamais de "$var" && commande — toujours if [ "$var" = "true" ]
 ```
 
+### Documentation interne
+
+Le dossier `docs/` est organisé comme suit (pour référence lors d'ajouts de documentation) :
+
+- `docs/architecture/` — décisions architecturales (ADR), schémas, référence agents et skills
+- `docs/guides/` — guides pratiques (contribution, workflows, authoring)
+- `docs/reference/` — référence CLI et configuration
+- `docs/dev/` — notes techniques internes (gotchas, patterns shell)
+
 ### ADR
 
 Toute décision architecturale significative doit être documentée dans un ADR :

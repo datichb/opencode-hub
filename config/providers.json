@@ -75,7 +75,8 @@
     "github-copilot": {
       "label": "GitHub Copilot",
       "description": "GitHub Copilot API — modèles Claude via Copilot",
-      "requires_api_key": true,
+      "requires_api_key": false,
+      "auth_method": "oauth",
       "requires_base_url": false,
       "litellm": false,
       "default_model": "claude-sonnet-4-5",

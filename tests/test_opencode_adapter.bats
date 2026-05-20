@@ -103,6 +103,48 @@ teardown() {
   ! echo "$output" | grep -q 'baseURL'
 }
 
+# ── _build_provider_json : github-copilot (sans clé API) ─────────────────────
+
+@test "_build_provider_json : github-copilot sans clé → génère {'provider': {'github-copilot': {}}}" {
+  command -v jq &>/dev/null || skip "jq non disponible"
+  result=$(_build_provider_json "github-copilot" "" "" "")
+  [ -n "$result" ]
+  run jq . <<< "$result"
+  [ "$status" -eq 0 ]
+  value=$(jq -r '.provider["github-copilot"]' <<< "$result")
+  [ "$value" = "{}" ]
+}
+
+@test "_build_provider_block : github-copilot sans clé → génère un bloc valide" {
+  printf '[PROJ-GHC]\nmodel=claude-sonnet-4-5\nprovider=github-copilot\napi_key=\n' > "$API_KEYS_FILE"
+  command -v jq &>/dev/null || skip "jq non disponible"
+  result=$(_build_provider_block "PROJ-GHC")
+  [ -n "$result" ]
+  run jq . <<< "$result"
+  [ "$status" -eq 0 ]
+  value=$(jq -r '.provider["github-copilot"]' <<< "$result")
+  [ "$value" = "{}" ]
+}
+
+@test "_build_provider_block : anthropic sans clé → retourne vide (inchangé)" {
+  printf '[PROJ-ANT-NOKEY]\nmodel=claude-sonnet-4-5\nprovider=anthropic\napi_key=\n' > "$API_KEYS_FILE"
+  run _build_provider_block "PROJ-ANT-NOKEY"
+  [ "$status" -eq 0 ]
+  [ "$output" = "" ]
+}
+
+@test "_build_provider_block : ollama sans clé → génère un bloc valide (non-régression #opencode-hub-0td)" {
+  # ollama a requires_api_key=false dans providers.json — doit générer un bloc même sans api_key
+  printf '[PROJ-OLLAMA]\nmodel=llama3.2\nprovider=ollama\napi_key=\n' > "$API_KEYS_FILE"
+  command -v jq &>/dev/null || skip "jq non disponible"
+  result=$(_build_provider_block "PROJ-OLLAMA")
+  [ -n "$result" ]
+  run jq . <<< "$result"
+  [ "$status" -eq 0 ]
+  # Doit contenir une référence au provider ollama ou litellm (selon l'implémentation)
+  echo "$result" | grep -qE '"ollama"|"litellm"'
+}
+
 # ── Génération opencode.json via adapter_deploy ───────────────────────────────
 
 @test "adapter_deploy : génère opencode.json sans clé API (contenu minimal)" {

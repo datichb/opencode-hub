@@ -96,7 +96,20 @@ _get_agent_model() {
 _build_provider_json() {
   local provider="${1:-}" api_key="${2:-}" base_url="${3:-}" aws_region="${4:-}"
 
-  [ -z "$provider" ] || [ -z "$api_key" ] && return 0
+  [ -z "$provider" ] && return 0
+
+  # Vérifier si le provider requiert une clé API (défaut : true pour la rétrocompatibilité)
+  # Note : on n'utilise pas `// true` car false // true = true en jq (false est falsy)
+  local requires_api_key="true"
+  local providers_file="$HUB_DIR/config/providers.json"
+  if [ -f "$providers_file" ]; then
+    requires_api_key=$(jq -r --arg p "$provider" \
+      '.providers[$p].requires_api_key | if . == null then "true" else tostring end' \
+      "$providers_file" 2>/dev/null)
+  fi
+
+  # Early return uniquement si la clé est vide ET que le provider en requiert une
+  [ -z "$api_key" ] && [ "$requires_api_key" != "false" ] && return 0
 
   case "$provider" in
     anthropic)
@@ -110,6 +123,10 @@ _build_provider_json() {
       local region="${aws_region:-eu-west-3}"
       jq -n --arg region "$region" \
         '{"provider": {"amazon-bedrock": {"options": {"region": $region}}}}'
+      ;;
+    github-copilot)
+      # Provider natif github-copilot d'OpenCode — authentification OAuth, pas de clé API
+      jq -n '{"provider": {"github-copilot": {}}}'
       ;;
     mammouth|github-models|ollama|litellm)
       # Providers OpenAI-compatible via litellm
@@ -133,7 +150,20 @@ _build_provider_block() {
   local provider api_key base_url aws_region
   provider=$(get_project_api_provider "$project_id")
   api_key=$(get_project_api_key "$project_id")
-  { [ -z "$provider" ] || [ -z "$api_key" ]; } && return 0
+  [ -z "$provider" ] && return 0
+
+  # Vérifier si le provider requiert une clé API (défaut : true pour la rétrocompatibilité)
+  # Note : on n'utilise pas `// true` car false // true = true en jq (false est falsy)
+  local requires_api_key="true"
+  local providers_file="$HUB_DIR/config/providers.json"
+  if [ -f "$providers_file" ]; then
+    requires_api_key=$(jq -r --arg p "$provider" \
+      '.providers[$p].requires_api_key | if . == null then "true" else tostring end' \
+      "$providers_file" 2>/dev/null)
+  fi
+
+  # Early return uniquement si la clé est vide ET que le provider en requiert une
+  [ -z "$api_key" ] && [ "$requires_api_key" != "false" ] && return 0
 
   base_url=$(get_project_api_base_url "$project_id")
   aws_region=$(get_project_api_region "$project_id" 2>/dev/null || true)
