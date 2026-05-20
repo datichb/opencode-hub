@@ -120,6 +120,14 @@ if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ] && [ -t 0 ]; then
   fi
 fi
 
+# Si --provider est fourni et agents déjà déployés : régénérer opencode.json avec le bon provider
+if [ -n "$PROVIDER_OVERRIDE" ] && [ -n "$agents_dir" ] && [ -d "$agents_dir" ]; then
+  if ! adapter_deploy "$PROJECT_PATH" "$PROJECT_ID" "$PROVIDER_OVERRIDE"; then
+    log_error "Échec de la régénération d'opencode.json — lancement annulé"
+    exit 1
+  fi
+fi
+
 # Suggestion onboarder si les agents sont déployés et que l'onboarding n'a pas encore été fait
 if [ -n "$agents_dir" ] && [ -d "$agents_dir" ] && [ "$ONBOARD_MODE" = false ] && [ ! -f "$PROJECT_PATH/ONBOARDING.md" ]; then
   echo -e "${DIM}│${RESET}"

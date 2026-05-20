@@ -329,13 +329,16 @@ adapter_deploy() {
       '$base + {($id): {"disable": true}}')
   done
 
-  # Régénérer si : fichier absent, clé API à injecter, ou project_id défini
+  # Régénérer si : fichier absent, clé API à injecter, project_id défini, ou provider_override fourni
   local should_write=false
   if [ ! -f "$config_file" ]; then
     should_write=true
   elif [ "$has_api_key" = true ]; then
     should_write=true
   elif [ -n "$project_id" ]; then
+    should_write=true
+  elif [ -n "$provider_override" ]; then
+    # Cas sans project_id (ex : déploiement hub direct avec --provider)
     should_write=true
   fi
 
