@@ -149,6 +149,176 @@ cmd_set_default() {
 }
 
 # ────────────────────────────────────────────────────────────────────────────────
+# Subcommande : oc provider init [--force]
+# Initialise les fichiers de configuration provider dans config/providers/
+# ────────────────────────────────────────────────────────────────────────────────
+cmd_init() {
+  local force=false
+  [ "${1:-}" = "--force" ] && force=true
+
+  local providers_dir="$HUB_DIR/config/providers"
+  mkdir -p "$providers_dir"
+
+  log_title "Initialisation des providers opencode"
+  echo ""
+
+  # Templates des 5 providers (utiliser des here-docs)
+  declare -A templates
+  templates[mammouth]=$(cat <<'TMPL'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "litellm/claude-sonnet-4-5",
+  "provider": {
+    "litellm": {
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "apiKey": "REPLACE_ME",
+        "baseURL": "https://api.mammouth.ai/v1"
+      }
+    }
+  }
+}
+TMPL
+  )
+  templates[copilot]=$(cat <<'TMPL'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "github-copilot/claude-sonnet-4.5",
+  "provider": {
+    "github-copilot": {}
+  }
+}
+TMPL
+  )
+  templates[openrouter]=$(cat <<'TMPL'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "openrouter/anthropic/claude-sonnet-4-5",
+  "provider": {
+    "openrouter": {
+      "apiKey": "sk-or-v1-REPLACE_ME"
+    }
+  }
+}
+TMPL
+  )
+  templates[ollama]=$(cat <<'TMPL'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "ollama/REPLACE_ME",
+  "provider": {
+    "ollama": {
+      "apiKey": "ollama"
+    }
+  }
+}
+TMPL
+  )
+  templates[bedrock]=$(cat <<'TMPL'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "amazon-bedrock/anthropic.claude-sonnet-4-5-20250929-v1:0",
+  "provider": {
+    "amazon-bedrock": {
+      "options": {
+        "region": "eu-west-3"
+      }
+    }
+  }
+}
+TMPL
+  )
+
+  for name in mammouth copilot openrouter ollama bedrock; do
+    local file="$providers_dir/${name}.json"
+    if [ ! -f "$file" ] || [ "$force" = true ]; then
+      echo "${templates[$name]}" > "$file"
+      log_success "${name}.json [créé]"
+    else
+      log_info "${name}.json [existant]"
+    fi
+  done
+
+  # Créer .gitignore si absent
+  local gitignore="$providers_dir/.gitignore"
+  if [ ! -f "$gitignore" ] || [ "$force" = true ]; then
+    printf '# Fichiers de configuration provider — contiennent des clés API en clair\n*.json\n# Autoriser les fichiers d'\''exemple\n!*.example.json\n' > "$gitignore"
+    log_success ".gitignore créé"
+  fi
+
+  echo ""
+  log_info "Actions manuelles requises :"
+  log_info "  openrouter : oc provider set-key openrouter <clé>"
+  log_info "  ollama     : oc provider set-model ollama <modèle> (ex: qwen2.5-coder:7b)"
+  log_info "  bedrock    : configurer ~/.aws/credentials ou AWS_PROFILE"
+}
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Subcommande : oc provider set-key <nom> <clé>
+# Met à jour le champ apiKey dans le fichier de configuration d'un provider
+# ────────────────────────────────────────────────────────────────────────────────
+cmd_set_key() {
+  local provider_name="${1:-}" api_key="${2:-}"
+  [ -z "$provider_name" ] || [ -z "$api_key" ] && {
+    log_error "Usage : oc provider set-key <nom> <clé>"
+    exit 1
+  }
+
+  local providers_dir="$HUB_DIR/config/providers"
+  local provider_file="$providers_dir/${provider_name}.json"
+
+  [ ! -f "$provider_file" ] && {
+    log_error "Provider '${provider_name}' introuvable : $provider_file"
+    log_info "Providers disponibles : $(ls "$providers_dir"/*.json 2>/dev/null | xargs -n1 basename | sed 's/\.json//' | tr '\n' ' ')"
+    exit 1
+  }
+
+  # Trouver et remplacer le premier champ apiKey dans le JSON
+  local tmp; tmp=$(mktemp)
+  jq --arg key "$api_key" '
+    walk(if type == "object" and has("apiKey") then .apiKey = $key else . end)
+  ' "$provider_file" > "$tmp" || { rm -f "$tmp"; log_error "JSON invalide"; exit 1; }
+  mv "$tmp" "$provider_file"
+
+  local masked="${api_key:0:8}***"
+  log_success "Clé mise à jour pour ${provider_name} : ${masked}"
+}
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Subcommande : oc provider set-model <nom> <modèle>
+# Met à jour le champ model dans le fichier de configuration d'un provider
+# ────────────────────────────────────────────────────────────────────────────────
+cmd_set_model() {
+  local provider_name="${1:-}" model="${2:-}"
+  [ -z "$provider_name" ] || [ -z "$model" ] && {
+    log_error "Usage : oc provider set-model <nom> <modèle>"
+    exit 1
+  }
+
+  local providers_dir="$HUB_DIR/config/providers"
+  local provider_file="$providers_dir/${provider_name}.json"
+
+  [ ! -f "$provider_file" ] && {
+    log_error "Provider '${provider_name}' introuvable : $provider_file"
+    exit 1
+  }
+
+  # Préfixer automatiquement le modèle avec <provider_name>/ s'il ne l'est pas déjà
+  local prefixed_model="$model"
+  if [[ "$model" != "${provider_name}/"* ]]; then
+    prefixed_model="${provider_name}/${model}"
+  fi
+
+  local tmp; tmp=$(mktemp)
+  jq --arg model "$prefixed_model" '.model = $model' "$provider_file" > "$tmp" || {
+    rm -f "$tmp"; log_error "JSON invalide"; exit 1
+  }
+  mv "$tmp" "$provider_file"
+
+  log_success "Modèle mis à jour pour ${provider_name} : ${prefixed_model}"
+}
+
+# ────────────────────────────────────────────────────────────────────────────────
 # Main dispatcher
 # ────────────────────────────────────────────────────────────────────────────────
 
@@ -156,6 +326,9 @@ SUBCOMMAND="${1:-list}"
 case "$SUBCOMMAND" in
   list)        cmd_list "${@:2}" ;;
   set-default) cmd_set_default "${@:2}" ;;
+  init)        cmd_init "${@:2}" ;;
+  set-key)     cmd_set_key "${@:2}" ;;
+  set-model)   cmd_set_model "${@:2}" ;;
   set|get)
     log_error "provider ${SUBCOMMAND} est supprimé — utilisez : oc config ${SUBCOMMAND} <PROJECT_ID>"
     exit 1
@@ -167,6 +340,9 @@ case "$SUBCOMMAND" in
     echo ""
     echo "  $(t provider.list_cmd)"
     echo "  $(t provider.set_default_cmd)"
+    echo "  oc provider init [--force]          — initialise les 5 fichiers provider + .gitignore"
+    echo "  oc provider set-key <nom> <clé>     — met à jour la clé API d'un provider"
+    echo "  oc provider set-model <nom> <modèle> — met à jour le modèle d'un provider"
     exit 1
     ;;
 esac
