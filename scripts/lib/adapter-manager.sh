@@ -35,23 +35,12 @@ load_adapter() {
   done
 }
 
-# Retourne la cible par défaut depuis config/hub.json (ou 'opencode')
+# Retourne la cible par défaut — toujours "opencode"
 get_default_target() {
-  if [ -f "$HUB_CONFIG" ] && command -v jq &>/dev/null; then
-    jq -r '.default_target // "opencode"' "$HUB_CONFIG"
-  else
-    echo "opencode"
-  fi
+  echo "opencode"
 }
 
-# Retourne les cibles actives depuis config/hub.json (ou 'opencode')
-# Strip les \r (fichiers CRLF) et ignore les lignes vides
+# Retourne les cibles actives — toujours "opencode"
 get_active_targets() {
-  local raw
-  if [ -f "$HUB_CONFIG" ] && command -v jq &>/dev/null; then
-    raw=$(jq -r '.active_targets[]?' "$HUB_CONFIG")
-  else
-    raw="opencode"
-  fi
-  echo "$raw" | tr -d '\r' | grep -v '^[[:space:]]*$'
+  echo "opencode"
 }

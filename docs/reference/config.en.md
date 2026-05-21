@@ -13,8 +13,6 @@ Global hub configuration. Created by `oc install` and editable manually.
 ```json
 {
   "version": "1.0.0",
-  "default_target": "opencode",
-  "active_targets": ["opencode"],
   "default_provider": {
     "name": "anthropic",
     "api_key": "",
@@ -33,8 +31,6 @@ Global hub configuration. Created by `oc install` and editable manually.
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `version` | string | — | Hub version (read by `oc version`) |
-| `default_target` | string | `"opencode"` | Target used by `oc start` |
-| `active_targets` | array | `["opencode"]` | Targets deployed by `oc deploy all`, `oc sync` and updated by `oc update` |
 | `default_provider` | object | — | Default LLM provider configuration for all projects |
 | `default_provider.name` | string | `"anthropic"` | Provider name (`anthropic`, `mammouth`, `github-models`, `bedrock`, `ollama`) |
 | `default_provider.api_key` | string | `""` | Provider API key (masked in display, auto-gitignored if set) |
@@ -48,15 +44,12 @@ Global hub configuration. Created by `oc install` and editable manually.
 | Value | Target tool |
 |-------|-------------|
 | `opencode` | OpenCode (`opencode run`) |
-| `opencode` | OpenCode |
 
 ### Minimal example (OpenCode only)
 
 ```json
 {
   "version": "1.0.0",
-  "default_target": "opencode",
-  "active_targets": ["opencode"],
   "default_provider": {
     "name": "anthropic",
     "api_key": "",
@@ -74,8 +67,6 @@ Global hub configuration. Created by `oc install` and editable manually.
 ```json
 {
   "version": "1.0.0",
-  "default_target": "opencode",
-  "active_targets": ["opencode"],
   "default_provider": {
     "name": "mammouth",
     "api_key": "sk-xxx...",
@@ -88,13 +79,11 @@ Global hub configuration. Created by `oc install` and editable manually.
 }
 ```
 
-### Multi-target example
+### Complete example
 
 ```json
 {
   "version": "1.0.0",
-  "default_target": "opencode",
-  "active_targets": ["opencode", "opencode"],
   "default_provider": {
     "name": "anthropic",
     "api_key": "sk-ant-xxx...",
@@ -126,7 +115,7 @@ their own. Automatically created from `projects/projects.example.md` on the firs
 - Labels: label1, label2, label3
 - Language: english        # optional — if absent: agents respond in French by default
 - Agents: all             # optional — all (default) or CSV list of agent-ids
-- Targets: opencode,opencode  # optional — override of hub.json active_targets
+- Targets: opencode  # optional — target(s) to use for this project
 - Modes: agent-id:mode,agent-id:mode  # optional — override primary/subagent modes per agent
 - Disable agents: plan,build  # optional — overrides hub.json for this project
 ```
@@ -149,7 +138,7 @@ their own. Automatically created from `projects/projects.example.md` on the firs
 - Labels: feature, fix, api
 - Language: english
 - Agents: orchestrator,orchestrator-dev,developer-backend,developer-api
-- Targets: opencode,opencode
+- Targets: opencode
 - Modes: developer-backend:primary,developer-api:primary
 ```
 
@@ -159,7 +148,7 @@ their own. Automatically created from `projects/projects.example.md` on the firs
 - `Tracker`: `jira`, `gitlab` or `none`
 - `Language`: optional — free value (e.g. `english`, `spanish`) — if absent, agents respond in French
 - `Agents`: optional — `all` or CSV of agent identifiers — filtered at deployment
-- `Targets`: optional — CSV of targets (`opencode`, `opencode`) — overrides `active_targets` in `hub.json`
+- `Targets`: optional — CSV of targets (`opencode`) — overrides the hub default target
 - `Modes`: optional — CSV of `agent-id:mode` pairs — overrides agent frontmatter. Modes: `primary`, `subagent`. Leave empty to revert to frontmatter values.
 - `Disable agents`: optional — CSV of native OpenCode agents to disable (`build`, `plan`, `general`, `explore`) — overrides `opencode.disabled_native_agents` in `hub.json`. Empty = use hub default.
 - This file is **local** — never commit it
@@ -239,7 +228,7 @@ base_url=https://models.inference.ai.azure.com
 
 | Provider | Targets | API Key required | Default base URL | Description |
 |----------|---------|-----------------|-----------------|-------------|
-| `anthropic` | OpenCode, OpenCode | yes | — | Direct Anthropic API |
+| `anthropic` | OpenCode | yes | — | Direct Anthropic API |
 | `mammouth` | OpenCode | yes | `https://api.mammouth.ai/v1` | OpenAI-compatible proxy (FR-hosted) |
 | `github-models` | OpenCode | yes | `https://models.inference.ai.azure.com` | GitHub Models API |
 | `bedrock` | OpenCode | yes | — (AWS-specific) | AWS Bedrock |

@@ -115,10 +115,9 @@ These variables are available to `adapter_deploy_config` after Phase 1:
 ## Creating a New Adapter
 
 1. Create `scripts/adapters/<target>.adapter.sh` with the **8 contract functions**
-2. Add the target to `config/hub.json` (`active_targets` and `default_target` if relevant)
-3. The file will be loaded automatically by `load_adapter` — no modification of
+2. The file will be loaded automatically by `load_adapter` — no modification of
    `adapter-manager.sh` is needed
-4. Test: `oc deploy <target>` then verify the generated files
+3. Test: `oc deploy <target>` then verify the generated files
 
 ### Minimal Example
 

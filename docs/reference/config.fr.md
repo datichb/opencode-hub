@@ -11,8 +11,6 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
 ```json
 {
   "version": "1.0.0",
-  "default_target": "opencode",
-  "active_targets": ["opencode"],
   "default_provider": {
     "name": "anthropic",
     "api_key": "",
@@ -31,8 +29,6 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
 | Clé | Type | Défaut | Description |
 |-----|------|--------|-------------|
 | `version` | string | — | Version du hub (lue par `oc version`) |
-| `default_target` | string | `"opencode"` | Cible utilisée par `oc start` |
-| `active_targets` | array | `["opencode"]` | Cibles déployées par `oc deploy all`, `oc sync` et mises à jour par `oc update` |
 | `default_provider` | object | — | Configuration du provider LLM par défaut pour tous les projets |
 | `default_provider.name` | string | `"anthropic"` | Nom du provider (`anthropic`, `mammouth`, `github-models`, `bedrock`, `ollama`) |
 | `default_provider.api_key` | string | `""` | Clé API du provider (masquée en affichage, auto-ignorée par git si définie) |
@@ -46,15 +42,12 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
 | Valeur | Outil cible |
 |--------|-------------|
 | `opencode` | OpenCode (`opencode run`) |
-| `opencode` | OpenCode |
 
 ### Exemple minimal (OpenCode uniquement)
 
 ```json
 {
   "version": "1.0.0",
-  "default_target": "opencode",
-  "active_targets": ["opencode"],
   "default_provider": {
     "name": "anthropic",
     "api_key": "",
@@ -72,8 +65,6 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
 ```json
 {
   "version": "1.0.0",
-  "default_target": "opencode",
-  "active_targets": ["opencode"],
   "default_provider": {
     "name": "mammouth",
     "api_key": "sk-xxx...",
@@ -86,13 +77,11 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
 }
 ```
 
-### Exemple multi-cibles
+### Exemple complet
 
 ```json
 {
   "version": "1.0.0",
-  "default_target": "opencode",
-  "active_targets": ["opencode", "opencode"],
   "default_provider": {
     "name": "anthropic",
     "api_key": "sk-ant-xxx...",
@@ -124,7 +113,7 @@ le sien. Créé automatiquement depuis `projects/projects.example.md` au premier
 - Labels : label1, label2, label3
 - Langue : english        # optionnel — si absent : agents en français par défaut
 - Agents : all            # optionnel — all (défaut) ou liste CSV d'agent-ids
-- Targets : opencode,opencode  # optionnel — override de active_targets du hub.json
+- Targets : opencode  # optionnel — cible(s) à utiliser pour ce projet
 - Modes : agent-id:mode,agent-id:mode  # optionnel — override des modes primary/subagent par agent
 - Disable agents : plan,build  # optionnel — surcharge hub.json pour ce projet
 ```
@@ -147,7 +136,7 @@ le sien. Créé automatiquement depuis `projects/projects.example.md` au premier
 - Labels : feature, fix, api
 - Langue : english
 - Agents : orchestrator,orchestrator-dev,developer-backend,developer-api
-- Targets : opencode,opencode
+- Targets : opencode
 - Modes : developer-backend:primary,developer-api:primary
 ```
 
@@ -157,7 +146,7 @@ le sien. Créé automatiquement depuis `projects/projects.example.md` au premier
 - `Tracker` : `jira`, `gitlab` ou `none`
 - `Langue` : optionnel — valeur libre (ex: `english`, `spanish`) — si absent, les agents s'expriment en français
 - `Agents` : optionnel — `all` ou CSV d'identifiants d'agents — filtré au déploiement
-- `Targets` : optionnel — CSV de cibles (`opencode`, `opencode`) — surcharge `active_targets` de `hub.json`
+- `Targets` : optionnel — CSV de cibles (`opencode`) — surcharge la cible par défaut du hub
 - `Modes` : optionnel — CSV de paires `agent-id:mode` — surcharge le frontmatter des agents. Modes : `primary`, `subagent`. Laisser vide pour revenir aux valeurs frontmatter.
 - `Disable agents` : optionnel — CSV d'agents natifs OpenCode à désactiver (`build`, `plan`, `general`, `explore`) — surcharge `opencode.disabled_native_agents` de `hub.json`. Vide = utiliser le défaut hub.
 - Ce fichier est **local** — ne jamais le committer
@@ -237,7 +226,7 @@ base_url=https://models.inference.ai.azure.com
 
 | Provider | Cibles | Requis API Key | Base URL défaut | Description |
 |----------|--------|----------------|-----------------|-------------|
-| `anthropic` | OpenCode, OpenCode | oui | — | API Anthropic directe |
+| `anthropic` | OpenCode | oui | — | API Anthropic directe |
 | `mammouth` | OpenCode | oui | `https://api.mammouth.ai/v1` | Proxy OpenAI-compatible (FR-hosted) |
 | `github-models` | OpenCode | oui | `https://models.inference.ai.azure.com` | GitHub Models API |
 | `bedrock` | OpenCode | oui | — (spécifique AWS) | AWS Bedrock |

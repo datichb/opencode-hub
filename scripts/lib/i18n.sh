@@ -493,7 +493,7 @@ t() {
       sync.title_dryrun)      printf '%s' "Vérification globale des agents déployés (dry-run)" ;;
       sync.title)             printf '%s' "Synchronisation des agents sur tous les projets" ;;
       sync.no_projects)       printf '%s' "Aucun projet enregistré — lancez : ./oc.sh init" ;;
-      sync.no_targets)        printf '%s' "Aucune cible configurée — vérifier active_targets dans config/hub.json" ;;
+      sync.no_targets)        printf '%s' "Aucune cible de synchronisation disponible" ;;
       sync.project_label)     printf '%s' "── Projet : " ;;
       sync.path_undefined)    printf '%s' "path non défini localement, ignoré" ;;
       sync.dir_missing)       printf '%s' "dossier introuvable : " ;;
@@ -1114,7 +1114,7 @@ t_en() {
     sync.title_dryrun)      printf '%s' "Global check of deployed agents (dry-run)" ;;
     sync.title)             printf '%s' "Sync agents on all registered projects" ;;
     sync.no_projects)       printf '%s' "No registered projects — run: ./oc.sh init" ;;
-    sync.no_targets)        printf '%s' "No target configured — check active_targets in config/hub.json" ;;
+    sync.no_targets)        printf '%s' "No synchronization target available" ;;
     sync.project_label)     printf '%s' "── Project: " ;;
     sync.path_undefined)    printf '%s' "path not defined locally, skipped" ;;
     sync.dir_missing)       printf '%s' "directory not found: " ;;

@@ -1035,7 +1035,7 @@ cmd_deploy() {
   fi
 
   if [ "${#targets[@]}" -eq 0 ]; then
-    log_warn "Aucune cible configurée — vérifier active_targets dans config/hub.json"
+    log_warn "Aucune cible disponible pour cet agent"
     exit 1
   fi
 

@@ -61,7 +61,6 @@ mkdir -p "$HUB_DIR/projects" "$HUB_DIR/skills" "$HUB_DIR/agents" \
          "$HUB_DIR/scripts/lib" "$HUB_DIR/scripts/adapters"
 
 # ── Écrire config/hub.json (seulement si absent ou si l'utilisateur confirme) ──
-targets_json=$(printf '"%s",' "${active_targets[@]}" | sed 's/,$//')
 if [ -f "$HUB_DIR/config/hub.json" ]; then
   log_warn "$(t install.hub_json_exists)"
   read -rp "  $(t install.hub_json_overwrite)" overwrite_choice
@@ -79,8 +78,6 @@ if [ "$_write_hub_json" = true ]; then
   cat > "$HUB_DIR/config/hub.json" << HUBJSON
 {
   "version": "2.0.0",
-  "default_target": "${active_targets[0]}",
-  "active_targets": [${targets_json}],
   "default_provider": {
     "name": "anthropic",
     "api_key": "",

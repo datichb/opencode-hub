@@ -115,10 +115,9 @@ Ces variables sont disponibles pour `adapter_deploy_config` après la Phase 1 :
 ## Créer un nouvel adapter
 
 1. Créer `scripts/adapters/<cible>.adapter.sh` avec les **8 fonctions** du contrat
-2. Ajouter la cible dans `config/hub.json` (`active_targets` et `default_target` si pertinent)
-3. Le fichier sera chargé automatiquement par `load_adapter` — aucune modification de
+2. Le fichier sera chargé automatiquement par `load_adapter` — aucune modification de
    `adapter-manager.sh` n'est nécessaire
-4. Tester : `oc deploy <cible>` puis vérifier les fichiers générés
+3. Tester : `oc deploy <cible>` puis vérifier les fichiers générés
 
 ### Exemple minimal
 

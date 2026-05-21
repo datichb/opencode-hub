@@ -87,8 +87,6 @@ ensure_hub_config() {
       cat > "$HUB_CONFIG" <<HUBEOF
 {
   "version": "${_fallback_version}",
-  "default_target": "opencode",
-  "active_targets": ["opencode"],
   "default_provider": {
     "name": "",
     "api_key": "",
@@ -232,7 +230,7 @@ get_project_agents() {
 }
 
 # Retourne la liste CSV des cibles sélectionnées pour un projet
-# Retourne "" si le champ est absent (= utiliser les active_targets de hub.json)
+# Retourne "" si le champ targets n'est pas renseigné dans le fichier projet
 # Strip les \r (fichiers CRLF) et les espaces parasites
 get_project_targets() {
   local raw
