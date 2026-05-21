@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 # Tests pour scripts/cmd-deploy.sh
-# Couvre : _get_mtime, --check (à jour / obsolète / manquant), --diff, mode normal
+# Couvre : --check (à jour / obsolète / manquant), --diff, mode normal
 #
 # Stratégie d'isolation :
 #   - FAKE_HUB = dossier temporaire avec :
@@ -10,6 +10,7 @@
 #     - scripts/ → symlink vers le vrai scripts/ du repo
 #     - skills/  → symlink vers le vrai skills/ du repo
 #   - HUB_DIR=FAKE_HUB est exporté pour cmd-deploy.sh
+#   - CANONICAL_AGENTS_DIR=FAKE_HUB/agents est exporté pour isoler le scan aux agents du FAKE_HUB
 
 setup() {
   HUB_ROOT="$BATS_TEST_DIRNAME/.."
@@ -59,6 +60,7 @@ HUBEOF
   touch "$FAKE_HUB/projects/api-keys.local.md"
 
   export HUB_DIR="$FAKE_HUB"
+  export CANONICAL_AGENTS_DIR="$FAKE_HUB/agents"
 }
 
 teardown() {
@@ -66,21 +68,8 @@ teardown() {
 }
 
 # ── _get_mtime ────────────────────────────────────────────────────────────────
-
-@test "_get_mtime : retourne un timestamp numérique pour un fichier existant" {
-  tmpf=$(mktemp)
-  result=$(bash -c "
-    source '$HUB_ROOT/scripts/cmd-deploy.sh' --check opencode 2>/dev/null || true
-    _get_mtime '$tmpf'
-  " 2>/dev/null || true)
-  rm -f "$tmpf"
-  # Fallback : appel direct si source échoue en subprocess
-  if [ -z "$result" ]; then
-    result=$(stat -f %m "$FAKE_HUB/config/hub.json" 2>/dev/null || stat -c %Y "$FAKE_HUB/config/hub.json" 2>/dev/null)
-  fi
-  [ -n "$result" ]
-  [[ "$result" =~ ^[0-9]+$ ]]
-}
+# _get_mtime a été supprimée dans le commit 6c29c94. Le test d'ordre de timestamps
+# reste valide en s'appuyant directement sur stat.
 
 @test "_get_mtime : un fichier plus récent a un timestamp plus grand ou égal" {
   f1=$(mktemp)
@@ -96,12 +85,12 @@ teardown() {
 
 @test "deploy --check : agent manquant retourne exit 1" {
   # Pas de fichier déployé dans .opencode/agents/
-  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check opencode
+  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check
   [ "$status" -eq 1 ]
 }
 
 @test "deploy --check : affiche MANQUANT si agent absent" {
-  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check opencode 2>&1 || true
+  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check 2>&1 || true
   [[ "$output" == *"MANQUANT"* ]]
 }
 
@@ -114,7 +103,7 @@ teardown() {
   # Toucher la source pour la rendre plus récente
   touch "$FAKE_HUB/agents/quality/test-agent.md"
 
-  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check opencode
+  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check
   [ "$status" -eq 1 ]
 }
 
@@ -123,7 +112,7 @@ teardown() {
   sleep 1
   touch "$FAKE_HUB/agents/quality/test-agent.md"
 
-  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check opencode 2>&1 || true
+  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check 2>&1 || true
   [[ "$output" == *"OBSOLÈTE"* ]]
 }
 
@@ -134,7 +123,7 @@ teardown() {
   sleep 1
   cp "$FAKE_HUB/agents/quality/test-agent.md" "$FAKE_HUB/.opencode/agents/test-agent.md"
 
-  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check opencode
+  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check
   [ "$status" -eq 0 ]
 }
 
@@ -142,22 +131,26 @@ teardown() {
   sleep 1
   cp "$FAKE_HUB/agents/quality/test-agent.md" "$FAKE_HUB/.opencode/agents/test-agent.md"
 
-  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check opencode
+  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check
   [ "$status" -eq 0 ]
   [[ "$output" == *"À JOUR"* ]]
 }
 
-# ── --check : cible inconnue ──────────────────────────────────────────────────
+# ── --check : aucun agent à vérifier ─────────────────────────────────────────
 
-@test "deploy --check : cible inconnue retourne exit 0 sans crash" {
-  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check unknown-target
+@test "deploy --check : aucun agent à vérifier retourne exit 0 sans crash" {
+  # Vider CANONICAL_AGENTS_DIR pour simuler un hub sans agents
+  rm -rf "$FAKE_HUB/agents/quality"
+  mkdir -p "$FAKE_HUB/agents"
+
+  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check
   [ "$status" -eq 0 ]
 }
 
 # ── --diff : agent nouveau ────────────────────────────────────────────────────
 
 @test "deploy --diff : affiche 'nouveau' si agent non déployé" {
-  run bash -c "echo n | bash '$HUB_ROOT/scripts/cmd-deploy.sh' --diff opencode"
+  run bash -c "echo n | bash '$HUB_ROOT/scripts/cmd-deploy.sh' --diff"
   [[ "$output" == *"nouveau"* ]]
 }
 
@@ -165,9 +158,9 @@ teardown() {
 
 @test "deploy --diff : affiche 'inchangé' si agent déjà identique" {
   # Pré-déployer l'agent pour avoir le bon contenu généré
-  bash "$HUB_ROOT/scripts/cmd-deploy.sh" opencode 2>/dev/null || true
+  bash "$HUB_ROOT/scripts/cmd-deploy.sh" 2>/dev/null || true
 
-  run bash -c "echo n | bash '$HUB_ROOT/scripts/cmd-deploy.sh' --diff opencode"
+  run bash -c "echo n | bash '$HUB_ROOT/scripts/cmd-deploy.sh' --diff"
   [[ "$output" == *"inchangé"* ]]
 }
 
