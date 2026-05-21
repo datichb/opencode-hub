@@ -25,7 +25,7 @@ _spinner_start() {
     while true; do
       printf "\r${blue}%s${reset}  %s  " "${frames[$i]}" "$_SPINNER_MSG"
       i=$(( (i + 1) % 10 ))
-      sleep 0.1
+      read -r -t 0.1 < /dev/null 2>/dev/null || true  # builtin bash, zéro fork ; read -t fractionnaire ≥ bash 3.2
     done
   ) &
   _SPINNER_PID=$!
