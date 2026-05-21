@@ -6,7 +6,6 @@ source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 resolve_oc_lang
 source "$LIB_DIR/tui-picker.sh"
 source "$LIB_DIR/agent-picker.sh"
-source "$LIB_DIR/target-picker.sh"
 
 # EXTERNAL_SKILLS_DIR est défini dans common.sh
 
@@ -353,7 +352,7 @@ cmd_create() {
 
   # ── 4. Cibles ─────────────────────────────────────────────────────────────
   PICKED_TARGETS=""
-  _pick_project_targets "opencode"
+  _pick_targets "opencode"
   local targets_csv="$PICKED_TARGETS"
   [ "$targets_csv" = "all" ] && targets_csv="opencode"
 
@@ -544,7 +543,7 @@ cmd_edit() {
   local new_targets="$cur_targets"
   if [[ "$edit_targets" =~ ^[Yy]$ ]]; then
     PICKED_TARGETS=""
-    _pick_project_targets "$cur_targets"
+    _pick_targets "$cur_targets"
     new_targets="$PICKED_TARGETS"
     [ "$new_targets" = "all" ] && new_targets="opencode"
   fi
