@@ -49,8 +49,7 @@ if [ "$CLEAN_MODE" = true ]; then
   source "$LIB_DIR/adapter-manager.sh"
 
   # Déterminer les cibles actives
-  local_targets=""
-  local_targets=$(get_active_targets 2>/dev/null || echo "opencode")
+  local_targets="opencode"
 
   log_info "Nettoyage des fichiers déployés dans ${PROJECT_PATH}…"
 

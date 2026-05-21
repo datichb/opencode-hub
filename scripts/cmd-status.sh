@@ -129,7 +129,7 @@ _show_project_status() {
   # ── Agents déployés (cible par défaut) ────────────────────────────────────
   if [ -n "$path" ]; then
     local default_target
-    default_target=$(get_default_target)
+    default_target="opencode"
     local agents_dir=""
     case "$default_target" in
       opencode) agents_dir="$path/.opencode/agents" ;;

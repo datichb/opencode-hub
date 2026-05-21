@@ -53,7 +53,7 @@ PROJECT_ID=$(normalize_project_id "$PROJECT_ID")
 PROJECT_PATH=$(resolve_project_path "$PROJECT_ID")
 
 # ── Résolution de la cible ────────────────────────────────────────────────────
-default_target=$(get_default_target)
+default_target="opencode"
 load_adapter "$default_target"
 adapter_validate || { log_error "$(t review.target_unavailable)'${default_target}' $(t review.target_unavailable_suffix)"; exit 1; }
 

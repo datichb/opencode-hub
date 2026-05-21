@@ -134,7 +134,7 @@ cmd_set_default() {
   # Régénérer opencode.json du hub immédiatement pour que la config soit active
   source "$HUB_DIR/scripts/lib/adapter-manager.sh"
   local active_targets
-  active_targets=$(get_active_targets)
+  active_targets="opencode"
   local _synced=false
   while IFS= read -r target; do
     [ -z "$target" ] && continue

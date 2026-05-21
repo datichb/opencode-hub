@@ -5,10 +5,10 @@ source "$LIB_DIR/adapter-manager.sh"
 
 log_title "$(t update.title)"
 
-while IFS= read -r target; do
+for target in "opencode"; do
   load_adapter "$target"
   adapter_update
-done < <(get_active_targets)
+done
 
 log_info "$(t update.beads_updating)"
 if command -v bd &>/dev/null; then

@@ -1018,26 +1018,7 @@ cmd_deploy() {
   fi
 
   # Résoudre les cibles
-  local targets=()
-  if [ -n "$project_id" ]; then
-    local proj_targets; proj_targets=$(get_project_targets "$project_id")
-    if [ -n "$proj_targets" ] && [ "$proj_targets" != "all" ]; then
-      while IFS=',' read -ra _t; do
-        for _tgt in "${_t[@]}"; do
-          _tgt=$(echo "$_tgt" | tr -d '\r' | sed 's/^ *//;s/ *$//')
-          [ -n "$_tgt" ] && targets+=("$_tgt")
-        done
-      done <<< "$proj_targets"
-    fi
-  fi
-  if [ "${#targets[@]}" -eq 0 ]; then
-    while IFS= read -r t; do [ -n "$t" ] && targets+=("$t"); done < <(get_active_targets)
-  fi
-
-  if [ "${#targets[@]}" -eq 0 ]; then
-    log_warn "Aucune cible disponible pour cet agent"
-    exit 1
-  fi
+  local targets=("opencode")
 
   # Langue du projet
   local lang=""
