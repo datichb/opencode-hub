@@ -88,8 +88,7 @@ exec "$REAL_GIT" "$@"
 GITEOF
   chmod +x "$TEST_DIR/bin/git"
 
-  # Mock jq pour que get_default_target fonctionne sans hub.json
-  # (common.sh retourne "opencode" si jq absent ou hub.json absent)
+  # Mock jq : common.sh utilise "opencode" comme cible fixe si jq est absent ou hub.json absent
   # On s'assure que le mock opencode est trouvé par adapter_validate
   export PATH="$TEST_DIR/bin:$PATH"
 }

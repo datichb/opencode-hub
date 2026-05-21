@@ -229,15 +229,6 @@ get_project_agents() {
   echo "${raw:-all}"
 }
 
-# Retourne la liste CSV des cibles sélectionnées pour un projet
-# Retourne "" si le champ targets n'est pas renseigné dans le fichier projet
-# Strip les \r (fichiers CRLF) et les espaces parasites
-get_project_targets() {
-  local raw
-  raw=$(_get_project_field "$1" "Targets")
-  echo "${raw:-}" | tr -d '\r' | sed 's/^ *//;s/ *$//'
-}
-
 # Retourne le mode de synchronisation d'un projet (bidirectional|pull-only|push-only)
 # Retourne "bidirectional" si le champ est absent (comportement historique)
 get_project_sync_mode() {

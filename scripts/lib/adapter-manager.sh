@@ -34,13 +34,3 @@ load_adapter() {
     fi
   done
 }
-
-# Retourne la cible par défaut — toujours "opencode"
-get_default_target() {
-  echo "opencode"
-}
-
-# Retourne les cibles actives — toujours "opencode"
-get_active_targets() {
-  echo "opencode"
-}
