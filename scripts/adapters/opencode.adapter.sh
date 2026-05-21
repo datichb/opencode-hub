@@ -76,16 +76,22 @@ _get_opencode_model() {
 
 # Résout le modèle pour un agent et retourne vide si identique au modèle global du projet.
 # $1 = agent_file (chemin .md), $2 = project_id (optionnel), $3 = provider_override (optionnel)
+# $4 = hub_agent_models (optionnel) — précalculé par adapter_deploy_config
+# $5 = hub_family_models (optionnel) — précalculé par adapter_deploy_config
+# $6 = hub_global_model (optionnel) — précalculé par adapter_deploy_config
 # Retourne le modèle résolu sur stdout, ou rien si == modèle global projet.
 _get_agent_model() {
   local agent_file="$1"
   local project_id="${2:-}"
   local provider_override="${3:-}"
+  local hub_agent_models="${4:-}"
+  local hub_family_models="${5:-}"
+  local hub_global_model="${6:-}"
 
   [ -z "$agent_file" ] && return 0
 
   local resolved
-  resolved=$(resolve_agent_model "$agent_file" "$project_id")
+  resolved=$(resolve_agent_model "$agent_file" "$project_id" "$hub_agent_models" "$hub_family_models" "$hub_global_model")
   # Strip le préfixe provider pour obtenir le nom court
   resolved="${resolved##*/}"
   # Appliquer le préfixe et les aliases du provider effectif
@@ -330,6 +336,16 @@ adapter_deploy_config() {
 
   # Construire l'objet "agent" via jq pour garantir un JSON valide
   local agent_obj_json="{}"
+
+  # Précalculer les 3 niveaux hub.json une seule fois (évite N×3 lectures de hub.json en boucle)
+  # Si jq absent ou HUB_CONFIG inexistant, les vars restent vides → resolve_agent_model bascule sur le chemin lent (sed) — dégradation gracieuse.
+  local _hub_agent_models="" _hub_family_models="" _hub_global_model=""
+  if command -v jq &>/dev/null && [ -f "$HUB_CONFIG" ]; then
+    _hub_agent_models=$(jq -r '.agent_models.agents // {} | tojson' "$HUB_CONFIG" 2>/dev/null || true)
+    _hub_family_models=$(jq -r '.agent_models.families // {} | tojson' "$HUB_CONFIG" 2>/dev/null || true)
+    _hub_global_model=$(jq -r '.opencode.model // empty' "$HUB_CONFIG" 2>/dev/null || true)
+  fi
+
   local _ai=0
   while [ "$_ai" -lt "${#_DEPLOY_FILES_AGENT_KEYS[@]}" ]; do
     local _aid="${_DEPLOY_FILES_AGENT_KEYS[$_ai]}"
@@ -354,7 +370,7 @@ adapter_deploy_config() {
     # Résoudre le modèle pour cet agent (vide si == modèle global)
     local _agent_model=""
     if [ -n "$_asource" ]; then
-      _agent_model=$(_get_agent_model "$_asource" "$project_id" "$provider_override")
+      _agent_model=$(_get_agent_model "$_asource" "$project_id" "$provider_override" "$_hub_agent_models" "$_hub_family_models" "$_hub_global_model")
     fi
 
     # Fusionner le champ model si nécessaire

@@ -133,10 +133,20 @@ _get_agent_family() {
 # Résout le modèle à utiliser pour un agent via une cascade à 7 niveaux + clamp.
 # $1 = agent_file (chemin du fichier .md)
 # $2 = project_id (optionnel)
+# $3 = hub_agent_models (optionnel) — JSON object .agent_models.agents précalculé via tojson
+#   ex: '{"orchestrator":"claude-opus-4"}' ou '{}' si la section est absente de hub.json.
+# $4 = hub_family_models (optionnel) — JSON object .agent_models.families précalculé via tojson
+#   ex: '{"planning":"claude-opus-4"}' ou '{}' si la section est absente.
+# $5 = hub_global_model (optionnel) — string .opencode.model précalculé
+# Si $3/$4/$5 sont fournis, les niveaux 4-6 lisent les valeurs en mémoire (zéro lecture hub.json).
+# Si $3/$4/$5 sont vides, comportement actuel inchangé (lecture hub.json directe — rétrocompatibilité).
 # Affiche le modèle résolu sur stdout.
 resolve_agent_model() {
   local agent_file="$1"
   local project_id="${2:-}"
+  local hub_agent_models="${3:-}"
+  local hub_family_models="${4:-}"
+  local hub_global_model="${5:-}"
 
   # Lire le frontmatter pour obtenir id et model (plancher)
   read_agent_frontmatter "$agent_file"
@@ -158,28 +168,48 @@ resolve_agent_model() {
   fi
 
   # Niveaux 4-6 : hub.json
-  if [ -z "$resolved" ] && [ -f "$HUB_CONFIG" ]; then
-    if command -v jq &>/dev/null; then
-      # 4. hub.agents.X
-      [ -z "$resolved" ] && resolved=$(jq -r ".agent_models.agents.\"${agent_id}\" // empty" "$HUB_CONFIG" 2>/dev/null)
-      # 5. hub.families.F
-      [ -z "$resolved" ] && resolved=$(jq -r ".agent_models.families.\"${family}\" // empty" "$HUB_CONFIG" 2>/dev/null)
-      # 6. hub.model
-      [ -z "$resolved" ] && resolved=$(jq -r '.opencode.model // empty' "$HUB_CONFIG" 2>/dev/null)
-    else
-      # Fallback sans jq : sed pour extraire les sections puis grep la clé
-      # 4. hub.agents.X — chercher agent_id dans la section "agents" de "agent_models"
-      [ -z "$resolved" ] && resolved=$(sed -n '/"agent_models"/,/^[[:space:]]*}/p' "$HUB_CONFIG" 2>/dev/null \
-        | sed -n '/"agents"/,/}/p' \
-        | grep "\"${agent_id}\"" | head -1 \
-        | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/' | grep -v '{' || true)
-      # 5. hub.families.F — chercher family dans la section "families" de "agent_models"
-      [ -z "$resolved" ] && resolved=$(sed -n '/"agent_models"/,/^[[:space:]]*}/p' "$HUB_CONFIG" 2>/dev/null \
-        | sed -n '/"families"/,/}/p' \
-        | grep "\"${family}\"" | head -1 \
-        | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/' | grep -v '{' || true)
-      # 6. hub.model — chercher "model" dans la section opencode
-      [ -z "$resolved" ] && resolved=$(sed -n '/"opencode"/,/}/p' "$HUB_CONFIG" 2>/dev/null | grep '"model"' | head -1 | sed 's/.*"model"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || true)
+  # Si les valeurs précalculées sont fournies ($3/$4/$5), les utiliser directement (zéro lecture hub.json).
+  # Sinon, conserver le comportement actuel (lecture hub.json directe — rétrocompatibilité).
+  if [ -z "$resolved" ]; then
+    if [ -n "$hub_agent_models" ] || [ -n "$hub_family_models" ] || [ -n "$hub_global_model" ]; then
+      # Chemin rapide : valeurs précalculées en mémoire.
+      # Note : hub_agent_models/hub_family_models peuvent valoir '{}' (objet JSON vide sérialisé)
+      # quand la section correspondante est absente de hub.json. Dans ce cas le chemin rapide
+      # est quand même activé, mais .[$id] // empty sur '{}' retourne vide → identique au chemin lent.
+      # jq est nécessairement présent : le précalcul qui fournit ces paramètres est conditionné par command -v jq.
+      if command -v jq &>/dev/null; then
+        # 4. hub.agents.X — jq sur chaîne en mémoire (pas de lecture fichier)
+        [ -z "$resolved" ] && [ -n "$hub_agent_models" ] && \
+          resolved=$(printf '%s' "$hub_agent_models" | jq -r --arg id "$agent_id" '.[$id] // empty' 2>/dev/null)
+        # 5. hub.families.F — jq sur chaîne en mémoire
+        [ -z "$resolved" ] && [ -n "$hub_family_models" ] && \
+          resolved=$(printf '%s' "$hub_family_models" | jq -r --arg fam "$family" '.[$fam] // empty' 2>/dev/null)
+      fi
+      # 6. hub.model — valeur scalaire directe (zéro fork)
+      [ -z "$resolved" ] && resolved="$hub_global_model"
+    elif [ -f "$HUB_CONFIG" ]; then
+      if command -v jq &>/dev/null; then
+        # 4. hub.agents.X
+        [ -z "$resolved" ] && resolved=$(jq -r ".agent_models.agents.\"${agent_id}\" // empty" "$HUB_CONFIG" 2>/dev/null)
+        # 5. hub.families.F
+        [ -z "$resolved" ] && resolved=$(jq -r ".agent_models.families.\"${family}\" // empty" "$HUB_CONFIG" 2>/dev/null)
+        # 6. hub.model
+        [ -z "$resolved" ] && resolved=$(jq -r '.opencode.model // empty' "$HUB_CONFIG" 2>/dev/null)
+      else
+        # Fallback sans jq : sed pour extraire les sections puis grep la clé
+        # 4. hub.agents.X — chercher agent_id dans la section "agents" de "agent_models"
+        [ -z "$resolved" ] && resolved=$(sed -n '/"agent_models"/,/^[[:space:]]*}/p' "$HUB_CONFIG" 2>/dev/null \
+          | sed -n '/"agents"/,/}/p' \
+          | grep "\"${agent_id}\"" | head -1 \
+          | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/' | grep -v '{' || true)
+        # 5. hub.families.F — chercher family dans la section "families" de "agent_models"
+        [ -z "$resolved" ] && resolved=$(sed -n '/"agent_models"/,/^[[:space:]]*}/p' "$HUB_CONFIG" 2>/dev/null \
+          | sed -n '/"families"/,/}/p' \
+          | grep "\"${family}\"" | head -1 \
+          | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/' | grep -v '{' || true)
+        # 6. hub.model — chercher "model" dans la section opencode
+        [ -z "$resolved" ] && resolved=$(sed -n '/"opencode"/,/}/p' "$HUB_CONFIG" 2>/dev/null | grep '"model"' | head -1 | sed 's/.*"model"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || true)
+      fi
     fi
   fi
 
