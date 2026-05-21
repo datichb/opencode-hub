@@ -1,6 +1,6 @@
 #!/bin/bash
 # Assemble le contenu d'un agent canonique (agents/) avec ses skills injectés.
-# Usage : source ce fichier, puis appeler build_agent_content <agent_file> [target]
+# Usage : source ce fichier, puis appeler build_agent_content <agent_file>
 
 # Guard contre le double sourcing
 [[ -n "${_PROMPT_BUILDER_LOADED:-}" ]] && return 0
@@ -38,15 +38,18 @@ extract_frontmatter_list() {
     | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$'
 }
 
+# Retourne 0 (vrai) si un agent supporte la cible donnée.
+# Opencode est désormais la seule cible — tous les agents sont compatibles.
+agent_supports_target() { return 0; }
+
 # Lit le frontmatter d'un agent en une seule passe et expose les variables :
-#   _fm_id      : valeur du champ id
-#   _fm_targets : valeur brute du champ targets (ex: "[opencode]")
-#   _fm_skills  : valeur brute du champ skills  (ex: "[skill/a, skill/b]")
+#   _fm_id     : valeur du champ id
+#   _fm_skills : valeur brute du champ skills  (ex: "[skill/a, skill/b]")
 # Utilise uniquement des builtins bash (read, while) — pas de subprocess.
 # @param $1 — chemin absolu du fichier agent
 read_agent_frontmatter() {
   local file="$1"
-  _fm_id="" _fm_targets="" _fm_skills="" _fm_model=""
+  _fm_id="" _fm_skills="" _fm_model=""
   local in_fm=0 fm_done=0
   while IFS= read -r line; do
     if [ "$in_fm" -eq 0 ] && [ "$line" = "---" ]; then
@@ -62,15 +65,14 @@ read_agent_frontmatter() {
       # (ligne ci-dessous). Il DOIT apparaître avant skills: dans le frontmatter
       # pour être lu avant la sortie anticipée.
       case "$line" in
-        id:*)      _fm_id="${line#id:}";      _fm_id="${_fm_id# }"      ;;
-        targets:*) _fm_targets="${line#targets:}"; _fm_targets="${_fm_targets# }" ;;
-        skills:*)  _fm_skills="${line#skills:}";  _fm_skills="${_fm_skills# }"  ;;
-        model:*)   _fm_model="${line#model:}";   _fm_model="${_fm_model# }"   ;;
+        id:*)    _fm_id="${line#id:}";    _fm_id="${_fm_id# }"    ;;
+        skills:*) _fm_skills="${line#skills:}"; _fm_skills="${_fm_skills# }" ;;
+        model:*)  _fm_model="${line#model:}";  _fm_model="${_fm_model# }"  ;;
       esac
     fi
     # Arrêter dès qu'on a tout (optimisation : les champs utiles sont dans les 10 premières lignes)
     # _fm_model est optionnel — pas inclus dans la condition de sortie anticipée
-    [ -n "$_fm_id" ] && [ -n "$_fm_targets" ] && [ -n "$_fm_skills" ] && break
+    [ -n "$_fm_id" ] && [ -n "$_fm_skills" ] && break
   done < "$file"
 }
 
@@ -328,11 +330,6 @@ strip_frontmatter() {
   else
     cat "$file"
   fi
-}
-
-# Vérifie si un agent supporte une cible donnée (via frontmatter targets)
-agent_supports_target() {
-  extract_frontmatter_list "$1" "targets" | grep -q "^${2}$"
 }
 
 # Retourne le mode de déploiement d'un agent (frontmatter mode:)
@@ -594,7 +591,8 @@ _get_precomputed_stack_skills() {
 }
 
 # Construit le contenu final : corps de l'agent + skills injectés → stdout
-# $2 (target) est réservé pour un futur filtrage par cible — non utilisé pour l'instant
+# $2 (target) est transmis par les appelants (cmd-deploy.sh, cmd-agent.sh, opencode.adapter.sh)
+#   mais non utilisé ici — conservé pour rétrocompatibilité de signature.
 # $3 (lang) optionnel — si non vide, injecte une instruction de langue en tête de l'agent
 # $4 (project_path) optionnel — si non vide, détecte la stack et injecte les skills correspondants
 # $5 (precomputed_stacks) optionnel — si non vide, utilise les stack skills précalculés (chemin rapide)
@@ -604,7 +602,7 @@ _get_precomputed_stack_skills() {
 build_agent_content() {
   local agent_file="$1"
   # shellcheck disable=SC2034
-  local target="${2:-opencode}"  # réservé : filtrage par cible (futur)
+  local target="${2:-}"  # transmis par les appelants — non utilisé (rétrocompatibilité de signature)
   local lang="${3:-}"
   local project_path="${4:-}"
   local precomputed_stacks="${5:-}"

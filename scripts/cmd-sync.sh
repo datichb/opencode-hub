@@ -78,7 +78,6 @@ for project_id in "${project_ids[@]}"; do
       # — cohérent avec cmd-deploy.sh qui utilise find
       while IFS= read -r agent_file; do
         [ -f "$agent_file" ] || continue
-        agent_supports_target "$agent_file" "$tgt" || continue
         agent_id=$(get_agent_id "$agent_file")
 
         gen_file=""

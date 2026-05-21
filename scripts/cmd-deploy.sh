@@ -50,9 +50,6 @@ _cmd_deploy_check() {
     # Lire le frontmatter en une seule passe (builtins bash uniquement — pas de subprocess)
     read_agent_frontmatter "$agent_file"
 
-    # Vérifier si l'agent supporte cette cible via _fm_targets (pas de subprocess)
-    case "$_fm_targets" in *"$tgt"*) ;; *) continue ;; esac
-
     local agent_id="$_fm_id"
     [ -z "$agent_id" ] && agent_id=$(basename "$agent_file" .md)
 
@@ -161,7 +158,6 @@ _cmd_deploy_diff() {
 
   while IFS= read -r agent_file; do
     [ -f "$agent_file" ] || continue
-    agent_supports_target "$agent_file" "$tgt" || continue
 
     local agent_id; agent_id=$(get_agent_id "$agent_file")
     should_deploy_agent "$project_id" "$agent_id" || continue

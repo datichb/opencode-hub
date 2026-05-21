@@ -1049,12 +1049,6 @@ cmd_deploy() {
 
   local deployed=0
   for tgt in "${targets[@]}"; do
-    # Vérifier que l'agent supporte cette cible
-    if ! agent_supports_target "$agent_file" "$tgt"; then
-      log_info "Cible $tgt : ignorée (agent non compatible)"
-      continue
-    fi
-
     # Répertoire de sortie selon la cible
     local out_dir="" out_file=""
     case "$tgt" in
