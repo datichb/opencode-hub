@@ -224,6 +224,8 @@ resolve_agent_model() {
 # Supporte : permission.question (scalaire) et permission.task (map multi-ligne)
 # Retourne une chaîne JSON partielle, ex: "\"permission\": { \"question\": \"allow\" }"
 # ou vide si aucune permission n'est déclarée
+# Zéro fork dans la boucle : tous les tests utilisent case/[[ =~ ]] et les extractions
+# de clé/valeur utilisent des expansions de paramètre bash (pas de echo|grep/sed/cut).
 extract_permission_json() {
   local file="$1"
   # Extraire uniquement le bloc frontmatter
@@ -231,8 +233,9 @@ extract_permission_json() {
   frontmatter=$(sed -n '/^---$/,/^---$/p' "$file" | sed '1d;$d')
   [ -z "$frontmatter" ] && return 0
 
-  # Détecter si un bloc permission: existe
-  echo "$frontmatter" | grep -q '^permission:' || return 0
+  # Détecter si un bloc permission: existe — test builtin (zéro fork)
+  # Note : cherche 'permission:' en début de ligne (newline Unix). Tab en lieu de newline : edge case non supporté.
+  [[ "$frontmatter" == *$'\npermission:'* || "$frontmatter" == 'permission:'* ]] || return 0
 
   # Extraire tous les scalaires directs sous permission: (indentation 2 espaces)
   # et le sous-bloc task: (indentation 4 espaces)
@@ -241,42 +244,57 @@ extract_permission_json() {
   local scalar_fields="" task_entries=""
 
   while IFS= read -r line; do
-    if echo "$line" | grep -q '^permission:'; then
-      in_permission=1; in_task=0; continue
-    fi
-    if [ "$in_permission" = "1" ]; then
-      # Quitter le bloc permission si on revient à l'indentation racine
-      if echo "$line" | grep -qE '^[^ ]'; then
-        in_permission=0; in_task=0; continue
-      fi
+    case "$line" in
+      permission:*)
+        in_permission=1; in_task=0; continue ;;
+    esac
 
-      if echo "$line" | grep -q '^  task:'; then
-        in_task=1; continue
-      fi
+    if [ "$in_permission" = "1" ]; then
+      # Quitter le bloc permission si on revient à l'indentation racine (caractère non-espace en tête)
+      case "$line" in
+        [!\ ]*)  in_permission=0; in_task=0; continue ;;  # retour indentation racine (ligne non indentée)
+      esac
+
+      case "$line" in
+        '  task:'*)
+          in_task=1; continue ;;
+      esac
 
       if [ "$in_task" = "1" ]; then
         # Ligne d'entrée task : "    \"*\": \"deny\"" ou "    \"developer-*\": \"allow\""
-        if echo "$line" | grep -qE '^    '; then
-          # Extraire clé et valeur (format YAML : "clé": valeur ou clé: valeur)
-          # shellcheck disable=SC2001
-          local kv; kv=$(echo "$line" | sed 's/^[[:space:]]*//')
-          # Clé : peut être quotée ("*") ou non (reviewer) — on strip les guillemets
-          local k; k=$(echo "$kv" | cut -d: -f1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/^"//;s/"$//')
-          local v; v=$(echo "$kv" | cut -d: -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-          if [ -n "$k" ] && [ -n "$v" ]; then
-            [ -n "$task_entries" ] && task_entries="${task_entries}, "
-            task_entries="${task_entries}\"${k}\": \"${v}\""
-          fi
-        else
-          # Fin du bloc task
-          in_task=0
-        fi
+        case "$line" in
+          '    '*)
+            # Extraire clé et valeur — expansions de paramètre bash (zéro fork)
+            local kv="${line#"${line%%[! ]*}"}"   # strip leading whitespace
+            local k="${kv%%:*}"                    # tout avant le premier ':'
+            k="${k#"${k%%[! ]*}"}"                # strip leading whitespace
+            k="${k%"${k##*[! ]}"}"                # strip trailing whitespace
+            k="${k#\"}"                            # strip guillemet ouvrant
+            k="${k%\"}"                            # strip guillemet fermant
+            local v="${kv#*:}"                     # tout après le premier ':'
+            v="${v#"${v%%[! ]*}"}"                # strip leading whitespace
+            v="${v%"${v##*[! ]}"}"                # strip trailing whitespace
+            v="${v#\"}"                            # strip guillemet ouvrant si présent
+            v="${v%\"}"                            # strip guillemet fermant si présent
+            if [ -n "$k" ] && [ -n "$v" ]; then
+              [ -n "$task_entries" ] && task_entries="${task_entries}, "
+              task_entries="${task_entries}\"${k}\": \"${v}\""
+            fi
+            ;;
+          *)
+            # Fin du bloc task
+            in_task=0 ;;
+        esac
       fi
 
       # Scalaire direct sous permission: (2 espaces, pas task:, pas sous-bloc)
-      if [ "$in_task" = "0" ] && echo "$line" | grep -qE '^  [a-zA-Z][a-zA-Z0-9_-]*: '; then
-        local sk; sk=$(echo "$line" | sed 's/^  //;s/:.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-        local sv; sv=$(echo "$line" | cut -d: -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+      if [ "$in_task" = "0" ] && [[ "$line" =~ ^[[:space:]][[:space:]][a-zA-Z][a-zA-Z0-9_-]*:[[:space:]] ]]; then
+        local sk="${line#  }"     # strip les 2 espaces d'indentation
+        sk="${sk%%:*}"             # tout avant le premier ':'
+        sk="${sk%"${sk##*[! ]}"}" # strip trailing whitespace
+        local sv="${line#*:}"     # tout après le premier ':'
+        sv="${sv#"${sv%%[! ]*}"}" # strip leading whitespace
+        sv="${sv%"${sv##*[! ]}"}" # strip trailing whitespace
         if [ -n "$sk" ] && [ -n "$sv" ]; then
           [ -n "$scalar_fields" ] && scalar_fields="${scalar_fields}, "
           scalar_fields="${scalar_fields}\"${sk}\": \"${sv}\""
