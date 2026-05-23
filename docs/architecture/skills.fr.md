@@ -160,6 +160,7 @@ Skills d'audit. Le coordinateur `auditor` injecte `auditor-workflow` (workflow u
 | `auditor/audit-privacy.md` | auditor-privacy | RGPD articles 5/6/17/25/32, EDPB, CNIL, minimisation, consentement |
 | `auditor/audit-observability.md` | auditor-observability | Méthode RED (Rate/Errors/Duration), logs structurés, OpenTelemetry, SLOs/error budget, alerting (actionnable, runbooks), dashboards, grille des 5 questions |
 | `auditor/audit-handoff-format.md` | tous les auditor-*, orchestrator | **Contrat de handoff** — bloc structuré `## Retour vers orchestrator` : périmètre audité, tableau des vulnérabilités par sévérité, recommandations priorisées avec estimation d'effort, risque résiduel, statut (`corrections-requises` / `acceptable` / `bloquant`) |
+| `auditor/living-docs-enrichment.md` | auditor, planner, debugger | **Enrichissement des documents vivants** — protocole de capitalisation incrémentale dans `ONBOARDING.md` et `CONVENTIONS.md` : identification des découvertes (auditor : sections `### Découvertes à documenter` des rapports sous-agents ; planner : patterns détectés en Phase 1 ; debugger : zones d'ombre levées en Phase 3) → résumé des enrichissements proposés → confirmation via `question` → délégation au `documentarian` via `task` → affichage confirmation. Aucune écriture directe — le `documentarian` est le seul agent autorisé à écrire. Tableau de correspondance origine → sections prioritaires ONBOARDING.md / CONVENTIONS.md |
 
 ---
 
@@ -304,7 +305,8 @@ onboarder             → planning/onboarder-workflow,
                          planning/onboarder-handoff-format †
 planner               → developer/beads-plan, planning/planner-workflow,
                          posture/expert-posture, posture/tool-question,
-                         planning/planner-handoff-format †
+                         planning/planner-handoff-format †,
+                         auditor/living-docs-enrichment
 reviewer              → dev-standards-universal, dev-standards-security,
                          dev-standards-backend,
                          dev-standards-frontend, dev-standards-frontend-a11y,
@@ -317,8 +319,11 @@ qa-engineer           → dev-standards-universal, dev-standards-testing,
                          posture/tool-question, qa/qa-protocol,
                          qa/qa-handoff-format †
 debugger              → quality/debugger-workflow, posture/tool-question,
-                         quality/debugger-handoff-format †
-auditor               → auditor/auditor-workflow, posture/tool-question
+                         quality/debugger-handoff-format †,
+                         auditor/living-docs-enrichment,
+                         posture/expert-posture
+auditor               → auditor/auditor-workflow, posture/tool-question,
+                         auditor/living-docs-enrichment
 auditor-security      → auditor/audit-protocol-light, auditor/audit-security,
                          posture/expert-posture,
                          auditor/audit-handoff-format †

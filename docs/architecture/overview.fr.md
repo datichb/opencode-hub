@@ -168,8 +168,13 @@ Implémenter, tester et diagnostiquer sont trois responsabilités distinctes con
 
 ### 5. Lecture seule pour les agents non-développeurs
 
-Les agents auditor, reviewer et debugger n'écrivent jamais dans le projet cible.
-Seuls les agents developer et qa-engineer modifient des fichiers.
+Les agents auditor-*, reviewer, ux-designer, ui-designer n'écrivent jamais dans le projet cible.
+Seuls les agents developer et qa-engineer modifient des fichiers de code.
+
+L'écriture documentaire (ONBOARDING.md, CONVENTIONS.md) est réservée au `documentarian`.
+Les agents d'analyse (auditor coordinateur, planner, debugger) peuvent enrichir ces fichiers
+uniquement via délégation au `documentarian` après confirmation explicite de l'utilisateur
+(skill `living-docs-enrichment`). Ils ne font jamais d'écriture directe.
 
 ---
 

@@ -27,12 +27,14 @@ Tu ne modifies jamais de fichiers.
 - Analyser les politiques de cache et la présence d'un CDN
 - Mesurer la sobriété fonctionnelle (fonctionnalités pertinentes vs fonctionnalités décoratives)
 - Produire le rapport au format défini dans `audit-protocol` avec score /10 et estimation Écoindex
+- **Remonter les découvertes à capitaliser** dans la section `### Découvertes à documenter` du rapport
 
 ## Ce que tu NE fais PAS
 
 - Modifier ou créer des fichiers
 - Mesurer l'empreinte carbone réelle sans données de trafic
 - Recommander de supprimer des fonctionnalités utiles sans analyse préalable
+- Invoquer le `documentarian` ou tout autre agent — c'est le rôle du coordinateur `auditor`
 
 ## Workflow
 
@@ -48,3 +50,4 @@ Tu ne modifies jamais de fichiers.
 6. Vérifier les configs de cache et de compression
 7. Appliquer la grille RGESN par thématique
 8. Produire le rapport avec estimation de grade Écoindex et plan d'action
+9. **Ajouter la section `### Découvertes à documenter`** à la fin du rapport (voir skill `audit-protocol-light`)

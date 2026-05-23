@@ -134,7 +134,7 @@ CP-2 (commit ou corriger ?) est toujours manuel dans tous les modes.
 |--|--|
 | **Label** | Auditeur |
 | **Fichier** | `agents/auditor/auditor.md` |
-| **Skills** | `auditor/auditor-workflow`, `posture/tool-question` |
+| **Skills** | `auditor/auditor-workflow`, `auditor/audit-handoff-format`, `auditor/living-docs-enrichment`, `posture/tool-question` |
 | **Invocation** | `"Audite [projet/périmètre]"` / `"Audit [domaine]"` |
 
 Coordinateur d'audit multi-domaine. Pilote la réalisation d'audits en 5 phases structurées :
@@ -143,7 +143,12 @@ vérification prérequis (périmètre, stack, accès fichiers) → chargement co
 compatibilité stack → délégation aux 7 sous-agents spécialisés → consolidation synthèse exécutive
 (score global, top 5 actions prioritaires, recommandations transverses).
 
-Produit une synthèse exécutive multi-domaines. Lecture seule — ne modifie jamais de fichiers.
+Produit une synthèse exécutive multi-domaines. Lecture seule — ne modifie jamais de fichiers directement.
+
+**Phase 4 — Enrichissement des documents vivants :** après la synthèse, consolide les sections
+`### Découvertes à documenter` des rapports reçus et propose à l'utilisateur d'enrichir
+`ONBOARDING.md` et/ou `CONVENTIONS.md`. Si accepté, délègue l'écriture au `documentarian` via `task`
+(skill `living-docs-enrichment`). Ne peut invoquer le `documentarian` sans confirmation explicite.
 
 ---
 
@@ -164,6 +169,11 @@ Sous-agents de l'auditeur. Tous en lecture seule. Invocables directement ou via 
 Tous les agents d'audit injectent `auditor/audit-protocol-light` (format de rapport commun allégé)
 + leur skill de domaine spécifique (`auditor/audit-<domaine>`)
 + `auditor/audit-handoff-format` (contrat de retour structuré quand invoqué depuis l'orchestrator).
+
+Tous les rapports produits par les sous-agents incluent une section **`### Découvertes à documenter`**
+en fin de rapport — les découvertes à capitaliser dans `ONBOARDING.md` / `CONVENTIONS.md`.
+Cette section est consolidée par le coordinateur `auditor` en Phase 4 (skill `living-docs-enrichment`).
+Les sous-agents eux-mêmes ne font jamais d'appel `task` — leur lecture seule est stricte.
 
 ---
 
@@ -293,7 +303,7 @@ ces tickets — le `qa-engineer` n'est pas invoqué.
 |--|--|
 | **Label** | Debugger |
 | **Fichier** | `agents/quality/debugger.md` |
-| **Skills** | `quality/debugger-workflow`, `posture/tool-question`, `quality/debugger-handoff-format` |
+| **Skills** | `quality/debugger-workflow`, `quality/debugger-handoff-format`, `auditor/living-docs-enrichment`, `posture/expert-posture`, `posture/tool-question` |
 | **Invocation** | `"Ce bug : [stacktrace]"` / `"Analyse ces logs : [logs]"` |
 
 Diagnostique la cause racine d'un bug en 6 phases structurées : vérification des artefacts
@@ -303,6 +313,11 @@ hypothèse graduée haute/moyenne/faible) → détection cas particuliers (race 
 environnement-spécifique, données, configuration, dépendances, régression). Produit un
 rapport de diagnostic avec hypothèses graduées. Crée un ticket Beads de correction après
 confirmation explicite. Ne corrige jamais le bug.
+
+**Phase 5 — Enrichissement des documents vivants :** après le rapport, identifie les zones d'ombre
+levées par le diagnostic et les patterns d'erreur à mémoriser, puis propose à l'utilisateur d'enrichir
+`ONBOARDING.md` et/ou `CONVENTIONS.md`. Si accepté, délègue l'écriture au `documentarian` via `task`
+(skill `living-docs-enrichment`). Ne peut invoquer le `documentarian` sans confirmation explicite.
 
 > Voir [ADR-004](./adr/004-qa-debugger-separation.fr.md).
 
@@ -316,7 +331,7 @@ confirmation explicite. Ne corrige jamais le bug.
 |--|--|
 | **Label** | ProjectPlanner |
 | **Fichier** | `agents/planning/planner.md` |
-| **Skills** | `developer/beads-plan`, `planning/planner-workflow`, `posture/expert-posture`, `posture/tool-question`, `planning/planner-handoff-format` |
+| **Skills** | `developer/beads-plan`, `planning/planner-workflow`, `planning/planner-handoff-format`, `posture/expert-posture`, `posture/tool-question`, `auditor/living-docs-enrichment` |
 | **Invocation** | Description d'une feature en langage naturel |
 
 Consultant fonctionnel et technique qui analyse le contexte projet avant de planifier.
@@ -338,6 +353,11 @@ en Phase 1, le planner propose 3 options à l'utilisateur :
 - **Option B** — l'utilisateur invoque lui-même les agents et colle la spec.
 - **Option C** (`"continuer sans UX/UI"`) — poursuit avec le contexte disponible,
   tickets `--design` partiels + `bd comments add` pour tracer la spec manquante.
+
+**Phase 6 — Enrichissement des documents vivants :** après validation du plan, identifie les
+patterns architecturaux et conventions observées dans la codebase mais absents de
+`ONBOARDING.md`/`CONVENTIONS.md`, et propose à l'utilisateur de les capitaliser. Si accepté,
+délègue l'écriture au `documentarian` via `task` (skill `living-docs-enrichment`).
 
 ---
 
@@ -363,9 +383,10 @@ Principe directeur : **explorer → adapter ou proposer → attendre si nécessa
 
 ## Règles communes à tous les agents
 
-- **Agents en lecture seule** : auditor-*, reviewer, debugger, ux-designer, ui-designer — ne modifient jamais de fichiers
+- **Agents en lecture seule** : auditor-*, reviewer — ne modifient jamais de fichiers directement
+- **Agents qui délèguent l'écriture documentaire** : auditor (coordinateur), planner, debugger — peuvent invoquer le `documentarian` via `task` pour enrichir `ONBOARDING.md` / `CONVENTIONS.md`, uniquement après confirmation explicite de l'utilisateur (skill `living-docs-enrichment`)
 - **Agents qui écrivent du code** : developer-*, qa-engineer — modifient uniquement les fichiers de leur domaine
-- **Agents qui écrivent de la documentation** : documentarian — modifie uniquement les fichiers de documentation
+- **Agents qui écrivent de la documentation** : documentarian — modifie uniquement les fichiers de documentation ; seul agent autorisé à écrire dans `ONBOARDING.md` et `CONVENTIONS.md`
 - **Agents qui créent des tickets** : planner (tickets feature), debugger (tickets bug après confirmation)
 - **Agents qui lisent les tickets** : tous peuvent faire `bd show <ID>` pour contextualiser leur travail
 - **Agents coordinateurs** : orchestrator, orchestrator-dev, auditor — ne codent jamais, pilotent d'autres agents

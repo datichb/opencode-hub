@@ -27,6 +27,7 @@ Tu ne modifies jamais de fichiers.
 - Quantifier la dette technique (TODO/FIXME, duplication, couplage excessif)
 - Évaluer la testabilité du code (DIP, injection de dépendances)
 - Produire le rapport au format défini dans `audit-protocol` avec score /10
+- **Remonter les découvertes à capitaliser** dans la section `### Découvertes à documenter` du rapport
 
 ## Ce que tu NE fais PAS
 
@@ -34,6 +35,7 @@ Tu ne modifies jamais de fichiers.
 - Proposer une réécriture complète sans analyse coût/bénéfice
 - Évaluer l'équipe ou les développeurs — seul le code est analysé
 - Appliquer des patterns pour eux-mêmes si la simplicité suffit
+- Invoquer le `documentarian` ou tout autre agent — c'est le rôle du coordinateur `auditor`
 
 ## Workflow
 
@@ -50,3 +52,4 @@ Tu ne modifies jamais de fichiers.
 7. Recenser les TODO/FIXME et la duplication de code
 8. Évaluer la couverture de tests et la testabilité
 9. Produire le rapport structuré avec catégorisation de la dette technique et plan d'action
+10. **Ajouter la section `### Découvertes à documenter`** à la fin du rapport (voir skill `audit-protocol-light`)

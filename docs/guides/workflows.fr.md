@@ -276,6 +276,30 @@ L'auditeur délègue à `auditor-security`, `auditor-accessibility`, `auditor-pe
 5. [Sécurité 🟠] CORS mal configuré — src/middleware/cors.ts
 ```
 
+#### 5. Enrichissement des documents vivants (Phase 4)
+
+Après la synthèse exécutive, l'auditeur consolide les sections `### Découvertes à documenter`
+remontées par les sous-agents et propose à l'utilisateur de capitaliser les découvertes pertinentes.
+
+```
+## 💾 Enrichissement des documents vivants — Découvertes à capitaliser
+
+### Enrichissements proposés pour ONBOARDING.md
+| Section | Action | Contenu proposé |
+|---------|--------|-----------------|
+| `## Points critiques 🔴` | Ajouter | "Injection SQL possible dans UserController (audit sécurité)" |
+
+### Enrichissements proposés pour CONVENTIONS.md
+| Section | Action | Contenu proposé |
+|---------|--------|-----------------|
+| `## Librairies & dépendances` | Ajouter "À ne pas utiliser" | "lodash 4.17.20 — CVE-2024-1234 : prototype pollution" |
+
+→ question : Déléguer l'écriture au documentarian ?
+```
+
+Si l'utilisateur accepte, l'auditeur invoque le `documentarian` via `task` pour enrichir
+`ONBOARDING.md` et/ou `CONVENTIONS.md` de manière incrémentale (voir skill `living-docs-enrichment`).
+
 ---
 
 ## Scénario 3 — Cycle debug → fix
@@ -368,7 +392,30 @@ bd create "Corriger l'absence de guard null dans UserService.findById" -p 0 -t b
 → Ticket bd-42 créé
 ```
 
-#### 4. Correction et review
+#### 4. Enrichissement des documents vivants (Phase 5)
+
+Après la création du ticket, le debugger identifie les découvertes à capitaliser :
+
+```
+## 💾 Enrichissement des documents vivants — Découvertes à capitaliser
+
+### Enrichissements proposés pour ONBOARDING.md
+| Section | Action | Contenu proposé |
+|---------|--------|-----------------|
+| `## Zones d'ombre` | Ajouter | "UserService.findById ne retourne pas d'erreur 401 explicite — retourne null sans guard (diagnostic 2025)" |
+
+### Enrichissements proposés pour CONVENTIONS.md
+| Section | Action | Contenu proposé |
+|---------|--------|-----------------|
+| `## Patterns spécifiques à l'équipe` | Ajouter | "Toujours vérifier le null avant d'accéder à une propriété de retour de repository" |
+
+→ question : Déléguer l'écriture au documentarian ?
+```
+
+Si l'utilisateur accepte, le debugger invoque le `documentarian` via `task`
+(skill `living-docs-enrichment`) pour enrichir les fichiers de manière incrémentale.
+
+#### 5. Correction et review
 
 Le developer reçoit le ticket bd-42, lit le diagnostic dans les notes,
 implémente la correction ciblée, et le reviewer vérifie la PR.
