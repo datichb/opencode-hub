@@ -147,6 +147,37 @@ Afficher le récapitulatif des tickets reçus et démarrer directement sans rede
 
 ---
 
+### Évaluation du parallélisme conditionnel (mode `auto` uniquement)
+
+En mode `auto`, avant de démarrer le traitement ticket par ticket, évaluer si le lot est éligible au parallélisme conditionnel.
+
+**Les 4 critères — tous doivent être vérifiés :**
+
+1. **Pas de dépendance formelle entre tickets du lot** : pour chaque ticket, `bd dep list <ID>` — l'intersection avec les IDs du lot est vide
+2. **Agents distincts et domaines disjoints** : tous les tickets sont routés vers des `developer-*` différents, pas de `developer-fullstack` dans le lot
+3. **Pas de fichiers transverses prévisibles** : aucune mention de types partagés, migrations de base de données, ou fichiers de configuration globaux dans les descriptions
+4. **Maximum 3 tickets dans le lot parallèle**
+
+**Si tous les critères sont vérifiés :**
+```
+▶️ [Parallélisme conditionnel] X tickets éligibles — lancement simultané.
+Critères vérifiés : (1) dépendances — aucune ✅ (2) agents — disjoints ✅ (3) fichiers — non transverses ✅ (4) taille — X ≤ 3 ✅
+```
+
+→ Lancer N sessions `developer-*` simultanément (voir section "Workflow parallèle").
+
+**Si au moins un critère n'est pas vérifié :**
+```
+▶️ [Parallélisme conditionnel] Non éligible — traitement séquentiel.
+Raison : <critère non vérifié>
+```
+
+→ Traitement séquentiel normal ticket par ticket.
+
+**En mode `manuel` ou `semi-auto` :** ne pas évaluer le parallélisme — séquentiel forcé.
+
+---
+
 ## Workflow ticket par ticket
 
 ### Étape 1a — Présentation du ticket + CP-1
@@ -532,6 +563,44 @@ Le format attendu et les définitions des statuts sont définis dans le skill `d
 
 ---
 
+## Workflow parallèle (mode `auto` conditionnel uniquement)
+
+Ce workflow s'applique uniquement quand les 4 critères de parallélisabilité sont vérifiés.
+
+### Lancement simultané
+
+Invoquer N sessions `developer-*` dans le même appel — chacune reçoit son ticket, son contexte, et l'instruction TDD si applicable. Maximum 3 sessions simultanées.
+
+### Attente et agrégation des résultats
+
+Attendre les résultats de toutes les sessions. Pour chaque résultat reçu :
+
+1. Vérifier la présence du compte rendu d'implémentation + bloc `## Retour vers orchestrator-dev`
+2. Si `### Statut` = `bloqué` → traiter comme un "Ticket bloqué" (produire `## Question pour l'orchestrator` si invoqué depuis l'orchestrateur)
+3. Détecter un éventuel conflit de fichiers : si un `developer-*` a modifié un fichier déjà modifié par une autre session parallèle, signaler et passer à l'étape QA+Review en priorité pour ce ticket avant les autres
+
+### CP-QA et Review en parallèle
+
+Les phases QA et Review sont lancées pour chaque ticket dès que son implémentation est terminée — sans attendre les autres sessions. Les sessions QA et Review pour différents tickets peuvent donc se chevaucher.
+
+### CP-2 en séquentiel
+
+Lorsque N sessions atteignent CP-2 (chacune produit `## Question pour l'orchestrator`) :
+- Présenter les rapports de review **un par un**, dans l'ordre d'arrivée
+- Recueillir la réponse de l'utilisateur pour chaque rapport avant de passer au suivant
+- Ré-invoquer chaque session via son `task_id` avec la réponse correspondante
+
+```
+> 📋 [CP-2 — Revue parallèle] X rapports de review en attente.
+> Traitement séquentiel : rapport 1/X affiché ci-dessus.
+```
+
+### Récap global — synchronisation finale
+
+Le récap global est produit uniquement quand **toutes** les sessions parallèles ont retourné un récap `**Type de récap :** final`. Ne pas produire le récap global tant qu'au moins une session est encore suspendue sur CP-2 ou en cours.
+
+---
+
 ## Récap global — Fin de session
 
 **Deux étapes obligatoires dans cet ordre — ne jamais les inverser, ne jamais en omettre une.**
@@ -801,7 +870,9 @@ Si résolu : `bd update <ID> -s in_progress` puis reprendre l'implémentation.
 - Automatiser CP-2 — cette pause est absolue dans tous les modes
 - Exécuter `git merge`, `git push` ou toute opération d'envoi/fusion de branches
 - Modifier les tickets Beads sans validation de l'utilisateur
-- Lancer plusieurs tickets en parallèle — traitement séquentiel uniquement
+- Lancer plusieurs tickets en parallèle en mode `manuel` ou `semi-auto` — le parallélisme conditionnel est réservé au mode `auto` avec les 4 critères vérifiés
+- Lancer plus de 3 sessions parallèles simultanées
+- Lancer en parallèle des tickets avec des dépendances formelles entre eux (`bd dep list` révèle une intersection non vide avec le lot), un `developer-fullstack` dans le lot, ou des types/migrations/configs partagés mentionnés dans la description
 - Résumer ou abréger les rapports de review — les transmettre dans leur intégralité
 - Résumer les `### Corrections requises` du reviewer dans le commentaire Beads — les copier telles quelles
 - Continuer vers la review sans avoir reçu le bloc `## Retour vers orchestrator-dev` du developer

@@ -20,6 +20,8 @@ Il est injecté dans `orchestrator` et `orchestrator-dev` — toute modification
 
 > Quand un CP est `▶️ auto`, l'orchestrateur affiche quand même l'information mais enchaîne sans attendre de confirmation.
 
+> **Parallélisme conditionnel (mode `auto` uniquement) :** en mode `auto`, `orchestrator-dev` peut traiter plusieurs tickets simultanément si les 4 critères sont vérifiés : aucune dépendance formelle entre les tickets du lot, agents distincts avec domaines disjoints, pas de fichiers transverses prévisibles, maximum 3 tickets. Le parallélisme ne supprime pas CP-2 — les rapports de review sont présentés en séquentiel dans l'ordre d'arrivée. Voir `orchestrator-dev-protocol` pour le protocole complet.
+
 ---
 
 ## Règles absolues sur les modes
@@ -42,7 +44,7 @@ question({
   options: [
     { label: "Manuel (Recommandé)", description: "Chaque étape attend ta confirmation — CP-1, CP-QA, CP-2, CP-3 tous en pause" },
     { label: "Semi-auto", description: "CP-1 et CP-3 automatiques, CP-QA et CP-2 (commit) restent manuels" },
-    { label: "Auto", description: "Workflow entièrement automatique sauf CP-2 (commit) — QA configurable au démarrage" }
+    { label: "Auto", description: "Workflow entièrement automatique sauf CP-2 (commit) — QA configurable au démarrage — parallélisme conditionnel disponible pour les tickets indépendants" }
   ]
 })
 ```

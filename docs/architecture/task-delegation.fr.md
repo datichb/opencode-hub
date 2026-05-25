@@ -494,10 +494,48 @@ stateDiagram-v2
 > ❌ **Ne jamais construire le CP-feature à partir d'un récap partiel.**
 > Un récap est partiel si et seulement si la réponse de `task(orchestrator-dev)` contient aussi `## Question pour l'orchestrator`.
 
-### Pas de parallélisme
+### Parallélisme conditionnel (mode `auto` uniquement)
 
-`orchestrator-dev` traite les tickets **séquentiellement**. Aucun mécanisme
-de parallélisation n'est prévu — chaque ticket attend la fin du précédent.
+Par défaut, `orchestrator-dev` traite les tickets **séquentiellement**. Un mode
+de **parallélisme conditionnel** est disponible exclusivement en mode `auto` lorsque
+les 4 critères de parallélisabilité sont réunis.
+
+#### Pourquoi le séquentiel est le mode par défaut
+
+Trois contraintes rendent le parallélisme non pertinent ou risqué dans le cas général :
+
+| Contrainte | Impact |
+|---|---|
+| **CP-2 pause absolue** | Même en parallèle, les CP-2 de N sessions sont traités en séquentiel (un rapport à la fois) — le gain en phase d'implémentation est "absorbé" par la review |
+| **Goulot humain** | En modes `manuel`/`semi-auto`, les pauses humaines (CP-1, CP-QA, CP-3) dominent le temps total — paralléliser l'implémentation n'accélère pas ces décisions |
+| **Dépendances implicites non détectables** | Deux tickets sans relation `deps` formelle peuvent avoir des dépendances sémantiques invisibles à l'orchestrator |
+
+Le gain réel du parallélisme n'existe qu'en mode `auto`, et uniquement sur la phase d'implémentation.
+
+#### Les 4 critères de parallélisabilité
+
+Un lot de tickets est éligible au traitement parallèle si et seulement si **tous** ces critères sont vérifiés :
+
+| # | Critère | Vérification |
+|---|---|---|
+| 1 | **Pas de dépendance formelle entre tickets du lot** | `bd dep list <ID>` pour chaque ticket — l'intersection avec les IDs du lot est vide |
+| 2 | **Agents différents, domaines disjoints** | Tickets routés vers des `developer-*` distincts — pas de `developer-fullstack` dans le lot |
+| 3 | **Pas de fichiers transverses prévisibles** | Aucun ticket ne mentionne de types partagés, migrations de base de données, ou fichiers de configuration globaux |
+| 4 | **Mode `auto` actif** | Les modes `manuel` et `semi-auto` restent séquentiels |
+
+Si un seul critère n'est pas vérifié → **séquentiel forcé**.
+
+#### Comportement en mode parallèle conditionnel
+
+- **Lancement** : N sessions `developer-*` démarrées simultanément (max 3 en parallèle)
+- **CP-2** : traité en **séquentiel** même en parallèle — une question à la fois dans l'ordre d'arrivée des résultats
+- **Détection de conflit tardif** : si un `developer-*` modifie un fichier déjà modifié par une autre session parallèle (`git status`), l'orchestrator déclenche un CP-2 anticipé avant de continuer
+- **Récap global** : produit uniquement quand **toutes** les sessions parallèles ont retourné un récap `final`
+- **Limite** : maximum 3 sessions parallèles simultanées
+
+#### Ce que le parallélisme ne résout pas
+
+Le parallélisme ne supprime pas les pauses CP-2 — il les regroupe dans le temps. Pour un lot de N tickets en parallèle, l'utilisateur lira N rapports de review successifs en fin de phase d'implémentation au lieu de les lire au fil de l'eau. C'est un changement de posture : supervision agrégée plutôt que supervision ticket par ticket.
 
 ### Transmission du mode via prompt
 

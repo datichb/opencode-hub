@@ -9,6 +9,17 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 
 ## [Unreleased]
 
+### Added
+
+- **Parallélisme conditionnel** (`orchestrator-dev-protocol`, `orchestrator-workflow-modes`) — mode de traitement parallèle des tickets disponible exclusivement en mode `auto` lorsque 4 critères sont vérifiés simultanément : (1) pas de dépendance formelle entre tickets du lot, (2) agents distincts avec domaines disjoints (pas de `developer-fullstack`), (3) pas de fichiers transverses prévisibles, (4) maximum 3 tickets simultanés. Comportement : lancement simultané des sessions `developer-*`, CP-2 traités en séquentiel dans l'ordre d'arrivée, récap global produit uniquement quand toutes les sessions sont finales. Les modes `manuel` et `semi-auto` restent séquentiels — le bénéfice du parallélisme est réel uniquement en mode `auto` sur la phase d'implémentation.
+  - Section "Évaluation du parallélisme conditionnel" ajoutée dans `orchestrator-dev-protocol` (CP-0)
+  - Section "Workflow parallèle" ajoutée dans `orchestrator-dev-protocol` (entre Étape 6 et Récap global)
+  - Note de parallélisme et description enrichie de l'option `Auto` dans `orchestrator-workflow-modes`
+
+### Documentation
+
+- `docs/architecture/task-delegation.fr.md` : section `### Pas de parallélisme` remplacée par `### Parallélisme conditionnel (mode auto uniquement)` — explication du choix séquentiel par défaut, tableau des 4 critères, comportement en mode parallèle, limites (CP-2 reste séquentiel, bénéfice uniquement en mode auto)
+
 ### Fixed
 
 - **`task_id` — nature clarifiée et garde-fou ajouté** (`task_id-delegation.fr.md`, `orchestrator-protocol.md`) :
