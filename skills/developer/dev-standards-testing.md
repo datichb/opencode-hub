@@ -237,6 +237,98 @@ tests/
 
 ---
 
+## Tests incrémentaux pendant l'implémentation
+
+### Principe
+
+**Lancer les tests après chaque bloc logique de modifications.**
+
+Ne pas attendre d'avoir terminé toute l'implémentation pour lancer les tests.
+Un "bloc logique" correspond à :
+- Une fonction ajoutée ou modifiée
+- Un cas de bord traité
+- Un refactor local terminé
+
+Cette pratique permet de :
+- Détecter les régressions immédiatement, quand le contexte est frais
+- Éviter l'accumulation d'erreurs difficiles à démêler
+- Maintenir une confiance continue dans le code
+
+### Commandes par framework
+
+#### Vitest
+
+```bash
+# Watch mode — relance automatiquement les tests modifiés
+npx vitest
+
+# Tester un seul fichier
+npx vitest run src/services/__tests__/user.service.test.ts
+
+# Tester les fichiers liés aux modifications (changed files)
+npx vitest related src/services/user.service.ts
+
+# Watch sur un fichier spécifique
+npx vitest src/services/__tests__/user.service.test.ts
+```
+
+#### Jest
+
+```bash
+# Watch mode — relance les tests liés aux fichiers modifiés
+npx jest --watch
+
+# Watch all — relance tous les tests à chaque modification
+npx jest --watchAll
+
+# Tester un seul fichier
+npx jest src/services/__tests__/user.service.test.ts
+
+# Tester les fichiers liés aux modifications (depuis le dernier commit)
+npx jest --onlyChanged
+
+# Filtrer par nom de test
+npx jest -t "doit retourner null"
+```
+
+#### Vérifier la couverture
+
+Pour valider que les modifications sont bien couvertes par les tests :
+
+```bash
+# Vitest — couverture des fichiers modifiés
+npx vitest run --coverage
+
+# Jest — couverture avec rapport
+npx jest --coverage
+
+# Couverture ciblée sur un fichier
+npx vitest run --coverage src/services/user.service.ts
+npx jest --coverage src/services/__tests__/user.service.test.ts
+```
+
+> **Conseil :** Activer `--coverage` avant de commit pour s'assurer que les nouvelles fonctions sont testées.
+
+### Bonnes pratiques
+
+| Situation | Action |
+|-----------|--------|
+| Début de session de développement | Lancer le watch mode en arrière-plan |
+| Ajout d'une fonction | Lancer les tests du fichier concerné |
+| Refactor d'un module | Lancer les tests liés (`related` ou `--onlyChanged`) |
+| Avant de commit | Lancer la suite complète |
+
+### Intégration avec le workflow TDD
+
+En mode TDD, le watch mode est particulièrement utile :
+1. Écrire le test (Red) → le watch détecte et montre l'échec
+2. Implémenter (Green) → le watch détecte et montre le succès
+3. Refactorer → le watch confirme que rien n'est cassé
+
+Le feedback immédiat du watch mode renforce la boucle Red/Green/Refactor.
+
+---
+
 ## Non-régression
 
 - Tout bug corrigé **doit** avoir un test qui le reproduit avant le fix
