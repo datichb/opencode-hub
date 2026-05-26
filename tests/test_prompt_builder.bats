@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # Tests unitaires pour scripts/lib/prompt-builder.sh
 # Fonctions testées : extract_frontmatter_value, extract_frontmatter_list,
-#                     strip_frontmatter, agent_supports_target, get_agent_id,
+#                     strip_frontmatter, get_agent_id,
 #                     build_agent_content, detect_stack, resolve_stack_skills
 
 setup() {
@@ -112,13 +112,6 @@ EOF
   [ "$status" -eq 0 ]
   echo "$output" | grep -q "body content"
   echo "$output" | grep -q "line 2"
-}
-
-# ── agent_supports_target ─────────────────────────────────────────────────────
-
-@test "agent_supports_target : retourne 0 pour une cible supportée (opencode)" {
-  run agent_supports_target "$TEST_DIR/agents/test-agent.md" "opencode"
-  [ "$status" -eq 0 ]
 }
 
 # ── get_agent_id ──────────────────────────────────────────────────────────────

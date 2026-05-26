@@ -223,7 +223,6 @@ _load_agent_metadata() {
 
   while IFS= read -r agent_file; do
     [ -f "$agent_file" ] || continue
-    agent_supports_target "$agent_file" "opencode" || continue
 
     local agent_id; agent_id=$(get_agent_id "$agent_file")
     should_deploy_agent "$project_id" "$agent_id" || continue

@@ -38,10 +38,6 @@ extract_frontmatter_list() {
     | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$'
 }
 
-# Retourne 0 (vrai) si un agent supporte la cible donnée.
-# Opencode est désormais la seule cible — tous les agents sont compatibles.
-agent_supports_target() { return 0; }
-
 # Lit le frontmatter d'un agent en une seule passe et expose les variables :
 #   _fm_id     : valeur du champ id
 #   _fm_skills : valeur brute du champ skills  (ex: "[skill/a, skill/b]")

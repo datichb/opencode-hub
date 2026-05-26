@@ -89,7 +89,6 @@ An adapter has access to functions from `common.sh` and `prompt-builder.sh`:
 | `extract_frontmatter_value file key` | Reads a value from YAML frontmatter |
 | `extract_frontmatter_list file key` | Parses an inline YAML list → one value per line |
 | `strip_frontmatter file` | Returns the body without the frontmatter |
-| `agent_supports_target file target` | Checks if an agent supports the target |
 | `get_agent_id file` | Returns the `id` from the frontmatter |
 | `get_agent_mode file` | Returns the `mode` from the frontmatter (`primary` by default) |
 | `get_effective_agent_mode file project_id` | Effective mode: project override > frontmatter > `primary` |
@@ -148,7 +147,6 @@ adapter_deploy_files() {
 
   while IFS= read -r f; do
     [ -f "$f" ] || continue
-    agent_supports_target "$f" "my-tool" || continue
     local agent_id; agent_id=$(get_agent_id "$f")
     should_deploy_agent "$project_id" "$agent_id" || continue
     build_agent_content "$f" "my-tool" "$lang" "$deploy_dir" > "$out_dir/${agent_id}.md"
