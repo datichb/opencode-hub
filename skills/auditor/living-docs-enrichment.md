@@ -116,12 +116,14 @@ Après affichage du résumé, utiliser l'outil `question` :
 
 ```
 question({
-  header: "Enrichir les docs vivants",
-  question: "[<Nom de l'agent> — Post-<audit/diagnostic/planification> | Projet : <nom>]\nJ'ai identifié X enrichissements à capitaliser (voir résumé ci-dessus). Déléguer l'écriture au documentarian ?",
-  options: [
-    { label: "Oui — déléguer au documentarian (Recommandé)", description: "Invoquer le documentarian pour enrichir ONBOARDING.md et/ou CONVENTIONS.md de manière incrémentale" },
-    { label: "Non — passer", description: "Conserver les documents tels quels" }
-  ]
+  questions: [{
+    header: "Enrichir les docs vivants",
+    question: "[<Nom de l'agent> — Post-<audit/diagnostic/planification> | Projet : <nom>]\nJ'ai identifié X enrichissements à capitaliser (voir résumé ci-dessus). Déléguer l'écriture au documentarian ?",
+    options: [
+      { label: "Oui — déléguer au documentarian (Recommandé)", description: "Invoquer le documentarian pour enrichir ONBOARDING.md et/ou CONVENTIONS.md de manière incrémentale" },
+      { label: "Non — passer", description: "Conserver les documents tels quels" }
+    ]
+  }]
 })
 ```
 

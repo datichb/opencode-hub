@@ -207,14 +207,16 @@ Afficher le ticket :
 
   ```
   question({
-    header: "CP-1 — Ticket #<ID>",
-    question: "Démarrer l'implémentation du ticket #<ID> — <titre> ?",
-    options: [
-      { label: "Oui — démarrer", description: "Déléguer l'implémentation à <developer-xxx>" },
-      { label: "Voir le détail", description: "Afficher le contenu complet du ticket via bd show <ID>" },
-      { label: "Passer", description: "Ignorer ce ticket et passer au suivant" },
-      { label: "Stop", description: "Arrêter le workflow et afficher le récap de l'état courant" }
-    ]
+    questions: [{
+      header: "CP-1 — Ticket #<ID>",
+      question: "Démarrer l'implémentation du ticket #<ID> — <titre> ?",
+      options: [
+        { label: "Oui — démarrer", description: "Déléguer l'implémentation à <developer-xxx>" },
+        { label: "Voir le détail", description: "Afficher le contenu complet du ticket via bd show <ID>" },
+        { label: "Passer", description: "Ignorer ce ticket et passer au suivant" },
+        { label: "Stop", description: "Arrêter le workflow et afficher le récap de l'état courant" }
+      ]
+    }]
   })
   ```
   - **Oui — démarrer** → passer à l'étape 1b
@@ -239,12 +241,14 @@ Calculer le nom de branche selon la convention `<type>/<ticket-id>-<description-
 
 ```
 question({
-  header: "Branche — Ticket #<ID>",
-  question: "Créer une branche dédiée pour le ticket #<ID> ?",
-  options: [
-    { label: "Oui (Recommandé)", description: "Créer et basculer sur <type>/<ticket-id>-<description-courte> avant de démarrer" },
-    { label: "Non", description: "Rester sur la branche courante" }
-  ]
+  questions: [{
+    header: "Branche — Ticket #<ID>",
+    question: "Créer une branche dédiée pour le ticket #<ID> ?",
+    options: [
+      { label: "Oui (Recommandé)", description: "Créer et basculer sur <type>/<ticket-id>-<description-courte> avant de démarrer" },
+      { label: "Non", description: "Rester sur la branche courante" }
+    ]
+  }]
 })
 ```
 
@@ -305,12 +309,14 @@ question({
 
   ```
   question({
-    header: "CP-QA — Ticket #<ID>",
-    question: "Passer par le QA avant la review pour le ticket #<ID> ?",
-    options: [
-      { label: "Non (Recommandé)", description: "Passer directement à la review" },
-      { label: "Oui", description: "Invoquer qa-engineer avec le diff et l'ID du ticket" }
-    ]
+    questions: [{
+      header: "CP-QA — Ticket #<ID>",
+      question: "Passer par le QA avant la review pour le ticket #<ID> ?",
+      options: [
+        { label: "Non (Recommandé)", description: "Passer directement à la review" },
+        { label: "Oui", description: "Invoquer qa-engineer avec le diff et l'ID du ticket" }
+      ]
+    }]
   })
   ```
   - **Non** (défaut) → étape 4
@@ -390,12 +396,14 @@ Utiliser le `### Verdict` du retour reviewer pour orienter les options présent�
 
 ```
 question({
-  header: "CP-2 — Ticket #<ID>",
-  question: "Le rapport de review est affiché ci-dessus. Quelle suite pour le ticket #<ID> ?",
-  options: [
-    { label: "Commit", description: "Formuler le message Conventional Commits et demander au developer de commiter" },
-    { label: "Corriger", description: "Retourner le ticket au developer avec les retours du reviewer" }
-  ]
+  questions: [{
+    header: "CP-2 — Ticket #<ID>",
+    question: "Le rapport de review est affiché ci-dessus. Quelle suite pour le ticket #<ID> ?",
+    options: [
+      { label: "Commit", description: "Formuler le message Conventional Commits et demander au developer de commiter" },
+      { label: "Corriger", description: "Retourner le ticket au developer avec les retours du reviewer" }
+    ]
+  }]
 })
 ```
 
@@ -519,12 +527,14 @@ Si le ticket est de type `feature` ou `fix` (visible utilisateur), utiliser l'ou
 
 ```
 question({
-  header: "CHANGELOG",
-  question: "Ce ticket est de type feature/fix. Mettre à jour le CHANGELOG via le documentarian ?",
-  options: [
-    { label: "Non (Recommandé)", description: "Passer au ticket suivant sans mettre à jour le CHANGELOG" },
-    { label: "Oui", description: "Invoquer le documentarian pour mettre à jour le CHANGELOG" }
-  ]
+  questions: [{
+    header: "CHANGELOG",
+    question: "Ce ticket est de type feature/fix. Mettre à jour le CHANGELOG via le documentarian ?",
+    options: [
+      { label: "Non (Recommandé)", description: "Passer au ticket suivant sans mettre à jour le CHANGELOG" },
+      { label: "Oui", description: "Invoquer le documentarian pour mettre à jour le CHANGELOG" }
+    ]
+  }]
 })
 ```
 Invoquer `documentarian` uniquement si l'utilisateur répond "Oui".
@@ -547,12 +557,14 @@ Le format attendu et les définitions des statuts sont définis dans le skill `d
 
   ```
   question({
-    header: "CP-3 — Suite",
-    question: "Ticket #<ID> terminé. Passer au ticket suivant ?",
-    options: [
-      { label: "Suivant", description: "Passer au ticket suivant dans la liste" },
-      { label: "Stop", description: "Arrêter le workflow et afficher le récap global" }
-    ]
+    questions: [{
+      header: "CP-3 — Suite",
+      question: "Ticket #<ID> terminé. Passer au ticket suivant ?",
+      options: [
+        { label: "Suivant", description: "Passer au ticket suivant dans la liste" },
+        { label: "Stop", description: "Arrêter le workflow et afficher le récap global" }
+      ]
+    }]
   })
   ```
 
@@ -690,13 +702,15 @@ Le format exact, les champs obligatoires et les définitions des statuts (`succ�
 
 ```
 question({
-  header: "Dépendance non résolue",
-  question: "Le ticket #<ID> dépend de #<ID-parent> qui n'est pas encore terminé. Comment procéder ?",
-  options: [
-    { label: "Attendre", description: "Suspendre ce ticket jusqu'à la résolution du ticket parent" },
-    { label: "Traiter le parent d'abord", description: "Réorganiser pour traiter #<ID-parent> avant #<ID>" },
-    { label: "Continuer quand même", description: "Ignorer la dépendance et démarrer l'implémentation maintenant" }
-  ]
+  questions: [{
+    header: "Dépendance non résolue",
+    question: "Le ticket #<ID> dépend de #<ID-parent> qui n'est pas encore terminé. Comment procéder ?",
+    options: [
+      { label: "Attendre", description: "Suspendre ce ticket jusqu'à la résolution du ticket parent" },
+      { label: "Traiter le parent d'abord", description: "Réorganiser pour traiter #<ID-parent> avant #<ID>" },
+      { label: "Continuer quand même", description: "Ignorer la dépendance et démarrer l'implémentation maintenant" }
+    ]
+  }]
 })
 ```
 
@@ -738,12 +752,14 @@ Utiliser l'outil `question` :
 
 ```
 question({
-  header: "Agent non identifié",
-  question: "Aucun agent clairement identifié pour le ticket #<ID>. Quel agent utiliser ?",
-  options: [
-    { label: "developer-fullstack (Recommandé)", description: "Agent généraliste — couvre les cas ambigus front + back" },
-    { label: "Préciser manuellement", description: "Indiquer l'agent à utiliser dans la réponse libre" }
-  ]
+  questions: [{
+    header: "Agent non identifié",
+    question: "Aucun agent clairement identifié pour le ticket #<ID>. Quel agent utiliser ?",
+    options: [
+      { label: "developer-fullstack (Recommandé)", description: "Agent généraliste — couvre les cas ambigus front + back" },
+      { label: "Préciser manuellement", description: "Indiquer l'agent à utiliser dans la réponse libre" }
+    ]
+  }]
 })
 ```
 
@@ -753,12 +769,14 @@ question({
 
 ```
 question({
-  header: "Blocage après 3 cycles",
-  question: "Le ticket #<ID> a subi 3 cycles de review sans résolution. Une intervention manuelle est recommandée. Comment procéder ?",
-  options: [
-    { label: "Continuer", description: "Tenter un nouveau cycle de correction" },
-    { label: "Passer ce ticket", description: "Ignorer ce ticket et passer au suivant" }
-  ]
+  questions: [{
+    header: "Blocage après 3 cycles",
+    question: "Le ticket #<ID> a subi 3 cycles de review sans résolution. Une intervention manuelle est recommandée. Comment procéder ?",
+    options: [
+      { label: "Continuer", description: "Tenter un nouveau cycle de correction" },
+      { label: "Passer ce ticket", description: "Ignorer ce ticket et passer au suivant" }
+    ]
+  }]
 })
 ```
 
@@ -815,13 +833,15 @@ Ajouter un label système si applicable :
 
 ```
 question({
-  header: "Ticket bloqué #<ID>",
-  question: "Le ticket #<ID> est bloqué : <raison>. Comment procéder ?",
-  options: [
-    { label: "Résoudre maintenant", description: "Traiter le blocage avant de continuer l'implémentation" },
-    { label: "Passer au suivant", description: "Ignorer ce ticket et passer au ticket suivant" },
-    { label: "Stop", description: "Arrêter le workflow et afficher le récap de l'état courant" }
-  ]
+  questions: [{
+    header: "Ticket bloqué #<ID>",
+    question: "Le ticket #<ID> est bloqué : <raison>. Comment procéder ?",
+    options: [
+      { label: "Résoudre maintenant", description: "Traiter le blocage avant de continuer l'implémentation" },
+      { label: "Passer au suivant", description: "Ignorer ce ticket et passer au ticket suivant" },
+      { label: "Stop", description: "Arrêter le workflow et afficher le récap de l'état courant" }
+    ]
+  }]
 })
 ```
 

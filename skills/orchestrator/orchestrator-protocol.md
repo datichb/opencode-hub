@@ -95,12 +95,14 @@ Tenter de lire `ONBOARDING.md` et `CONVENTIONS.md` à la racine du projet.
 
 ```
 question({
-  header: "Onboarding projet",
-  question: "Aucun fichier de contexte (ONBOARDING.md, CONVENTIONS.md) n'existe sur ce projet. Lancer l'onboarder pour établir le contexte avant de démarrer la feature ?",
-  options: [
-    { label: "Oui — lancer l'onboarder (Recommandé)", description: "Invoquer l'onboarder pour analyser le projet et établir le contexte" },
-    { label: "Non — skip", description: "Passer directement à la feature (à utiliser si tu connais déjà le projet)" }
-  ]
+  questions: [{
+    header: "Onboarding projet",
+    question: "Aucun fichier de contexte (ONBOARDING.md, CONVENTIONS.md) n'existe sur ce projet. Lancer l'onboarder pour établir le contexte avant de démarrer la feature ?",
+    options: [
+      { label: "Oui — lancer l'onboarder (Recommandé)", description: "Invoquer l'onboarder pour analyser le projet et établir le contexte" },
+      { label: "Non — skip", description: "Passer directement à la feature (à utiliser si tu connais déjà le projet)" }
+    ]
+  }]
 })
 ```
 
@@ -124,12 +126,14 @@ question({
 
   ```
   question({
-    header: "CP-onboard",
-    question: "Contexte établi pour [Nom du projet]. Le contexte est-il suffisant pour démarrer la feature ?",
-    options: [
-      { label: "Oui — démarrer la feature", description: "Continuer en Mode A ou Mode B avec le contexte établi" },
-      { label: "Non — questions complémentaires", description: "Poser des questions avant de démarrer" }
-    ]
+    questions: [{
+      header: "CP-onboard",
+      question: "Contexte établi pour [Nom du projet]. Le contexte est-il suffisant pour démarrer la feature ?",
+      options: [
+        { label: "Oui — démarrer la feature", description: "Continuer en Mode A ou Mode B avec le contexte établi" },
+        { label: "Non — questions complémentaires", description: "Poser des questions avant de démarrer" }
+      ]
+    }]
   })
   ```
 
@@ -290,13 +294,15 @@ avant de router. Signaler à l'utilisateur et demander confirmation.
 
    ```
    question({
-     header: "CP-spec — Ticket #<ID>",
-     question: "Spec <UX/UI> produite pour le ticket #<ID> — <titre>. Quelle suite ?",
-     options: [
-       { label: "Valider", description: "Transmettre la spec à orchestrator-dev pour implémentation" },
-       { label: "Réviser", description: "Retourner à l'agent design avec des corrections" },
-       { label: "Ignorer", description: "Abandonner ce ticket et passer au suivant" }
-     ]
+     questions: [{
+       header: "CP-spec — Ticket #<ID>",
+       question: "Spec <UX/UI> produite pour le ticket #<ID> — <titre>. Quelle suite ?",
+       options: [
+         { label: "Valider", description: "Transmettre la spec à orchestrator-dev pour implémentation" },
+         { label: "Réviser", description: "Retourner à l'agent design avec des corrections" },
+         { label: "Ignorer", description: "Abandonner ce ticket et passer au suivant" }
+       ]
+     }]
    })
    ```
 
@@ -308,13 +314,15 @@ avant de router. Signaler à l'utilisateur et demander confirmation.
 
   ```
   question({
-    header: "3 révisions sans validation",
-    question: "Le ticket #<ID> a subi 3 révisions sans validation. Comment procéder ?",
-    options: [
-      { label: "Continuer", description: "Relancer une nouvelle révision avec l'agent design" },
-      { label: "Valider en l'état", description: "Accepter la spec actuelle et passer à l'implémentation" },
-      { label: "Ignorer", description: "Abandonner ce ticket" }
-    ]
+    questions: [{
+      header: "3 révisions sans validation",
+      question: "Le ticket #<ID> a subi 3 révisions sans validation. Comment procéder ?",
+      options: [
+        { label: "Continuer", description: "Relancer une nouvelle révision avec l'agent design" },
+        { label: "Valider en l'état", description: "Accepter la spec actuelle et passer à l'implémentation" },
+        { label: "Ignorer", description: "Abandonner ce ticket" }
+      ]
+    }]
   })
   ```
 
@@ -351,13 +359,15 @@ avant de router. Signaler à l'utilisateur et demander confirmation.
 
    ```
    question({
-     header: "CP-audit — Ticket #<ID>",
-     question: "Rapport d'audit reçu pour le ticket #<ID> — <titre>. Quelle suite ?",
-     options: [
-       { label: "Corriger", description: "Transmettre le rapport à orchestrator-dev pour corrections" },
-       { label: "Accepter", description: "Aucune correction nécessaire — ticket audité" },
-       { label: "Ignorer", description: "Abandonner ce ticket" }
-     ]
+     questions: [{
+       header: "CP-audit — Ticket #<ID>",
+       question: "Rapport d'audit reçu pour le ticket #<ID> — <titre>. Quelle suite ?",
+       options: [
+         { label: "Corriger", description: "Transmettre le rapport à orchestrator-dev pour corrections" },
+         { label: "Accepter", description: "Aucune correction nécessaire — ticket audité" },
+         { label: "Ignorer", description: "Abandonner ce ticket" }
+       ]
+     }]
    })
    ```
 
@@ -367,12 +377,14 @@ avant de router. Signaler à l'utilisateur et demander confirmation.
 
   ```
   question({
-    header: "Re-audit",
-    question: "Corrections appliquées pour le ticket #<ID>. Relancer l'audit pour vérifier ?",
-    options: [
-      { label: "Oui — relancer l'audit", description: "Invoquer à nouveau l'auditeur sur le même périmètre" },
-      { label: "Non", description: "Considérer le ticket corrigé sans re-vérification" }
-    ]
+    questions: [{
+      header: "Re-audit",
+      question: "Corrections appliquées pour le ticket #<ID>. Relancer l'audit pour vérifier ?",
+      options: [
+        { label: "Oui — relancer l'audit", description: "Invoquer à nouveau l'auditeur sur le même périmètre" },
+        { label: "Non", description: "Considérer le ticket corrigé sans re-vérification" }
+      ]
+    }]
   })
   ```
 
@@ -383,13 +395,15 @@ avant de router. Signaler à l'utilisateur et demander confirmation.
 
   ```
   question({
-    header: "2 re-audits sans validation",
-    question: "Le ticket #<ID> a subi 2 re-audits sans atteindre le statut acceptable. Comment procéder ?",
-    options: [
-      { label: "Continuer", description: "Relancer un nouveau cycle correction + re-audit" },
-      { label: "Accepter en l'état", description: "Considérer les corrections suffisantes sans nouvelle vérification" },
-      { label: "Ignorer", description: "Abandonner ce ticket" }
-    ]
+    questions: [{
+      header: "2 re-audits sans validation",
+      question: "Le ticket #<ID> a subi 2 re-audits sans atteindre le statut acceptable. Comment procéder ?",
+      options: [
+        { label: "Continuer", description: "Relancer un nouveau cycle correction + re-audit" },
+        { label: "Accepter en l'état", description: "Considérer les corrections suffisantes sans nouvelle vérification" },
+        { label: "Ignorer", description: "Abandonner ce ticket" }
+      ]
+    }]
   })
   ```
 
@@ -450,12 +464,14 @@ Quand orchestrator-dev atteint un CP à enjeu fort (CP-2, blocage 3 cycles, dép
 
    ```
    question({
-     header: "[OrchestratorDev] <Phase> — #<ID>",
-     question: "[OrchestratorDev — <Phase> | Ticket #<ID> — <titre>]\n<question exacte du bloc>",
-     options: [
-       { label: "<label-option-1>", description: "<description du bloc>" },
-       { label: "<label-option-2>", description: "<description du bloc>" }
-     ]
+     questions: [{
+       header: "[OrchestratorDev] <Phase> — #<ID>",
+       question: "[OrchestratorDev — <Phase> | Ticket #<ID> — <titre>]\n<question exacte du bloc>",
+       options: [
+         { label: "<label-option-1>", description: "<description du bloc>" },
+         { label: "<label-option-2>", description: "<description du bloc>" }
+       ]
+     }]
    })
    ```
 
@@ -481,12 +497,14 @@ Utiliser l'outil `question` :
 
 ```
 question({
-  header: "Session perdue — #<ID>",
-  question: "[Orchestrator — Session introuvable | Ticket #<ID> — <titre>]\nLa session orchestrator-dev a été perdue (redémarrage probable). Comment reprendre ?",
-  options: [
-    { label: "Relancer depuis les tickets restants (Recommandé)", description: "Invoquer une nouvelle session orchestrator-dev avec les tickets non encore traités (liste dans ### État de la session)" },
-    { label: "Stop", description: "Arrêter le workflow et afficher le récap de l'état courant connu" }
-  ]
+  questions: [{
+    header: "Session perdue — #<ID>",
+    question: "[Orchestrator — Session introuvable | Ticket #<ID> — <titre>]\nLa session orchestrator-dev a été perdue (redémarrage probable). Comment reprendre ?",
+    options: [
+      { label: "Relancer depuis les tickets restants (Recommandé)", description: "Invoquer une nouvelle session orchestrator-dev avec les tickets non encore traités (liste dans ### État de la session)" },
+      { label: "Stop", description: "Arrêter le workflow et afficher le récap de l'état courant connu" }
+    ]
+  }]
 })
 ```
 
@@ -540,12 +558,14 @@ Utiliser l'outil `question` :
 
 ```
 question({
-  header: "Ticket mixte #<ID>",
-  question: "Le ticket #<ID> couvre à la fois une phase de conception et une phase d'implémentation. Comment procéder ?",
-  options: [
-    { label: "Scinder via le planner (Recommandé)", description: "Créer deux tickets : Spec <UX/UI> et Implémentation" },
-    { label: "Traiter comme ticket dev", description: "Ignorer la phase spec et router directement vers orchestrator-dev" }
-  ]
+  questions: [{
+    header: "Ticket mixte #<ID>",
+    question: "Le ticket #<ID> couvre à la fois une phase de conception et une phase d'implémentation. Comment procéder ?",
+    options: [
+      { label: "Scinder via le planner (Recommandé)", description: "Créer deux tickets : Spec <UX/UI> et Implémentation" },
+      { label: "Traiter comme ticket dev", description: "Ignorer la phase spec et router directement vers orchestrator-dev" }
+    ]
+  }]
 })
 ```
 
@@ -555,14 +575,16 @@ Utiliser l'outil `question` :
 
 ```
 question({
-  header: "Agent non identifié #<ID>",
-  question: "Impossible de classifier le ticket #<ID>. Le type le plus probable est dev. Confirmer ?",
-  options: [
-    { label: "dev — orchestrator-dev (Recommandé)", description: "Traiter comme ticket d'implémentation" },
-    { label: "spec-ux", description: "Traiter comme ticket de spécification UX" },
-    { label: "spec-ui", description: "Traiter comme ticket de spécification UI" },
-    { label: "audit", description: "Traiter comme ticket d'audit" }
-  ]
+  questions: [{
+    header: "Agent non identifié #<ID>",
+    question: "Impossible de classifier le ticket #<ID>. Le type le plus probable est dev. Confirmer ?",
+    options: [
+      { label: "dev — orchestrator-dev (Recommandé)", description: "Traiter comme ticket d'implémentation" },
+      { label: "spec-ux", description: "Traiter comme ticket de spécification UX" },
+      { label: "spec-ui", description: "Traiter comme ticket de spécification UI" },
+      { label: "audit", description: "Traiter comme ticket d'audit" }
+    ]
+  }]
 })
 ```
 
@@ -591,13 +613,15 @@ ou agent absent de `.opencode/agents/`), ne jamais silencieusement basculer vers
 
 ```
 question({
-  header: "Agent manquant — #<ID>",
-  question: "[Orchestrator — Routing | Ticket #<ID> — <titre>]\nL'agent `<agent-id>` est requis mais n'est pas déployé sur ce projet. Comment procéder ?",
-  options: [
-    { label: "Déployer l'agent (Recommandé)", description: "Tape `!oc deploy opencode <PROJECT_ID>` ici pour déployer sans quitter OpenCode, puis réponds pour reprendre" },
-    { label: "Utiliser <substitut>", description: "<Limitation de couverture>" },
-    { label: "Ignorer ce ticket", description: "Passer au ticket suivant — noté comme ignoré dans le récap" }
-  ]
+  questions: [{
+    header: "Agent manquant — #<ID>",
+    question: "[Orchestrator — Routing | Ticket #<ID> — <titre>]\nL'agent `<agent-id>` est requis mais n'est pas déployé sur ce projet. Comment procéder ?",
+    options: [
+      { label: "Déployer l'agent (Recommandé)", description: "Tape `!oc deploy opencode <PROJECT_ID>` ici pour déployer sans quitter OpenCode, puis réponds pour reprendre" },
+      { label: "Utiliser <substitut>", description: "<Limitation de couverture>" },
+      { label: "Ignorer ce ticket", description: "Passer au ticket suivant — noté comme ignoré dans le récap" }
+    ]
+  }]
 })
 ```
 
@@ -605,12 +629,14 @@ question({
 
 ```
 question({
-  header: "Agent manquant — #<ID>",
-  question: "[Orchestrator — Routing | Ticket #<ID> — <titre>]\nL'agent `<agent-id>` est requis mais n'est pas déployé sur ce projet, et aucun substitut n'est disponible. Comment procéder ?",
-  options: [
-    { label: "Déployer l'agent (Recommandé)", description: "Tape `!oc deploy opencode <PROJECT_ID>` ici pour déployer sans quitter OpenCode, puis réponds pour reprendre" },
-    { label: "Ignorer ce ticket", description: "Passer au ticket suivant — noté comme ignoré dans le récap" }
-  ]
+  questions: [{
+    header: "Agent manquant — #<ID>",
+    question: "[Orchestrator — Routing | Ticket #<ID> — <titre>]\nL'agent `<agent-id>` est requis mais n'est pas déployé sur ce projet, et aucun substitut n'est disponible. Comment procéder ?",
+    options: [
+      { label: "Déployer l'agent (Recommandé)", description: "Tape `!oc deploy opencode <PROJECT_ID>` ici pour déployer sans quitter OpenCode, puis réponds pour reprendre" },
+      { label: "Ignorer ce ticket", description: "Passer au ticket suivant — noté comme ignoré dans le récap" }
+    ]
+  }]
 })
 ```
 

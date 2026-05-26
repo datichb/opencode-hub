@@ -44,12 +44,14 @@ Avant de supprimer un fichier (refactoring, réorganisation, nettoyage), toujour
 
 ```
 question({
-  header: "Suppression de fichier",
-  question: "Risque détecté : suppression du fichier [chemin/fichier]. Cette action est irréversible sans git restore. Confirmes-tu vouloir supprimer ce fichier ?",
-  options: [
-    { label: "Oui — supprimer", description: "Le fichier sera supprimé définitivement (récupérable via git restore)" },
-    { label: "Non — conserver", description: "Annuler la suppression" }
-  ]
+  questions: [{
+    header: "Suppression de fichier",
+    question: "Risque détecté : suppression du fichier [chemin/fichier]. Cette action est irréversible sans git restore. Confirmes-tu vouloir supprimer ce fichier ?",
+    options: [
+      { label: "Oui — supprimer", description: "Le fichier sera supprimé définitivement (récupérable via git restore)" },
+      { label: "Non — conserver", description: "Annuler la suppression" }
+    ]
+  }]
 })
 ```
 

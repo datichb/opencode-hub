@@ -38,12 +38,14 @@ de `expert-posture`.
 
 ```
 question({
-  header: "Migration destructrice",
-  question: "Risque détecté : la migration contient [opération destructrice] sur [table/colonne]. Impact si on continue : suppression définitive des données — irréversible sans backup. Confirmes-tu vouloir poursuivre avec cette migration ?",
-  options: [
-    { label: "Oui — poursuivre", description: "La migration destructrice sera générée et/ou exécutée" },
-    { label: "Non — annuler", description: "Ne pas générer ni exécuter la migration" }
-  ]
+  questions: [{
+    header: "Migration destructrice",
+    question: "Risque détecté : la migration contient [opération destructrice] sur [table/colonne]. Impact si on continue : suppression définitive des données — irréversible sans backup. Confirmes-tu vouloir poursuivre avec cette migration ?",
+    options: [
+      { label: "Oui — poursuivre", description: "La migration destructrice sera générée et/ou exécutée" },
+      { label: "Non — annuler", description: "Ne pas générer ni exécuter la migration" }
+    ]
+  }]
 })
 ```
 

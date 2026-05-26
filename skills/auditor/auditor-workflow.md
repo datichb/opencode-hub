@@ -71,9 +71,11 @@ Sinon :
 
 [Puis appel outil question]
 question({
-  header: "...",
-  question: "[Auditeur — Phase X | Projet : <nom>]\n<question de validation>",
-  options: [...]
+  questions: [{
+    header: "...",
+    question: "[Auditeur — Phase X | Projet : <nom>]\n<question de validation>",
+    options: [...]
+  }]
 })
 ```
 
@@ -185,12 +187,14 @@ Pour déléguer aux sous-agents dans de bonnes conditions, j'ai besoin de préci
 
 [Puis appel outil question]
 question({
-  header: "Informations manquantes",
-  question: "[Auditeur — Phase 0 : Prérequis | Projet : <nom>]\nPour déléguer aux sous-agents dans de bonnes conditions, j'ai besoin de précisions (listées ci-dessus). Comment procéder ?",
-  options: [
-    { label: "Fournir les précisions", description: "Préciser le périmètre, la stack ou les chemins d'accès manquants" },
-    { label: "Lancer quand même", description: "Démarrer l'audit avec les informations disponibles — les sous-agents signaleront les limites" }
-  ]
+  questions: [{
+    header: "Informations manquantes",
+    question: "[Auditeur — Phase 0 : Prérequis | Projet : <nom>]\nPour déléguer aux sous-agents dans de bonnes conditions, j'ai besoin de précisions (listées ci-dessus). Comment procéder ?",
+    options: [
+      { label: "Fournir les précisions", description: "Préciser le périmètre, la stack ou les chemins d'accès manquants" },
+      { label: "Lancer quand même", description: "Démarrer l'audit avec les informations disponibles — les sous-agents signaleront les limites" }
+    ]
+  }]
 })
 ```
 
@@ -220,13 +224,15 @@ question({
 
 ```
 question({
-  header: "Charger le contexte",
-  question: "[Auditeur — Phase 0 complétée | Projet : <nom>]\nPrérequis vérifiés. Charger le contexte projet (Phase 1) ?",
-  options: [
-    { label: "Charger le contexte (Recommandé)", description: "Passer à la Phase 1 — Chargement contexte projet" },
-    { label: "Préciser le périmètre", description: "Ajuster le périmètre avant de continuer" },
-    { label: "Arrêter", description: "Annuler l'audit" }
-  ]
+  questions: [{
+    header: "Charger le contexte",
+    question: "[Auditeur — Phase 0 complétée | Projet : <nom>]\nPrérequis vérifiés. Charger le contexte projet (Phase 1) ?",
+    options: [
+      { label: "Charger le contexte (Recommandé)", description: "Passer à la Phase 1 — Chargement contexte projet" },
+      { label: "Préciser le périmètre", description: "Ajuster le périmètre avant de continuer" },
+      { label: "Arrêter", description: "Annuler l'audit" }
+    ]
+  }]
 })
 ```
 
@@ -298,13 +304,15 @@ La reconnaissance rapide n'a pas permis d'identifier la stack technique :
 
 [Puis appel outil question]
 question({
-  header: "Stack non identifiable",
-  question: "[Auditeur — Phase 1 : Contexte | Projet : <nom>]\nStack non identifiable. Comment procéder ?",
-  options: [
-    { label: "Préciser la stack", description: "Indiquer manuellement le langage, framework et architecture" },
-    { label: "Lancer l'onboarder", description: "Invoquer l'onboarder pour une exploration complète avant l'audit" },
-    { label: "Continuer quand même", description: "Démarrer l'audit sans contexte stack — les sous-agents feront au mieux" }
-  ]
+  questions: [{
+    header: "Stack non identifiable",
+    question: "[Auditeur — Phase 1 : Contexte | Projet : <nom>]\nStack non identifiable. Comment procéder ?",
+    options: [
+      { label: "Préciser la stack", description: "Indiquer manuellement le langage, framework et architecture" },
+      { label: "Lancer l'onboarder", description: "Invoquer l'onboarder pour une exploration complète avant l'audit" },
+      { label: "Continuer quand même", description: "Démarrer l'audit sans contexte stack — les sous-agents feront au mieux" }
+    ]
+  }]
 })
 ```
 
@@ -339,13 +347,15 @@ question({
 
 ```
 question({
-  header: "Sélectionner les domaines",
-  question: "[Auditeur — Phase 1 complétée | Projet : <nom>]\nContexte chargé. Passer à la sélection des domaines à auditer (Phase 2) ?",
-  options: [
-    { label: "Sélectionner les domaines (Recommandé)", description: "Passer à la Phase 2 — Sélection des domaines" },
-    { label: "Recharger le contexte", description: "Relire ONBOARDING.md ou refaire la reconnaissance rapide" },
-    { label: "Arrêter", description: "Annuler l'audit" }
-  ]
+  questions: [{
+    header: "Sélectionner les domaines",
+    question: "[Auditeur — Phase 1 complétée | Projet : <nom>]\nContexte chargé. Passer à la sélection des domaines à auditer (Phase 2) ?",
+    options: [
+      { label: "Sélectionner les domaines (Recommandé)", description: "Passer à la Phase 2 — Sélection des domaines" },
+      { label: "Recharger le contexte", description: "Relire ONBOARDING.md ou refaire la reconnaissance rapide" },
+      { label: "Arrêter", description: "Annuler l'audit" }
+    ]
+  }]
 })
 ```
 
@@ -438,13 +448,15 @@ Si la **demande est ambiguë** ou si un **domaine demandé n'est pas pertinent p
 
 ```
 question({
-  header: "Démarrer les audits",
-  question: "[Auditeur — Phase 2 complétée | Projet : <nom>]\nDomaines sélectionnés. Démarrer les audits (Phase 3) ?",
-  options: [
-    { label: "Démarrer les audits (Recommandé)", description: "Passer à la Phase 3 — Délégation aux sous-agents" },
-    { label: "Ajuster les domaines", description: "Ajouter ou retirer des domaines avant de démarrer" },
-    { label: "Arrêter", description: "Annuler l'audit" }
-  ]
+  questions: [{
+    header: "Démarrer les audits",
+    question: "[Auditeur — Phase 2 complétée | Projet : <nom>]\nDomaines sélectionnés. Démarrer les audits (Phase 3) ?",
+    options: [
+      { label: "Démarrer les audits (Recommandé)", description: "Passer à la Phase 3 — Délégation aux sous-agents" },
+      { label: "Ajuster les domaines", description: "Ajouter ou retirer des domaines avant de démarrer" },
+      { label: "Arrêter", description: "Annuler l'audit" }
+    ]
+  }]
 })
 ```
 
@@ -536,12 +548,14 @@ Les audits suivants n'ont pas encore été lancés : <liste des domaines restant
 
 [Puis appel outil question]
 question({
-  header: "Audit bloquant",
-  question: "[Auditeur — Phase 3 : Délégation | Projet : <nom>]\nAudit <domaine> a détecté un problème bloquant. Comment procéder ?",
-  options: [
-    { label: "Continuer les autres audits", description: "Lancer les audits restants — le problème bloquant sera signalé dans la synthèse" },
-    { label: "Arrêter tous les audits", description: "Stopper l'audit global — corriger le problème critique avant de continuer" }
-  ]
+  questions: [{
+    header: "Audit bloquant",
+    question: "[Auditeur — Phase 3 : Délégation | Projet : <nom>]\nAudit <domaine> a détecté un problème bloquant. Comment procéder ?",
+    options: [
+      { label: "Continuer les autres audits", description: "Lancer les audits restants — le problème bloquant sera signalé dans la synthèse" },
+      { label: "Arrêter tous les audits", description: "Stopper l'audit global — corriger le problème critique avant de continuer" }
+    ]
+  }]
 })
 ```
 
@@ -571,13 +585,15 @@ question({
 
 ```
 question({
-  header: "Consolider les rapports",
-  question: "[Auditeur — Phase 3 complétée | Projet : <nom>]\nAudits réalisés. Passer à la consolidation (Phase 4) ?",
-  options: [
-    { label: "Consolider (Recommandé)", description: "Passer à la Phase 4 — Consolidation et synthèse exécutive" },
-    { label: "Relancer un audit", description: "Relancer un sous-agent pour affiner son rapport" },
-    { label: "Arrêter", description: "Stopper avant la consolidation — rapports disponibles individuellement" }
-  ]
+  questions: [{
+    header: "Consolider les rapports",
+    question: "[Auditeur — Phase 3 complétée | Projet : <nom>]\nAudits réalisés. Passer à la consolidation (Phase 4) ?",
+    options: [
+      { label: "Consolider (Recommandé)", description: "Passer à la Phase 4 — Consolidation et synthèse exécutive" },
+      { label: "Relancer un audit", description: "Relancer un sous-agent pour affiner son rapport" },
+      { label: "Arrêter", description: "Stopper avant la consolidation — rapports disponibles individuellement" }
+    ]
+  }]
 })
 ```
 
@@ -705,13 +721,15 @@ Produire uniquement la synthèse exécutive, **sans** le bloc `## Retour vers or
 
 ```
 question({
-  header: "Audit terminé",
-  question: "[Auditeur — Phase 4 complétée | Projet : <nom>]\nSynthèse exécutive produite. Besoin d'ajustements ?",
-  options: [
-    { label: "Terminer", description: "Audit complet terminé" },
-    { label: "Relancer un audit", description: "Relancer un sous-agent pour affiner son rapport" },
-    { label: "Revoir la consolidation", description: "Ajuster la synthèse exécutive" }
-  ]
+  questions: [{
+    header: "Audit terminé",
+    question: "[Auditeur — Phase 4 complétée | Projet : <nom>]\nSynthèse exécutive produite. Besoin d'ajustements ?",
+    options: [
+      { label: "Terminer", description: "Audit complet terminé" },
+      { label: "Relancer un audit", description: "Relancer un sous-agent pour affiner son rapport" },
+      { label: "Revoir la consolidation", description: "Ajuster la synthèse exécutive" }
+    ]
+  }]
 })
 ```
 
@@ -749,12 +767,14 @@ Afficher d'abord le contexte en texte :
 Puis appeler l'outil `question` :
 ```
 question({
-  header: "Retour à Phase X",
-  question: "[Auditeur — Retour en arrière | Projet : <nom>]\n<raison du retour>. Revenir à la Phase X pour <action> ?",
-  options: [
-    { label: "Oui, revenir à Phase X", description: "<ce qui sera fait en Phase X>" },
-    { label: "Non, continuer", description: "Poursuivre avec l'information disponible" }
-  ]
+  questions: [{
+    header: "Retour à Phase X",
+    question: "[Auditeur — Retour en arrière | Projet : <nom>]\n<raison du retour>. Revenir à la Phase X pour <action> ?",
+    options: [
+      { label: "Oui, revenir à Phase X", description: "<ce qui sera fait en Phase X>" },
+      { label: "Non, continuer", description: "Poursuivre avec l'information disponible" }
+    ]
+  }]
 })
 ```
 
@@ -786,13 +806,15 @@ La Phase X a été répétée 3 fois. Pour éviter une boucle infinie, je recomm
 Puis appeler l'outil `question` :
 ```
 question({
-  header: "Limite d'itérations",
-  question: "[Auditeur — Phase X répétée 3 fois | Projet : <nom>]\nComment procéder ?",
-  options: [
-    { label: "Continuer quand même", description: "Passer à la phase suivante avec l'information disponible" },
-    { label: "Itération finale", description: "Une dernière itération de Phase X puis passage forcé à la suite" },
-    { label: "Terminer", description: "Arrêter l'audit ici et produire une synthèse partielle" }
-  ]
+  questions: [{
+    header: "Limite d'itérations",
+    question: "[Auditeur — Phase X répétée 3 fois | Projet : <nom>]\nComment procéder ?",
+    options: [
+      { label: "Continuer quand même", description: "Passer à la phase suivante avec l'information disponible" },
+      { label: "Itération finale", description: "Une dernière itération de Phase X puis passage forcé à la suite" },
+      { label: "Terminer", description: "Arrêter l'audit ici et produire une synthèse partielle" }
+    ]
+  }]
 })
 ```
 

@@ -63,12 +63,14 @@ Une information est **critique** si son absence empêche de :
 
 ```
 question({
-  header: "Information manquante",
-  question: "[Planner — Information manquante critique | Feature : <nom>]\n<question précise — issue de l'exploration, pas générique>",
-  options: [
-    { label: "Répondre", description: "<ce que cette réponse permet de débloquer>" },
-    { label: "Continuer avec hypothèse", description: "Je formule une hypothèse documentée et continue — le ticket sera marqué `needs-clarification`" }
-  ]
+  questions: [{
+    header: "Information manquante",
+    question: "[Planner — Information manquante critique | Feature : <nom>]\n<question précise — issue de l'exploration, pas générique>",
+    options: [
+      { label: "Répondre", description: "<ce que cette réponse permet de débloquer>" },
+      { label: "Continuer avec hypothèse", description: "Je formule une hypothèse documentée et continue — le ticket sera marqué `needs-clarification`" }
+    ]
+  }]
 })
 ```
 
@@ -194,12 +196,14 @@ Présenter ce qui a été détecté avant de poser des questions :
 
 ```
 question({
-  header: "Validation du contexte",
-  question: "Ce contexte correspond-il à votre projet ? Des corrections ou précisions avant de continuer ?",
-  options: [
-    { label: "Oui — continuer", description: "Lancer la phase de discovery" },
-    { label: "Corrections à apporter", description: "Préciser ou corriger le contexte avant de continuer" }
-  ]
+  questions: [{
+    header: "Validation du contexte",
+    question: "Ce contexte correspond-il à votre projet ? Des corrections ou précisions avant de continuer ?",
+    options: [
+      { label: "Oui — continuer", description: "Lancer la phase de discovery" },
+      { label: "Corrections à apporter", description: "Préciser ou corriger le contexte avant de continuer" }
+    ]
+  }]
 })
 ```
 
@@ -249,12 +253,14 @@ Toujours expliquer le raisonnement :
 
 ```
 question({
-  header: "Validation de la compréhension",
-  question: "Ai-je bien compris le besoin ? Des corrections avant que je propose un découpage ?",
-  options: [
-    { label: "Oui — proposer le découpage", description: "Lancer la phase de planification" },
-    { label: "Corrections à apporter", description: "Corriger la compréhension avant de continuer" }
-  ]
+  questions: [{
+    header: "Validation de la compréhension",
+    question: "Ai-je bien compris le besoin ? Des corrections avant que je propose un découpage ?",
+    options: [
+      { label: "Oui — proposer le découpage", description: "Lancer la phase de planification" },
+      { label: "Corrections à apporter", description: "Corriger la compréhension avant de continuer" }
+    ]
+  }]
 })
 ```
 
@@ -488,12 +494,14 @@ Un seul critère ne suffit pas à proposer un découpage. Si un découpage sembl
 
 ```
 question({
-  header: "Validation du plan",
-  question: "Est-ce que ce découpage vous convient ? Souhaitez-vous modifier, ajouter ou supprimer des éléments avant que je crée les tickets ?",
-  options: [
-    { label: "Oui — créer les tickets", description: "Lancer la création des tickets dans Beads" },
-    { label: "Modifier le plan", description: "Apporter des modifications au découpage avant de créer" }
-  ]
+  questions: [{
+    header: "Validation du plan",
+    question: "Est-ce que ce découpage vous convient ? Souhaitez-vous modifier, ajouter ou supprimer des éléments avant que je crée les tickets ?",
+    options: [
+      { label: "Oui — créer les tickets", description: "Lancer la création des tickets dans Beads" },
+      { label: "Modifier le plan", description: "Apporter des modifications au découpage avant de créer" }
+    ]
+  }]
 })
 ```
 
@@ -835,13 +843,15 @@ T=$(bd create "Titre" -t task -p 2 -l ai-delegated -a dev-agent --parent $EPIC_I
 
 ```
 question({
-  header: "Délégation ai-delegated",
-  question: "Souhaitez-vous déléguer certains tickets à l'agent IA (label ai-delegated) ?",
-  options: [
-    { label: "Non", description: "Aucun ticket délégué à l'IA" },
-    { label: "Oui — certains tickets", description: "Indiquer les IDs dans la réponse libre" },
-    { label: "Oui — tous les tickets", description: "Déléguer tous les tickets créés à l'IA" }
-  ]
+  questions: [{
+    header: "Délégation ai-delegated",
+    question: "Souhaitez-vous déléguer certains tickets à l'agent IA (label ai-delegated) ?",
+    options: [
+      { label: "Non", description: "Aucun ticket délégué à l'IA" },
+      { label: "Oui — certains tickets", description: "Indiquer les IDs dans la réponse libre" },
+      { label: "Oui — tous les tickets", description: "Déléguer tous les tickets créés à l'IA" }
+    ]
+  }]
 })
 ```
 
@@ -898,12 +908,14 @@ Epics créés : N | Tickets créés : M | Estimation totale : ~Xh
 
 ```
 question({
-  header: "Validation finale",
-  question: "Les tickets correspondent-ils à vos attentes ? Souhaitez-vous des ajustements ?",
-  options: [
-    { label: "Oui — c'est bon", description: "Planning terminé" },
-    { label: "Ajustements à faire", description: "Apporter des modifications aux tickets créés" }
-  ]
+  questions: [{
+    header: "Validation finale",
+    question: "Les tickets correspondent-ils à vos attentes ? Souhaitez-vous des ajustements ?",
+    options: [
+      { label: "Oui — c'est bon", description: "Planning terminé" },
+      { label: "Ajustements à faire", description: "Apporter des modifications aux tickets créés" }
+    ]
+  }]
 })
 ```
 

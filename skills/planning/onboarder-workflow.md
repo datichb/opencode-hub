@@ -68,9 +68,11 @@ Sinon :
 
 [Puis appel outil question]
 question({
-  header: "...",
-  question: "[Onboarder — Phase X | Projet : <nom>]\n<question de validation>",
-  options: [...]
+  questions: [{
+    header: "...",
+    question: "[Onboarder — Phase X | Projet : <nom>]\n<question de validation>",
+    options: [...]
+  }]
 })
 ```
 
@@ -154,12 +156,14 @@ Pour démarrer l'onboarding, j'ai besoin de :
 
 [Puis appel outil question]
 question({
-  header: "Prérequis manquants",
-  question: "[Onboarder — Phase 0 : Prérequis | Projet]\nPour démarrer l'onboarding, j'ai besoin de :\n<liste>\n\nComment procéder ?",
-  options: [
-    { label: "Fournir les informations", description: "Préciser les éléments manquants" },
-    { label: "Continuer quand même", description: "Démarrer avec les informations disponibles — le rapport sera partiel" }
-  ]
+  questions: [{
+    header: "Prérequis manquants",
+    question: "[Onboarder — Phase 0 : Prérequis | Projet]\nPour démarrer l'onboarding, j'ai besoin de :\n<liste>\n\nComment procéder ?",
+    options: [
+      { label: "Fournir les informations", description: "Préciser les éléments manquants" },
+      { label: "Continuer quand même", description: "Démarrer avec les informations disponibles — le rapport sera partiel" }
+    ]
+  }]
 })
 ```
 
@@ -184,13 +188,15 @@ question({
 
 ```
 question({
-  header: "Démarrer l'exploration",
-  question: "[Onboarder — Phase 0 complétée | Projet : <nom>]\nPrérequis vérifiés. Démarrer l'exploration contextuelle (Phase 1) ?",
-  options: [
-    { label: "Démarrer (Recommandé)", description: "Passer à la Phase 1 — Exploration contextuelle" },
-    { label: "Préciser le contexte", description: "Ajouter des informations avant de démarrer" },
-    { label: "Arrêter", description: "Annuler l'onboarding" }
-  ]
+  questions: [{
+    header: "Démarrer l'exploration",
+    question: "[Onboarder — Phase 0 complétée | Projet : <nom>]\nPrérequis vérifiés. Démarrer l'exploration contextuelle (Phase 1) ?",
+    options: [
+      { label: "Démarrer (Recommandé)", description: "Passer à la Phase 1 — Exploration contextuelle" },
+      { label: "Préciser le contexte", description: "Ajouter des informations avant de démarrer" },
+      { label: "Arrêter", description: "Annuler l'onboarding" }
+    ]
+  }]
 })
 ```
 
@@ -450,12 +456,14 @@ Si une **information critique** émerge pendant l'exploration qui nécessite une
 
 ```
 question({
-  header: "Questions complémentaires",
-  question: "[Onboarder — Phase 1 complétée | Projet : <nom>]\nExploration terminée — X fichiers lus. Passer aux questions complémentaires (Phase 2) ?",
-  options: [
-    { label: "Passer à Phase 2 (Recommandé)", description: "Poser les questions de clarification identifiées" },
-    { label: "Explorer davantage", description: "Lire d'autres fichiers avant de poser des questions" }
-  ]
+  questions: [{
+    header: "Questions complémentaires",
+    question: "[Onboarder — Phase 1 complétée | Projet : <nom>]\nExploration terminée — X fichiers lus. Passer aux questions complémentaires (Phase 2) ?",
+    options: [
+      { label: "Passer à Phase 2 (Recommandé)", description: "Poser les questions de clarification identifiées" },
+      { label: "Explorer davantage", description: "Lire d'autres fichiers avant de poser des questions" }
+    ]
+  }]
 })
 ```
 
@@ -517,12 +525,14 @@ Puis appeler l'outil `question` :
 
 ```
 question({
-  header: "Clarifications projet",
-  question: "[Onboarder — Phase 2 : Questions | Projet : <nom>]\nQuelques questions de clarification issues de l'exploration. Comment souhaitez-vous procéder ?",
-  options: [
-    { label: "Répondre aux questions", description: "Fournir les réponses pour affiner l'analyse" },
-    { label: "Skip / Passer", description: "Continuer sans répondre — l'analyse restera partielle sur ces points" }
-  ]
+  questions: [{
+    header: "Clarifications projet",
+    question: "[Onboarder — Phase 2 : Questions | Projet : <nom>]\nQuelques questions de clarification issues de l'exploration. Comment souhaitez-vous procéder ?",
+    options: [
+      { label: "Répondre aux questions", description: "Fournir les réponses pour affiner l'analyse" },
+      { label: "Skip / Passer", description: "Continuer sans répondre — l'analyse restera partielle sur ces points" }
+    ]
+  }]
 })
 ```
 
@@ -549,13 +559,15 @@ question({
 
 ```
 question({
-  header: "Rapport de contexte",
-  question: "[Onboarder — Phase 2 complétée | Projet : <nom>]\nQuestions traitées. Passer à l'analyse approfondie (Phase 3 — Rapport de contexte) ?",
-  options: [
-    { label: "Passer à Phase 3 (Recommandé)", description: "Produire le rapport de contexte structuré" },
-    { label: "Poser d'autres questions", description: "Rester en Phase 2 pour préciser d'autres points" },
-    { label: "Revenir à Phase 1", description: "Explorer à nouveau avec les nouvelles informations reçues" }
-  ]
+  questions: [{
+    header: "Rapport de contexte",
+    question: "[Onboarder — Phase 2 complétée | Projet : <nom>]\nQuestions traitées. Passer à l'analyse approfondie (Phase 3 — Rapport de contexte) ?",
+    options: [
+      { label: "Passer à Phase 3 (Recommandé)", description: "Produire le rapport de contexte structuré" },
+      { label: "Poser d'autres questions", description: "Rester en Phase 2 pour préciser d'autres points" },
+      { label: "Revenir à Phase 1", description: "Explorer à nouveau avec les nouvelles informations reçues" }
+    ]
+  }]
 })
 ```
 
@@ -731,13 +743,15 @@ bd ready                  # Tickets prêts à travailler
 
 ```
 question({
-  header: "Détection cas particuliers",
-  question: "[Onboarder — Phase 3 complétée | Projet : <nom>]\nRapport de contexte produit. Passer à la détection des cas particuliers (Phase 4) ?",
-  options: [
-    { label: "Passer à Phase 4 (Recommandé)", description: "Vérifier les incohérences et cas particuliers" },
-    { label: "Réviser le rapport", description: "Rester en Phase 3 pour ajuster le rapport" },
-    { label: "Revenir à Phase 1", description: "Explorer à nouveau après avoir produit le rapport" }
-  ]
+  questions: [{
+    header: "Détection cas particuliers",
+    question: "[Onboarder — Phase 3 complétée | Projet : <nom>]\nRapport de contexte produit. Passer à la détection des cas particuliers (Phase 4) ?",
+    options: [
+      { label: "Passer à Phase 4 (Recommandé)", description: "Vérifier les incohérences et cas particuliers" },
+      { label: "Réviser le rapport", description: "Rester en Phase 3 pour ajuster le rapport" },
+      { label: "Revenir à Phase 1", description: "Explorer à nouveau après avoir produit le rapport" }
+    ]
+  }]
 })
 ```
 
@@ -794,13 +808,15 @@ Si un **cas particulier critique** est détecté (ex : CVE critiques, incohéren
 
 ```
 question({
-  header: "Génération des fichiers",
-  question: "[Onboarder — Phase 4 complétée | Projet : <nom>]\nDétection des cas particuliers terminée. Passer à la génération des fichiers (Phase 5) ?",
-  options: [
-    { label: "Générer les fichiers (Recommandé)", description: "Passer à la Phase 5 — Écriture ONBOARDING.md + CONVENTIONS.md" },
-    { label: "Vérifier d'autres cas", description: "Rester en Phase 4 pour vérifier d'autres cas particuliers" },
-    { label: "Revenir à Phase 3", description: "Revoir le rapport après détection de cas particuliers critiques" }
-  ]
+  questions: [{
+    header: "Génération des fichiers",
+    question: "[Onboarder — Phase 4 complétée | Projet : <nom>]\nDétection des cas particuliers terminée. Passer à la génération des fichiers (Phase 5) ?",
+    options: [
+      { label: "Générer les fichiers (Recommandé)", description: "Passer à la Phase 5 — Écriture ONBOARDING.md + CONVENTIONS.md" },
+      { label: "Vérifier d'autres cas", description: "Rester en Phase 4 pour vérifier d'autres cas particuliers" },
+      { label: "Revenir à Phase 3", description: "Revoir le rapport après détection de cas particuliers critiques" }
+    ]
+  }]
 })
 ```
 
@@ -856,12 +872,14 @@ ONBOARDING.md existe déjà (généré le <DATE>). Ce fichier va être écrasé 
 
 [Puis appel outil question]
 question({
-  header: "ONBOARDING.md existant",
-  question: "[Onboarder — Phase 5 : ONBOARDING.md | Projet : <nom>]\nONBOARDING.md existe déjà (généré le <DATE>). Comment procéder ?",
-  options: [
-    { label: "Écraser", description: "Remplacer l'existant par le nouveau rapport" },
-    { label: "Conserver l'existant", description: "Annuler l'écriture de ONBOARDING.md" }
-  ]
+  questions: [{
+    header: "ONBOARDING.md existant",
+    question: "[Onboarder — Phase 5 : ONBOARDING.md | Projet : <nom>]\nONBOARDING.md existe déjà (généré le <DATE>). Comment procéder ?",
+    options: [
+      { label: "Écraser", description: "Remplacer l'existant par le nouveau rapport" },
+      { label: "Conserver l'existant", description: "Annuler l'écriture de ONBOARDING.md" }
+    ]
+  }]
 })
 ```
 
@@ -1140,12 +1158,14 @@ CONVENTIONS.md existe déjà (généré le <DATE>). Ce fichier va être écrasé
 
 [Puis appel outil question]
 question({
-  header: "CONVENTIONS.md existant",
-  question: "[Onboarder — Phase 5 : CONVENTIONS.md | Projet : <nom>]\nCONVENTIONS.md existe déjà (généré le <DATE>). Comment procéder ?",
-  options: [
-    { label: "Écraser", description: "Remplacer l'existant par les nouvelles conventions détectées" },
-    { label: "Conserver l'existant", description: "Annuler l'écriture de CONVENTIONS.md" }
-  ]
+  questions: [{
+    header: "CONVENTIONS.md existant",
+    question: "[Onboarder — Phase 5 : CONVENTIONS.md | Projet : <nom>]\nCONVENTIONS.md existe déjà (généré le <DATE>). Comment procéder ?",
+    options: [
+      { label: "Écraser", description: "Remplacer l'existant par les nouvelles conventions détectées" },
+      { label: "Conserver l'existant", description: "Annuler l'écriture de CONVENTIONS.md" }
+    ]
+  }]
 })
 ```
 
@@ -1176,12 +1196,14 @@ J'ai détecté que le champ **Stack** est <absent / incomplet / générique> dan
 
 [Puis appel outil question]
 question({
-  header: "Mise à jour projects.md",
-  question: "[Onboarder — Phase 5 : projects.md | Projet : <nom>]\nDes champs sont absents ou incomplets dans projects.md. Mettre à jour ?",
-  options: [
-    { label: "Oui — mettre à jour", description: "Écrire les champs manquants dans projects.md (Stack en priorité)" },
-    { label: "Non", description: "Laisser projects.md tel quel" }
-  ]
+  questions: [{
+    header: "Mise à jour projects.md",
+    question: "[Onboarder — Phase 5 : projects.md | Projet : <nom>]\nDes champs sont absents ou incomplets dans projects.md. Mettre à jour ?",
+    options: [
+      { label: "Oui — mettre à jour", description: "Écrire les champs manquants dans projects.md (Stack en priorité)" },
+      { label: "Non", description: "Laisser projects.md tel quel" }
+    ]
+  }]
 })
 ```
 
@@ -1232,12 +1254,14 @@ Produire uniquement le récap de Phase 5, **sans** le bloc `## Retour vers orche
 
 ```
 question({
-  header: "Onboarding terminé",
-  question: "[Onboarder — Phase 5 complétée | Projet : <nom>]\nOnboarding terminé. Les fichiers ont été générés. Besoin d'ajustements ?",
-  options: [
-    { label: "Terminer", description: "Onboarding complet" },
-    { label: "Ajustements", description: "Revenir à une phase pour ajuster" }
-  ]
+  questions: [{
+    header: "Onboarding terminé",
+    question: "[Onboarder — Phase 5 complétée | Projet : <nom>]\nOnboarding terminé. Les fichiers ont été générés. Besoin d'ajustements ?",
+    options: [
+      { label: "Terminer", description: "Onboarding complet" },
+      { label: "Ajustements", description: "Revenir à une phase pour ajuster" }
+    ]
+  }]
 })
 ```
 
@@ -1274,12 +1298,14 @@ Afficher d'abord le contexte en texte :
 Puis appeler l'outil `question` :
 ```
 question({
-  header: "Retour à Phase X",
-  question: "[Onboarder — Retour en arrière | Projet : <nom>]\n<raison du retour>. Revenir à la Phase X pour <action> ?",
-  options: [
-    { label: "Oui, revenir à Phase X", description: "<ce qui sera fait en Phase X>" },
-    { label: "Non, continuer", description: "Poursuivre avec l'information disponible" }
-  ]
+  questions: [{
+    header: "Retour à Phase X",
+    question: "[Onboarder — Retour en arrière | Projet : <nom>]\n<raison du retour>. Revenir à la Phase X pour <action> ?",
+    options: [
+      { label: "Oui, revenir à Phase X", description: "<ce qui sera fait en Phase X>" },
+      { label: "Non, continuer", description: "Poursuivre avec l'information disponible" }
+    ]
+  }]
 })
 ```
 
@@ -1311,13 +1337,15 @@ La Phase X a été répétée 3 fois. Pour éviter une boucle infinie, je recomm
 Puis appeler l'outil `question` :
 ```
 question({
-  header: "Limite d'itérations",
-  question: "[Onboarder — Phase X répétée 3 fois | Projet : <nom>]\nComment procéder ?",
-  options: [
-    { label: "Continuer quand même", description: "Passer à la phase suivante avec l'information disponible" },
-    { label: "Itération finale", description: "Une dernière itération de Phase X puis passage forcé à la suite" },
-    { label: "Terminer", description: "Arrêter l'onboarding ici et produire les fichiers avec l'information actuelle" }
-  ]
+  questions: [{
+    header: "Limite d'itérations",
+    question: "[Onboarder — Phase X répétée 3 fois | Projet : <nom>]\nComment procéder ?",
+    options: [
+      { label: "Continuer quand même", description: "Passer à la phase suivante avec l'information disponible" },
+      { label: "Itération finale", description: "Une dernière itération de Phase X puis passage forcé à la suite" },
+      { label: "Terminer", description: "Arrêter l'onboarding ici et produire les fichiers avec l'information actuelle" }
+    ]
+  }]
 })
 ```
 

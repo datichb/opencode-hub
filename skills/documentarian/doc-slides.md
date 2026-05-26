@@ -53,14 +53,16 @@ Si la demande ne précise pas ces éléments, les demander via l'outil `question
 
 ```
 question({
-  header: "Contexte de la présentation",
-  question: "Quelques précisions pour structurer la présentation :",
-  options: [
-    { label: "Démo technique / feature", description: "Présenter une fonctionnalité ou un système à une équipe technique" },
-    { label: "Product pitch / stakeholders", description: "Présenter un produit, une roadmap ou des résultats à des décideurs" },
-    { label: "Retrospective / bilan", description: "Synthèse d'une sprint, d'un projet ou d'un incident" },
-    { label: "Onboarding / formation", description: "Initier une équipe ou un nouveau membre à un sujet" }
-  ]
+  questions: [{
+    header: "Contexte de la présentation",
+    question: "Quelques précisions pour structurer la présentation :",
+    options: [
+      { label: "Démo technique / feature", description: "Présenter une fonctionnalité ou un système à une équipe technique" },
+      { label: "Product pitch / stakeholders", description: "Présenter un produit, une roadmap ou des résultats à des décideurs" },
+      { label: "Retrospective / bilan", description: "Synthèse d'une sprint, d'un projet ou d'un incident" },
+      { label: "Onboarding / formation", description: "Initier une équipe ou un nouveau membre à un sujet" }
+    ]
+  }]
 })
 ```
 
@@ -446,13 +448,15 @@ Proposer la compilation via l'outil `question` :
 
 ```
 question({
-  header: "Compilation Marp",
-  question: "Marp est disponible. Compiler le fichier en HTML maintenant ?",
-  options: [
-    { label: "Compiler en HTML (Recommandé)", description: "Génère un fichier .html autonome présentable dans un navigateur" },
-    { label: "Compiler en PDF", description: "Génère un fichier .pdf — nécessite Chromium ou Chrome installé" },
-    { label: "Non, garder uniquement le .md", description: "Le fichier Marp source est suffisant pour l'instant" }
-  ]
+  questions: [{
+    header: "Compilation Marp",
+    question: "Marp est disponible. Compiler le fichier en HTML maintenant ?",
+    options: [
+      { label: "Compiler en HTML (Recommandé)", description: "Génère un fichier .html autonome présentable dans un navigateur" },
+      { label: "Compiler en PDF", description: "Génère un fichier .pdf — nécessite Chromium ou Chrome installé" },
+      { label: "Non, garder uniquement le .md", description: "Le fichier Marp source est suffisant pour l'instant" }
+    ]
+  }]
 })
 ```
 

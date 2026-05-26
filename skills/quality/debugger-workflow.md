@@ -70,9 +70,11 @@ Sinon :
 
 [Puis appel outil question]
 question({
-  header: "...",
-  question: "[Debugger — Phase X | Bug : <titre>]\n<question de validation>",
-  options: [...]
+  questions: [{
+    header: "...",
+    question: "[Debugger — Phase X | Bug : <titre>]\n<question de validation>",
+    options: [...]
+  }]
 })
 ```
 
@@ -165,12 +167,14 @@ Pour conduire un diagnostic sérieux, j'ai besoin des informations suivantes :
 
 [Puis appel outil question]
 question({
-  header: "Artefacts manquants",
-  question: "[Debugger — Phase 0 : Artefacts | Bug : <titre>]\nPour conduire un diagnostic sérieux, j'ai besoin de :\n<liste>\n\nComment souhaitez-vous procéder ?",
-  options: [
-    { label: "Fournir les informations", description: "Copier les logs, la stacktrace ou décrire le scénario de reproduction précis" },
-    { label: "Continuer quand même", description: "Démarrer le diagnostic avec les éléments disponibles — le rapport sera partiel" }
-  ]
+  questions: [{
+    header: "Artefacts manquants",
+    question: "[Debugger — Phase 0 : Artefacts | Bug : <titre>]\nPour conduire un diagnostic sérieux, j'ai besoin de :\n<liste>\n\nComment souhaitez-vous procéder ?",
+    options: [
+      { label: "Fournir les informations", description: "Copier les logs, la stacktrace ou décrire le scénario de reproduction précis" },
+      { label: "Continuer quand même", description: "Démarrer le diagnostic avec les éléments disponibles — le rapport sera partiel" }
+    ]
+  }]
 })
 ```
 
@@ -197,13 +201,15 @@ question({
 
 ```
 question({
-  header: "Démarrer l'exploration",
-  question: "[Debugger — Phase 0 complétée | Bug : <titre>]\nPrérequis vérifiés. Démarrer l'exploration contextuelle (Phase 1) ?",
-  options: [
-    { label: "Démarrer (Recommandé)", description: "Passer à la Phase 1 — Exploration contextuelle" },
-    { label: "Préciser le contexte", description: "Ajouter des informations avant de démarrer" },
-    { label: "Arrêter", description: "Annuler le diagnostic" }
-  ]
+  questions: [{
+    header: "Démarrer l'exploration",
+    question: "[Debugger — Phase 0 complétée | Bug : <titre>]\nPrérequis vérifiés. Démarrer l'exploration contextuelle (Phase 1) ?",
+    options: [
+      { label: "Démarrer (Recommandé)", description: "Passer à la Phase 1 — Exploration contextuelle" },
+      { label: "Préciser le contexte", description: "Ajouter des informations avant de démarrer" },
+      { label: "Arrêter", description: "Annuler le diagnostic" }
+    ]
+  }]
 })
 ```
 
@@ -280,12 +286,14 @@ Si une **information critique** émerge pendant l'exploration qui nécessite une
 
 ```
 question({
-  header: "Questions complémentaires",
-  question: "[Debugger — Phase 1 complétée | Bug : <titre>]\nExploration terminée. Y a-t-il des questions complémentaires à poser avant le diagnostic (Phase 2) ?",
-  options: [
-    { label: "Passer à Phase 2 (Recommandé)", description: "Pas de questions — démarrer le diagnostic" },
-    { label: "Questions à poser", description: "Demander des précisions avant le diagnostic" }
-  ]
+  questions: [{
+    header: "Questions complémentaires",
+    question: "[Debugger — Phase 1 complétée | Bug : <titre>]\nExploration terminée. Y a-t-il des questions complémentaires à poser avant le diagnostic (Phase 2) ?",
+    options: [
+      { label: "Passer à Phase 2 (Recommandé)", description: "Pas de questions — démarrer le diagnostic" },
+      { label: "Questions à poser", description: "Demander des précisions avant le diagnostic" }
+    ]
+  }]
 })
 ```
 
@@ -323,12 +331,14 @@ Puis appeler l'outil `question` :
 
 ```
 question({
-  header: "Clarifications",
-  question: "[Debugger — Phase 2 : Questions | Bug : <titre>]\nQuelques questions de clarification. Comment souhaitez-vous procéder ?",
-  options: [
-    { label: "Répondre aux questions", description: "Fournir les réponses pour affiner le diagnostic" },
-    { label: "Skip / Passer", description: "Continuer sans répondre — le diagnostic restera partiel sur ces points" }
-  ]
+  questions: [{
+    header: "Clarifications",
+    question: "[Debugger — Phase 2 : Questions | Bug : <titre>]\nQuelques questions de clarification. Comment souhaitez-vous procéder ?",
+    options: [
+      { label: "Répondre aux questions", description: "Fournir les réponses pour affiner le diagnostic" },
+      { label: "Skip / Passer", description: "Continuer sans répondre — le diagnostic restera partiel sur ces points" }
+    ]
+  }]
 })
 ```
 
@@ -354,12 +364,14 @@ question({
 
 ```
 question({
-  header: "Diagnostic",
-  question: "[Debugger — Phase 2 complétée | Bug : <titre>]\nQuestions traitées. Passer au diagnostic approfondi (Phase 3) ?",
-  options: [
-    { label: "Passer à Phase 3 (Recommandé)", description: "Démarrer le diagnostic en 4 étapes" },
-    { label: "Revenir à Phase 1", description: "Explorer à nouveau avec les nouvelles informations reçues" }
-  ]
+  questions: [{
+    header: "Diagnostic",
+    question: "[Debugger — Phase 2 complétée | Bug : <titre>]\nQuestions traitées. Passer au diagnostic approfondi (Phase 3) ?",
+    options: [
+      { label: "Passer à Phase 3 (Recommandé)", description: "Démarrer le diagnostic en 4 étapes" },
+      { label: "Revenir à Phase 1", description: "Explorer à nouveau avec les nouvelles informations reçues" }
+    ]
+  }]
 })
 ```
 
@@ -483,13 +495,15 @@ Hypothèse 2 (probabilité moyenne) : <description>
 
 ```
 question({
-  header: "Détection cas particuliers",
-  question: "[Debugger — Phase 3 complétée | Bug : <titre>]\nDiagnostic terminé. Passer à la détection des cas particuliers (Phase 4) ?",
-  options: [
-    { label: "Passer à Phase 4 (Recommandé)", description: "Vérifier les cas particuliers avant de finaliser" },
-    { label: "Réviser le diagnostic", description: "Rester en Phase 3 pour ajuster le diagnostic" },
-    { label: "Skip Phase 4", description: "Passer directement à la production du rapport (Phase 5)" }
-  ]
+  questions: [{
+    header: "Détection cas particuliers",
+    question: "[Debugger — Phase 3 complétée | Bug : <titre>]\nDiagnostic terminé. Passer à la détection des cas particuliers (Phase 4) ?",
+    options: [
+      { label: "Passer à Phase 4 (Recommandé)", description: "Vérifier les cas particuliers avant de finaliser" },
+      { label: "Réviser le diagnostic", description: "Rester en Phase 3 pour ajuster le diagnostic" },
+      { label: "Skip Phase 4", description: "Passer directement à la production du rapport (Phase 5)" }
+    ]
+  }]
 })
 ```
 
@@ -546,13 +560,15 @@ Si un **cas particulier critique** est détecté (ex : race condition confirmée
 
 ```
 question({
-  header: "Production du rapport",
-  question: "[Debugger — Phase 4 complétée | Bug : <titre>]\nDétection des cas particuliers terminée. Passer à la production du rapport (Phase 5) ?",
-  options: [
-    { label: "Produire le rapport (Recommandé)", description: "Générer le rapport de diagnostic final + ticket Beads" },
-    { label: "Vérifier d'autres cas", description: "Rester en Phase 4 pour vérifier d'autres cas particuliers" },
-    { label: "Revenir à Phase 3", description: "Revoir le diagnostic après détection de cas particuliers critiques" }
-  ]
+  questions: [{
+    header: "Production du rapport",
+    question: "[Debugger — Phase 4 complétée | Bug : <titre>]\nDétection des cas particuliers terminée. Passer à la production du rapport (Phase 5) ?",
+    options: [
+      { label: "Produire le rapport (Recommandé)", description: "Générer le rapport de diagnostic final + ticket Beads" },
+      { label: "Vérifier d'autres cas", description: "Rester en Phase 4 pour vérifier d'autres cas particuliers" },
+      { label: "Revenir à Phase 3", description: "Revoir le diagnostic après détection de cas particuliers critiques" }
+    ]
+  }]
 })
 ```
 
@@ -645,12 +661,14 @@ Puis appeler l'outil `question` :
 
 ```
 question({
-  header: "Créer ticket Beads",
-  question: "[Debugger — Phase 5 : Ticket | Bug : <titre>]\nCréer ce ticket de correction dans Beads ?",
-  options: [
-    { label: "Oui — créer le ticket", description: "Créer le ticket avec bd create et enrichir description/acceptance/notes techniques" },
-    { label: "Non", description: "Ne pas créer de ticket" }
-  ]
+  questions: [{
+    header: "Créer ticket Beads",
+    question: "[Debugger — Phase 5 : Ticket | Bug : <titre>]\nCréer ce ticket de correction dans Beads ?",
+    options: [
+      { label: "Oui — créer le ticket", description: "Créer le ticket avec bd create et enrichir description/acceptance/notes techniques" },
+      { label: "Non", description: "Ne pas créer de ticket" }
+    ]
+  }]
 })
 ```
 
@@ -719,12 +737,14 @@ Produire uniquement le récap de Phase 5, **sans** le bloc `## Retour vers orche
 
 ```
 question({
-  header: "Diagnostic terminé",
-  question: "[Debugger — Phase 5 complétée | Bug : <titre>]\nDiagnostic terminé. Besoin d'ajustements ?",
-  options: [
-    { label: "Terminer", description: "Diagnostic complet" },
-    { label: "Ajustements", description: "Revenir à une phase pour ajuster" }
-  ]
+  questions: [{
+    header: "Diagnostic terminé",
+    question: "[Debugger — Phase 5 complétée | Bug : <titre>]\nDiagnostic terminé. Besoin d'ajustements ?",
+    options: [
+      { label: "Terminer", description: "Diagnostic complet" },
+      { label: "Ajustements", description: "Revenir à une phase pour ajuster" }
+    ]
+  }]
 })
 ```
 
@@ -761,12 +781,14 @@ Afficher d'abord le contexte en texte :
 Puis appeler l'outil `question` :
 ```
 question({
-  header: "Retour à Phase X",
-  question: "[Debugger — Retour en arrière | Bug : <titre>]\n<raison du retour>. Revenir à la Phase X pour <action> ?",
-  options: [
-    { label: "Oui, revenir à Phase X", description: "<ce qui sera fait en Phase X>" },
-    { label: "Non, continuer", description: "Poursuivre avec l'information disponible" }
-  ]
+  questions: [{
+    header: "Retour à Phase X",
+    question: "[Debugger — Retour en arrière | Bug : <titre>]\n<raison du retour>. Revenir à la Phase X pour <action> ?",
+    options: [
+      { label: "Oui, revenir à Phase X", description: "<ce qui sera fait en Phase X>" },
+      { label: "Non, continuer", description: "Poursuivre avec l'information disponible" }
+    ]
+  }]
 })
 ```
 
@@ -798,13 +820,15 @@ La Phase X a été répétée 3 fois. Pour éviter une boucle infinie, je recomm
 Puis appeler l'outil `question` :
 ```
 question({
-  header: "Limite d'itérations",
-  question: "[Debugger — Phase X répétée 3 fois | Bug : <titre>]\nComment procéder ?",
-  options: [
-    { label: "Continuer quand même", description: "Passer à la phase suivante avec l'information disponible" },
-    { label: "Itération finale", description: "Une dernière itération de Phase X puis passage forcé à la suite" },
-    { label: "Terminer", description: "Arrêter le diagnostic ici et produire le rapport avec l'information actuelle" }
-  ]
+  questions: [{
+    header: "Limite d'itérations",
+    question: "[Debugger — Phase X répétée 3 fois | Bug : <titre>]\nComment procéder ?",
+    options: [
+      { label: "Continuer quand même", description: "Passer à la phase suivante avec l'information disponible" },
+      { label: "Itération finale", description: "Une dernière itération de Phase X puis passage forcé à la suite" },
+      { label: "Terminer", description: "Arrêter le diagnostic ici et produire le rapport avec l'information actuelle" }
+    ]
+  }]
 })
 ```
 

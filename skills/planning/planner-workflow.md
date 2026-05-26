@@ -75,9 +75,11 @@ Sinon :
 
 [Puis appel outil question]
 question({
-  header: "...",
-  question: "[Planner — Phase X | Feature : <nom>]\n<question de validation>",
-  options: [...]
+  questions: [{
+    header: "...",
+    question: "[Planner — Phase X | Feature : <nom>]\n<question de validation>",
+    options: [...]
+  }]
 })
 ```
 
@@ -108,14 +110,16 @@ Quand une pause est déclenchée **au milieu d'une phase** (ex : information man
 
 2. **PUIS appeler l'outil `question`** :
    ```
-   question({
-     header: "Information manquante",
-     question: "[Planner — Phase X : Information manquante | Feature : <nom>]\n<question précise>",
-     options: [
-       { label: "Fournir l'information", description: "..." },
-       { label: "Continuer avec hypothèse", description: "..." }
-     ]
-   })
+question({
+      questions: [{
+        header: "Information manquante",
+        question: "[Planner — Phase X : Information manquante | Feature : <nom>]\n<question précise>",
+        options: [
+          { label: "Fournir l'information", description: "..." },
+          { label: "Continuer avec hypothèse", description: "..." }
+        ]
+      }]
+    })
    ```
 
 **L'utilisateur voit dans cet ordre :**
@@ -186,12 +190,14 @@ Pour démarrer la planification dans de bonnes conditions, j'ai besoin de :
 
 [Puis appel outil question]
 question({
-  header: "Prérequis manquants",
-  question: "[Planner — Phase 0 : Prérequis | Feature : <nom>]\nPour démarrer l'analyse, j'ai besoin de :\n<liste numérotée>\n\nComment procéder ?",
-  options: [
-    { label: "Fournir les informations", description: "Préciser les éléments manquants maintenant" },
-    { label: "Continuer quand même", description: "Démarrer avec les informations disponibles — la planification sera partielle" }
-  ]
+  questions: [{
+    header: "Prérequis manquants",
+    question: "[Planner — Phase 0 : Prérequis | Feature : <nom>]\nPour démarrer l'analyse, j'ai besoin de :\n<liste numérotée>\n\nComment procéder ?",
+    options: [
+      { label: "Fournir les informations", description: "Préciser les éléments manquants maintenant" },
+      { label: "Continuer quand même", description: "Démarrer avec les informations disponibles — la planification sera partielle" }
+    ]
+  }]
 })
 ```
 
@@ -216,13 +222,15 @@ question({
 
 ```
 question({
-  header: "Démarrer l'exploration",
-  question: "[Planner — Phase 0 complétée | Feature : <nom>]\nPrérequis vérifiés. Démarrer l'exploration contextuelle (Phase 1) ?",
-  options: [
-    { label: "Démarrer (Recommandé)", description: "Passer à la Phase 1 — Exploration contextuelle" },
-    { label: "Préciser le contexte", description: "Ajouter des informations avant de démarrer" },
-    { label: "Arrêter", description: "Annuler l'analyse" }
-  ]
+  questions: [{
+    header: "Démarrer l'exploration",
+    question: "[Planner — Phase 0 complétée | Feature : <nom>]\nPrérequis vérifiés. Démarrer l'exploration contextuelle (Phase 1) ?",
+    options: [
+      { label: "Démarrer (Recommandé)", description: "Passer à la Phase 1 — Exploration contextuelle" },
+      { label: "Préciser le contexte", description: "Ajouter des informations avant de démarrer" },
+      { label: "Arrêter", description: "Annuler l'analyse" }
+    ]
+  }]
 })
 ```
 
@@ -359,25 +367,29 @@ Si une **information critique** émerge pendant l'exploration qui remet en cause
 Si **signaux UX ou UI détectés** :
 ```
 question({
-  header: "Délégation design",
-  question: "[Planner — Phase 1 complétée | Feature : <nom>]\nSignal <UX/UI> détecté (<raison>). Comment procéder ?",
-  options: [
-    { label: "Phase 1.5 — Délégation design (Recommandé)", description: "Invoquer <ux-designer/ui-designer> avant de planifier" },
-    { label: "Skip design — Phase 2", description: "Passer aux questions complémentaires sans spec design" },
-    { label: "Explorer davantage", description: "Lire d'autres fichiers avant de décider" }
-  ]
+  questions: [{
+    header: "Délégation design",
+    question: "[Planner — Phase 1 complétée | Feature : <nom>]\nSignal <UX/UI> détecté (<raison>). Comment procéder ?",
+    options: [
+      { label: "Phase 1.5 — Délégation design (Recommandé)", description: "Invoquer <ux-designer/ui-designer> avant de planifier" },
+      { label: "Skip design — Phase 2", description: "Passer aux questions complémentaires sans spec design" },
+      { label: "Explorer davantage", description: "Lire d'autres fichiers avant de décider" }
+    ]
+  }]
 })
 ```
 
 Si **aucun signal design** :
 ```
 question({
-  header: "Questions complémentaires",
-  question: "[Planner — Phase 1 complétée | Feature : <nom>]\nExploration terminée — X fichiers lus, Y observations. Passer aux questions complémentaires (Phase 2) ?",
-  options: [
-    { label: "Passer à Phase 2 (Recommandé)", description: "Poser les questions de clarification identifiées" },
-    { label: "Explorer davantage", description: "Lire d'autres fichiers avant de poser des questions" }
-  ]
+  questions: [{
+    header: "Questions complémentaires",
+    question: "[Planner — Phase 1 complétée | Feature : <nom>]\nExploration terminée — X fichiers lus, Y observations. Passer aux questions complémentaires (Phase 2) ?",
+    options: [
+      { label: "Passer à Phase 2 (Recommandé)", description: "Poser les questions de clarification identifiées" },
+      { label: "Explorer davantage", description: "Lire d'autres fichiers avant de poser des questions" }
+    ]
+  }]
 })
 ```
 
@@ -570,12 +582,14 @@ Appliquer la stratégie de traçabilité en Phase 5 : pour chaque ticket concern
 
 ```
 question({
-  header: "Questions complémentaires",
-  question: "[Planner — Phase 1.5 complétée | Feature : <nom>]\nSpecs design intégrées. Passer aux questions complémentaires (Phase 2) ?",
-  options: [
-    { label: "Passer à Phase 2 (Recommandé)", description: "Poser les questions de clarification identifiées" },
-    { label: "Revenir à Phase 1", description: "Explorer à nouveau avec les specs design reçues" }
-  ]
+  questions: [{
+    header: "Questions complémentaires",
+    question: "[Planner — Phase 1.5 complétée | Feature : <nom>]\nSpecs design intégrées. Passer aux questions complémentaires (Phase 2) ?",
+    options: [
+      { label: "Passer à Phase 2 (Recommandé)", description: "Poser les questions de clarification identifiées" },
+      { label: "Revenir à Phase 1", description: "Explorer à nouveau avec les specs design reçues" }
+    ]
+  }]
 })
 ```
 
@@ -646,12 +660,14 @@ Puis appeler l'outil `question` :
 
 ```
 question({
-  header: "Clarifications",
-  question: "[Planner — Phase 2 : Questions | Feature : <nom>]\nQuelques questions de clarification issues de l'exploration. Comment souhaitez-vous procéder ?",
-  options: [
-    { label: "Répondre aux questions", description: "Fournir les réponses pour affiner l'analyse" },
-    { label: "Skip / Passer", description: "Continuer sans répondre — l'analyse restera partielle sur ces points" }
-  ]
+  questions: [{
+    header: "Clarifications",
+    question: "[Planner — Phase 2 : Questions | Feature : <nom>]\nQuelques questions de clarification issues de l'exploration. Comment souhaitez-vous procéder ?",
+    options: [
+      { label: "Répondre aux questions", description: "Fournir les réponses pour affiner l'analyse" },
+      { label: "Skip / Passer", description: "Continuer sans répondre — l'analyse restera partielle sur ces points" }
+    ]
+  }]
 })
 ```
 
@@ -699,13 +715,15 @@ Toujours expliquer le raisonnement :
 
 ```
 question({
-  header: "Plan hiérarchique",
-  question: "[Planner — Phase 2 complétée | Feature : <nom>]\nQuestions traitées. Passer à l'analyse approfondie (Phase 3 — Plan hiérarchique) ?",
-  options: [
-    { label: "Passer à Phase 3 (Recommandé)", description: "Démarrer la décomposition en epics et tickets" },
-    { label: "Poser d'autres questions", description: "Rester en Phase 2 pour préciser d'autres points" },
-    { label: "Revenir à Phase 1", description: "Explorer à nouveau avec les nouvelles informations reçues" }
-  ]
+  questions: [{
+    header: "Plan hiérarchique",
+    question: "[Planner — Phase 2 complétée | Feature : <nom>]\nQuestions traitées. Passer à l'analyse approfondie (Phase 3 — Plan hiérarchique) ?",
+    options: [
+      { label: "Passer à Phase 3 (Recommandé)", description: "Démarrer la décomposition en epics et tickets" },
+      { label: "Poser d'autres questions", description: "Rester en Phase 2 pour préciser d'autres points" },
+      { label: "Revenir à Phase 1", description: "Explorer à nouveau avec les nouvelles informations reçues" }
+    ]
+  }]
 })
 ```
 
@@ -796,13 +814,15 @@ Un seul critère ne suffit pas à proposer un découpage. Si un découpage sembl
 
 ```
 question({
-  header: "Validation du plan",
-  question: "[Planner — Phase 3 complétée | Feature : <nom>]\nEst-ce que ce découpage vous convient ? Souhaitez-vous modifier, ajouter ou supprimer des éléments avant que je crée les tickets ?",
-  options: [
-    { label: "Valider le plan (Recommandé)", description: "Passer à la détection des cas particuliers (Phase 4)" },
-    { label: "Modifier le plan", description: "Apporter des modifications au découpage" },
-    { label: "Revenir à Phase 2", description: "Reposer des questions avant de finaliser le plan" }
-  ]
+  questions: [{
+    header: "Validation du plan",
+    question: "[Planner — Phase 3 complétée | Feature : <nom>]\nEst-ce que ce découpage vous convient ? Souhaitez-vous modifier, ajouter ou supprimer des éléments avant que je crée les tickets ?",
+    options: [
+      { label: "Valider le plan (Recommandé)", description: "Passer à la détection des cas particuliers (Phase 4)" },
+      { label: "Modifier le plan", description: "Apporter des modifications au découpage" },
+      { label: "Revenir à Phase 2", description: "Reposer des questions avant de finaliser le plan" }
+    ]
+  }]
 })
 ```
 
@@ -861,13 +881,15 @@ Si un **cas particulier critique** est détecté (ex : doublon avéré, dépenda
 
 ```
 question({
-  header: "Création des tickets",
-  question: "[Planner — Phase 4 complétée | Feature : <nom>]\nDétection des cas particuliers terminée. Passer à la création des tickets dans Beads (Phase 5) ?",
-  options: [
-    { label: "Créer les tickets (Recommandé)", description: "Passer à la Phase 5 — Création dans Beads" },
-    { label: "Vérifier d'autres cas", description: "Rester en Phase 4 pour vérifier d'autres cas particuliers" },
-    { label: "Revenir à Phase 3", description: "Revoir le plan après détection de cas particuliers critiques" }
-  ]
+  questions: [{
+    header: "Création des tickets",
+    question: "[Planner — Phase 4 complétée | Feature : <nom>]\nDétection des cas particuliers terminée. Passer à la création des tickets dans Beads (Phase 5) ?",
+    options: [
+      { label: "Créer les tickets (Recommandé)", description: "Passer à la Phase 5 — Création dans Beads" },
+      { label: "Vérifier d'autres cas", description: "Rester en Phase 4 pour vérifier d'autres cas particuliers" },
+      { label: "Revenir à Phase 3", description: "Revoir le plan après détection de cas particuliers critiques" }
+    ]
+  }]
 })
 ```
 
@@ -1260,13 +1282,15 @@ Le label `ai-delegated` indique qu'un ticket peut être délégué à un agent I
 
 ```
 question({
-  header: "Délégation ai-delegated",
-  question: "[Planner — Phase 5.5 | Feature : <nom>]\nSouhaitez-vous déléguer certains tickets à l'agent IA (label ai-delegated) ?",
-  options: [
-    { label: "Non", description: "Aucun ticket délégué à l'IA" },
-    { label: "Oui — certains tickets", description: "Indiquer les IDs dans la réponse libre" },
-    { label: "Oui — tous les tickets éligibles", description: "Déléguer tous les tickets sans dépendance bloquante" }
-  ]
+  questions: [{
+    header: "Délégation ai-delegated",
+    question: "[Planner — Phase 5.5 | Feature : <nom>]\nSouhaitez-vous déléguer certains tickets à l'agent IA (label ai-delegated) ?",
+    options: [
+      { label: "Non", description: "Aucun ticket délégué à l'IA" },
+      { label: "Oui — certains tickets", description: "Indiquer les IDs dans la réponse libre" },
+      { label: "Oui — tous les tickets éligibles", description: "Déléguer tous les tickets sans dépendance bloquante" }
+    ]
+  }]
 })
 ```
 
@@ -1400,12 +1424,14 @@ Produire uniquement le récapitulatif de planification complet, **sans** le bloc
 
 ```
 question({
-  header: "Validation finale",
-  question: "[Planner — Phase 6 complétée | Feature : <nom>]\nLes tickets correspondent-ils à vos attentes ? Souhaitez-vous des ajustements ?",
-  options: [
-    { label: "Oui — c'est bon", description: "Planning terminé" },
-    { label: "Ajustements à faire", description: "Apporter des modifications aux tickets créés" }
-  ]
+  questions: [{
+    header: "Validation finale",
+    question: "[Planner — Phase 6 complétée | Feature : <nom>]\nLes tickets correspondent-ils à vos attentes ? Souhaitez-vous des ajustements ?",
+    options: [
+      { label: "Oui — c'est bon", description: "Planning terminé" },
+      { label: "Ajustements à faire", description: "Apporter des modifications aux tickets créés" }
+    ]
+  }]
 })
 ```
 
@@ -1442,12 +1468,14 @@ Afficher d'abord le contexte en texte :
 Puis appeler l'outil `question` :
 ```
 question({
-  header: "Retour à Phase X",
-  question: "[Planner — Retour en arrière | Feature : <nom>]\n<raison du retour>. Revenir à la Phase X pour <action> ?",
-  options: [
-    { label: "Oui, revenir à Phase X", description: "<ce qui sera fait en Phase X>" },
-    { label: "Non, continuer", description: "Poursuivre avec l'information disponible" }
-  ]
+  questions: [{
+    header: "Retour à Phase X",
+    question: "[Planner — Retour en arrière | Feature : <nom>]\n<raison du retour>. Revenir à la Phase X pour <action> ?",
+    options: [
+      { label: "Oui, revenir à Phase X", description: "<ce qui sera fait en Phase X>" },
+      { label: "Non, continuer", description: "Poursuivre avec l'information disponible" }
+    ]
+  }]
 })
 ```
 
@@ -1479,13 +1507,15 @@ La Phase X a été répétée 3 fois. Pour éviter une boucle infinie, je recomm
 Puis appeler l'outil `question` :
 ```
 question({
-  header: "Limite d'itérations",
-  question: "[Planner — Phase X répétée 3 fois | Feature : <nom>]\nComment procéder ?",
-  options: [
-    { label: "Continuer quand même", description: "Passer à la phase suivante avec l'information disponible" },
-    { label: "Itération finale", description: "Une dernière itération de Phase X puis passage forcé à la suite" },
-    { label: "Terminer", description: "Arrêter l'analyse ici et produire le livrable avec l'information actuelle" }
-  ]
+  questions: [{
+    header: "Limite d'itérations",
+    question: "[Planner — Phase X répétée 3 fois | Feature : <nom>]\nComment procéder ?",
+    options: [
+      { label: "Continuer quand même", description: "Passer à la phase suivante avec l'information disponible" },
+      { label: "Itération finale", description: "Une dernière itération de Phase X puis passage forcé à la suite" },
+      { label: "Terminer", description: "Arrêter l'analyse ici et produire le livrable avec l'information actuelle" }
+    ]
+  }]
 })
 ```
 

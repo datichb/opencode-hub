@@ -101,6 +101,14 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
   - Étape 5 (CP-2) : routing de correction basé sur le `### Routing recommandé` du reviewer ; commentaire Beads rempli avec les `### Corrections requises` verbatim (plus de résumé manuel)
   - Étape 6 (compte rendu) : compte rendu enrichi avec fichiers modifiés, couverture des critères d'acceptance, points d'attention techniques agrégés depuis les sous-agents
   - Récap global : colonne `Critères couverts` ajoutée ; `### Points d'attention` alimentés par l'agrégation des retours de toute la chaîne
+- **Migration syntaxe outil `question`** — Mise à jour de 98 occurrences dans 18 fichiers skills vers la syntaxe correcte `question({ questions: [{...}] })` conforme au schéma JSON d'OpenCode
+- **Refonte du skill `posture/tool-question.md`** — Documentation complète avec :
+  - Schéma JSON détaillé de l'outil
+  - Support multi-questions (plusieurs questions en un seul appel)
+  - Support multi-sélection avec `multiple: true`
+  - Documentation de l'option de saisie libre automatique ("Type your own answer")
+  - Format des réponses (tableau de labels)
+  - Exemples complets pour chaque cas d'usage
 
 ### Fixed
 

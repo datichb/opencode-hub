@@ -39,13 +39,15 @@ Utiliser ce bloc exact via l'outil `question` pour demander le mode :
 
 ```
 question({
-  header: "Mode de workflow",
-  question: "Quel mode de workflow pour les phases d'implémentation ?",
-  options: [
-    { label: "Manuel (Recommandé)", description: "Chaque étape attend ta confirmation — CP-1, CP-QA, CP-2, CP-3 tous en pause" },
-    { label: "Semi-auto", description: "CP-1 et CP-3 automatiques, CP-QA et CP-2 (commit) restent manuels" },
-    { label: "Auto", description: "Workflow entièrement automatique sauf CP-2 (commit) — QA configurable au démarrage — parallélisme conditionnel disponible pour les tickets indépendants" }
-  ]
+  questions: [{
+    header: "Mode de workflow",
+    question: "Quel mode de workflow pour les phases d'implémentation ?",
+    options: [
+      { label: "Manuel (Recommandé)", description: "Chaque étape attend ta confirmation — CP-1, CP-QA, CP-2, CP-3 tous en pause" },
+      { label: "Semi-auto", description: "CP-1 et CP-3 automatiques, CP-QA et CP-2 (commit) restent manuels" },
+      { label: "Auto", description: "Workflow entièrement automatique sauf CP-2 (commit) — QA configurable au démarrage — parallélisme conditionnel disponible pour les tickets indépendants" }
+    ]
+  }]
 })
 ```
 
@@ -59,12 +61,14 @@ En mode `auto`, poser également via l'outil `question` :
 
 ```
 question({
-  header: "QA global",
-  question: "QA activé pour tous les tickets d'implémentation ?",
-  options: [
-    { label: "Non (Recommandé)", description: "QA skippé pour tous les tickets — review directe après implémentation" },
-    { label: "Oui", description: "QA activé pour tous les tickets — qa-engineer invoqué avant chaque review" }
-  ]
+  questions: [{
+    header: "QA global",
+    question: "QA activé pour tous les tickets d'implémentation ?",
+    options: [
+      { label: "Non (Recommandé)", description: "QA skippé pour tous les tickets — review directe après implémentation" },
+      { label: "Oui", description: "QA activé pour tous les tickets — qa-engineer invoqué avant chaque review" }
+    ]
+  }]
 })
 ```
 

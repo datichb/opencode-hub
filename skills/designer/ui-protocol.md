@@ -247,12 +247,14 @@ Avant de spécifier le moindre composant, utiliser l'outil `question` pour propo
 
 ```
 question({
-  header: "Fondations design system",
-  question: "Aucun design system détecté. Je recommande de commencer par les tokens de base (palette, typographie, espacement, radius) avant de spécifier des composants. Comment procéder ?",
-  options: [
-    { label: "Démarrer par les fondations (Recommandé)", description: "Définir palette, typographie, espacement, radius (~30-45 min) avant les composants" },
-    { label: "Spécifier directement le composant", description: "Ignorer les fondations et traiter le composant demandé" }
-  ]
+  questions: [{
+    header: "Fondations design system",
+    question: "Aucun design system détecté. Je recommande de commencer par les tokens de base (palette, typographie, espacement, radius) avant de spécifier des composants. Comment procéder ?",
+    options: [
+      { label: "Démarrer par les fondations (Recommandé)", description: "Définir palette, typographie, espacement, radius (~30-45 min) avant les composants" },
+      { label: "Spécifier directement le composant", description: "Ignorer les fondations et traiter le composant demandé" }
+    ]
+  }]
 })
 ```
 

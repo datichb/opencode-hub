@@ -370,12 +370,14 @@ Si le champ `Stack` du projet est absent ou trop générique dans `projects.md` 
 
 ```
 question({
-  header: "Mise à jour projects.md",
-  question: "J'ai détecté la stack suivante : [stack]. Mettre à jour le champ Stack dans projects.md ?",
-  options: [
-    { label: "Oui — mettre à jour", description: "Écrire le champ Stack détecté dans projects.md" },
-    { label: "Non", description: "Laisser projects.md tel quel" }
-  ]
+  questions: [{
+    header: "Mise à jour projects.md",
+    question: "J'ai détecté la stack suivante : [stack]. Mettre à jour le champ Stack dans projects.md ?",
+    options: [
+      { label: "Oui — mettre à jour", description: "Écrire le champ Stack détecté dans projects.md" },
+      { label: "Non", description: "Laisser projects.md tel quel" }
+    ]
+  }]
 })
 ```
 

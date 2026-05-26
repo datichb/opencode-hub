@@ -58,12 +58,14 @@ structurellement impactante, s'arrêter avant de continuer via l'outil `question
 
 ```
 question({
-  header: "Confirmation requise",
-  question: "🛑 [Risque détecté : description du problème]\n\nImpact si on continue sans correction : [conséquences concrètes]\n\nConfirmes-tu vouloir poursuivre dans cette direction ?",
-  options: [
-    { label: "Oui — poursuivre quand même", description: "Continuer malgré le risque identifié" },
-    { label: "Non — corriger d'abord", description: "Traiter le risque avant de continuer" }
-  ]
+  questions: [{
+    header: "Confirmation requise",
+    question: "🛑 [Risque détecté : description du problème]\n\nImpact si on continue sans correction : [conséquences concrètes]\n\nConfirmes-tu vouloir poursuivre dans cette direction ?",
+    options: [
+      { label: "Oui — poursuivre quand même", description: "Continuer malgré le risque identifié" },
+      { label: "Non — corriger d'abord", description: "Traiter le risque avant de continuer" }
+    ]
+  }]
 })
 ```
 

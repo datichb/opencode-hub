@@ -51,12 +51,14 @@ Regrouper TOUTES les questions manquantes en un seul appel `question`, formulé 
 
 ```
 question({
-  header: "Artefacts manquants",
-  question: "[Debugger — Artefacts insuffisants | <titre court du problème décrit>]\nPour conduire un diagnostic sérieux, j'ai besoin des informations suivantes :\n<liste numérotée des informations manquantes>\n\nComment souhaitez-vous procéder ?",
-  options: [
-    { label: "Fournir les informations", description: "Copier les logs, la stacktrace ou décrire le scénario de reproduction précis" },
-    { label: "Continuer quand même", description: "Je démarre le diagnostic avec les éléments disponibles — le rapport sera partiel et formulé en hypothèses" }
-  ]
+  questions: [{
+    header: "Artefacts manquants",
+    question: "[Debugger — Artefacts insuffisants | <titre court du problème décrit>]\nPour conduire un diagnostic sérieux, j'ai besoin des informations suivantes :\n<liste numérotée des informations manquantes>\n\nComment souhaitez-vous procéder ?",
+    options: [
+      { label: "Fournir les informations", description: "Copier les logs, la stacktrace ou décrire le scénario de reproduction précis" },
+      { label: "Continuer quand même", description: "Je démarre le diagnostic avec les éléments disponibles — le rapport sera partiel et formulé en hypothèses" }
+    ]
+  }]
 })
 ```
 
@@ -196,12 +198,14 @@ Après avoir produit le rapport, utiliser l'outil `question` pour proposer la cr
 
 ```
 question({
-  header: "Créer ticket Beads",
-  question: "Créer ce ticket de correction dans Beads ?",
-  options: [
-    { label: "Oui — créer le ticket", description: "Créer le ticket avec bd create et enrichir description/acceptance/notes techniques" },
-    { label: "Non", description: "Ne pas créer de ticket" }
-  ]
+  questions: [{
+    header: "Créer ticket Beads",
+    question: "Créer ce ticket de correction dans Beads ?",
+    options: [
+      { label: "Oui — créer le ticket", description: "Créer le ticket avec bd create et enrichir description/acceptance/notes techniques" },
+      { label: "Non", description: "Ne pas créer de ticket" }
+    ]
+  }]
 })
 ```
 

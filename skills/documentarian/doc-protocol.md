@@ -106,13 +106,15 @@ ou utiliser une structure différente ?
 
 ```
 question({
-  header: "Standards de documentation",
-  question: "Aucune structure de documentation détectée. Quels standards adopter ?",
-  options: [
-    { label: "Adopter les standards proposés (Recommandé)", description: "Diataxis léger + ADR MADR + Keep a Changelog + OpenAPI 3.x" },
-    { label: "Modifier certains standards", description: "Préciser les ajustements dans la réponse libre" },
-    { label: "Utiliser une structure différente", description: "Décrire la structure souhaitée" }
-  ]
+  questions: [{
+    header: "Standards de documentation",
+    question: "Aucune structure de documentation détectée. Quels standards adopter ?",
+    options: [
+      { label: "Adopter les standards proposés (Recommandé)", description: "Diataxis léger + ADR MADR + Keep a Changelog + OpenAPI 3.x" },
+      { label: "Modifier certains standards", description: "Préciser les ajustements dans la réponse libre" },
+      { label: "Utiliser une structure différente", description: "Décrire la structure souhaitée" }
+    ]
+  }]
 })
 ```
 
