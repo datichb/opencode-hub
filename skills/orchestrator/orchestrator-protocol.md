@@ -33,6 +33,33 @@ Tu ne codes jamais, tu ne modifies jamais de fichiers, tu n'analyses jamais le c
 
 ---
 
+## Skill injecté — todowrite
+
+Ce protocole utilise l'outil `todowrite` pour afficher la progression des phases de la feature.
+Les règles d'utilisation de l'outil sont définies dans le skill `skills/posture/tool-todowrite.md` — s'y référer comme source de vérité pour :
+- Le format de l'outil (paramètres `content`, `status`, `priority`)
+- Les états disponibles (`pending`, `in_progress`, `completed`, `cancelled`)
+- La contrainte d'une seule tâche `in_progress` à la fois
+- La mise à jour en temps réel à chaque transition
+
+**Usage spécifique à orchestrator (feature) :**
+- **Une tâche = une phase de la feature** (planification, spec UX, spec UI, audit, implémentation)
+- La granularité est volontairement haute : on suit les phases, pas les tickets individuels
+- Création en Mode A ou Mode B, mise à jour à chaque changement de phase
+- **Complémentarité avec orchestrator-dev** : quand orchestrator-dev est invoqué, il gère sa propre liste todowrite au niveau des tickets — les deux listes coexistent sans duplication (phases ≠ tickets)
+
+**Phases types à inclure selon le contexte :**
+
+| Phase | Quand l'inclure | Priorité |
+|-------|-----------------|----------|
+| Planification | Mode A uniquement | high |
+| Spec UX | Si tickets spec-ux identifiés par le planner | high |
+| Spec UI | Si tickets spec-ui identifiés par le planner | high |
+| Audit(s) | Si tickets audit identifiés par le planner | medium |
+| Implémentation | Toujours | high |
+
+---
+
 ## Trois modes d'entrée
 
 ### Mode D — Bug / Problème isolé signalé par l'utilisateur
@@ -176,7 +203,27 @@ L'utilisateur décrit une feature, un besoin ou un chantier.
    - Noter la présence du label `tdd` depuis la colonne `TDD` du tableau
    - **Ne jamais analyser les labels, le titre ou la description pour déterminer l'agent** — utiliser uniquement les instructions explicites du planner
 
-4. **[CP-0]** — voir section CP-0 ci-dessous.
+4. **Initialiser la liste todowrite** — construire la liste des phases selon les agents prévus :
+
+   ```
+   todowrite({
+     todos: [
+       { content: "Planification feature", status: "completed", priority: "high" },
+       // Inclure si tickets spec-ux identifiés :
+       { content: "Spec UX — [nombre] ticket(s)", status: "pending", priority: "high" },
+       // Inclure si tickets spec-ui identifiés :
+       { content: "Spec UI — [nombre] ticket(s)", status: "pending", priority: "high" },
+       // Inclure si tickets audit identifiés :
+       { content: "Audit(s) — [nombre] ticket(s)", status: "pending", priority: "medium" },
+       // Toujours inclure :
+       { content: "Implémentation — [nombre] ticket(s)", status: "pending", priority: "high" }
+     ]
+   })
+   ```
+
+   > La phase "Planification" est immédiatement `completed` puisqu'on vient de la terminer.
+
+5. **[CP-0]** — voir section CP-0 ci-dessous.
 
 ---
 
@@ -200,7 +247,22 @@ L'utilisateur fournit directement un ou plusieurs IDs de tickets.
 
 3. À la réception du résultat du planner, lire le champ `Agent prévu` pour chaque ticket et la section `### Ordre de traitement`.
 
-4. **[CP-0]** — voir section CP-0 ci-dessous.
+4. **Initialiser la liste todowrite** — construire la liste des phases selon les agents prévus :
+
+   ```
+   todowrite({
+     todos: [
+       // Inclure si tickets audit identifiés :
+       { content: "Audit(s) — [nombre] ticket(s)", status: "pending", priority: "medium" },
+       // Toujours inclure :
+       { content: "Implémentation — [nombre] ticket(s)", status: "pending", priority: "high" }
+     ]
+   })
+   ```
+
+   > En Mode B, la planification n'a pas lieu — les tickets existent déjà. Seules les phases audit (si applicable) et implémentation sont suivies.
+
+5. **[CP-0]** — voir section CP-0 ci-dessous.
 
 ---
 
@@ -263,15 +325,43 @@ de labels, de titre ou de description pour déterminer l'agent.
 
 ### Ticket `spec-ux` ou `spec-ui`
 
-1. Annoncer la phase de conception :
+1. **Mettre à jour todowrite** — passer la phase Spec UX ou Spec UI en `in_progress` :
+
+   **Exemple Spec UX :**
+   ```
+   todowrite({
+     todos: [
+       { content: "Planification feature", status: "completed", priority: "high" },
+       { content: "Spec UX — [nombre] ticket(s)", status: "in_progress", priority: "high" },
+       { content: "Spec UI — [nombre] ticket(s)", status: "pending", priority: "high" },
+       { content: "Audit(s) — [nombre] ticket(s)", status: "pending", priority: "medium" },
+       { content: "Implémentation — [nombre] ticket(s)", status: "pending", priority: "high" }
+     ]
+   })
+   ```
+
+   **Exemple Spec UI (après Spec UX terminée) :**
+   ```
+   todowrite({
+     todos: [
+       { content: "Planification feature", status: "completed", priority: "high" },
+       { content: "Spec UX — [nombre] ticket(s)", status: "completed", priority: "high" },
+       { content: "Spec UI — [nombre] ticket(s)", status: "in_progress", priority: "high" },
+       { content: "Audit(s) — [nombre] ticket(s)", status: "pending", priority: "medium" },
+       { content: "Implémentation — [nombre] ticket(s)", status: "pending", priority: "high" }
+     ]
+   })
+   ```
+
+2. Annoncer la phase de conception :
    > « Je délègue la spécification à `ux-designer` / `ui-designer` pour le ticket #<ID> — <titre>.
    > Si des questions apparaissent ici, elles viennent de cet agent et incluront leur contexte. »
 
-2. Invoquer l'agent design avec :
+3. Invoquer l'agent design avec :
    - L'ID du ticket (`bd show <ID>`)
    - Le contexte global de la feature
 
-3. À la réception du résultat, effectuer les vérifications suivantes dans l'ordre :
+4. À la réception du résultat, effectuer les vérifications suivantes dans l'ordre :
 
    1. **Détecter la présence de la spec complète** (user flows, états, wireframes, tokens, critères d'acceptance UX/UI) :
       - **Présente** → continuer la vérification suivante
@@ -286,7 +376,7 @@ de labels, de titre ou de description pour déterminer l'agent.
    > ❌ Ne jamais résumer ni abréger la spec avant de la présenter à l'utilisateur au CP-spec.
    > ❌ Ne jamais accepter un bloc handoff sans spec complète préalable — les deux sont obligatoires.
 
-4. [CP-spec] Afficher la spec complète dans le texte de la discussion (ne pas inclure dans l'outil `question`), puis utiliser l'outil `question` :
+5. [CP-spec] Afficher la spec complète dans le texte de la discussion (ne pas inclure dans l'outil `question`), puis utiliser l'outil `question` :
 
    ```
    question({
@@ -302,7 +392,7 @@ de labels, de titre ou de description pour déterminer l'agent.
    })
    ```
 
-- **Valider** → transmettre la spec validée **et les `### Contraintes d'implémentation`** à `orchestrator-dev` pour implémentation
+- **Valider** → mettre à jour todowrite (phase Spec UX/UI → `completed` si tous les tickets spec de ce type sont traités), puis transmettre la spec validée **et les `### Contraintes d'implémentation`** à `orchestrator-dev` pour implémentation
 - **Réviser** → retourner à l'agent design avec les corrections, incrémenter le compteur de révisions, nouveau CP-spec
 
   **Compteur de révisions :** maintenir un compteur interne par ticket spec.
@@ -328,15 +418,31 @@ de labels, de titre ou de description pour déterminer l'agent.
 
 ### Ticket `audit`
 
-1. Annoncer la phase d'audit :
+1. **Mettre à jour todowrite** — passer la phase Audit en `in_progress` :
+
+   ```
+   todowrite({
+     todos: [
+       { content: "Planification feature", status: "completed", priority: "high" },
+       { content: "Spec UX — [nombre] ticket(s)", status: "completed", priority: "high" },
+       { content: "Spec UI — [nombre] ticket(s)", status: "completed", priority: "high" },
+       { content: "Audit(s) — [nombre] ticket(s)", status: "in_progress", priority: "medium" },
+       { content: "Implémentation — [nombre] ticket(s)", status: "pending", priority: "high" }
+     ]
+   })
+   ```
+
+   > Adapter les phases selon ce qui existe réellement dans la feature (omettre Spec UX/UI si absentes).
+
+2. Annoncer la phase d'audit :
    > « Je délègue l'audit à `auditor-<domaine>` pour le ticket #<ID> — <titre>.
    > Si des questions apparaissent ici, elles viennent de cet agent et incluront leur contexte. »
 
-2. Invoquer l'agent auditeur avec :
+3. Invoquer l'agent auditeur avec :
    - L'ID du ticket (`bd show <ID>`)
    - Le périmètre à auditer
 
-3. À la réception du résultat, effectuer les vérifications suivantes dans l'ordre :
+4. À la réception du résultat, effectuer les vérifications suivantes dans l'ordre :
 
    1. **Détecter la présence du rapport d'audit complet** (analyse narrative, observations item par item, preuves) :
       - **Présent** → continuer la vérification suivante
@@ -351,7 +457,7 @@ de labels, de titre ou de description pour déterminer l'agent.
    > ❌ Ne jamais résumer ni filtrer le rapport avant de le présenter à l'utilisateur au CP-audit.
    > ❌ Ne jamais accepter un bloc handoff sans rapport d'audit préalable — les deux sont obligatoires.
 
-4. [CP-audit] Afficher le rapport d'audit complet dans le texte de la discussion (ne pas inclure dans l'outil `question`), puis utiliser l'outil `question` :
+5. [CP-audit] Afficher le rapport d'audit complet dans le texte de la discussion (ne pas inclure dans l'outil `question`), puis utiliser l'outil `question` :
 
    ```
    question({
@@ -403,14 +509,30 @@ de labels, de titre ou de description pour déterminer l'agent.
   })
   ```
 
-- **Accepter** → noter le ticket comme audité sans corrections nécessaires
-- **Ignorer** → noter le ticket comme ignoré
+- **Accepter** → mettre à jour todowrite (phase Audit → `completed` si tous les tickets audit sont traités), noter le ticket comme audité sans corrections nécessaires
+- **Ignorer** → mettre à jour todowrite (phase Audit → `completed` si c'était le dernier ticket audit), noter le ticket comme ignoré
 
 ---
 
 ### Ticket `dev` (ou phase d'implémentation après spec/audit)
 
-1. Annoncer la délégation :
+1. **Mettre à jour todowrite** — passer la phase Implémentation en `in_progress` :
+
+   ```
+   todowrite({
+     todos: [
+       { content: "Planification feature", status: "completed", priority: "high" },
+       { content: "Spec UX — [nombre] ticket(s)", status: "completed", priority: "high" },
+       { content: "Spec UI — [nombre] ticket(s)", status: "completed", priority: "high" },
+       { content: "Audit(s) — [nombre] ticket(s)", status: "completed", priority: "medium" },
+       { content: "Implémentation — [nombre] ticket(s)", status: "in_progress", priority: "high" }
+     ]
+   })
+   ```
+
+   > Adapter les phases selon ce qui existe réellement dans la feature. **orchestrator-dev gère sa propre liste todowrite au niveau des tickets** — les deux listes sont complémentaires.
+
+2. Annoncer la délégation :
    > « Je délègue l'implémentation à `orchestrator-dev` pour les tickets : <liste des IDs>.
    > Si des questions apparaissent ici pendant l'implémentation, elles viennent d'`orchestrator-dev` ou de ses sous-agents et incluront leur contexte. »
 
@@ -516,6 +638,22 @@ question({
 ## CP-feature — Récap global
 
 Afficher en fin de feature (tous les tickets traités ou après un **stop**).
+
+**Mettre à jour todowrite** — toutes les phases passent à leur statut final :
+
+```
+todowrite({
+  todos: [
+    { content: "Planification feature", status: "completed", priority: "high" },
+    { content: "Spec UX — [nombre] ticket(s)", status: "completed", priority: "high" },
+    { content: "Spec UI — [nombre] ticket(s)", status: "completed", priority: "high" },
+    { content: "Audit(s) — [nombre] ticket(s)", status: "completed", priority: "medium" },
+    { content: "Implémentation — [nombre] ticket(s)", status: "completed", priority: "high" }
+  ]
+})
+```
+
+> Utiliser `cancelled` pour les phases abandonnées (tickets ignorés). Adapter selon les phases réellement présentes.
 
 **Avant de construire ce récap**, reproduire intégralement dans le texte de la discussion le récap global complet reçu d'orchestrator-dev (s'il n'a pas déjà été affiché). Puis produire le récap consolidé ci-dessous :
 
