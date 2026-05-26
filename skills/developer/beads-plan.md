@@ -12,6 +12,22 @@ ciblent le bon board.
 
 ---
 
+## ⛔ Accès direct aux fichiers Beads — INTERDIT
+
+**Tu ne dois JAMAIS :**
+- Lire directement les fichiers `.beads/issues.jsonl`, `.beads/metadata.json` ou tout autre fichier dans `.beads/`
+- Utiliser `read`, `cat`, `grep` ou tout autre outil pour accéder aux fichiers Beads
+- Parser le format interne de Beads
+
+**Tu dois TOUJOURS :**
+- Utiliser les commandes `bd` (CLI) pour interagir avec Beads
+- `bd list`, `bd show`, `bd ready` pour lire
+- `bd create`, `bd update`, `bd close` pour modifier
+
+**Raison :** Le format interne de `.beads/` n'est pas une API stable. Le CLI `bd` est l'interface officielle et garantit la cohérence des données.
+
+---
+
 ## Lire les tickets
 
 **Lister les tickets ouverts :**
