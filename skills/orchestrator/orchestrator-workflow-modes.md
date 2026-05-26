@@ -33,7 +33,54 @@ Il est injecté dans `orchestrator` et `orchestrator-dev` — toute modification
 
 ---
 
+## Configuration projet (opencode.json)
+
+Le mode de workflow peut être pré-configuré dans `opencode.json` pour éviter la question interactive au CP-0.
+
+### Format de configuration
+
+```json
+{
+  "workflow": {
+    "defaultMode": "semi-auto",
+    "qaEnabled": false
+  }
+}
+```
+
+### Propriétés
+
+| Propriété | Type | Valeurs valides | Description |
+|-----------|------|-----------------|-------------|
+| `defaultMode` | string | `"manuel"`, `"semi-auto"`, `"auto"` | Mode de workflow appliqué automatiquement au CP-0 |
+| `qaEnabled` | boolean | `true`, `false` | QA global activé/désactivé (utilisé uniquement si `defaultMode` = `"auto"`) |
+
+### Comportement
+
+- **`defaultMode` présent et valide** → le mode est appliqué sans question, un message confirme : "Mode de workflow : `<mode>` (configuré dans opencode.json)"
+- **`defaultMode` absent ou invalide** → la question CP-0 est posée normalement (compatibilité ascendante)
+- **`qaEnabled` défini (en mode `auto`)** → le QA global est configuré sans question, un message confirme : "QA global : `<activé/désactivé>` (configuré dans opencode.json)"
+- **`qaEnabled` non défini (en mode `auto`)** → la question QA global est posée normalement
+
+> **Note :** La propriété `qaEnabled` n'est lue et appliquée que si le mode est `auto`. Elle est ignorée pour les modes `manuel` et `semi-auto`.
+
+---
+
 ## Bloc question — Choix du mode
+
+### Détection de la configuration projet
+
+Avant de poser la question, vérifier si `opencode.json` contient une configuration `workflow.defaultMode` :
+
+1. Lire `opencode.json` à la racine du projet
+2. Vérifier si `workflow.defaultMode` existe et contient une valeur valide : `"manuel"`, `"semi-auto"`, ou `"auto"`
+3. **Si valide** → appliquer le mode sans poser la question, afficher :
+   > Mode de workflow : `<mode>` (configuré dans opencode.json)
+4. **Si absent, invalide, ou `opencode.json` inexistant** → poser la question normalement
+
+> **Cas d'erreur :** si `opencode.json` existe mais contient du JSON invalide (erreur de parsing) ou si une erreur d'accès fichier survient → traiter comme "absent" et poser la question normalement.
+
+### Question interactive (si non configuré)
 
 Utiliser ce bloc exact via l'outil `question` pour demander le mode :
 
@@ -56,6 +103,19 @@ Enregistrer le mode pour toute la session.
 ---
 
 ## Bloc question — QA global (mode `auto` uniquement)
+
+### Détection de la configuration projet
+
+Avant de poser la question, vérifier si `opencode.json` contient une configuration `workflow.qaEnabled` :
+
+1. Vérifier si `workflow.qaEnabled` existe et est **strictement un booléen JSON** (`true` ou `false`)
+2. **Si défini** → appliquer la valeur sans poser la question, afficher :
+   > QA global : `<activé/désactivé>` (configuré dans opencode.json)
+3. **Si absent ou non booléen** → poser la question normalement
+
+> **Type strict :** seuls les booléens JSON `true` et `false` sont acceptés. Toute autre valeur (string `"true"`, nombre `1` ou `0`, `null`, etc.) est ignorée et déclenche la question interactive.
+
+### Question interactive (si non configuré)
 
 En mode `auto`, poser également via l'outil `question` :
 
