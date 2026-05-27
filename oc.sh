@@ -36,6 +36,7 @@ case "$COMMAND" in
   conventions)     bash "$SCRIPTS_DIR/cmd-conventions.sh" "${@:2}" ;;
   beads)           bash "$SCRIPTS_DIR/cmd-beads.sh" "${@:2}" ;;
   quick)           bash "$SCRIPTS_DIR/cmd-quick.sh" "${@:2}" ;;
+  metrics)         bash "$SCRIPTS_DIR/cmd-metrics.sh" "${@:2}" ;;
   version|--version) bash "$SCRIPTS_DIR/cmd-version.sh" ;;
   help|--help|-h)  bash "$SCRIPTS_DIR/cmd-help.sh" ;;
   "")              bash "$SCRIPTS_DIR/cmd-help.sh" ;;

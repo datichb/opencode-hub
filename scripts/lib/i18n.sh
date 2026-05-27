@@ -91,6 +91,8 @@ t() {
       help.review_branch.desc) printf '%s' "Review d'une branche spécifique (défaut : branche courante)" ;;
       help.debug.cmd)         printf '%s' "debug [PROJECT_ID]" ;;
       help.debug.desc)        printf '%s' "Lance une session de debug via l'agent debugger" ;;
+      help.metrics.cmd)       printf '%s' "metrics" ;;
+      help.metrics.desc)      printf '%s' "Affiche les métriques de vélocité du workflow" ;;
       # Maintenance
       help.deploy.cmd)        printf '%s' "deploy [target] [PROJECT_ID]" ;;
       help.deploy.desc)       printf '%s' "Déploie les agents (opencode/all)" ;;
@@ -699,6 +701,8 @@ t_en() {
     help.review_branch.desc) printf '%s' "Review a specific branch (default: current branch)" ;;
     help.debug.cmd)         printf '%s' "debug [PROJECT_ID]" ;;
     help.debug.desc)        printf '%s' "Start a debug session via the debugger agent" ;;
+    help.metrics.cmd)       printf '%s' "metrics" ;;
+    help.metrics.desc)      printf '%s' "Display workflow velocity metrics" ;;
     # Maintenance
     help.deploy.cmd)        printf '%s' "deploy [target] [PROJECT_ID]" ;;
     help.deploy.desc)       printf '%s' "Deploy agents (opencode/all)" ;;

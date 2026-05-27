@@ -231,3 +231,167 @@ metrics_correction() {
   fi
   metrics_log_event "correction" "$ticket_id" "" "" "$extra"
 }
+
+# ─────────────────────────────────────────
+# AGGREGATION FUNCTIONS
+# ─────────────────────────────────────────
+
+# Vérifie si le fichier metrics existe et contient des données
+# Usage : if metrics_file_exists; then ... fi
+# Returns : 0 si le fichier existe et n'est pas vide, 1 sinon
+metrics_file_exists() {
+  [ -f "$_METRICS_FILE" ] && [ -s "$_METRICS_FILE" ]
+}
+
+# Retourne le chemin du fichier metrics
+# Usage : path=$(metrics_get_file_path)
+metrics_get_file_path() {
+  printf '%s' "$_METRICS_FILE"
+}
+
+# Compte le nombre de tickets complétés
+# Usage : count=$(metrics_count_completed)
+# Returns : nombre de tickets (0 si aucun ou fichier absent)
+metrics_count_completed() {
+  if ! metrics_file_exists; then
+    echo "0"
+    return 0
+  fi
+  local count
+  count=$(grep -c '"event":"ticket_complete"' "$_METRICS_FILE" 2>/dev/null) || count=0
+  # Nettoyer les espaces éventuels
+  count=$(echo "$count" | tr -d '[:space:]')
+  echo "${count:-0}"
+}
+
+# Calcule la durée moyenne par ticket (en secondes)
+# Usage : avg=$(metrics_avg_duration)
+# Returns : durée moyenne en secondes (0 si pas de données)
+metrics_avg_duration() {
+  if ! metrics_file_exists; then
+    echo "0"
+    return 0
+  fi
+
+  local total=0
+  local count=0
+
+  # Extraire toutes les durées des événements ticket_complete
+  while IFS= read -r duration; do
+    if [ -n "$duration" ] && [[ "$duration" =~ ^[0-9]+$ ]]; then
+      total=$((total + duration))
+      count=$((count + 1))
+    fi
+  done < <(grep '"event":"ticket_complete"' "$_METRICS_FILE" 2>/dev/null | \
+           sed -n 's/.*"duration_seconds":\([0-9]*\).*/\1/p')
+
+  if [ "$count" -eq 0 ]; then
+    echo "0"
+    return 0
+  fi
+
+  echo $((total / count))
+}
+
+# Calcule le nombre moyen de cycles de review par ticket
+# Usage : avg=$(metrics_avg_review_cycles)
+# Returns : moyenne (format X.X) ou "0" si pas de données
+metrics_avg_review_cycles() {
+  if ! metrics_file_exists; then
+    echo "0"
+    return 0
+  fi
+
+  # Compter les événements review_cycle
+  local review_count
+  review_count=$(grep -c '"event":"review_cycle"' "$_METRICS_FILE" 2>/dev/null) || review_count=0
+  # Nettoyer les espaces éventuels
+  review_count=$(echo "$review_count" | tr -d '[:space:]')
+  review_count="${review_count:-0}"
+
+  # Compter les tickets complétés (pour la moyenne)
+  local ticket_count
+  ticket_count=$(metrics_count_completed)
+  ticket_count="${ticket_count:-0}"
+
+  if [ "$ticket_count" -eq 0 ]; then
+    echo "0"
+    return 0
+  fi
+
+  # Calcul avec une décimale (bash integer arithmetic)
+  # Multiplier par 10 pour avoir une décimale
+  local avg_x10
+  avg_x10=$(( (review_count * 10) / ticket_count ))
+
+  # Formater X.X
+  local integer_part=$((avg_x10 / 10))
+  local decimal_part=$((avg_x10 % 10))
+  echo "${integer_part}.${decimal_part}"
+}
+
+# Retourne le top N des raisons de correction
+# Usage : metrics_top_corrections [N]
+# @param $1 — nombre de raisons à retourner (défaut: 3)
+# Returns : liste "reason|count" par ligne, triée par count décroissant
+metrics_top_corrections() {
+  local top_n="${1:-3}"
+
+  if ! metrics_file_exists; then
+    return 0
+  fi
+
+  # Extraire les raisons, compter les occurrences, trier, prendre le top N
+  grep '"event":"correction"' "$_METRICS_FILE" 2>/dev/null | \
+    sed -n 's/.*"reason":"\([^"]*\)".*/\1/p' | \
+    sort | uniq -c | sort -rn | head -n "$top_n" | \
+    while read -r count reason; do
+      printf '%s|%s\n' "$reason" "$count"
+    done
+}
+
+# Formate une durée en secondes en format lisible (Xh Xm Xs)
+# Usage : formatted=$(metrics_format_duration 3665)
+# @param $1 — durée en secondes
+# Returns : chaîne formatée (ex: "1h 1m 5s", "15m 30s", "45s")
+metrics_format_duration() {
+  local seconds="$1"
+  [ -z "$seconds" ] && seconds=0
+
+  local hours=$((seconds / 3600))
+  local minutes=$(( (seconds % 3600) / 60 ))
+  local secs=$((seconds % 60))
+
+  local result=""
+  if [ "$hours" -gt 0 ]; then
+    result="${hours}h "
+  fi
+  if [ "$minutes" -gt 0 ] || [ "$hours" -gt 0 ]; then
+    result="${result}${minutes}m "
+  fi
+  result="${result}${secs}s"
+
+  printf '%s' "$result"
+}
+
+# Agrège toutes les métriques en un seul appel
+# Usage : metrics_aggregate
+# Returns : données formatées pour affichage (utilise des variables globales)
+# Variables set:
+#   METRICS_TOTAL_TICKETS — nombre de tickets complétés
+#   METRICS_AVG_DURATION — durée moyenne en secondes
+#   METRICS_AVG_DURATION_FMT — durée moyenne formatée
+#   METRICS_AVG_CYCLES — cycles review moyens
+#   METRICS_TOP_CORRECTIONS — tableau des top corrections (reason|count)
+metrics_aggregate() {
+  METRICS_TOTAL_TICKETS=$(metrics_count_completed)
+  METRICS_AVG_DURATION=$(metrics_avg_duration)
+  METRICS_AVG_DURATION_FMT=$(metrics_format_duration "$METRICS_AVG_DURATION")
+  METRICS_AVG_CYCLES=$(metrics_avg_review_cycles)
+
+  # Top corrections dans un tableau
+  METRICS_TOP_CORRECTIONS=()
+  while IFS= read -r line; do
+    [ -n "$line" ] && METRICS_TOP_CORRECTIONS+=("$line")
+  done < <(metrics_top_corrections 3)
+}
