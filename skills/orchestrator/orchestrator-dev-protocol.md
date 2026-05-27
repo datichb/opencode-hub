@@ -130,7 +130,7 @@ Afficher le tableau récapitulatif :
 | bd-13 | ...  | P1 | task    | developer-backend  | ✅  |
 | bd-14 | ...  | P2 | feature | developer-platform | —   |
 
-X tickets identifiés. Y en TDD (tests écrits avant l'implémentation — QA skippé).
+<NB_TICKETS> tickets identifiés. <NB_TDD> en TDD (tests écrits avant l'implémentation — QA skippé).
 ```
 
 ⏸️ **Demander le mode de workflow et, si mode `auto`, configurer le QA global via les blocs question définis dans le skill `orchestrator-workflow-modes`.**
@@ -205,8 +205,8 @@ En mode `auto`, avant de démarrer le traitement ticket par ticket, évaluer si 
 
 **Si tous les critères sont vérifiés :**
 ```
-▶️ [Parallélisme conditionnel] X tickets éligibles — lancement simultané.
-Critères vérifiés : (1) dépendances — aucune ✅ (2) agents — disjoints ✅ (3) fichiers — non transverses ✅ (4) taille — X ≤ 3 ✅
+▶️ [Parallélisme conditionnel] <NB_TICKETS> tickets éligibles — lancement simultané.
+Critères vérifiés : (1) dépendances — aucune ✅ (2) agents — disjoints ✅ (3) fichiers — non transverses ✅ (4) taille — <NB_TICKETS> ≤ 3 ✅
 ```
 
 → Lancer N sessions `developer-*` simultanément (voir section "Workflow parallèle").
@@ -232,7 +232,7 @@ Afficher le ticket :
 ```
 ## Ticket #<ID> — <titre>
 
-**Priorité :** P<X> | **Type :** <type> | **Agent :** <developer-xxx>
+**Priorité :** P<PRIORITE> | **Type :** <type> | **Agent :** <developer-xxx>
 
 **Description :**
 <description du ticket>
@@ -691,8 +691,8 @@ Construire le compte rendu en agrégeant les données structurées collectées a
 ## ✅ Ticket #<ID> terminé — <titre>
 
 **Agent :** <developer-xxx>
-**QA :** <oui — X tests ajoutés | non>
-**Cycles de review :** <N>
+**QA :** <oui — <NB_TESTS> tests ajoutés | non>
+**Cycles de review :** <NB_CYCLES>
 **Corrections demandées :** <oui/non>
 **Statut Beads :** clos
 
@@ -712,7 +712,7 @@ Construire le compte rendu en agrégeant les données structurées collectées a
 
 ---
 
-**Tickets restants :** <N> | **Traités :** <M> | **Ignorés :** <K>
+**Tickets restants :** <NB_RESTANTS> | **Traités :** <NB_TRAITES> | **Ignorés :** <NB_IGNORES>
 ```
 
 Si le ticket est de type `feature` ou `fix` (visible utilisateur), utiliser l'outil `question` :
@@ -818,7 +818,7 @@ Collecter les verdicts de tous les rapports de review en attente :
 **Si TOUS les verdicts sont `commit`** → proposer un batch groupé :
 
 ```
-> 📋 [CP-2 — Batch disponible] X tickets prêts à commiter.
+> 📋 [CP-2 — Batch disponible] <NB_TICKETS> tickets prêts à commiter.
 > Tous les verdicts reviewer sont `commit` — aucun problème bloquant détecté.
 ```
 
@@ -827,11 +827,11 @@ Utiliser l'outil `question` :
 ```
 question({
   questions: [{
-    header: "CP-2 — Batch de X tickets",
-    question: "X tickets ont reçu un verdict `commit` du reviewer. Quelle action pour ce lot ?",
+    header: "CP-2 — Batch de <NB_TICKETS> tickets",
+    question: "<NB_TICKETS> tickets ont reçu un verdict `commit` du reviewer. Quelle action pour ce lot ?",
     options: [
-      { label: "Commit tous", description: "Commiter les X tickets en séquence avec leurs messages Conventional Commits respectifs" },
-      { label: "Commit sélectif", description: "Choisir quels tickets commiter parmi les X disponibles" },
+      { label: "Commit tous", description: "Commiter les <NB_TICKETS> tickets en séquence avec leurs messages Conventional Commits respectifs" },
+      { label: "Commit sélectif", description: "Choisir quels tickets commiter parmi les <NB_TICKETS> disponibles" },
       { label: "Voir détails", description: "Afficher le rapport de review de chaque ticket avant de décider" }
     ]
   }]
@@ -852,7 +852,7 @@ question({
   question({
     questions: [{
       header: "Sélection des tickets à commiter",
-      question: "Quels tickets commiter parmi les X disponibles ?",
+      question: "Quels tickets commiter parmi les <NB_TICKETS> disponibles ?",
       multiple: true,
       options: [
         { label: "#<ID-1> — <titre-1>", description: "Verdict: commit" },
@@ -865,12 +865,16 @@ question({
   → Commiter uniquement les tickets sélectionnés, les autres retournent en séquentiel standard
   → Si aucun ticket sélectionné (sélection vide), revenir au choix précédent sans action
 
-- **Voir détails** → passer en mode séquentiel standard (comportement ci-dessous)
+- **Voir détails** → afficher les rapports de review complets un par un, puis passer en mode séquentiel standard :
+  1. Afficher le rapport de review complet du premier ticket
+  2. Poser un CP-2 unitaire (Commit / Corriger) pour ce ticket
+  3. Répéter pour chaque ticket du batch, dans l'ordre FIFO
+  (voir "Mode séquentiel standard" ci-dessous pour le détail)
 
 **Si AU MOINS UN verdict est `corriger` ou `corriger-sécurité`** → éclater le batch :
 
 ```
-> 📋 [CP-2 — Batch éclaté] X tickets en attente, Y avec verdict `corriger`.
+> 📋 [CP-2 — Batch éclaté] <NB_TICKETS> tickets en attente, <NB_CORRIGER> avec verdict `corriger`.
 > Traitement séquentiel : les tickets avec corrections requises seront présentés individuellement.
 ```
 
@@ -883,8 +887,8 @@ question({
 - Ré-invoquer chaque session via son `task_id` avec la réponse correspondante
 
 ```
-> 📋 [CP-2 — Revue séquentielle] X rapports de review en attente.
-> Traitement séquentiel : rapport 1/X affiché ci-dessus.
+> 📋 [CP-2 — Revue séquentielle] <NB_TICKETS> rapports de review en attente.
+> Traitement séquentiel : rapport 1/<NB_TICKETS> affiché ci-dessus.
 ```
 
 #### Rappel — CP-2 reste une pause obligatoire
@@ -912,14 +916,14 @@ Construire ce récap en agrégeant les données structurées collectées à chaq
 
 | ID | Titre | Agent | QA | Cycles review | Critères couverts | Statut |
 |----|-------|-------|----|---------------|-------------------|--------|
-| bd-XX | ... | developer-frontend | oui — X tests | 1 | tous | ✅ Terminé |
+| bd-XX | ... | developer-frontend | oui — <NB_TESTS> tests | 1 | tous | ✅ Terminé |
 | bd-XX | ... | developer-backend  | non | 2 | partielle | ✅ Terminé |
 | bd-XX | ... | developer-api      | non | 1 | — | ⏭️ Ignoré  |
 
-- **Tickets traités :** X / Y
-- **Tickets ignorés :** Z
-- **Total cycles de review :** N
-- **Corrections demandées :** M fois
+- **Tickets traités :** <NB_TRAITES> / <NB_TOTAL>
+- **Tickets ignorés :** <NB_IGNORES>
+- **Total cycles de review :** <NB_CYCLES>
+- **Corrections demandées :** <NB_CORRECTIONS> fois
 
 ### Comptes rendus d'implémentation
 
@@ -961,7 +965,7 @@ Ajouter immédiatement après le récap global le bloc `## Retour vers orchestra
 ### Détail par ticket
 | ID | Agent | QA | Cycles review | Critères couverts | Statut |
 |----|-------|----|---------------|-------------------|--------|
-| bd-XX | developer-frontend | oui — X tests | 1 | tous | ✅ Terminé |
+| bd-XX | developer-frontend | oui — <NB_TESTS> tests | 1 | tous | ✅ Terminé |
 | bd-YY | developer-backend  | non | 2 | partielle | ✅ Terminé |
 | bd-ZZ | developer-api      | non | — | — | ⏭️ Ignoré  |
 
@@ -1165,6 +1169,60 @@ Le ticket #<ID> est bloqué : <raison>. Comment procéder ?
 ```
 
 Si résolu : `bd update <ID> -s in_progress` puis reprendre l'implémentation.
+
+---
+
+## Métriques de vélocité — Points d'intégration
+
+Les événements du workflow sont loggés dans `.opencode/metrics.jsonl` pour permettre l'analyse de la vélocité.
+
+Les fonctions de logging sont définies dans `scripts/lib/metrics.sh` :
+
+| Fonction | Usage | Quand l'appeler |
+|----------|-------|-----------------|
+| `metrics_start_timer <ticket_id>` | Démarre le chrono d'un ticket | CP-1 — après validation du démarrage |
+| `metrics_ticket_start <ticket_id> [agent]` | Log l'événement de démarrage | CP-1 — après validation du démarrage |
+| `metrics_review_cycle <ticket_id> [cycle_number]` | Log un cycle de review | Étape 4 — à chaque soumission au reviewer |
+| `metrics_correction <ticket_id> [reason]` | Log une correction demandée | CP-2 — si l'option "Corriger" est choisie |
+| `metrics_get_duration <ticket_id>` | Récupère la durée depuis le start | Étape 6 — pour calculer la durée totale |
+| `metrics_ticket_complete <ticket_id> [agent] [duration]` | Log la complétion du ticket | Étape 6 — après clôture du ticket Beads |
+| `metrics_clear_timer <ticket_id>` | Nettoie le timer (optionnel) | Étape 6 — après ticket_complete |
+
+### Séquence d'appels typique
+
+```
+# CP-1 — Démarrage du ticket
+metrics_start_timer "bd-42"
+metrics_ticket_start "bd-42" "developer-backend"
+
+# Étape 4 — Premier passage en review
+metrics_review_cycle "bd-42" 1
+
+# CP-2 — Correction demandée
+metrics_correction "bd-42" "lint errors"
+
+# Étape 4 — Deuxième passage en review
+metrics_review_cycle "bd-42" 2
+
+# Étape 6 — Ticket terminé
+duration=$(metrics_get_duration "bd-42")
+metrics_ticket_complete "bd-42" "developer-backend" "$duration"
+metrics_clear_timer "bd-42"
+```
+
+### Format des événements loggés
+
+Chaque événement est une ligne JSON dans `.opencode/metrics.jsonl` :
+
+```json
+{"timestamp":"2024-01-15T10:30:00Z","event":"ticket_start","ticket_id":"bd-42","agent":"developer-backend"}
+{"timestamp":"2024-01-15T10:35:00Z","event":"review_cycle","ticket_id":"bd-42","cycle":1}
+{"timestamp":"2024-01-15T10:40:00Z","event":"correction","ticket_id":"bd-42","reason":"lint errors"}
+{"timestamp":"2024-01-15T10:42:00Z","event":"review_cycle","ticket_id":"bd-42","cycle":2}
+{"timestamp":"2024-01-15T10:45:00Z","event":"ticket_complete","ticket_id":"bd-42","agent":"developer-backend","duration_seconds":900}
+```
+
+> **Note :** Ces fonctions sont destinées à être appelées par les agents orchestrateurs qui pilotent le workflow. Les agents `developer-*` n'appellent pas directement les fonctions de métriques — c'est l'orchestrateur qui trace les événements.
 
 ---
 
