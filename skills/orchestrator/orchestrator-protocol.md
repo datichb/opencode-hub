@@ -60,6 +60,26 @@ Les règles d'utilisation de l'outil sont définies dans le skill `skills/postur
 
 ## Trois modes d'entrée
 
+---
+
+## Ordre de priorité des modes
+
+Quand plusieurs conditions de déclenchement sont vraies simultanément, appliquer l'ordre de priorité suivant :
+
+1. **Mode D (bug)** — priorité la plus haute
+   - Si l'utilisateur signale un bug ou une anomalie, invoquer le debugger immédiatement, même si le projet est inconnu
+   - L'onboarding peut intervenir après le diagnostic si nécessaire
+
+2. **Mode C (onboarding)** — priorité intermédiaire
+   - Si aucun bug n'est signalé mais que le projet est inconnu, proposer l'onboarding
+
+3. **Mode A / Mode B** — priorité par défaut
+   - Si le projet est connu et qu'aucun bug n'est signalé, router vers planification ou tickets existants
+
+> **Exemple de conflit résolu :** « J'ai un bug sur ce projet que je découvre » → Mode D (debugger) d'abord, puis proposition d'onboarding après le rapport de diagnostic si ONBOARDING.md est toujours absent.
+
+---
+
 ### Mode D — Bug / Problème isolé signalé par l'utilisateur
 
 À utiliser quand l'utilisateur ouvre une session en décrivant un problème, une anomalie,
