@@ -409,6 +409,251 @@ Identifier :
 - Y a-t-il des tickets de dette / bug / chore non traités en nombre inhabituel ?
 - Y a-t-il des patterns récurrents (ex: concentration de bugs sur un module) ?
 
+---
+
+### ÉTAPE 1.4 — Exploration du contexte métier
+
+**Annoncer avant d'explorer :**
+> "Je vais analyser le contexte métier du projet pour identifier le domaine et les concepts clés."
+
+#### Analyse du README et de la documentation
+
+Lire dans cet ordre :
+
+```
+README.md                              → description, domaine, utilisateurs
+docs/glossary.md ou GLOSSARY.md        → terminologie métier
+docs/domain/ ou docs/business/         → documentation métier
+CONTRIBUTING.md                        → contexte contributeurs
+adr/ ou docs/architecture/adr/         → décisions métier
+```
+
+#### Analyse sémantique de la codebase
+
+Lire la structure et identifier les patterns :
+
+**Détection du domaine :**
+
+Rechercher des mots-clés de domaines connus dans README.md et le nom du projet :
+
+- **E-commerce** : cart, checkout, payment, product, inventory, shipping, order, catalog
+- **Fintech** : transaction, account, balance, transfer, compliance, kyc, wallet, payment
+- **Santé** : patient, practitioner, appointment, prescription, diagnosis, medical
+- **RH** : employee, payroll, leave, performance, recruitment, timesheet
+- **SaaS** : tenant, subscription, billing, feature-flag, organization, plan
+- **Éduc** : student, course, lesson, grade, enrollment, teacher
+- **Immobilier** : property, listing, rental, lease, tenant, owner
+
+**Extraction des concepts métier :**
+
+Lire 10-15 fichiers représentatifs pour identifier les concepts :
+
+```
+src/domain/ ou src/models/ ou src/entities/
+src/services/ (noms des services)
+src/types/ ou src/interfaces/ (types métier)
+src/repositories/ (noms des repositories)
+```
+
+Pour chaque fichier, extraire :
+- Les noms de classes/interfaces (ex : `class User`, `interface Product`, `type Order`)
+- Les concepts récurrents (≥ 3 occurrences dans différents fichiers)
+- Les patterns d'architecture (DDD détecté si répertoires `domain/`, `entities/`, `value-objects/`)
+
+**Détection des utilisateurs cibles :**
+
+Rechercher dans README.md :
+- "utilisateur", "user", "client", "admin", "administrator"
+- "pour les", "à destination de", "conçu pour"
+- Identifier les rôles dans le code (`UserRole`, `permissions`, `roles`)
+
+#### Tickets Beads (analyse complémentaire)
+
+Si Beads est initialisé (déjà exploré en ÉTAPE 1.3) :
+
+Analyser les 20 derniers tickets (ouverts + clos) pour identifier :
+- Les features récurrentes (patterns métier visibles)
+- Les concepts mentionnés dans les titres/descriptions
+- Les labels métier custom (`epic:payment`, `domain:user`, etc.)
+
+#### Récap contexte métier
+
+Produire un résumé structuré :
+
+```markdown
+**Contexte métier détecté :**
+- Domaine(s) : <liste> (ou "Non identifié — projet générique")
+- Utilisateurs cibles : <liste> (ou "Non documentés")
+- Concepts clés : <liste des concepts détectés> (X concepts récurrents)
+- Glossaire : <Présent dans docs/glossary.md (Y termes) / Absent>
+- Pattern architecture : <DDD / CQRS / Layered / MVC / Non documenté>
+- Features métier récurrentes (Beads) : <patterns identifiés ou "Aucun pattern visible">
+```
+
+**Si aucun contexte métier détectable :**
+```markdown
+**Contexte métier détecté :**
+- Non documenté — recommandation : créer docs/glossary.md et documenter les concepts clés dans README
+```
+
+---
+
+### ÉTAPE 1.5 — Exploration Figma (optionnelle)
+
+**Déclencheur :**
+
+Lancer uniquement si :
+- Le profil détecté en Phase 1.1 contient "Frontend" (Vue.js, React, Angular, etc.)
+- OU des composants UI sont présents dans `src/components/` ou équivalent
+
+**Si pas de frontend détecté → skipper Phase 1.5, passer à 1.6.**
+
+**Annoncer avant d'explorer :**
+> "Je vais rechercher les maquettes Figma liées au projet."
+
+#### Recherche des fichiers Figma
+
+```
+Utiliser l'outil : search_figma_files
+Argument : <nom du projet> (depuis package.json "name" ou déduit du dossier)
+```
+
+**Si aucun fichier trouvé :**
+```markdown
+**Maquettes Figma détectées :**
+- Aucune maquette Figma trouvée
+```
+→ Passer à Phase 1.6
+
+**Si fichier(s) trouvé(s) :**
+→ Continuer vers analyse
+
+#### Analyse des fichiers Figma (max 3 fichiers pertinents)
+
+Pour chaque fichier :
+
+```
+get_file_structure(fileId)
+→ Obtenir : nom, pages, nombre de composants, date de modification
+
+detect_ui_signals(fileId)
+→ Obtenir : complexité, signaux UX/UI
+
+extract_design_tokens(fileId)
+→ Obtenir : tokens couleur, typo, spacing, effects
+```
+
+#### Identification du design system
+
+**Critères de détection :**
+- Fichier Figma nommé "*Design System*" ou "*DS*" ou "*Components*"
+- Présence de tokens structurés dans Figma Variables
+- Composants nommés selon une convention (DSFR*, Material*, Ant*, Custom*)
+
+**Si design system détecté :**
+- Lister les composants principaux (max 10)
+- Extraire les design tokens
+- Identifier le framework (DSFR / Material / Ant Design / Custom)
+
+**Si pas de design system :**
+- Mentionner "Pas de design system centralisé détecté dans Figma"
+
+#### Récap Figma
+
+```markdown
+**Maquettes Figma détectées :**
+- Fichiers trouvés : X fichiers
+  - [Nom fichier 1](URL)
+  - [Nom fichier 2](URL)
+- Design system : <Oui — Framework : DSFR / Non>
+  - Composants disponibles : <liste>
+- Design tokens : <X tokens couleur, Y tokens typo, Z tokens spacing / Non configurés>
+```
+
+---
+
+### ÉTAPE 1.6 — Exploration de la stratégie de test
+
+**Annoncer avant d'explorer :**
+> "Je vais analyser la stratégie de test du projet."
+
+#### Détection des frameworks de test
+
+Lire les fichiers de configuration :
+
+```
+vitest.config.ts / vitest.config.js    → Vitest
+jest.config.ts / jest.config.js        → Jest
+pytest.ini / pyproject.toml            → pytest
+phpunit.xml / phpunit.xml.dist         → PHPUnit
+playwright.config.ts                   → Playwright (E2E)
+cypress.config.ts / cypress.json       → Cypress (E2E)
+karma.conf.js                          → Karma (Angular)
+```
+
+**Extraire :**
+- Nom du framework unitaire
+- Nom du framework E2E (si présent)
+- Seuil de couverture configuré (`coverage.threshold` ou équivalent)
+
+#### Analyse de l'organisation des tests
+
+Explorer la structure :
+
+```
+tests/ ou __tests__/ ou spec/         → dossier dédié
+*.test.ts ou *.spec.ts à côté du code → co-localisés
+```
+
+**Calculer le ratio test/source :**
+
+```bash
+# Compter les fichiers test
+find src -name "*.test.*" -o -name "*.spec.*" | wc -l
+
+# Compter les fichiers source (hors tests)
+find src -name "*.ts" -o -name "*.js" -o -name "*.py" | grep -v test | grep -v spec | wc -l
+```
+
+Interpréter :
+- Ratio ≥ 0.8 : Bonne couverture
+- Ratio 0.4-0.8 : Couverture partielle
+- Ratio < 0.4 : Couverture faible
+
+#### Détection de la philosophie de test
+
+**Indicateurs TDD :**
+- Fichiers test créés avant les fichiers source (git log --diff-filter=A)
+- Labels Beads `tdd` présents dans les tickets
+- Mention "TDD" ou "Test-Driven Development" dans README ou CONTRIBUTING
+
+**Indicateurs BDD :**
+- Framework Cucumber / Behave détecté
+- Fichiers `.feature` présents
+- Syntaxe `Given/When/Then` dans les tests
+
+**Par défaut :**
+- "Test-after" — tests écrits après implémentation
+
+#### Récap stratégie de test
+
+```markdown
+**Stratégie de test détectée :**
+- Frameworks :
+  - Unitaires : <Vitest / Jest / pytest / PHPUnit>
+  - E2E : <Playwright / Cypress / Aucun>
+- Organisation : <Co-localisés (.spec.ts à côté du code) / Dossier tests/ séparé>
+- Seuil de couverture : <X% configuré dans vitest.config.ts / Non configuré>
+- Ratio test/source : <calculé> — <Bonne / Partielle / Faible> couverture
+- Philosophie : <TDD (labels Beads détectés) / BDD (Cucumber) / Test-after>
+- Commandes :
+  - Tests unitaires : `<npm test / pytest / ...>`
+  - Tests E2E : `<npm run test:e2e / ...>`
+  - Couverture : `<npm run test:coverage / ...>`
+```
+
+---
+
 ### Déclencheur de pause ⏸️
 
 Si une **information critique** émerge pendant l'exploration qui nécessite une clarification immédiate → afficher le contexte en texte puis utiliser l'outil `question`.
@@ -441,6 +686,27 @@ Si une **information critique** émerge pendant l'exploration qui nécessite une
 - Tickets ouverts : X
 - Tickets clos récents : Y
 - Concentration de bugs : <module si applicable>
+
+**Contexte métier détecté :**
+- Domaine(s) : <liste> (ou "Non identifié — projet générique")
+- Utilisateurs cibles : <liste> (ou "Non documentés")
+- Concepts clés : <liste des concepts récurrents> (X concepts)
+- Glossaire : <Présent dans docs/glossary.md (Y termes) / Absent>
+- Pattern architecture : <DDD / CQRS / Layered / MVC / Non documenté>
+
+**Maquettes Figma détectées :** (si frontend)
+- Fichiers trouvés : X fichiers (<URLs>)
+- Design system : <Oui — Framework : DSFR / Material / Custom / Non>
+  - Composants disponibles : <liste>
+- Design tokens : <X tokens couleur, Y tokens typo, Z tokens spacing / Non configurés>
+<"Phase 1.5 skippée (projet backend)" si pas de frontend>
+
+**Stratégie de test détectée :**
+- Frameworks : <unitaires : X, E2E : Y / Aucun framework détecté>
+- Organisation : <Co-localisés / Dossier tests/ séparé>
+- Seuil couverture : <X% configuré / Non configuré>
+- Ratio test/source : <calculé> — <Bonne / Partielle / Faible / Non calculable> couverture
+- Philosophie : <TDD / BDD / Test-after / Non déterminable>
 
 **Points d'attention détectés (préliminaire) :**
 - 🔴 Critiques : <liste si applicable>
@@ -500,6 +766,29 @@ Poser les questions de clarification identifiées en Phase 1 pour lever les zone
 - Le processus de déploiement n'est pas documenté — y a-t-il un runbook ou une procédure ?
 - Combien d'environnements existent (dev, staging, prod, preview) ?
 - Y a-t-il un système de feature flags actif ? Si oui, lequel ?
+
+#### Questions sur le contexte métier (si flou)
+
+Si le contexte métier est absent du README ou non documenté :
+- Quel est le domaine d'application de ce projet ? (e-commerce, fintech, santé, SaaS, autre)
+- Qui sont les utilisateurs finaux ? (clients, admins, patients, employés, etc.)
+- Y a-t-il des concepts métier clés à connaître ? Si oui, existe-t-il un glossaire ?
+- Y a-t-il des règles métier spécifiques documentées ailleurs (wiki, Notion, Confluence) ?
+
+#### Questions sur la stratégie de test (si ambiguë)
+
+Si la stratégie n'est pas claire depuis les fichiers de config :
+- Quelle est la philosophie de test privilégiée ? (TDD systématique, tests après implémentation, BDD)
+- Quel est le seuil de couverture visé, même s'il n'est pas configuré ? (80%, 90%, pas de cible)
+- Les tests E2E sont-ils réservés aux parcours critiques ou doivent-ils être exhaustifs ?
+- Les tests unitaires sont-ils obligatoires sur toute logique métier ou seulement recommandés ?
+
+#### Questions sur Figma (si maquettes trouvées mais ambiguës)
+
+Si des fichiers Figma existent mais leur statut n'est pas clair :
+- Ces maquettes sont-elles à jour et ready-for-dev, ou encore en WIP ?
+- Les design tokens Figma sont-ils la source de vérité, ou le code CSS ?
+- Y a-t-il une convention de synchronisation Figma → code ? (manuelle, plugin, aucune)
 
 ### Format de la question
 
@@ -845,6 +1134,44 @@ question({
 ## Architecture
 <structure du projet, patterns dominants, conventions>
 
+## Contexte métier
+<Domaine d'application, utilisateurs cibles, concepts clés détectés>
+<"Non documenté" si aucun contexte identifiable>
+
+## Design et maquettes
+**Fichiers Figma :**
+- [Nom fichier — URL](lien)
+
+**Design system :**
+- Framework : <DSFR / Material / Custom / Aucun>
+- Composants : <liste>
+
+**Design tokens :**
+- Couleurs : <liste des tokens principaux>
+- Typographie : <liste>
+- Espacements : <liste>
+
+<"Non disponible" si pas de Figma ou projet backend>
+
+## Stratégie de test
+**Frameworks :**
+- Unitaires : <Vitest / Jest / pytest / PHPUnit>
+- E2E : <Playwright / Cypress / Aucun>
+
+**Couverture :**
+- Seuil configuré : <X%>
+- Ratio actuel : <Y fichiers test pour Z fichiers source>
+
+**Philosophie :**
+- <TDD encouragé / BDD avec Cucumber / Test-after>
+
+**Commandes :**
+```bash
+npm test               # Tests unitaires
+npm run test:e2e       # Tests E2E
+npm run test:coverage  # Rapport de couverture
+```
+
 ## Points critiques 🔴
 <problèmes bloquants ou risques majeurs — vide si aucun>
 
@@ -1125,6 +1452,39 @@ Et observer :
 - **Préfixe exposé côté client** : <`VITE_` / `NEXT_PUBLIC_` / `NUXT_PUBLIC_` / aucun>
 - **`.env` dans `.gitignore`** : <oui / ⚠️ non — à corriger>
 - **Gestion des secrets** : <vault / GitHub secrets / .env local uniquement>
+
+---
+
+## Design tokens
+
+**Source :** <Figma Variables (fichier : [Design System](URL)) / Code CSS/SCSS / Aucun>
+
+**Tokens couleurs :**
+- `color/primary` : <valeur hex>
+- `color/secondary` : <valeur hex>
+- `color/error` : <valeur hex>
+- `color/success` : <valeur hex>
+<liste complète si Figma Variables configurées — max 15 tokens>
+
+**Tokens typographie :**
+- `text/heading-1` : <font-family, size, weight>
+- `text/body` : <font-family, size, weight>
+- `text/caption` : <font-family, size, weight>
+<liste complète — max 10 tokens>
+
+**Tokens espacements :**
+- `space/xs` : <valeur>px
+- `space/sm` : <valeur>px
+- `space/md` : <valeur>px
+- `space/lg` : <valeur>px
+- `space/xl` : <valeur>px
+<liste complète — max 8 tokens>
+
+**Synchronisation :** <Manuel / Plugin Figma Tokens → CSS / Non configurée>
+
+> ⚠️ Source de vérité : <Figma / Code CSS>
+
+<Vide si aucun design token détecté — ne rien afficher dans ce cas>
 
 ---
 

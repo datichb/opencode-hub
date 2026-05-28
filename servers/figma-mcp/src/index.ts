@@ -17,6 +17,7 @@ import { FigmaClient } from './client.js';
 import { searchFilesTool, searchFiles } from './tools/search-files.js';
 import { getFileStructureTool, getFileStructure } from './tools/get-file-structure.js';
 import { detectUISignalsTool, detectUISignals } from './tools/detect-ui-signals.js';
+import { extractDesignTokensTool, extractDesignTokens } from './tools/extract-design-tokens.js';
 
 // Initialisation
 let figmaClient: FigmaClient;
@@ -45,7 +46,7 @@ const server = new Server(
 // Handler: Liste des tools disponibles
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
-    tools: [searchFilesTool, getFileStructureTool, detectUISignalsTool],
+    tools: [searchFilesTool, getFileStructureTool, detectUISignalsTool, extractDesignTokensTool],
   };
 });
 
@@ -74,6 +75,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           throw new Error('Invalid arguments: fileId (string) is required');
         }
         return await detectUISignals(figmaClient, args.fileId);
+      }
+
+      case 'extract_design_tokens': {
+        if (!args || typeof args.fileId !== 'string') {
+          throw new Error('Invalid arguments: fileId (string) is required');
+        }
+        return await extractDesignTokens(figmaClient, args.fileId);
       }
 
       default:

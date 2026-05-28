@@ -43,6 +43,25 @@ En standalone (invocation directe), le rapport d'onboarding précède également
 **Outils :** <liste — CI/CD, tests, linting, etc.>
 **Versions clés :** <ex : Node 20, PHP 8.2, Python 3.11, etc.>
 
+### Contexte métier
+**Domaine(s) :** <liste> (ou "Non identifié — projet générique")
+**Utilisateurs cibles :** <liste> (ou "Non documentés")
+**Concepts clés :** <liste des concepts métier récurrents>
+**Glossaire :** <Présent dans docs/glossary.md / Absent>
+**Pattern architecture :** <DDD / CQRS / Layered / MVC / Non documenté>
+
+### Design et maquettes
+**Fichiers Figma :** <X fichiers — [URLs]> (ou "Aucun fichier détecté")
+**Design system :** <DSFR / Material / Custom / Aucun>
+**Design tokens :** <X tokens couleur, Y typo, Z spacing / Non configurés>
+<"Non applicable (projet backend)" si pas de frontend>
+
+### Stratégie de test
+**Frameworks :** <unitaires : X, E2E : Y>
+**Seuil couverture :** <X% configuré / Non configuré>
+**Ratio test/source :** <calculé>
+**Philosophie :** <TDD / BDD / Test-after>
+
 ### Conventions identifiées
 - <convention 1 — ex : nommage en camelCase pour les variables, PascalCase pour les composants>
 - <convention 2 — ex : tests unitaires avec Jest, colocalisés avec le code source>
@@ -106,7 +125,7 @@ En standalone (invocation directe), le rapport d'onboarding précède également
 
 2. **Afficher l'intégralité du bloc `## Retour vers orchestrator` dans le texte de la discussion** (ne pas inclure dans l'outil `question`) — vérifier que tous les champs obligatoires sont présents.
 
-3. **Vérifier la présence de tous les champs obligatoires** : `Stack technique`, `Conventions identifiées`, `Dette technique détectée`, `Zones d'incertitude`, `Fichiers de contexte produits`, `Statut`.
+3. **Vérifier la présence de tous les champs obligatoires** : `Stack technique`, `Contexte métier`, `Design et maquettes`, `Stratégie de test`, `Conventions identifiées`, `Dette technique détectée`, `Zones d'incertitude`, `Fichiers de contexte produits`, `Statut`.
    - Si l'un de ces champs est absent → demander explicitement à l'onboarder de compléter avant de continuer.
 
 4. **Si le rapport d'onboarding complet est absent** (le bloc handoff est présent sans rapport préalable) → demander explicitement à l'onboarder de produire le rapport complet avant de continuer.

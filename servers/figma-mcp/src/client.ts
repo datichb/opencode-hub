@@ -156,4 +156,116 @@ export class FigmaClient {
     const baseUrl = `https://www.figma.com/file/${fileId}`;
     return nodeId ? `${baseUrl}?node-id=${nodeId}` : baseUrl;
   }
+
+  /**
+   * Extrait les design tokens (Figma Variables) depuis un fichier
+   */
+  async getDesignTokens(fileId: string): Promise<{
+    colors: Array<{ name: string; value: string; type: 'color' }>;
+    text: Array<{ name: string; fontSize: number; fontFamily: string; fontWeight: number }>;
+    spacing: Array<{ name: string; value: number }>;
+    effects: Array<{ name: string; type: string; radius?: number; offset?: { x: number; y: number } }>;
+  }> {
+    try {
+      // Récupérer les variables Figma (API endpoint pour les variables)
+      const { data } = await this.client.get(`/files/${fileId}/variables/local`);
+
+      const colors: Array<{ name: string; value: string; type: 'color' }> = [];
+      const text: Array<{ name: string; fontSize: number; fontFamily: string; fontWeight: number }> = [];
+      const spacing: Array<{ name: string; value: number }> = [];
+      const effects: Array<{ name: string; type: string; radius?: number; offset?: { x: number; y: number } }> = [];
+
+      // Parser les variables selon leur type
+      if (data.meta && data.meta.variableCollections) {
+        for (const collectionId of Object.keys(data.meta.variableCollections)) {
+          const collection = data.meta.variableCollections[collectionId];
+          
+          for (const varId of collection.variableIds || []) {
+            const variable = data.meta.variables?.[varId];
+            if (!variable) continue;
+
+            const varName = variable.name;
+            const varType = variable.resolvedType;
+
+            // Extraire la valeur depuis le premier mode
+            const firstModeId = collection.modes?.[0]?.modeId;
+            if (!firstModeId) continue;
+
+            const varValue = variable.valuesByMode?.[firstModeId];
+            if (varValue === undefined) continue;
+
+            // Catégoriser selon le type
+            if (varType === 'COLOR') {
+              const { r, g, b, a } = varValue;
+              const hex = this.rgbaToHex(r, g, b, a);
+              colors.push({ name: varName, value: hex, type: 'color' });
+            } else if (varType === 'FLOAT') {
+              // Heuristique : si le nom contient "space", "spacing", "gap", c'est un spacing
+              if (/space|spacing|gap|margin|padding/i.test(varName)) {
+                spacing.push({ name: varName, value: varValue });
+              }
+            }
+          }
+        }
+      }
+
+      // Récupérer les styles de texte (text styles)
+      const { data: stylesData } = await this.client.get(`/files/${fileId}/styles`);
+      
+      if (stylesData.meta && stylesData.meta.styles) {
+        for (const style of Object.values(stylesData.meta.styles) as any[]) {
+          if (style.style_type === 'TEXT') {
+            const textStyle = style;
+            text.push({
+              name: textStyle.name,
+              fontSize: textStyle.fontSize || 16,
+              fontFamily: textStyle.fontFamily || 'Sans-serif',
+              fontWeight: textStyle.fontWeight || 400,
+            });
+          }
+        }
+      }
+
+      // Récupérer les styles d'effet (effect styles)
+      if (stylesData.meta && stylesData.meta.styles) {
+        for (const style of Object.values(stylesData.meta.styles) as any[]) {
+          if (style.style_type === 'EFFECT') {
+            const effectStyle = style;
+            effects.push({
+              name: effectStyle.name,
+              type: effectStyle.type || 'UNKNOWN',
+              radius: effectStyle.radius,
+              offset: effectStyle.offset,
+            });
+          }
+        }
+      }
+
+      return { colors, text, spacing, effects };
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        // Si l'endpoint n'existe pas ou retourne 404, retourner des tokens vides
+        if (error.response?.status === 404 || error.response?.status === 403) {
+          return { colors: [], text: [], spacing: [], effects: [] };
+        }
+        throw new Error(
+          `Figma API error: ${error.response?.status} - ${error.response?.data?.err || error.message}`
+        );
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Convertit une couleur RGBA Figma en hex
+   */
+  private rgbaToHex(r: number, g: number, b: number, a: number = 1): string {
+    const toHex = (n: number) => {
+      const hex = Math.round(n * 255).toString(16);
+      return hex.length === 1 ? '0' + hex : hex;
+    };
+    
+    const hex = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    return a < 1 ? `${hex}${toHex(a)}` : hex;
+  }
 }
