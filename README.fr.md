@@ -280,6 +280,7 @@ Les agents Scout et Planner interrogent automatiquement Figma lors de l'analyse 
 | Document | Description |
 |----------|-------------|
 | [Optimisations de performance](docs/dev/performance-optimizations.fr.md) | Améliorations de performance dans `oc deploy` |
+| [Système de barre de progression](docs/dev/progress-bar.fr.md) | Système de feedback visuel pour opérations longues |
 | [Pièges shell](docs/dev/shell-gotchas.md) | Pièges courants dans les scripts bash |
 
 ---
