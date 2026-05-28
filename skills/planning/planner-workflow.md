@@ -209,6 +209,8 @@ Avant d'appeler l'outil `question`, te poser cette question :
 
 ❌ Ne jamais appeler `question` sans avoir d'abord affiché le contexte en texte.
 
+> ⚠️ **RAPPEL CRITIQUE** : Le récap Phase 6 doit contenir la **liste narrative détaillée** de tous les tickets (descriptions + acceptance + notes + hypothèses + risques) — pas juste les IDs et titres. Orchestrator retransmettra ce récap intégralement à l'utilisateur pour le CP-0.
+
 ---
 
 ## Les 7 phases du workflow
@@ -970,6 +972,8 @@ Un seul critère ne suffit pas à proposer un découpage. Si un découpage sembl
 
 (Le récap est le plan lui-même tel que présenté ci-dessus)
 
+> ⚠️ **RAPPEL** : En Phase 6, le récapitulatif de planification doit reprendre tous ces éléments (plan hiérarchique + dépendances + hypothèses + risques) sous forme narrative détaillée — ne pas se limiter au tableau structuré du bloc handoff.
+
 ### Question de validation obligatoire
 
 ```
@@ -1508,35 +1512,100 @@ bd list -s open --json
 ### Récap de fin de Phase 6
 
 ```markdown
-## [Phase 6] Vérification finale
+## [Phase 6] Récapitulatif de planification
 
 ### Tickets créés
 
 **Epic bd-X — [Nom de l'epic]**
-  bd-Y  P1  feature  ~2h   [Titre]
-  bd-Z  P2  task     ~4h   [Titre]  → dépend de bd-Y
-  bd-W  P2  task     ~1h   [Titre]  → dépend de bd-Y
+
+**bd-Y (P1, feature, ~2h) — [Titre]**
+- **Description :** [Résumé en 2-3 phrases de ce que fait ce ticket]
+- **Critères d'acceptance :** [Liste des critères — format : "Le système doit..."]
+- **Notes :** [Choix techniques, alternatives considérées, points d'attention]
+- **Dépendances :** Aucune — ticket fondation
+
+**bd-Z (P2, task, ~4h) — [Titre]**
+- **Description :** [Résumé en 2-3 phrases]
+- **Critères d'acceptance :** [Critères]
+- **Notes :** [Notes]
+- **Dépendances :** bd-Y (raison : consomme le service créé par bd-Y)
+
+**bd-W (P2, task, ~1h) — [Titre]**
+- **Description :** [Résumé]
+- **Critères d'acceptance :** [Critères]
+- **Notes :** [Notes]
+- **Dépendances :** bd-Y (raison : utilise l'endpoint créé par bd-Y)
 
 **Epic bd-A — [Nom de l'epic]**
-  bd-B  P1  feature  ~3h   [Titre]  → dépend de bd-Z
+
+**bd-B (P1, feature, ~3h) — [Titre]**
+- **Description :** [Résumé]
+- **Critères d'acceptance :** [Critères]
+- **Notes :** [Notes]
+- **Dépendances :** bd-Z (raison : intègre le middleware créé par bd-Z)
 
 ---
 
 ### Ordre d'implémentation suggéré
-1. bd-Y  (bloquant)
-2. bd-Z, bd-W  (parallélisables après bd-Y)
-3. bd-B  (après bd-Z)
+
+1. **bd-Y** (bloquant) — ticket fondation, doit être fait en premier
+2. **bd-Z, bd-W** (parallélisables) — peuvent être implémentés en parallèle après bd-Y
+3. **bd-B** (après bd-Z) — dépend du middleware créé par bd-Z
+
+---
+
+### Hypothèses et ambiguïtés
+
+- **Hypothèse 1 :** [Ex : "J'ai supposé que l'authentification utilise JWT — l'utilisateur n'a pas précisé le mécanisme"]
+- **Ambiguïté 1 :** [Ex : "Le délai d'expiration du token n'était pas précisé — j'ai fixé 24h par défaut"]
+- (Aucune hypothèse ni ambiguïté si la demande était complète et sans ambiguïté)
+
+---
+
+### Risques identifiés
+
+- **Risque 1 :** [Ex : "bd-Z dépend d'une librairie externe non encore évaluée — risque de complexité sous-estimée"]
+- **Risque 2 :** [Ex : "bd-B touche 3 composants UI — risque de régression si les tests ne couvrent pas tous les parcours"]
+- (Aucun risque identifié si le plan est clair et sans risque notable)
+
+---
 
 ### Résumé
+
 - **Epics créés :** N
 - **Tickets créés :** M
 - **Estimation totale :** ~Xh
 - **Tickets délégués à l'IA :** K tickets avec label `ai-delegated`
 
 ### Points d'attention
-- <point 1 si applicable — ex : ticket bd-Z marqué needs-clarification (raison)>
-- <point 2 si applicable>
+
+- [Point 1 si applicable — ex : ticket bd-Z marqué needs-clarification (raison)]
+- [Point 2 si applicable]
 ```
+
+---
+
+### ⚠️ Autocontrôle visuel — AVANT de produire le bloc handoff
+
+**STOP — Question obligatoire à te poser MAINTENANT :**
+
+> « Ai-je affiché le récapitulatif de planification complet EN TEXTE dans la discussion ? »
+> → **NON** : STOP — produire et afficher le récapitulatif MAINTENANT (voir template ci-dessus)
+> → **OUI** : vérifier que tous les éléments ci-dessous sont présents, puis continuer vers le bloc handoff
+
+**Vérifications obligatoires avant bloc handoff :**
+- ✅ Liste narrative de tous les tickets créés (pas juste les IDs — descriptions + acceptance + notes)
+- ✅ Dépendances expliquées en langage naturel (raisons métier/technique)
+- ✅ Hypothèses faites lors de la planification (décisions prises sans info complète)
+- ✅ Risques identifiés et leur impact potentiel
+
+> ❌ Ne JAMAIS produire le bloc `## Retour vers orchestrator` sans avoir d'abord affiché le récapitulatif complet
+> ❌ Ne JAMAIS remplacer le récapitulatif narratif par le bloc structuré — les deux sont obligatoires et complémentaires
+> ❌ Ne JAMAIS résumer le récapitulatif — orchestrator doit pouvoir le retransmettre intégralement à l'utilisateur
+
+**Si le récapitulatif n'a pas encore été affiché → retour immédiat à "Récap de fin de Phase 6" ci-dessus.**
+
+---
 
 ### Format de retour final
 
