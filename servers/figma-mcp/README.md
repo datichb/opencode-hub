@@ -7,6 +7,7 @@ MCP Server pour l'intégration Figma avec OpenCode.
 - **search_figma_files** : Recherche de fichiers Figma par nom
 - **get_file_structure** : Récupération de la structure d'un fichier (frames, composants)
 - **detect_ui_signals** : Détection automatique de signaux UX/UI
+- **extract_design_tokens** : Extraction des design tokens (Figma Variables) depuis un fichier
 
 ## Configuration
 
@@ -53,11 +54,14 @@ src/
 └── tools/
     ├── search-files.ts
     ├── get-file-structure.ts
-    └── detect-ui-signals.ts
+    ├── detect-ui-signals.ts
+    └── extract-design-tokens.ts
 ```
 
 ## Utilisation
 
 Ce MCP est automatiquement déployé avec les agents via `oc deploy opencode MY-APP`.
 
-Les agents `scout` et `planner` l'utilisent pour enrichir leur analyse contextuelle avec les données Figma.
+Les agents `scout`, `planner` et `onboarder` l'utilisent pour enrichir leur analyse contextuelle avec les données Figma :
+- **scout** et **planner** : détection de signaux UX/UI pour features
+- **onboarder** : exploration des maquettes projet et extraction des design tokens
