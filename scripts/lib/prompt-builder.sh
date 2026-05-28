@@ -872,32 +872,36 @@ projects.md : ${projects_file}"
   fi
 
   cat <<EOF
-Effectue une exploration complète du projet pour produire un rapport de contexte.
+Effectue une exploration complète du projet pour produire un rapport de contexte enrichi.
 
 ${project_info}${hub_info}
 
-Workflow :
-1. Annoncer ce qui va être exploré
-2. ÉTAPE 1 — Détecter la stack (racine du projet)
-3. ÉTAPE 2 — Explorer adaptativement selon le profil détecté
-4. ÉTAPE 3 — Lire les tickets Beads (bd list -s open) + ADRs si disponibles
-5. ÉTAPE 4 — Produire le rapport de contexte structuré
-6. ÉTAPE 5 — Écrire ONBOARDING.md à la racine du projet
-7. ÉTAPE 6 — Détecter les conventions et écrire CONVENTIONS.md à la racine du projet
+Workflow (6 phases) :
+1. PHASE 0 — Vérifier les prérequis (projet accessible, fichiers structurants)
+2. PHASE 1 — Explorer le projet de manière adaptative :
+   - ÉTAPE 1.1 : Détecter la stack (langages, frameworks, bases de données, infra)
+   - ÉTAPE 1.2 : Explorer selon le profil détecté (frontend/backend/fullstack/data/mobile/devops)
+   - ÉTAPE 1.3 : Lire les tickets Beads (bd list -s open) + ADRs si disponibles
+   - ÉTAPE 1.4 : Analyser le contexte métier (domaine, utilisateurs, concepts clés, glossaire)
+   - ÉTAPE 1.5 : Explorer Figma si frontend (maquettes, design system, design tokens)
+   - ÉTAPE 1.6 : Analyser la stratégie de test (frameworks, couverture, philosophie TDD/BDD)
+3. PHASE 2 — Poser les questions de clarification (stratégie projet, conventions ambiguës, zones d'ombre, métier, tests, Figma)
+4. PHASE 3 — Produire le rapport de contexte structuré (stack, architecture, contexte métier, design, tests, points d'attention, zones d'ombre, agents recommandés)
+5. PHASE 4 — Détecter les cas particuliers (incohérences, CVE, dette masquée, architecture hybride)
+6. PHASE 5 — Produire les livrables :
+   - Écrire ONBOARDING.md à la racine du projet (7 sections : Stack, Architecture, Contexte métier, Design et maquettes, Stratégie de test, Points critiques/importants/améliorations, Zones d'ombre)
+   - Écrire CONVENTIONS.md à la racine du projet (y compris section Design tokens si extraits depuis Figma)
+   - Ajouter ces fichiers au .git/info/exclude (exclusion locale uniquement)
+   - Si le champ Stack est absent/incomplet dans projects.md, proposer la mise à jour (confirmation explicite requise)
 
-Règles :
-- Lecture seule — tu ne modifies aucun fichier du projet (sauf ONBOARDING.md, CONVENTIONS.md et .git/info/exclude)
-- Rapport honnête : signaler les points critiques (🔴), importants (🟠), améliorations (🟡)
-- Lister les zones d'ombre non résolues
-- Après le rapport complet dans la conversation, écrire ONBOARDING.md à la racine du projet
-  (sans les sections Agents recommandés et Commandes utiles)
-- Ensuite, détecter et écrire CONVENTIONS.md à la racine du projet
-  (linting config, tsconfig, package.json, git log, fichiers représentatifs de la codebase)
-- Ajouter ONBOARDING.md et CONVENTIONS.md au .git/info/exclude du projet
-  (créer le fichier .git/info/exclude s'il n'existe pas, ainsi que le dossier .git/info/ si nécessaire)
-  Ne pas modifier le .gitignore du projet — utiliser uniquement .git/info/exclude (exclusion locale)
-- Si le champ Stack est absent ou incomplet dans projects.md, le mettre à jour
-  (chemin fourni ci-dessus — demander confirmation explicite avant toute écriture)
+Règles strictes :
+- Lecture seule — tu ne modifies aucun fichier du projet (sauf ONBOARDING.md, CONVENTIONS.md et .git/info/exclude en Phase 5)
+- Rapport honnête : signaler les points critiques (🔴), importants (🟠), améliorations (🟡) avec observations concrètes
+- Zones d'ombre explicites : ce qui n'a pas pu être déterminé
+- Conventions basées sur fichiers réellement lus — ne jamais inventer
+- Phase 1.5 (Figma) : optionnelle, déclenchée uniquement si frontend détecté
+- Ne jamais modifier .gitignore — utiliser uniquement .git/info/exclude
+- Produire le rapport complet dans la conversation AVANT d'écrire les fichiers
 EOF
 }
 
