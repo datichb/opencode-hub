@@ -140,7 +140,7 @@ oc start MON-APP
 | `orchestrator` | Coordinateur | Feature de A à Z — délègue spec, audit, implémentation |
 | `orchestrator-dev` | Coordinateur | Implémentation de tickets — pilote les `developer-*` |
 | `auditor` | Coordinateur | Audit multi-domaine — délègue aux 7 `auditor-*` |
-| `onboarder` | Coordinateur | Découverte de projet existant, rapport de contexte |
+| `onboarder` | Coordinateur | Découverte de projet existant — détecte la stack, le domaine métier, les designs Figma, la stratégie de test, et produit un rapport de contexte |
 | `planner` | Planification | Décompose une feature en tickets Beads |
 | `ux-designer` | Design | Spec UX — user flows, critères d'acceptance |
 | `ui-designer` | Design | Spec UI — tokens, composants, guidelines visuelles |
@@ -203,8 +203,10 @@ opencode-hub s'intègre avec Figma pour enrichir les workflows de planification 
 
 ### Fonctionnalités
 
-- **Détection automatique de maquettes** : Scout et Planner recherchent les fichiers Figma par nom de feature
+- **Détection automatique de maquettes** : Scout, Planner et Onboarder recherchent les fichiers Figma par nom de feature ou projet
 - **Détection de signaux UX/UI** : Détection automatique des flows multi-étapes et composants visuels
+- **Extraction des design tokens** : Extraction des couleurs, typographie, espacements et effets depuis Figma Variables
+- **Détection du design system** : Identification automatique de DSFR, Material Design ou design system custom
 - **Estimation enrichie** : Ajustement de la complexité selon les composants et états détectés
 - **Pré-remplissage du contexte design** : Remplissage auto des champs `--design` dans les tickets avec les données Figma
 
@@ -225,7 +227,7 @@ opencode-hub s'intègre avec Figma pour enrichir les workflows de planification 
 
 ### Utilisation
 
-Les agents Scout et Planner interrogent automatiquement Figma lors de l'analyse de features UI :
+Les agents Scout, Planner et Onboarder interrogent automatiquement Figma lors de l'analyse de features UI ou de l'exploration de projets :
 
 ```bash
 # Scout avec enrichissement Figma
@@ -233,6 +235,10 @@ Les agents Scout et Planner interrogent automatiquement Figma lors de l'analyse 
 
 # Planner avec contexte Figma (Phase 1.3)
 > Planifie cette feature: processus inscription
+
+# Onboarder avec exploration Figma (Phase 1.5)
+> Onboarde-toi sur ce projet
+# → Extrait les design tokens, détecte le design system, liste les composants
 ```
 
 📖 **Documentation complète** : [Guide Intégration Figma](docs/guides/figma-integration.fr.md)

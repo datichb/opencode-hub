@@ -140,7 +140,7 @@ oc start MY-APP
 | `orchestrator` | Coordinator | Feature end-to-end — delegates spec, audit, implementation |
 | `orchestrator-dev` | Coordinator | Ticket implementation — drives `developer-*` agents |
 | `auditor` | Coordinator | Multi-domain audit — delegates to 7 `auditor-*` agents |
-| `onboarder` | Coordinator | Discovery of existing projects, context report |
+| `onboarder` | Coordinator | Discovery of existing projects — detects stack, business domain, Figma designs, test strategy, and produces context report |
 | `planner` | Planning | Breaks down a feature into Beads tickets |
 | `ux-designer` | Design | UX spec — user flows, acceptance criteria |
 | `ui-designer` | Design | UI spec — tokens, components, visual guidelines |
@@ -203,8 +203,10 @@ opencode-hub integrates with Figma to enrich planning workflows with design cont
 
 ### Features
 
-- **Automatic maquette detection**: Scout and Planner search Figma files by feature name
+- **Automatic maquette detection**: Scout, Planner, and Onboarder search Figma files by feature or project name
 - **UX/UI signal detection**: Automatic detection of multi-step flows and visual components
+- **Design tokens extraction**: Extract colors, typography, spacing, and effects from Figma Variables
+- **Design system detection**: Automatically identify DSFR, Material Design, or custom design systems
 - **Enriched estimation**: Adjust complexity based on detected components and states
 - **Design context pre-filling**: Auto-populate `--design` fields in tickets with Figma data
 
@@ -225,7 +227,7 @@ opencode-hub integrates with Figma to enrich planning workflows with design cont
 
 ### Usage
 
-The Scout and Planner agents automatically query Figma when analyzing UI features:
+The Scout, Planner, and Onboarder agents automatically query Figma when analyzing UI features or exploring projects:
 
 ```bash
 # Scout with Figma enrichment
@@ -233,6 +235,10 @@ The Scout and Planner agents automatically query Figma when analyzing UI feature
 
 # Planner with Figma context (Phase 1.3)
 > Planifie cette feature: processus inscription
+
+# Onboarder with Figma exploration (Phase 1.5)
+> Onboarde-toi sur ce projet
+# → Extracts design tokens, detects design system, lists components
 ```
 
 📖 **Full documentation**: [Figma Integration Guide](docs/guides/figma-integration.en.md)

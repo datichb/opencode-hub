@@ -11,6 +11,18 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 
 ### Added
 
+- **Enrichissement agent `onboarder` v1.1** — 3 nouvelles phases d'exploration pour un onboarding complet :
+  - **Phase 1.4 — Exploration contexte métier** : détection automatique du domaine (e-commerce, fintech, santé, RH, SaaS, éduc, immobilier), identification des utilisateurs cibles, extraction des concepts clés (≥ 3 occurrences), analyse sémantique de la codebase (classes, interfaces, services), détection du glossaire (`docs/glossary.md`), identification du pattern d'architecture (DDD, CQRS, Layered, MVC), analyse des tickets Beads pour patterns métier récurrents
+  - **Phase 1.5 — Exploration Figma** (optionnelle, si frontend détecté) : recherche automatique des maquettes par nom de projet, analyse de 3 fichiers max (les plus pertinents), détection automatique du design system (DSFR, Material Design, Ant Design, Custom), extraction des design tokens depuis Figma Variables (couleurs, typographie, espacements, effets) via nouveau tool MCP `extract_design_tokens`, intégration dans `ONBOARDING.md` (section "Design et maquettes") et `CONVENTIONS.md` (section "Design tokens")
+  - **Phase 1.6 — Exploration stratégie de test** : détection des frameworks (Vitest, Jest, pytest, PHPUnit, Playwright, Cypress), analyse de l'organisation (co-localisés vs dossier séparé), calcul du ratio test/source (bonne ≥ 0.8, partielle 0.4-0.8, faible < 0.4), identification de la philosophie (TDD via labels Beads, BDD via Cucumber/Behave, test-after par défaut), extraction du seuil de couverture configuré, détection des commandes de test
+- **Nouveau tool MCP Figma `extract_design_tokens`** (`servers/figma-mcp/src/tools/extract-design-tokens.ts`) — extraction automatique des design tokens depuis Figma Variables : couleurs (conversion RGBA → hex), typographie (fontFamily, fontSize, fontWeight), espacements, effets (shadows). Gère les cas où les Variables ne sont pas configurées (retour vide avec message informatif). Méthode `getDesignTokens()` ajoutée au client Figma.
+- **Nouveau skill `adapters/figma-onboarder-protocol`** — protocole complet d'intégration Figma dans l'onboarder : déclenchement conditionnel (si frontend détecté), workflow en 4 étapes (recherche → analyse → identification design system → récap), critères de détection DSFR/Material/Ant Design/Custom, extraction tokens, intégration dans templates de sortie, 4 exemples concrets (backend skip, frontend avec DS, frontend sans Figma, erreur accès)
+- **Templates enrichis** :
+  - `ONBOARDING.md` : 3 nouvelles sections — "Contexte métier" (domaine, utilisateurs, concepts, glossaire), "Design et maquettes" (fichiers Figma, design system, tokens), "Stratégie de test" (frameworks, couverture, philosophie, commandes)
+  - `CONVENTIONS.md` : nouvelle section "Design tokens" (source, tokens couleurs/typo/spacing, synchronisation Figma ↔ code)
+- **Handoff format enrichi** (`planning/onboarder-handoff-format`) : 3 nouveaux champs dans le bloc `## Retour vers orchestrator` — "Contexte métier" (domaine, utilisateurs, concepts, glossaire, pattern archi), "Design et maquettes" (fichiers, design system, tokens), "Stratégie de test" (frameworks, couverture, ratio, philosophie)
+- **Questions Phase 2 enrichies** (workflow onboarder) : questions contextualisées sur le métier (si flou), sur la stratégie de test (si ambiguë), sur Figma (si maquettes trouvées mais statut unclear)
+- **MCP Figma** : `mcpServers: [figma]` ajouté à l'agent `onboarder` ; documentation README mise à jour avec nouveau tool ; architecture actualisée
 - **Parallélisme conditionnel** (`orchestrator-dev-protocol`, `orchestrator-workflow-modes`) — mode de traitement parallèle des tickets disponible exclusivement en mode `auto` lorsque 4 critères sont vérifiés simultanément : (1) pas de dépendance formelle entre tickets du lot, (2) agents distincts avec domaines disjoints (pas de `developer-fullstack`), (3) pas de fichiers transverses prévisibles, (4) maximum 3 tickets simultanés. Comportement : lancement simultané des sessions `developer-*`, CP-2 traités en séquentiel dans l'ordre d'arrivée, récap global produit uniquement quand toutes les sessions sont finales. Les modes `manuel` et `semi-auto` restent séquentiels — le bénéfice du parallélisme est réel uniquement en mode `auto` sur la phase d'implémentation.
   - Section "Évaluation du parallélisme conditionnel" ajoutée dans `orchestrator-dev-protocol` (CP-0)
   - Section "Workflow parallèle" ajoutée dans `orchestrator-dev-protocol` (entre Étape 6 et Récap global)
@@ -63,6 +75,29 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 
 ### Changed
 
+- **Agent `onboarder`** (`agents/planning/onboarder.md`) :
+  - Description enrichie : mentionne les nouvelles capacités (contexte métier, Figma, stratégie de test)
+  - Skills mis à jour : ajout de `adapters/figma-onboarder-protocol`
+  - `mcpServers: [figma]` ajouté pour accès aux tools Figma
+  - Workflow `planning/onboarder-workflow` enrichi avec Phases 1.4, 1.5, 1.6
+- **Skill `planning/onboarder-workflow`** (`skills/planning/onboarder-workflow.md`) :
+  - Ajout Phase 1.4 (Exploration contexte métier) : 7 domaines détectables, analyse sémantique codebase, extraction concepts ≥ 3 occurrences
+  - Ajout Phase 1.5 (Exploration Figma, optionnelle) : recherche fichiers, analyse design system, extraction tokens
+  - Ajout Phase 1.6 (Exploration stratégie de test) : frameworks, organisation, ratio test/source, philosophie TDD/BDD
+  - Récap Phase 1 enrichi avec 3 nouvelles sections
+  - Questions Phase 2 enrichies (métier, test, Figma)
+  - Templates ONBOARDING.md et CONVENTIONS.md enrichis avec nouvelles sections
+- **Skill `planning/onboarder-handoff-format`** (`skills/planning/onboarder-handoff-format.md`) :
+  - 3 nouveaux champs dans le bloc `## Retour vers orchestrator` : Contexte métier, Design et maquettes, Stratégie de test
+  - Checklist consommateur enrichie avec vérification des 9 champs (au lieu de 6)
+- **MCP Server Figma** (`servers/figma-mcp/`) :
+  - Client Figma : méthode `getDesignTokens()` ajoutée pour interroger l'API Figma Variables
+  - Index : tool `extract_design_tokens` ajouté à la liste des tools disponibles
+  - README : fonctionnalités et architecture mises à jour, mention des 3 agents utilisateurs (scout, planner, onboarder)
+- **Documentation** :
+  - `README.md` / `README.fr.md` : description onboarder enrichie, section "Figma Integration" mise à jour (3 agents au lieu de 2, nouvelles capacités)
+  - `docs/architecture/agents.fr.md` : section onboarder enrichie avec détail des 3 nouvelles phases, mention MCP Server figma
+  - `docs/architecture/skills.fr.md` : nouvelle section "Domaine — `adapters/`" avec 3 skills Figma (scout, planner, onboarder), matrice de dépendances mise à jour
 - **Agent `auditor`** (`agents/auditor/auditor.md`) : skill `auditor/living-docs-enrichment` ajouté ; Phase 4 enrichie — consolidation des sections `### Découvertes à documenter` et proposition d'enrichissement après la synthèse exécutive ; permission `task.documentarian = allow` ajoutée
 - **Agent `planner`** (`agents/planning/planner.md`) : skill `auditor/living-docs-enrichment` ajouté ; Phase 6 enrichie — identification des patterns et conventions observés, proposition d'enrichissement après validation du plan ; permission `task.documentarian = allow` ajoutée
 - **Agent `debugger`** (`agents/quality/debugger.md`) : skill `auditor/living-docs-enrichment` ajouté ; Phase 5 enrichie — identification des zones d'ombre levées et patterns d'erreur, proposition d'enrichissement après le rapport ; permission `task.documentarian = allow` ajoutée

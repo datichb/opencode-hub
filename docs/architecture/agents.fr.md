@@ -60,13 +60,26 @@ Agents qui pilotent d'autres agents sans jamais coder eux-mêmes.
 |--|--|
 | **Label** | Onboarder |
 | **Fichier** | `agents/planning/onboarder.md` |
-| **Skills** | `planning/onboarder-workflow`, `planning/onboarder-handoff-format`, `posture/expert-posture`, `posture/tool-question`, `developer/beads-plan`, `developer/dev-standards-git` |
+| **Skills** | `planning/onboarder-workflow`, `planning/onboarder-handoff-format`, `adapters/figma-onboarder-protocol`, `posture/expert-posture`, `posture/tool-question`, `developer/beads-plan`, `developer/dev-standards-git` |
+| **MCP Servers** | `figma` |
 | **Invocation** | `"Onboarde-toi sur ce projet"` / `"Découvre ce projet"` / `"Avant de commencer, explore le projet"` |
 
 Agent de découverte de projet. Explore la codebase d'un projet existant en 6 phases structurées
 (vérification prérequis → exploration adaptative 7 profils → questions → rapport contexte →
 détection cas particuliers → production des livrables). Produit `ONBOARDING.md`, `CONVENTIONS.md`
 et optionnellement `projects.md`.
+
+**Nouvelles capacités (enrichissement v1.1) :**
+- **Phase 1.4 — Exploration contexte métier** : détection du domaine (e-commerce, fintech, santé, etc.), 
+  utilisateurs cibles, concepts clés, glossaire. Analyse sémantique de la codebase pour extraire les concepts récurrents.
+- **Phase 1.5 — Exploration Figma** (optionnelle, si frontend détecté) : recherche des maquettes projet, 
+  détection du design system (DSFR, Material, Custom), extraction des design tokens depuis Figma Variables 
+  (couleurs, typographie, espacements, effets). Limite à 3 fichiers les plus pertinents.
+- **Phase 1.6 — Exploration stratégie de test** : détection frameworks (Vitest, Jest, pytest, Playwright, Cypress), 
+  calcul ratio test/source, identification philosophie (TDD, BDD, test-after), extraction seuil de couverture configuré.
+
+Les fichiers produits incluent désormais 3 nouvelles sections : **Contexte métier**, **Design et maquettes**, 
+**Stratégie de test**. Le template CONVENTIONS.md inclut également une section **Design tokens** si extraits depuis Figma.
 
 Détecte les cas particuliers : incohérences stack/conventions, CVE connus, dette technique masquée,
 architecture hybride non documentée. Produit une carte des agents recommandés en 3 niveaux

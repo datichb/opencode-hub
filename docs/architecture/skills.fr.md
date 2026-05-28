@@ -251,6 +251,18 @@ Skills de handoff pour les agents design. Injectés dans l'agent design (product
 
 ---
 
+## Domaine — `adapters/`
+
+Skills d'intégration avec des outils externes (Figma, Linear, etc.). Ces skills sont chargés en fonction des `mcpServers` déclarés dans l'agent.
+
+| Fichier | Agents qui l'utilisent | MCP Server | Contenu |
+|---------|----------------------|------------|---------|
+| `adapters/figma-scout-protocol.md` | scout | `figma` | Protocole d'enrichissement Figma pour Scout — recherche automatique de maquettes par nom de feature, détection de signaux UX/UI (flow multi-étapes, composants, états visuels), ajustement d'estimation (+1 ticket UI / +1 niveau complexité), recommandation d'escalade au planner si complexité L/XL + signaux design forts |
+| `adapters/figma-planner-protocol.md` | planner | `figma` | Protocole d'enrichissement Figma pour Planner — Phase 1.3 optionnelle (exploration Figma), recherche de maquettes par nom de feature, analyse de structure + signaux UX/UI, enrichissement récap Phase 1 avec URLs Figma et composants identifiés, déclenchement Phase 1.5 (délégation design) si signaux détectés, pré-remplissage champ `--design` des tickets avec données Figma |
+| `adapters/figma-onboarder-protocol.md` | onboarder | `figma` | Protocole d'enrichissement Figma pour Onboarder — Phase 1.5 optionnelle (si frontend détecté), recherche de maquettes par nom de projet, analyse de 3 fichiers max, détection automatique du design system (DSFR, Material, Ant Design, Custom), extraction des design tokens depuis Figma Variables (couleurs, typographie, espacements, effets), intégration dans ONBOARDING.md et CONVENTIONS.md (section Design tokens) |
+
+---
+
 ## Domaine — `posture/`
 
 Skills de posture transverse. Injectables dans tout agent nécessitant une posture d'expert ou une interaction structurée.
@@ -288,11 +300,13 @@ orchestrator-dev      → orchestrator/orchestrator-dev-protocol,
 onboarder             → planning/onboarder-workflow,
                          posture/expert-posture, posture/tool-question,
                          developer/beads-plan, developer/dev-standards-git,
-                         planning/onboarder-handoff-format †
+                         planning/onboarder-handoff-format †,
+                         adapters/figma-onboarder-protocol (si mcpServer figma)
 planner               → developer/beads-plan, planning/planner-workflow,
                          posture/expert-posture, posture/tool-question,
                          planning/planner-handoff-format †,
-                         auditor/living-docs-enrichment
+                         auditor/living-docs-enrichment,
+                         adapters/figma-planner-protocol (si mcpServer figma)
 reviewer              → dev-standards-universal, dev-standards-security,
                          dev-standards-backend,
                          dev-standards-frontend, dev-standards-frontend-a11y,
