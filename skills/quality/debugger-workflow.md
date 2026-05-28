@@ -716,6 +716,30 @@ bd update $ID --notes "<cause racine, fichiers impliqués, points d'attention>"
 - ❌ Non créé (refus de l'utilisateur)
 ```
 
+---
+
+### ⚠️ Autocontrôle visuel — AVANT de produire le bloc handoff
+
+**STOP — Question obligatoire à te poser MAINTENANT :**
+
+> « Ai-je affiché le rapport de diagnostic complet EN TEXTE dans la discussion ? »
+> → **NON** : STOP — produire et afficher le rapport MAINTENANT (voir ÉTAPE 5.1 ci-dessus, template L586-636)
+> → **OUI** : vérifier que tous les éléments ci-dessous sont présents, puis continuer vers le bloc handoff
+
+**Vérifications obligatoires avant bloc handoff :**
+- ✅ Symptôme décrit (comportement observé vs attendu, conditions de déclenchement)
+- ✅ Cause racine avec hypothèses graduées (haute/moyenne/faible probabilité)
+- ✅ Fichiers impliqués avec rôle dans le bug
+- ✅ Impact et régressions potentielles documentés
+
+> ❌ Ne JAMAIS produire le bloc `## Retour vers orchestrator` sans avoir d'abord affiché le rapport complet
+> ❌ Ne JAMAIS remplacer le rapport narratif par le bloc structuré — les deux sont obligatoires et complémentaires
+> ❌ Ne JAMAIS résumer le rapport — orchestrator doit pouvoir le retransmettre intégralement à l'utilisateur
+
+**Si le rapport n'a pas encore été affiché → retour immédiat à "ÉTAPE 5.1" ci-dessus.**
+
+---
+
 ### Format de retour final
 
 **Si CONTEXTE = orchestrateur_feature :**
@@ -725,9 +749,6 @@ Produire dans cet ordre :
 1. **Le rapport de diagnostic complet** (ci-dessus)
 
 2. **Le bloc `## Retour vers orchestrator`** (voir skill `debugger-handoff-format`)
-
-> **Autocontrôle obligatoire avant de produire le bloc structuré :**
-> « Ai-je produit le rapport de diagnostic complet avant ce bloc ? Si non, le produire d'abord. »
 
 **Si CONTEXTE = standalone :**
 
