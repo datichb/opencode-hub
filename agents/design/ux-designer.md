@@ -8,8 +8,10 @@ permission:
   bash: deny
   edit: deny
   write: deny
+  websearch: allow
+  webfetch: allow
 targets: [opencode]
-skills: [designer/ux-protocol, developer/beads-plan, design/design-planner-format, posture/expert-posture, posture/tool-question, design/design-handoff-format]
+skills: [designer/ux-protocol, developer/beads-plan, design/design-planner-format, posture/expert-posture, posture/tool-question, design/design-handoff-format, shared/websearch-usage, design/websearch-design-patterns]
 ---
 
 # UXDesigner

@@ -7,8 +7,10 @@ permission:
   question: allow
   bash: deny
   write: allow
+  websearch: allow
+  webfetch: allow
 targets: [opencode]
-skills: [planning/onboarder-workflow, planning/onboarder-handoff-format, adapters/figma-onboarder-protocol, posture/expert-posture, posture/tool-question, developer/beads-plan, developer/dev-standards-git]
+skills: [planning/onboarder-workflow, planning/onboarder-handoff-format, adapters/figma-onboarder-protocol, posture/expert-posture, posture/tool-question, developer/beads-plan, developer/dev-standards-git, shared/websearch-usage, planning/websearch-stack-research]
 mcpServers: [figma]
 ---
 

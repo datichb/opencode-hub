@@ -448,6 +448,246 @@ cmd_unset() {
   fi
 }
 
+# ── WebSearch management ───────────────────────────────────────────────
+
+cmd_websearch() {
+  local subcmd="${1:-}"
+  shift || true
+  
+  case "$subcmd" in
+    enable)  cmd_websearch_enable "$@" ;;
+    disable) cmd_websearch_disable "$@" ;;
+    status)  cmd_websearch_status "$@" ;;
+    "")
+      echo -e "${BOLD}WebSearch Configuration${RESET}"
+      echo ""
+      echo "  oc config websearch enable [PROJECT_ID]   — Enable WebSearch (Exa AI) for a project or hub"
+      echo "  oc config websearch disable [PROJECT_ID]  — Disable WebSearch for a project"
+      echo "  oc config websearch status [PROJECT_ID]   — Show WebSearch status"
+      echo ""
+      echo "WebSearch enables agents to search the web using Exa AI (hosted by OpenCode)."
+      echo "No API key required. Use this for CVE lookup, documentation research, design patterns, etc."
+      exit 0
+      ;;
+    *)
+      log_error "Unknown websearch subcommand: $subcmd"
+      echo "Available: enable, disable, status"
+      exit 1
+      ;;
+  esac
+}
+
+cmd_websearch_enable() {
+  local id="${1:-}"
+  
+  # Si aucun ID fourni → activer au niveau hub
+  if [ -z "$id" ]; then
+    log_info "Enabling WebSearch at hub level (opencode-hub/opencode.json)..."
+    
+    local hub_opencode_config="$REPO_ROOT/opencode.json"
+    
+    if [ ! -f "$hub_opencode_config" ]; then
+      log_warn "opencode.json not found, creating it..."
+      cat > "$hub_opencode_config" <<'EOF'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "env": {
+    "OPENCODE_ENABLE_EXA": "1"
+  },
+  "permission": {
+    "websearch": "allow",
+    "webfetch": "allow"
+  }
+}
+EOF
+      log_success "Created opencode.json with WebSearch enabled"
+      return 0
+    fi
+    
+    # Utiliser jq pour ajouter les champs si disponible, sinon erreur
+    if ! command -v jq >/dev/null 2>&1; then
+      log_error "jq is required to modify opencode.json"
+      log_info "Please install jq or manually add:"
+      echo ""
+      echo '  "env": { "OPENCODE_ENABLE_EXA": "1" },'
+      echo '  "permission": { "websearch": "allow", "webfetch": "allow" }'
+      exit 1
+    fi
+    
+    local tmp; tmp=$(mktemp)
+    jq '.env.OPENCODE_ENABLE_EXA = "1" | .permission.websearch = "allow" | .permission.webfetch = "allow"' \
+      "$hub_opencode_config" > "$tmp" && mv "$tmp" "$hub_opencode_config"
+    
+    log_success "WebSearch enabled at hub level"
+    log_info "All deployed projects will inherit this configuration"
+    echo ""
+    echo "  → Agents can now use WebSearch for:"
+    echo "     - CVE and security advisory lookup"
+    echo "     - Documentation and best practices research"
+    echo "     - Stack discovery and ecosystem exploration"
+    echo "     - Design patterns and UI trends"
+    echo ""
+    echo "  → Run './oc.sh deploy all' to apply to all projects"
+    return 0
+  fi
+  
+  # Sinon → activer au niveau projet
+  id=$(normalize_project_id "$id")
+  require_project_id "$id"
+  
+  local project_path
+  project_path=$(get_project_path "$id")
+  
+  if [ -z "$project_path" ]; then
+    log_error "Project path not found for $id"
+    log_info "Register it with: ./oc.sh project add $id /path/to/project"
+    exit 1
+  fi
+  
+  local project_opencode_config="${project_path}/.opencode/opencode.json"
+  
+  log_info "Enabling WebSearch for project: $id"
+  
+  if [ ! -f "$project_opencode_config" ]; then
+    mkdir -p "$(dirname "$project_opencode_config")"
+    cat > "$project_opencode_config" <<'EOF'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "env": {
+    "OPENCODE_ENABLE_EXA": "1"
+  },
+  "permission": {
+    "websearch": "allow",
+    "webfetch": "allow"
+  }
+}
+EOF
+    log_success "Created .opencode/opencode.json with WebSearch enabled"
+    return 0
+  fi
+  
+  if ! command -v jq >/dev/null 2>&1; then
+    log_error "jq is required to modify opencode.json"
+    exit 1
+  fi
+  
+  local tmp; tmp=$(mktemp)
+  jq '.env.OPENCODE_ENABLE_EXA = "1" | .permission.websearch = "allow" | .permission.webfetch = "allow"' \
+    "$project_opencode_config" > "$tmp" && mv "$tmp" "$project_opencode_config"
+  
+  log_success "WebSearch enabled for project: $id"
+  echo ""
+  echo "  Config: ${project_opencode_config}"
+}
+
+cmd_websearch_disable() {
+  local id="${1:-}"
+  
+  if [ -z "$id" ]; then
+    log_error "Usage: oc config websearch disable <PROJECT_ID>"
+    log_info "To disable at hub level, manually edit opencode.json"
+    exit 1
+  fi
+  
+  id=$(normalize_project_id "$id")
+  require_project_id "$id"
+  
+  local project_path
+  project_path=$(get_project_path "$id")
+  
+  if [ -z "$project_path" ]; then
+    log_error "Project path not found for $id"
+    exit 1
+  fi
+  
+  local project_opencode_config="${project_path}/.opencode/opencode.json"
+  
+  if [ ! -f "$project_opencode_config" ]; then
+    log_warn "No opencode.json found for project $id"
+    exit 0
+  fi
+  
+  if ! command -v jq >/dev/null 2>&1; then
+    log_error "jq is required to modify opencode.json"
+    exit 1
+  fi
+  
+  local tmp; tmp=$(mktemp)
+  jq 'del(.env.OPENCODE_ENABLE_EXA) | .permission.websearch = "deny"' \
+    "$project_opencode_config" > "$tmp" && mv "$tmp" "$project_opencode_config"
+  
+  log_success "WebSearch disabled for project: $id"
+}
+
+cmd_websearch_status() {
+  local id="${1:-}"
+  
+  # Hub level status
+  echo -e "\n${BOLD}WebSearch Status${RESET}\n"
+  
+  local hub_opencode_config="$REPO_ROOT/opencode.json"
+  
+  if [ -f "$hub_opencode_config" ]; then
+    echo "  Hub (opencode-hub):"
+    if command -v jq >/dev/null 2>&1; then
+      local hub_exa hub_perm
+      hub_exa=$(jq -r '.env.OPENCODE_ENABLE_EXA // "not set"' "$hub_opencode_config" 2>/dev/null)
+      hub_perm=$(jq -r '.permission.websearch // "not set"' "$hub_opencode_config" 2>/dev/null)
+      echo "    OPENCODE_ENABLE_EXA: $hub_exa"
+      echo "    permission.websearch: $hub_perm"
+      if [ "$hub_exa" = "1" ] && [ "$hub_perm" = "allow" ]; then
+        echo -e "    Status: ${GREEN}✓ Enabled${RESET}"
+      else
+        echo -e "    Status: ${YELLOW}○ Disabled${RESET}"
+      fi
+    else
+      echo "    (jq required to read config)"
+    fi
+  else
+    echo "  Hub: No opencode.json found"
+  fi
+  
+  # Project level status
+  if [ -n "$id" ]; then
+    id=$(normalize_project_id "$id")
+    require_project_id "$id"
+    
+    local project_path
+    project_path=$(get_project_path "$id")
+    
+    if [ -z "$project_path" ]; then
+      log_warn "Project path not found for $id"
+      exit 1
+    fi
+    
+    local project_opencode_config="${project_path}/.opencode/opencode.json"
+    
+    echo ""
+    echo "  Project ($id):"
+    if [ -f "$project_opencode_config" ]; then
+      if command -v jq >/dev/null 2>&1; then
+        local proj_exa proj_perm
+        proj_exa=$(jq -r '.env.OPENCODE_ENABLE_EXA // "not set"' "$project_opencode_config" 2>/dev/null)
+        proj_perm=$(jq -r '.permission.websearch // "not set"' "$project_opencode_config" 2>/dev/null)
+        echo "    OPENCODE_ENABLE_EXA: $proj_exa"
+        echo "    permission.websearch: $proj_perm"
+        if [ "$proj_exa" = "1" ] && [ "$proj_perm" = "allow" ]; then
+          echo -e "    Status: ${GREEN}✓ Enabled${RESET}"
+        else
+          echo -e "    Status: ${YELLOW}○ Disabled${RESET}"
+        fi
+      else
+        echo "    (jq required to read config)"
+      fi
+    else
+      echo "    No project-specific opencode.json"
+      echo "    → inherits from hub config"
+    fi
+  fi
+  
+  echo ""
+}
+
 # ── Dispatcher ─────────────────────────────────────────────────────
 
 # Si sourcé pour les fonctions uniquement, ne pas exécuter le dispatcher
@@ -458,6 +698,7 @@ case "$SUBCOMMAND" in
   get)   cmd_get "$@" ;;
   list)  cmd_list ;;
   unset) cmd_unset "$@" ;;
+  websearch) cmd_websearch "$@" ;;
   "")
     echo -e "${BOLD}$(t config.title)${RESET}"
     echo ""
@@ -467,6 +708,9 @@ case "$SUBCOMMAND" in
     echo "  $(t help.config_get)"
     echo "  $(t help.config_list)"
     echo "  $(t help.config_unset)"
+    echo ""
+    echo "  oc config websearch <enable|disable|status> [PROJECT_ID]"
+    echo "  Manage WebSearch (Exa AI) integration"
     exit 0
     ;;
   *)
@@ -480,6 +724,8 @@ case "$SUBCOMMAND" in
     echo "  $(t help.config_get)"
     echo "  $(t help.config_list)"
     echo "  $(t help.config_unset)"
+    echo ""
+    echo "  oc config websearch <enable|disable|status> [PROJECT_ID]"
     exit 1
     ;;
 esac

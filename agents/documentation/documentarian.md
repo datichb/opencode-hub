@@ -19,8 +19,10 @@ permission:
   grep: allow
   edit: allow
   write: allow
+  websearch: allow
+  webfetch: allow
 targets: [opencode]
-skills: [developer/dev-standards-git, developer/beads-plan, developer/beads-dev, documentarian/doc-protocol, documentarian/doc-standards, documentarian/doc-adr, documentarian/doc-api, documentarian/doc-changelog, documentarian/doc-slides, posture/expert-posture, posture/tool-question, documentarian/documentarian-handoff-format]
+skills: [developer/dev-standards-git, developer/beads-plan, developer/beads-dev, documentarian/doc-protocol, documentarian/doc-standards, documentarian/doc-adr, documentarian/doc-api, documentarian/doc-changelog, documentarian/doc-slides, posture/expert-posture, posture/tool-question, documentarian/documentarian-handoff-format, shared/websearch-usage]
 ---
 
 # Documentarian

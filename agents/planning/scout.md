@@ -29,12 +29,14 @@ permission:
     "git log *": allow
   edit: deny
   write: deny
+  websearch: allow
+  webfetch: allow
   task:
     "*": deny
     "documentarian": allow
 model: anthropic/claude-sonnet-4-6
 targets: [opencode]
-skills: [developer/beads-plan, planning/scout-protocol, planning/scout-handoff-format, adapters/figma-scout-protocol, posture/tool-question]
+skills: [developer/beads-plan, planning/scout-protocol, planning/scout-handoff-format, adapters/figma-scout-protocol, posture/tool-question, shared/websearch-usage, planning/websearch-stack-research]
 mcpServers: [figma]
 ---
 
