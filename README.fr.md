@@ -11,17 +11,15 @@ Supporte **OpenCode**.
 
 ## Comment ça marche
 
-opencode-hub repose sur quatre concepts : **agents**, **skills**, **serveurs MCP** et **déploiement**.
+opencode-hub repose sur trois concepts : **agents**, **serveurs MCP** et **déploiement**.
 
-- Les **agents** définissent les rôles IA (qui fait quoi, comment, dans quel ordre).
-- Les **skills** sont des protocoles injectables (standards de code, checklists, formats de rapport) — déclarés une fois, réutilisés entre plusieurs agents.
+- Les **agents** définissent les rôles IA (qui fait quoi, comment, dans quel ordre) avec leurs protocoles intégrés (standards de code, checklists, formats de rapport).
 - Les **serveurs MCP** fournissent des intégrations outils (Figma, Linear, etc.) disponibles pour tous les agents.
-- Le **déploiement** assemble agents + skills + serveurs MCP et les copie dans vos projets cibles.
+- Le **déploiement** assemble agents + serveurs MCP et les copie dans vos projets cibles.
 
 ```
 opencode-hub/          ← source de vérité (éditer ici, jamais dans les projets)
-├── agents/            ← identité des rôles IA (~40-80 lignes par agent)
-├── skills/            ← protocoles détaillés injectables
+├── agents/            ← identité des rôles IA avec protocoles intégrés
 ├── servers/           ← serveurs MCP (intégration Figma, etc.)
 └── scripts/           ← assemblage et déploiement
 
@@ -79,7 +77,7 @@ oc upgrade           # pull le dernier main
 oc upgrade v1.1.0    # basculer sur un tag de release spécifique
 ```
 
-### Mettre à jour les outils installés (opencode, Beads, skills)
+### Mettre à jour les outils installés (opencode, Beads)
 
 ```bash
 oc update
@@ -265,7 +263,6 @@ Les agents Scout, Planner et Onboarder interrogent automatiquement Figma lors de
 |----------|-------------|
 | [Vue d'ensemble](docs/architecture/overview.fr.md) | Concepts, diagrammes de flux, principes de design |
 | [Agents](docs/architecture/agents.fr.md) | Référence exhaustive des 27 agents |
-| [Skills](docs/architecture/skills.fr.md) | Référence exhaustive des skills et leurs dépendances |
 | [Serveurs MCP](servers/README.md) | Architecture et développement des serveurs MCP |
 | [ADR](docs/architecture/adr/) | Décisions architecturales (9 ADR) |
 | [Adapters](docs/architecture/adapters.fr.md) | Architecture des adapters |

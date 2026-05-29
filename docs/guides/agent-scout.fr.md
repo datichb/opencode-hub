@@ -285,16 +285,18 @@ Le scout est configuré dans `config/hub.json` :
       "planning": "claude-opus-4"
     },
     "agents": {
-      "scout": "claude-sonnet-4"
+      "scout": "claude-sonnet-4-6"
     }
   }
 }
 ```
 
-**Le scout utilise Claude Sonnet 4 pour :**
+**Le scout utilise Claude Sonnet 4.6 pour :**
 - Rapidité d'exécution (2-5 min)
+- Extended + Adaptive thinking
+- Context window 1M tokens
 - Coût réduit vs Opus 4
-- Qualité suffisante pour reconnaissance
+- Qualité optimale pour reconnaissance
 
 ## 🆘 FAQ
 

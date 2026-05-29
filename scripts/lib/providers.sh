@@ -48,6 +48,30 @@ list_all_providers() {
   jq -r '.providers | keys[]' "$PROVIDERS_FILE" 2>/dev/null
 }
 
+# Retourne le modèle par défaut du provider depuis providers.json
+# Usage : get_provider_default_model <provider_name>
+# Exemple :
+#   get_provider_default_model "bedrock"     # → "claude-sonnet-4-6"
+#   get_provider_default_model "anthropic"   # → "claude-sonnet-4-6"
+# Retourne le model ID court (sans préfixe provider)
+get_provider_default_model() {
+  local provider="${1:-}"
+  [ -z "$provider" ] && return 1
+  [ -f "$PROVIDERS_FILE" ] || return 1
+  
+  if command -v jq &>/dev/null; then
+    jq -r --arg p "$provider" '.providers[$p].default_model // empty' "$PROVIDERS_FILE" 2>/dev/null
+  else
+    # Fallback sans jq
+    sed -n "/\"${provider}\"/,/^[[:space:]]*}/p" "$PROVIDERS_FILE" 2>/dev/null \
+      | grep '"default_model"' \
+      | head -1 \
+      | sed 's/.*"default_model"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' \
+      | grep -v '{' || true
+  fi
+}
+
+
 # Hub-level default provider (lecture depuis hub.json)
 # Utilise un cache pour éviter les lectures multiples lors de boucles
 get_hub_default_provider() {

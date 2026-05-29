@@ -97,27 +97,6 @@ _cmd help.provider_set_default
 _section help.section.deploy_targets
 _note "$(t help.deploy_target.opencode)"
 
-_section help.section.agents
-_cmd help.agent_list
-_cmd help.agent_create
-_cmd help.agent_edit
-_cmd help.agent_info
-_cmd help.agent_select
-_cmd help.agent_mode
-_cmd help.agent_validate
-_cmd help.agent_deploy
-
-_section help.section.skills
-_cmd help.skills_search
-_cmd help.skills_info
-_cmd help.skills_add
-_cmd help.skills_list
-_cmd help.skills_update
-_cmd help.skills_used_by
-_cmd help.skills_sync
-_cmd help.skills_remove
-_cmd help.skills_validate
-
 _section help.section.beads
 _cmd help.beads_status
 _cmd help.beads_init
@@ -134,7 +113,7 @@ _cmd help.beads_board
 _cmd help.beads_board_watch
 
 _section help.section.examples
-_note "./oc.sh skills search pdf"
-_note "./oc.sh skills add /owner/repo skill-name"
-_note "$(t help.section.agents) → skills: [..., \"external/skill-name\"] → ./oc.sh deploy all"
+_note "./oc.sh start"
+_note "./oc.sh audit security"
+_note "./oc.sh deploy all"
 echo ""

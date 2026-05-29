@@ -90,8 +90,14 @@ _get_agent_model() {
 
   [ -z "$agent_file" ] && return 0
 
-  local resolved
-  resolved=$(resolve_agent_model "$agent_file" "$project_id" "$hub_agent_models" "$hub_family_models" "$hub_global_model")
+  # Résoudre le modèle avec source (format "MODEL|SOURCE")
+  local resolved_with_source
+  resolved_with_source=$(resolve_agent_model "$agent_file" "$project_id" "$hub_agent_models" "$hub_family_models" "$hub_global_model")
+  
+  # Extraire le modèle et la source
+  local resolved="${resolved_with_source%%|*}"  # Avant le pipe
+  local source="${resolved_with_source##*|}"    # Après le pipe
+  
   # Strip le préfixe provider pour obtenir le nom court
   resolved="${resolved##*/}"
   # Appliquer le préfixe et les aliases du provider effectif
@@ -99,14 +105,9 @@ _get_agent_model() {
   provider=$(get_effective_provider "$project_id" "$provider_override")
   resolved=$(_apply_provider_prefix "$resolved" "$provider")
 
-  local global_model
-  global_model=$(_get_opencode_model "$project_id" "$provider_override")
-
-  if [ "$resolved" = "$global_model" ]; then
-    return 0
-  fi
-
-  echo "$resolved"
+  # CHANGEMENT: Ne plus comparer avec le global, toujours retourner le modèle
+  # Retourner "MODEL|SOURCE" pour utilisation ultérieure
+  echo "${resolved}|${source}"
 }
 
 # Génère un objet JSON complet {"provider": {...}} selon le provider et ses paramètres
@@ -411,18 +412,48 @@ adapter_deploy_config() {
     local _perm_json=""
     [ -n "$_fm_raw" ] && _perm_json=$(extract_permission_json "$_asource" "$_fm_raw")
 
-    # Résoudre le modèle pour cet agent (vide si == modèle global)
+    # Résoudre le modèle pour cet agent (retourne "MODEL|SOURCE")
+    local _agent_model_with_source=""
     local _agent_model=""
+    local _agent_model_source=""
+    
     if [ -n "$_asource" ]; then
-      _agent_model=$(_get_agent_model "$_asource" "$project_id" "$provider_override" "$_hub_agent_models" "$_hub_family_models" "$_hub_global_model")
+      _agent_model_with_source=$(_get_agent_model "$_asource" "$project_id" "$provider_override" "$_hub_agent_models" "$_hub_family_models" "$_hub_global_model")
+      
+      # Extraire modèle et source
+      _agent_model="${_agent_model_with_source%%|*}"
+      _agent_model_source="${_agent_model_with_source##*|}"
+      
+      # Gestion du cas limite : si aucun modèle résolu, utiliser le default du provider
+      if [ -z "$_agent_model" ] || [ "$_agent_model" = "null" ]; then
+        local provider
+        provider=$(get_effective_provider "$project_id" "$provider_override")
+        
+        local provider_default
+        provider_default=$(get_provider_default_model "$provider")
+        
+        if [ -n "$provider_default" ]; then
+          _agent_model=$(_apply_provider_prefix "$provider_default" "$provider")
+          _agent_model_source="provider_default"
+          log_warn "Agent ${_aid} has no model configured, using provider default: $_agent_model"
+        else
+          log_error "Agent ${_aid} has no model configured and provider '$provider' has no default"
+          return 1
+        fi
+      fi
     fi
 
     # Construire le fragment JSON de l'agent en bash (zéro fork)
-    # Ordre des champs : mode (si subagent) → permission → model — identique à l'implémentation jq précédente
+    # Ordre des champs : mode (si subagent) → permission → model → _modelSource
     local _json_parts=()
     [ "$_amode" != "primary" ] && _json_parts+=('"mode": "'"${_amode}"'"')
     [ -n "$_perm_json" ]       && _json_parts+=("${_perm_json}")
-    [ -n "$_agent_model" ]     && _json_parts+=('"model": "'"${_agent_model}"'"')
+    
+    # CHANGEMENT: Toujours injecter le modèle, même si == global
+    if [ -n "$_agent_model" ]; then
+      _json_parts+=('"model": "'"${_agent_model}"'"')
+      [ -n "$_agent_model_source" ] && _json_parts+=('"_modelSource": "'"${_agent_model_source}"'"')
+    fi
 
     if [ "${#_json_parts[@]}" -gt 0 ]; then
       local _parts_str

@@ -11,17 +11,15 @@ Supports **OpenCode**.
 
 ## How it works
 
-opencode-hub is built around four concepts: **agents**, **skills**, **MCP servers**, and **deployment**.
+opencode-hub is built around three concepts: **agents**, **MCP servers**, and **deployment**.
 
-- **Agents** define AI roles (who does what, how, and in what order).
-- **Skills** are injectable protocols (code standards, checklists, report formats) — declared once, reused across multiple agents.
+- **Agents** define AI roles (who does what, how, and in what order) with integrated protocols (code standards, checklists, report formats).
 - **MCP Servers** provide tool integrations (Figma, Linear, etc.) available to all agents.
-- **Deployment** assembles agents + skills + MCP servers and copies them into your target projects.
+- **Deployment** assembles agents + MCP servers and copies them into your target projects.
 
 ```
 opencode-hub/          ← single source of truth (edit here, never in projects)
-├── agents/            ← AI role definitions (~40-80 lines per agent)
-├── skills/            ← detailed injectable protocols
+├── agents/            ← AI role definitions with integrated protocols
 ├── servers/           ← MCP servers (Figma integration, etc.)
 └── scripts/           ← assembly and deployment
 
@@ -79,7 +77,7 @@ oc upgrade           # pull latest main
 oc upgrade v1.1.0    # switch to a specific release tag
 ```
 
-### Update installed tools (opencode, Beads, skills)
+### Update installed tools (opencode, Beads)
 
 ```bash
 oc update
@@ -255,9 +253,9 @@ The Scout, Planner, and Onboarder agents automatically query Figma when analyzin
 | [Figma Integration](docs/guides/figma-integration.en.md) | Figma MCP setup, configuration, and testing |
 | [LLM Providers](docs/guides/providers.en.md) | Anthropic, MammouthAI, GitHub Models, Bedrock, Ollama |
 | [Workflows](docs/guides/workflows.en.md) | Full feature, audit, debug — illustrated scenarios |
-| [Contributing](docs/guides/contributing.en.md) | Adding an agent, a skill, an adapter |
+| [Contributing](docs/guides/contributing.en.md) | Adding an agent, an adapter |
 | [Onboarding](docs/guides/onboarding.en.md) | Onboarding agent guide (using the onboarder to discover a project) |
-| [Authoring](docs/guides/authoring.en.md) | Authoring guide (designing agents and skills) |
+| [Authoring](docs/guides/authoring.en.md) | Authoring guide (designing agents) |
 
 ### Architecture
 
@@ -265,7 +263,6 @@ The Scout, Planner, and Onboarder agents automatically query Figma when analyzin
 |----------|-------------|
 | [Overview](docs/architecture/overview.en.md) | Concepts, flow diagrams, design principles |
 | [Agents](docs/architecture/agents.en.md) | Exhaustive reference for all 27 agents |
-| [Skills](docs/architecture/skills.en.md) | Exhaustive reference for skills and their dependencies |
 | [MCP Servers](servers/README.md) | MCP servers architecture and development |
 | [ADR](docs/architecture/adr/) | Architectural decision records (9 ADRs) |
 | [Adapters](docs/architecture/adapters.en.md) | Adapters architecture |
