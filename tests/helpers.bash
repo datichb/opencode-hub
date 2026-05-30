@@ -277,6 +277,22 @@ mock_log_functions() {
   export -f log_info log_success log_warn log_error
 }
 
+# Mock simple de bd (Beads) qui retourne un JSON configurable
+# Usage : mock_bd '[]' ou mock_bd '[{"id":"BD-1"}]'
+mock_bd() {
+  local json_output="${1:-[]}"
+  export BD_MOCK_OUTPUT="$json_output"
+  
+  bd() {
+    # Si --json est demandé, retourner le mock JSON
+    if [[ "$*" == *"--json"* ]]; then
+      echo "$BD_MOCK_OUTPUT"
+    fi
+    return 0
+  }
+  export -f bd
+}
+
 # Mock de bd (Beads) avec capture des appels
 # Usage : mock_bd_with_log "/path/to/logfile"
 mock_bd_with_log() {
