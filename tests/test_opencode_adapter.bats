@@ -378,7 +378,7 @@ HUBEOF
   [ "$result" = "anthropic/claude-opus-4" ]
 }
 
-@test "adapter_deploy : agent avec modèle résolu == global → pas de champ model" {
+@test "adapter_deploy : agent avec modèle résolu == global → champ model présent" {
   command -v jq &>/dev/null || skip "jq non disponible"
 
   local family_dir="$AGENTS_DIR/backend"
@@ -396,7 +396,7 @@ skills: []
 Contenu de test.
 AGENTEOF
 
-  # hub.json avec override explicite == global (claude-sonnet-4-5) → pas de champ model
+  # hub.json avec override explicite == global (claude-sonnet-4-5) → champ model présent maintenant
   HUB_CONFIG="$TEST_DIR/hub.json"
   cat > "$HUB_CONFIG" <<'HUBEOF'
 {
@@ -413,12 +413,13 @@ HUBEOF
   [ -f "$DEPLOY_DIR/opencode.json" ]
   run jq . "$DEPLOY_DIR/opencode.json"
   [ "$status" -eq 0 ]
-  # L'agent ne doit PAS avoir de champ model (null en jq)
+  # L'agent DOIT avoir le champ model (nouveau comportement)
   result=$(jq -r '.agent."developer-api".model // "ABSENT"' "$DEPLOY_DIR/opencode.json")
-  [ "$result" = "ABSENT" ]
+  [ "$result" != "ABSENT" ]
+  [[ "$result" == *"claude-sonnet-4"* ]]
 }
 
-@test "adapter_deploy : sans agent_models dans hub.json → opencode.json sans champ model agent" {
+@test "adapter_deploy : sans agent_models dans hub.json → opencode.json avec champ model global" {
   command -v jq &>/dev/null || skip "jq non disponible"
 
   local family_dir="$AGENTS_DIR/backend"
@@ -449,9 +450,10 @@ HUBEOF
   [ -f "$DEPLOY_DIR/opencode.json" ]
   run jq . "$DEPLOY_DIR/opencode.json"
   [ "$status" -eq 0 ]
-  # Pas de champ model sur l'agent
+  # Le champ model DOIT être présent maintenant (utilise le modèle global)
   result=$(jq -r '.agent."developer-backend".model // "ABSENT"' "$DEPLOY_DIR/opencode.json")
-  [ "$result" = "ABSENT" ]
+  [ "$result" != "ABSENT" ]
+  [[ "$result" == *"claude"* ]]
 }
 
 @test "adapter_deploy : agent avec plancher clampé au-dessus du global → model injecté" {
@@ -488,7 +490,7 @@ AGENTEOF
   [ "$result" = "anthropic/claude-opus-4" ]
 }
 
-@test "adapter_deploy : opencode.json valide avec mix d'agents avec et sans model" {
+@test "adapter_deploy : opencode.json valide avec mix d'agents avec et sans override" {
   command -v jq &>/dev/null || skip "jq non disponible"
 
   local family_dir="$AGENTS_DIR/planning"
@@ -540,9 +542,10 @@ HUBEOF
   # Agent avec override → model présent
   result1=$(jq -r '.agent."agent-with-model".model // "ABSENT"' "$DEPLOY_DIR/opencode.json")
   [ "$result1" = "anthropic/claude-opus-4" ]
-  # Agent sans override → model absent
+  # Agent sans override → model présent aussi maintenant (utilise global)
   result2=$(jq -r '.agent."agent-no-model".model // "ABSENT"' "$DEPLOY_DIR/opencode.json")
-  [ "$result2" = "ABSENT" ]
+  [ "$result2" != "ABSENT" ]
+  [[ "$result2" == *"claude"* ]]
 }
 
 @test "adapter_deploy : opencode.json est du JSON valide même sans provider ni agents" {
