@@ -110,7 +110,9 @@ teardown() {
   HUB_CONFIG="$TEST_DIR/nonexistent.json"
   run resolve_agent_model "$TEST_DIR/agents/planning/orchestrator-dev.md" ""
   [ "$status" -eq 0 ]
-  [ "$output" = "claude-sonnet-4-5" ]
+  # Extraire uniquement la partie modèle (avant le pipe)
+  model="${output%%|*}"
+  [ "$model" = "claude-sonnet-4-5" ]
 }
 
 @test "resolve_agent_model niveau 6 : hub.json opencode.model" {
@@ -122,7 +124,9 @@ EOF
   HUB_CONFIG="$TEST_DIR/hub.json"
   run resolve_agent_model "$TEST_DIR/agents/planning/orchestrator-dev.md" ""
   [ "$status" -eq 0 ]
-  [ "$output" = "claude-opus-4" ]
+  # Extraire uniquement la partie modèle (avant le pipe)
+  model="${output%%|*}"
+  [ "$model" = "claude-opus-4" ]
 }
 
 @test "resolve_agent_model niveau 5 : hub.json families override" {
@@ -138,7 +142,9 @@ EOF
   HUB_CONFIG="$TEST_DIR/hub.json"
   run resolve_agent_model "$TEST_DIR/agents/planning/orchestrator-dev.md" ""
   [ "$status" -eq 0 ]
-  [ "$output" = "claude-opus-4" ]
+  # Extraire uniquement la partie modèle (avant le pipe)
+  model="${output%%|*}"
+  [ "$model" = "claude-opus-4" ]
 }
 
 @test "resolve_agent_model niveau 4 : hub.json agents override" {
@@ -154,7 +160,9 @@ EOF
   HUB_CONFIG="$TEST_DIR/hub.json"
   run resolve_agent_model "$TEST_DIR/agents/planning/orchestrator-dev.md" ""
   [ "$status" -eq 0 ]
-  [ "$output" = "claude-opus-4" ]
+  # Extraire uniquement la partie modèle (avant le pipe)
+  model="${output%%|*}"
+  [ "$model" = "claude-opus-4" ]
 }
 
 @test "resolve_agent_model niveau 4 prime sur niveau 5" {
@@ -170,7 +178,9 @@ EOF
   HUB_CONFIG="$TEST_DIR/hub.json"
   run resolve_agent_model "$TEST_DIR/agents/planning/orchestrator-dev.md" ""
   [ "$status" -eq 0 ]
-  [ "$output" = "claude-opus-4" ]
+  # Extraire uniquement la partie modèle (avant le pipe)
+  model="${output%%|*}"
+  [ "$model" = "claude-opus-4" ]
 }
 
 @test "resolve_agent_model niveau 3 : projet model via _api_keys_get" {
@@ -184,7 +194,9 @@ EOF
   HUB_CONFIG="$TEST_DIR/nonexistent.json"
   run resolve_agent_model "$TEST_DIR/agents/planning/orchestrator-dev.md" "my-project"
   [ "$status" -eq 0 ]
-  [ "$output" = "claude-opus-4" ]
+  # Extraire uniquement la partie modèle (avant le pipe)
+  model="${output%%|*}"
+  [ "$model" = "claude-opus-4" ]
 }
 
 @test "resolve_agent_model niveau 2 : projet families override" {
@@ -197,7 +209,9 @@ EOF
   HUB_CONFIG="$TEST_DIR/nonexistent.json"
   run resolve_agent_model "$TEST_DIR/agents/planning/orchestrator-dev.md" "my-project"
   [ "$status" -eq 0 ]
-  [ "$output" = "claude-opus-4" ]
+  # Extraire uniquement la partie modèle (avant le pipe)
+  model="${output%%|*}"
+  [ "$model" = "claude-opus-4" ]
 }
 
 @test "resolve_agent_model niveau 1 : projet agents override" {
@@ -210,7 +224,9 @@ EOF
   HUB_CONFIG="$TEST_DIR/nonexistent.json"
   run resolve_agent_model "$TEST_DIR/agents/planning/orchestrator-dev.md" "my-project"
   [ "$status" -eq 0 ]
-  [ "$output" = "claude-opus-4" ]
+  # Extraire uniquement la partie modèle (avant le pipe)
+  model="${output%%|*}"
+  [ "$model" = "claude-opus-4" ]
 }
 
 @test "resolve_agent_model niveau 1 prime sur niveaux 2-7" {
@@ -234,7 +250,9 @@ EOF
   HUB_CONFIG="$TEST_DIR/hub.json"
   run resolve_agent_model "$TEST_DIR/agents/planning/orchestrator-dev.md" "my-project"
   [ "$status" -eq 0 ]
-  [ "$output" = "claude-haiku-4-5" ]
+  # Extraire uniquement la partie modèle (avant le pipe)
+  model="${output%%|*}"
+  [ "$model" = "claude-haiku-4-5" ]
 }
 
 # ── resolve_agent_model + clamp ───────────────────────────────────────────────
@@ -243,7 +261,9 @@ EOF
   HUB_CONFIG="$TEST_DIR/nonexistent.json"
   local result
   result=$(resolve_agent_model "$TEST_DIR/agents/planning/high-floor.md" "" 2>/dev/null)
-  [ "$result" = "claude-opus-4" ]
+  # Extraire uniquement la partie modèle (avant le pipe)
+  local model="${result%%|*}"
+  [ "$model" = "claude-opus-4" ]
 }
 
 @test "resolve_agent_model clamp ne descend pas en dessous du plancher" {
@@ -256,18 +276,21 @@ EOF
   HUB_CONFIG="$TEST_DIR/nonexistent.json"
   local result
   result=$(resolve_agent_model "$TEST_DIR/agents/planning/high-floor.md" "my-project" 2>/dev/null)
-  [ "$result" = "claude-opus-4" ]
+  # Extraire uniquement la partie modèle (avant le pipe)
+  local model="${result%%|*}"
+  [ "$model" = "claude-opus-4" ]
 }
 
 # ── _get_agent_model ──────────────────────────────────────────────────────────
 
 @test "_get_agent_model retourne vide quand modèle résolu == modèle global" {
   # Pas de hub.json → fallback = claude-sonnet-4-5 = DEFAULT_MODEL
+  # CHANGEMENT : _get_agent_model retourne maintenant toujours MODEL|SOURCE
   HUB_CONFIG="$TEST_DIR/nonexistent.json"
   unset OPENCODE_MODEL
   run _get_agent_model "$TEST_DIR/agents/planning/orchestrator-dev.md" ""
   [ "$status" -eq 0 ]
-  [ "$output" = "" ]
+  [ "$output" = "anthropic/claude-sonnet-4-5|fallback" ]
 }
 
 @test "_get_agent_model retourne le modèle quand différent du global" {
@@ -284,7 +307,7 @@ EOF
   unset OPENCODE_MODEL
   run _get_agent_model "$TEST_DIR/agents/planning/orchestrator-dev.md" ""
   [ "$status" -eq 0 ]
-  [ "$output" = "anthropic/claude-opus-4" ]
+  [ "$output" = "anthropic/claude-opus-4|hub_agent" ]
 }
 
 @test "_get_agent_model retourne vide quand agent_file est vide" {
@@ -298,5 +321,5 @@ EOF
   unset OPENCODE_MODEL
   local result
   result=$(_get_agent_model "$TEST_DIR/agents/planning/high-floor.md" "" 2>/dev/null)
-  [ "$result" = "anthropic/claude-opus-4" ]
+  [ "$result" = "anthropic/claude-opus-4|fallback" ]
 }

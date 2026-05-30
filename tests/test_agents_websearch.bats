@@ -8,7 +8,7 @@ setup() {
 
 # ── Agents avec websearch : 13 agents attendus ───────────────────────
 
-@test "13 agents have websearch permission allow" {
+@test "13 agents ont la permission websearch allow" {
   local expected_agents=(
     "auditor/auditor-security"
     "auditor/auditor-performance"
@@ -44,7 +44,7 @@ setup() {
   done
 }
 
-@test "websearch agents have webfetch permission" {
+@test "les agents websearch ont la permission webfetch" {
   local expected_agents=(
     "auditor/auditor-security"
     "auditor/auditor-performance"

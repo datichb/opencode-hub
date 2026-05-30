@@ -824,8 +824,8 @@ description: TypeScript skill
 EOF
 
   # Créer un projet TypeScript ISOLÉ (pas de sous-dossiers qui déclencheraient terraform/k8s detect)
-  local proj
-  proj=$(mktemp -d)
+  local proj="$TEST_DIR/test_project_1"
+  mkdir -p "$proj"
   cat > "$proj/package.json" <<'EOF'
 { "devDependencies": { "typescript": "^5.0.0" } }
 EOF
@@ -856,7 +856,6 @@ EOF
   HUB_DIR="$TEST_DIR"
 
   run build_agent_content "$TEST_DIR/agents/developer-frontend.md" "opencode" "" "$proj"
-  rm -rf "$proj"
   [ "$status" -eq 0 ]
   echo "$output" | grep -q "TypeScript stack skill content"
 }
@@ -873,8 +872,8 @@ description: TypeScript skill
 # TypeScript unique
 EOF
 
-  local proj
-  proj=$(mktemp -d)
+  local proj="$TEST_DIR/test_project_2"
+  mkdir -p "$proj"
   cat > "$proj/package.json" <<'EOF'
 { "devDependencies": { "typescript": "^5.0.0" } }
 EOF
@@ -903,7 +902,6 @@ EOF
   HUB_DIR="$TEST_DIR"
 
   run build_agent_content "$TEST_DIR/agents/agent-with-ts.md" "opencode" "" "$proj"
-  rm -rf "$proj"
   [ "$status" -eq 0 ]
   # "TypeScript unique" ne doit apparaître qu'une seule fois
   local count

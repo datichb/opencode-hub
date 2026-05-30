@@ -6,8 +6,9 @@
 
 setup() {
   TEST_DIR="$(mktemp -d)"
-  DEPLOY_DIR="$(mktemp -d)"
-  AGENTS_DIR="$(mktemp -d)"  # Dossier agents vide → adapter_deploy ne boucle sur rien
+  DEPLOY_DIR="$TEST_DIR/deploy"
+  AGENTS_DIR="$TEST_DIR/agents"  # Dossier agents vide → adapter_deploy ne boucle sur rien
+  mkdir -p "$DEPLOY_DIR" "$AGENTS_DIR"
 
   # Fixer HUB_DIR avant le source pour que prompt-builder.sh soit trouvé
   HUB_DIR="$BATS_TEST_DIRNAME/.."

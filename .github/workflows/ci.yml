@@ -107,11 +107,15 @@ jobs:
 
       - name: Run bats tests
         run: |
+          # Collect all test files except websearch (they have their own workflow)
+          tests_to_run=()
           for f in tests/*.bats; do
-            # Skip websearch tests (they have their own workflow)
             [[ "$f" == *websearch* ]] && continue
-            bats "$f" || exit 1
+            tests_to_run+=("$f")
           done
+          
+          # Run tests in parallel (4 jobs) for faster CI execution
+          bats -j 4 "${tests_to_run[@]}" || exit 1
 
   version-consistency:
     name: Check version consistency

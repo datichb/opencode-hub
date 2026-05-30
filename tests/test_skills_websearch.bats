@@ -8,7 +8,7 @@ setup() {
 
 # ── Skills existence ─────────────────────────────────────────────────
 
-@test "all 5 websearch skills exist" {
+@test "les 5 skills websearch existent" {
   local skills=(
     "shared/websearch-usage.md"
     "auditor/websearch-cve-lookup.md"
@@ -28,7 +28,7 @@ setup() {
 
 # ── Sections requises ────────────────────────────────────────────────
 
-@test "websearch skills contain required sections" {
+@test "les skills websearch contiennent les sections requises" {
   local skills=(
     "shared/websearch-usage.md"
     "auditor/websearch-cve-lookup.md"
@@ -56,7 +56,7 @@ setup() {
 
 # ── Query examples ──────────────────────────────────────────────────
 
-@test "websearch skills contain at least 5 query examples" {
+@test "les skills websearch contiennent au moins 5 exemples de requêtes" {
   local skills=(
     "shared/websearch-usage.md"
     "auditor/websearch-cve-lookup.md"
@@ -83,7 +83,7 @@ setup() {
 
 # ── Données sensibles ───────────────────────────────────────────────
 
-@test "websearch skills contain no sensitive data" {
+@test "les skills websearch ne contiennent pas de données sensibles" {
   local skills=(
     "shared/websearch-usage.md"
     "auditor/websearch-cve-lookup.md"
@@ -119,7 +119,7 @@ setup() {
 
 # ── Liens internes valides ──────────────────────────────────────────
 
-@test "websearch skills have valid internal links" {
+@test "les skills websearch ont des liens internes valides" {
   local skills=(
     "shared/websearch-usage.md"
     "auditor/websearch-cve-lookup.md"
