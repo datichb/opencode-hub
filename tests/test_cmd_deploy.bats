@@ -73,7 +73,7 @@ teardown() {
 
 @test "_get_mtime : un fichier plus récent a un timestamp plus grand ou égal" {
   f1=$(mktemp)
-  sleep 1
+  sleep 0.1
   f2=$(mktemp)
   t1=$(stat -f %m "$f1" 2>/dev/null || stat -c %Y "$f1" 2>/dev/null)
   t2=$(stat -f %m "$f2" 2>/dev/null || stat -c %Y "$f2" 2>/dev/null)
@@ -99,7 +99,7 @@ teardown() {
 @test "deploy --check : agent obsolète retourne exit 1" {
   # Copier l'agent d'abord, puis le rendre plus vieux que la source
   cp "$FAKE_HUB/agents/quality/test-agent.md" "$FAKE_HUB/.opencode/agents/test-agent.md"
-  sleep 1
+  sleep 0.1
   # Toucher la source pour la rendre plus récente
   touch "$FAKE_HUB/agents/quality/test-agent.md"
 
@@ -109,7 +109,7 @@ teardown() {
 
 @test "deploy --check : affiche OBSOLÈTE si agent source plus récent" {
   cp "$FAKE_HUB/agents/quality/test-agent.md" "$FAKE_HUB/.opencode/agents/test-agent.md"
-  sleep 1
+  sleep 0.1
   touch "$FAKE_HUB/agents/quality/test-agent.md"
 
   run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check 2>&1 || true
@@ -120,7 +120,7 @@ teardown() {
 
 @test "deploy --check : agent à jour retourne exit 0" {
   # Copier l'agent APRÈS avoir attendu → le déployé est plus récent que la source
-  sleep 1
+  sleep 0.1
   cp "$FAKE_HUB/agents/quality/test-agent.md" "$FAKE_HUB/.opencode/agents/test-agent.md"
 
   run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check
@@ -128,7 +128,7 @@ teardown() {
 }
 
 @test "deploy --check : affiche À JOUR si agent récent" {
-  sleep 1
+  sleep 0.1
   cp "$FAKE_HUB/agents/quality/test-agent.md" "$FAKE_HUB/.opencode/agents/test-agent.md"
 
   run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check

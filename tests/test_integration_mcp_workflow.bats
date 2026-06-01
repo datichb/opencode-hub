@@ -200,6 +200,7 @@ EOF
 # ══════════════════════════════════════════════════════════════════════════════
 
 @test "mcp workflow : validation accessibilité MCP" {
+  command -v node >/dev/null 2>&1 || skip "node requis"
   PROJECT_DIR="$FAKE_HUB/test-mcp-proj"
   mkdir -p "$PROJECT_DIR/.opencode/mcp/dist"
 
@@ -237,6 +238,7 @@ EOF
 # ══════════════════════════════════════════════════════════════════════════════
 
 @test "mcp workflow : workflow complet de A à Z" {
+  command -v node >/dev/null 2>&1 || skip "node requis"
   cat >> "$PROJECTS_FILE" <<'EOF'
 
 ## MCP-TEST

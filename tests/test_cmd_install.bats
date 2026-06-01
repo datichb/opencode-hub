@@ -76,9 +76,15 @@ teardown() {
   }
   export -f command
   
-  # Vérifier que brew serait utilisé (test de logique)
+  # Vérifier que la logique conditionelle s'appliquerait : macOS + brew disponible
   OS=$(detect_os)
   [ "$OS" = "macos" ]
+  # brew devrait être détecté comme disponible via command
+  run command -v brew
+  [ "$status" -eq 0 ]
+  # jq devrait être absent
+  run command -v jq
+  [ "$status" -ne 0 ]
 }
 
 # ── Création hub.json ───────────────────────────────────────────────────────
@@ -139,9 +145,11 @@ EOF
   }
   export -f read
   
-  # Logique: si existe, demander confirmation
-  # Le test vérifie juste que le fichier existe
-  [ -f "$HUB_DIR/config/hub.json" ]
+  # Logique: si le script demande confirmation et qu'on répond N,
+  # le fichier original ne doit pas être modifié
+  local original_content
+  original_content=$(cat "$HUB_DIR/config/hub.json")
+  [ "$original_content" = '{"version":"1.0.0"}' ]
 }
 
 # ── Création dossiers requis ────────────────────────────────────────────────
@@ -340,7 +348,9 @@ EOF
   }
   export -f command
   
-  # Vérifier que brew est disponible
+  # Vérifier la logique : bd absent, brew disponible → brew serait utilisé
+  run command -v bd
+  [ "$status" -ne 0 ]
   run command -v brew
   [ "$status" -eq 0 ]
 }
@@ -357,7 +367,11 @@ EOF
   }
   export -f command
   
-  # Vérifier que curl est disponible
+  # Vérifier la logique : bd absent, brew absent, curl disponible → curl serait utilisé
+  run command -v bd
+  [ "$status" -ne 0 ]
+  run command -v brew
+  [ "$status" -ne 0 ]
   run command -v curl
   [ "$status" -eq 0 ]
 }

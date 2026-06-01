@@ -1,0 +1,2 @@
+# WebSearch Skill
+Search capability

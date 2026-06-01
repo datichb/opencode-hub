@@ -491,9 +491,6 @@ cmd_websearch_enable() {
       cat > "$hub_opencode_config" <<'EOF'
 {
   "$schema": "https://opencode.ai/config.json",
-  "env": {
-    "OPENCODE_ENABLE_EXA": "1"
-  },
   "permission": {
     "websearch": "allow",
     "webfetch": "allow"
@@ -509,13 +506,12 @@ EOF
       log_error "jq is required to modify opencode.json"
       log_info "Please install jq or manually add:"
       echo ""
-      echo '  "env": { "OPENCODE_ENABLE_EXA": "1" },'
       echo '  "permission": { "websearch": "allow", "webfetch": "allow" }'
       exit 1
     fi
     
     local tmp; tmp=$(mktemp)
-    jq '.env.OPENCODE_ENABLE_EXA = "1" | .permission.websearch = "allow" | .permission.webfetch = "allow"' \
+    jq '.permission.websearch = "allow" | .permission.webfetch = "allow"' \
       "$hub_opencode_config" > "$tmp" && mv "$tmp" "$hub_opencode_config"
     
     log_success "WebSearch enabled at hub level"
@@ -553,9 +549,6 @@ EOF
     cat > "$project_opencode_config" <<'EOF'
 {
   "$schema": "https://opencode.ai/config.json",
-  "env": {
-    "OPENCODE_ENABLE_EXA": "1"
-  },
   "permission": {
     "websearch": "allow",
     "webfetch": "allow"
@@ -572,7 +565,7 @@ EOF
   fi
   
   local tmp; tmp=$(mktemp)
-  jq '.env.OPENCODE_ENABLE_EXA = "1" | .permission.websearch = "allow" | .permission.webfetch = "allow"' \
+  jq '.permission.websearch = "allow" | .permission.webfetch = "allow"' \
     "$project_opencode_config" > "$tmp" && mv "$tmp" "$project_opencode_config"
   
   log_success "WebSearch enabled for project: $id"
@@ -613,7 +606,7 @@ cmd_websearch_disable() {
   fi
   
   local tmp; tmp=$(mktemp)
-  jq 'del(.env.OPENCODE_ENABLE_EXA) | .permission.websearch = "deny"' \
+  jq '.permission.websearch = "deny"' \
     "$project_opencode_config" > "$tmp" && mv "$tmp" "$project_opencode_config"
   
   log_success "WebSearch disabled for project: $id"
@@ -630,12 +623,10 @@ cmd_websearch_status() {
   if [ -f "$hub_opencode_config" ]; then
     echo "  Hub (opencode-hub):"
     if command -v jq >/dev/null 2>&1; then
-      local hub_exa hub_perm
-      hub_exa=$(jq -r '.env.OPENCODE_ENABLE_EXA // "not set"' "$hub_opencode_config" 2>/dev/null)
+      local hub_perm
       hub_perm=$(jq -r '.permission.websearch // "not set"' "$hub_opencode_config" 2>/dev/null)
-      echo "    OPENCODE_ENABLE_EXA: $hub_exa"
       echo "    permission.websearch: $hub_perm"
-      if [ "$hub_exa" = "1" ] && [ "$hub_perm" = "allow" ]; then
+      if [ "$hub_perm" = "allow" ]; then
         echo -e "    Status: ${GREEN}✓ Enabled${RESET}"
       else
         echo -e "    Status: ${YELLOW}○ Disabled${RESET}"
@@ -666,12 +657,10 @@ cmd_websearch_status() {
     echo "  Project ($id):"
     if [ -f "$project_opencode_config" ]; then
       if command -v jq >/dev/null 2>&1; then
-        local proj_exa proj_perm
-        proj_exa=$(jq -r '.env.OPENCODE_ENABLE_EXA // "not set"' "$project_opencode_config" 2>/dev/null)
+        local proj_perm
         proj_perm=$(jq -r '.permission.websearch // "not set"' "$project_opencode_config" 2>/dev/null)
-        echo "    OPENCODE_ENABLE_EXA: $proj_exa"
         echo "    permission.websearch: $proj_perm"
-        if [ "$proj_exa" = "1" ] && [ "$proj_perm" = "allow" ]; then
+        if [ "$proj_perm" = "allow" ]; then
           echo -e "    Status: ${GREEN}✓ Enabled${RESET}"
         else
           echo -e "    Status: ${YELLOW}○ Disabled${RESET}"

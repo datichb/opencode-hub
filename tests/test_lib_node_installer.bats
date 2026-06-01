@@ -206,15 +206,16 @@ EOF
   }
   export -f command
   
-  # Simuler input utilisateur (défaut = 1)
-  exec 3</dev/tty
-  exec </dev/null
-  
+  # Mock read pour simuler l'appui sur Entrée (choix par défaut = 1 = volta)
+  read() {
+    eval "${!#}=''"
+    return 0
+  }
+  export -f read
+
   run _choose_installer "linux"
   [ "$status" -eq 0 ]
   [ "$output" = "volta" ]
-  
-  exec 0<&3
 }
 
 @test "_choose_installer : inclut brew sur macOS" {
@@ -227,17 +228,19 @@ EOF
   }
   export -f command
   
-  # Simuler input (choix 2 = brew sur macOS)
-  exec 3</dev/tty
-  exec </dev/null
-  
+  # Mock read pour simuler l'appui sur Entrée (choix par défaut = 1 = volta)
+  read() {
+    eval "${!#}=''"
+    return 0
+  }
+  export -f read
+
   run _choose_installer "macos"
   [ "$status" -eq 0 ]
   # Sur macOS avec brew, les options sont: volta, brew, nvm
   # Le défaut devrait être volta
   [ "$output" = "volta" ]
   
-  exec 0<&3
 }
 
 # ── ensure_node ─────────────────────────────────────────────────────────────

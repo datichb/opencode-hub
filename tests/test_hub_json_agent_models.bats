@@ -4,6 +4,7 @@
 
 setup() {
   TEST_DIR="$(mktemp -d)"
+  command -v jq >/dev/null 2>&1 || skip "jq requis pour ces tests"
 }
 
 teardown() {

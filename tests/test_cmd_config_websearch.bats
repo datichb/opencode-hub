@@ -36,15 +36,15 @@ setup() {
 EOF
 
   # Format paths.local.md correct
-  cat > "$PATHS_FILE" <<'EOF'
+  cat > "$PATHS_FILE" <<EOF
 # Chemins locaux (ignoré par git)
-TEST-PROJ-1=/tmp/test-project-1
-TEST-PROJ-2=/tmp/test-project-2
+TEST-PROJ-1=$TEST_DIR/test-project-1
+TEST-PROJ-2=$TEST_DIR/test-project-2
 EOF
   
   # Créer les répertoires de projets de test
-  mkdir -p /tmp/test-project-1/.opencode
-  mkdir -p /tmp/test-project-2/.opencode
+  mkdir -p "$TEST_DIR/test-project-1/.opencode"
+  mkdir -p "$TEST_DIR/test-project-2/.opencode"
   
   # Mocks des fonctions de log
   log_info()    { true; }
@@ -58,21 +58,16 @@ EOF
 
 teardown() {
   rm -rf "$TEST_DIR"
-  rm -rf /tmp/test-project-1
-  rm -rf /tmp/test-project-2
 }
 
 # ── cmd_websearch_enable : Hub level ──────────────────────────────────
 
-@test "websearch enable hub : crée opencode.json avec OPENCODE_ENABLE_EXA et permissions" {
+@test "websearch enable hub : crée opencode.json avec permissions" {
   run cmd_websearch_enable
   [ "$status" -eq 0 ]
   
   local hub_config="$TEST_DIR/opencode.json"
   [ -f "$hub_config" ]
-  
-  run jq -r '.env.OPENCODE_ENABLE_EXA' "$hub_config"
-  [ "$output" = "1" ]
   
   run jq -r '.permission.websearch' "$hub_config"
   [ "$output" = "allow" ]
@@ -92,8 +87,8 @@ teardown() {
   
   # Vérifier que le fichier est toujours valide
   local hub_config="$TEST_DIR/opencode.json"
-  run jq -r '.env.OPENCODE_ENABLE_EXA' "$hub_config"
-  [ "$output" = "1" ]
+  run jq -r '.permission.websearch' "$hub_config"
+  [ "$output" = "allow" ]
 }
 
 @test "websearch enable hub : échoue avec message clair si jq manquant" {
@@ -132,11 +127,8 @@ teardown() {
   run cmd_websearch_enable "TEST-PROJ-1"
   [ "$status" -eq 0 ]
   
-  local proj_config="/tmp/test-project-1/.opencode/opencode.json"
+  local proj_config="/test-project-1/.opencode/opencode.json"
   [ -f "$proj_config" ]
-  
-  run jq -r '.env.OPENCODE_ENABLE_EXA' "$proj_config"
-  [ "$output" = "1" ]
   
   run jq -r '.permission.websearch' "$proj_config"
   [ "$output" = "allow" ]
@@ -155,7 +147,7 @@ teardown() {
   [ "$status" -eq 0 ]
   
   # Vérifier que le fichier est toujours valide
-  local proj_config="/tmp/test-project-1/.opencode/opencode.json"
+  local proj_config="/test-project-1/.opencode/opencode.json"
   run jq -r '.permission.websearch' "$proj_config"
   [ "$output" = "allow" ]
 }
@@ -175,11 +167,7 @@ teardown() {
   run cmd_websearch_disable "TEST-PROJ-1"
   [ "$status" -eq 0 ]
   
-  local proj_config="/tmp/test-project-1/.opencode/opencode.json"
-  
-  # Vérifier que OPENCODE_ENABLE_EXA est supprimé
-  run jq -r '.env.OPENCODE_ENABLE_EXA // "deleted"' "$proj_config"
-  [ "$output" = "deleted" ]
+  local proj_config="/test-project-1/.opencode/opencode.json"
   
   # Vérifier que permission.websearch est deny
   run jq -r '.permission.websearch' "$proj_config"
@@ -206,7 +194,6 @@ teardown() {
   run cmd_websearch_status
   [ "$status" -eq 0 ]
   [[ "$output" =~ "Hub" ]]
-  [[ "$output" =~ "OPENCODE_ENABLE_EXA: 1" ]]
   [[ "$output" =~ "permission.websearch: allow" ]]
   [[ "$output" =~ "Enabled" ]]
 }
@@ -230,7 +217,7 @@ teardown() {
   [ "$status" -eq 0 ]
   [[ "$output" =~ "Hub" ]]
   [[ "$output" =~ "Project (TEST-PROJ-1)" ]]
-  [[ "$output" =~ "OPENCODE_ENABLE_EXA: 1" ]]
+  [[ "$output" =~ "permission.websearch: allow" ]]
 }
 
 @test "websearch status project sans opencode.json : affiche inherit message" {

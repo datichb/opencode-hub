@@ -71,7 +71,7 @@ teardown() {
 EOF
   
   cat >> "$PATHS_FILE" <<EOF
-$TEST_PROJECT_ID|$TEST_PROJECT_PATH
+$TEST_PROJECT_ID=$TEST_PROJECT_PATH
 EOF
   
   # Vérifier existence
@@ -90,7 +90,7 @@ EOF
 EOF
   
   cat >> "$PATHS_FILE" <<EOF
-$TEST_PROJECT_ID|$TEST_PROJECT_PATH
+$TEST_PROJECT_ID=$TEST_PROJECT_PATH
 EOF
   
   # Ajouter clé API dans api-keys.local.md
@@ -244,7 +244,7 @@ EOF
 EOF
   
   cat > "$PATHS_FILE" <<EOF
-$TEST_PROJECT_ID|$TEST_PROJECT_PATH
+$TEST_PROJECT_ID=$TEST_PROJECT_PATH
 EOF
   
   # Vérifier qu'on peut lire les infos
@@ -266,7 +266,7 @@ EOF
 EOF
   
   cat > "$PATHS_FILE" <<EOF
-$TEST_PROJECT_ID|$TEST_PROJECT_PATH
+$TEST_PROJECT_ID=$TEST_PROJECT_PATH
 EOF
   
   # Sourcer cmd-remove
@@ -297,7 +297,7 @@ EOF
 EOF
   
   cat > "$PATHS_FILE" <<EOF
-$TEST_PROJECT_ID|$TEST_PROJECT_PATH
+$TEST_PROJECT_ID=$TEST_PROJECT_PATH
 EOF
   
   source "$SCRIPT_DIR/cmd-remove.sh"
@@ -329,7 +329,7 @@ EOF
 EOF
   
   cat > "$PATHS_FILE" <<EOF
-$TEST_PROJECT_ID|$TEST_PROJECT_PATH
+$TEST_PROJECT_ID=$TEST_PROJECT_PATH
 EOF
   
   # Vérifier projet créé
@@ -391,8 +391,8 @@ EOF
 EOF
   
   cat > "$PATHS_FILE" <<EOF
-$proj1|$path1
-$proj2|$path2
+$proj1=$path1
+$proj2=$path2
 EOF
   
   # Vérifier isolation
@@ -428,7 +428,7 @@ EOF
 EOF
   
   cat > "$PATHS_FILE" <<EOF
-$old_id|$project_path
+$old_id=$project_path
 EOF
   
   mkdir -p "$(dirname "$API_KEYS_FILE")"

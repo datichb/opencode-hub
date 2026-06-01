@@ -137,7 +137,7 @@ teardown() {
   _deploy_to "$TMP_AGENTS_DIR" "$TMP_SKILLS_DIR"
 
   # Rendre une copie d'agent plus récente que l'agent déployé
-  sleep 1
+  sleep 0.1
   first_agent=$(find "$TMP_AGENTS_DIR" -name "*.md" | sort | head -1)
   agent_id=$(grep '^id:' "$first_agent" | head -1 | sed 's/^id:[[:space:]]*//')
   touch "$first_agent"
@@ -160,7 +160,7 @@ teardown() {
   _deploy_to "$TMP_AGENTS_DIR" "$TMP_SKILLS_DIR"
 
   # Rendre la COPIE du skill plus récente — jamais l'original
-  sleep 1
+  sleep 0.1
   touch "$skill_copy"
 
   # Vérifier avec les mêmes copies

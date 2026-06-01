@@ -19,7 +19,6 @@ WebSearch permet aux agents opencode-hub de **rechercher sur le web** via Exa AI
 
 - opencode-hub v1.0+ installé et configuré
 - OpenCode CLI v1.32+ (avec support WebSearch)
-- Variable d'environnement `OPENCODE_ENABLE_EXA=1` (automatique si configuré dans le hub)
 
 ---
 
@@ -27,7 +26,7 @@ WebSearch permet aux agents opencode-hub de **rechercher sur le web** via Exa AI
 
 ```
 opencode-hub/
-├── opencode.json                   ← Configuration hub (env + permissions)
+├── opencode.json                   ← Configuration hub (permissions)
 ├── agents/
 │   ├── auditor/
 │   │   ├── auditor-security.md    ← Permission websearch activée
@@ -73,9 +72,6 @@ Après déploiement:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "env": {
-    "OPENCODE_ENABLE_EXA": "1"
-  },
   "permission": {
     "websearch": "allow",
     "webfetch": "allow"
@@ -116,9 +112,6 @@ cat /path/to/mon-projet/.opencode/opencode.json
 Doit inclure (hérité du hub ou explicite) :
 ```json
 {
-  "env": {
-    "OPENCODE_ENABLE_EXA": "1"
-  },
   "permission": {
     "websearch": "allow",
     "webfetch": "allow"
@@ -172,7 +165,6 @@ Agent:
 WebSearch Status
 
   Hub (opencode-hub):
-    OPENCODE_ENABLE_EXA: 1
     permission.websearch: allow
     Status: ✓ Enabled
 
@@ -233,9 +225,6 @@ Crée/modifie `/path/to/mon-projet/.opencode/opencode.json` :
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "env": {
-    "OPENCODE_ENABLE_EXA": "1"
-  },
   "permission": {
     "websearch": "allow",
     "webfetch": "allow"
@@ -286,19 +275,15 @@ Agent: [ERROR] WebSearch tool not available
 ```
 
 **Solutions** :
-1. Vérifier que `OPENCODE_ENABLE_EXA=1` est présent dans `opencode.json` (hub ou projet)
-   ```bash
-   cat opencode-hub/opencode.json | jq '.env.OPENCODE_ENABLE_EXA'
-   ```
-2. Vérifier que la permission `websearch` est `allow`
+1. Vérifier que la permission `websearch` est `allow`
    ```bash
    cat opencode-hub/opencode.json | jq '.permission.websearch'
    ```
-3. Redéployer l'agent
+2. Redéployer l'agent
    ```bash
    ./oc.sh deploy mon-projet
    ```
-4. Vérifier la version d'OpenCode CLI (requiert v1.32+)
+3. Vérifier la version d'OpenCode CLI (requiert v1.32+)
    ```bash
    oc --version
    ```
@@ -412,7 +397,6 @@ Si vous voulez désactiver WebSearch pour tous les projets :
      }
    }
    ```
-   (Supprimer `env.OPENCODE_ENABLE_EXA`)
 
 2. Redéployer tous les projets :
    ```bash

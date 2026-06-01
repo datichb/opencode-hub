@@ -158,7 +158,7 @@ teardown() {
 
 @test "metrics_get_duration : retourne durée en secondes" {
   metrics_start_timer "bd-42"
-  sleep 1
+  sleep 0.1
   
   run metrics_get_duration "bd-42"
   [ "$status" -eq 0 ]
@@ -356,7 +356,7 @@ teardown() {
   metrics_ticket_start "bd-42" "developer-backend"
   
   # Attendre 1 seconde
-  sleep 1
+  sleep 0.1
   
   # Get duration
   duration=$(metrics_get_duration "bd-42")

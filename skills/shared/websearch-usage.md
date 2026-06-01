@@ -15,9 +15,6 @@ WebSearch must be enabled in `opencode-hub/opencode.json`:
 
 ```json
 {
-  "env": {
-    "OPENCODE_ENABLE_EXA": "1"
-  },
   "permission": {
     "websearch": "allow",
     "webfetch": "allow"
@@ -148,7 +145,7 @@ websearch("PostgreSQL query optimization indexing strategies")
 ### Common Errors
 ```
 Error: "WebSearch tool not available"
-→ Check: OPENCODE_ENABLE_EXA=1 in opencode.json
+→ Check: permission.websearch = allow in opencode.json
 → Check: permission.websearch = allow in agent frontmatter
 
 Error: "Rate limit exceeded"
@@ -275,7 +272,7 @@ oc start auditor security
 ### WebSearch Not Available
 ```bash
 # Check hub config
-cat opencode-hub/opencode.json | jq '.env.OPENCODE_ENABLE_EXA, .permission.websearch'
+cat opencode-hub/opencode.json | jq '.permission.websearch'
 
 # Check agent config
 cat agents/auditor/security-auditor.md | grep -A5 'permission:'

@@ -180,7 +180,7 @@ EOF
   _set_project_agents "TEST-PROJECT" "orchestrator,developer-backend"
   
   # Vérifier que le champ a été ajouté
-  run rtk grep "TEST-PROJECT" -A 5 "$PROJECTS_FILE"
+  run grep "TEST-PROJECT" -A 5 "$PROJECTS_FILE"
   [[ "$output" == *"- Agents : orchestrator,developer-backend"* ]]
 }
 
@@ -188,7 +188,7 @@ EOF
   _set_project_agents "ANOTHER-PROJECT" "devops,qa-engineer"
   
   # Vérifier que le champ a été mis à jour
-  run rtk grep "ANOTHER-PROJECT" -A 5 "$PROJECTS_FILE"
+  run grep "ANOTHER-PROJECT" -A 5 "$PROJECTS_FILE"
   [[ "$output" == *"- Agents : devops,qa-engineer"* ]]
   [[ "$output" != *"orchestrator"* ]]
 }
@@ -197,7 +197,7 @@ EOF
   _set_project_agents "TEST-PROJECT" "orchestrator"
   
   # Vérifier que les autres champs sont toujours là
-  run rtk grep "TEST-PROJECT" -A 5 "$PROJECTS_FILE"
+  run grep "TEST-PROJECT" -A 5 "$PROJECTS_FILE"
   [[ "$output" == *"- Nom : Test Project"* ]]
   [[ "$output" == *"- Stack : TypeScript"* ]]
   [[ "$output" == *"- Labels : backend, api"* ]]
@@ -206,28 +206,28 @@ EOF
 @test "_set_project_agents : gère liste vide" {
   _set_project_agents "TEST-PROJECT" ""
   
-  run rtk grep "TEST-PROJECT" -A 5 "$PROJECTS_FILE"
+  run grep "TEST-PROJECT" -A 5 "$PROJECTS_FILE"
   [[ "$output" == *"- Agents : "* ]]
 }
 
 @test "_set_project_agents : gère agent unique" {
   _set_project_agents "TEST-PROJECT" "orchestrator"
   
-  run rtk grep "TEST-PROJECT" -A 5 "$PROJECTS_FILE"
+  run grep "TEST-PROJECT" -A 5 "$PROJECTS_FILE"
   [[ "$output" == *"- Agents : orchestrator"* ]]
 }
 
 @test "_set_project_agents : gère multiples agents CSV" {
   _set_project_agents "TEST-PROJECT" "orchestrator,developer-backend,devops"
   
-  run rtk grep "TEST-PROJECT" -A 5 "$PROJECTS_FILE"
+  run grep "TEST-PROJECT" -A 5 "$PROJECTS_FILE"
   [[ "$output" == *"- Agents : orchestrator,developer-backend,devops"* ]]
 }
 
 @test "_set_project_agents : gère valeur 'all'" {
   _set_project_agents "TEST-PROJECT" "all"
   
-  run rtk grep "TEST-PROJECT" -A 5 "$PROJECTS_FILE"
+  run grep "TEST-PROJECT" -A 5 "$PROJECTS_FILE"
   [[ "$output" == *"- Agents : all"* ]]
 }
 
@@ -240,10 +240,10 @@ EOF
   _set_project_agents "TEST-PROJECT" "orchestrator"
   
   # Vérifier l'ordre : Labels puis Agents
-  rtk awk '/^## TEST-PROJECT/,/^## / { print NR": "$0 }' "$PROJECTS_FILE" > "$TEST_DIR/order.txt"
+  awk '/^## TEST-PROJECT/,/^## / { print NR": "$0 }' "$PROJECTS_FILE" > "$TEST_DIR/order.txt"
   
-  local labels_line=$(rtk grep -n "Labels" "$TEST_DIR/order.txt" | cut -d: -f1)
-  local agents_line=$(rtk grep -n "Agents" "$TEST_DIR/order.txt" | cut -d: -f1)
+  local labels_line=$(grep -n "Labels" "$TEST_DIR/order.txt" | cut -d: -f1)
+  local agents_line=$(grep -n "Agents" "$TEST_DIR/order.txt" | cut -d: -f1)
   
   [ -n "$labels_line" ]
   [ -n "$agents_line" ]
@@ -264,13 +264,13 @@ EOF
   _set_project_agents "TEST-PROJECT" "$agents_csv"
   
   # Vérifier
-  run rtk grep "TEST-PROJECT" -A 5 "$PROJECTS_FILE"
+  run grep "TEST-PROJECT" -A 5 "$PROJECTS_FILE"
   [[ "$output" == *"- Agents :"* ]]
 }
 
 @test "Intégration : workflow complet modification agents" {
   # État initial
-  run rtk grep "ANOTHER-PROJECT" -A 5 "$PROJECTS_FILE"
+  run grep "ANOTHER-PROJECT" -A 5 "$PROJECTS_FILE"
   [[ "$output" == *"orchestrator,developer-backend"* ]]
   
   # Lister les agents disponibles
@@ -280,7 +280,7 @@ EOF
   _set_project_agents "ANOTHER-PROJECT" "devops,qa-engineer"
   
   # Vérifier le changement
-  run rtk grep "ANOTHER-PROJECT" -A 5 "$PROJECTS_FILE"
+  run grep "ANOTHER-PROJECT" -A 5 "$PROJECTS_FILE"
   [[ "$output" == *"devops,qa-engineer"* ]]
   [[ "$output" != *"orchestrator"* ]]
 }
