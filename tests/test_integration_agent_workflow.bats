@@ -388,9 +388,9 @@ skills: [websearch]
 Base instructions
 EOF
   
-  # Créer skill
-  mkdir -p "$HUB_DIR/skills"
-  cat > "$HUB_DIR/skills/websearch.md" <<'EOF'
+  # Créer skill dans TEST_DIR (isolation — ne pas toucher au repo réel)
+  mkdir -p "$TEST_DIR/skills"
+  cat > "$TEST_DIR/skills/websearch.md" <<'EOF'
 # WebSearch Skill
 Search capability
 EOF
@@ -398,7 +398,7 @@ EOF
   get_hub_version() { echo "2.0.0"; }
   export -f get_hub_version
   
-  export SKILLS_DIR="$HUB_DIR/skills"
+  export SKILLS_DIR="$TEST_DIR/skills"
   
   run build_agent_content "$agent_file" "" "" ""
   [ "$status" -eq 0 ]
