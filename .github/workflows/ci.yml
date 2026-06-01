@@ -98,12 +98,17 @@ jobs:
   bats:
     name: Bats unit tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install bats-core and parallel
-        run: sudo apt-get install -y bats parallel
+      - name: Install bats-core (official, latest stable)
+        run: |
+          git clone --depth 1 --branch v1.11.1 https://github.com/bats-core/bats-core.git /tmp/bats-core
+          sudo /tmp/bats-core/install.sh /usr/local
+          sudo apt-get install -y parallel jq
+          mkdir -p ~/.parallel && touch ~/.parallel/will-cite
 
       - name: Run bats tests
         run: |

@@ -25,14 +25,16 @@ jobs:
   test-websearch-config:
     name: Test WebSearch Config Script
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       
-      - name: Install dependencies
+      - name: Install bats-core (official, latest stable)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y bats jq
+          git clone --depth 1 --branch v1.11.1 https://github.com/bats-core/bats-core.git /tmp/bats-core
+          sudo /tmp/bats-core/install.sh /usr/local
+          sudo apt-get install -y jq
       
       - name: Make scripts executable
         run: |
@@ -56,12 +58,15 @@ jobs:
   test-websearch-agents:
     name: Validate WebSearch Agents
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       
-      - name: Install BATS
-        run: sudo apt-get update && sudo apt-get install -y bats
+      - name: Install bats-core (official, latest stable)
+        run: |
+          git clone --depth 1 --branch v1.11.1 https://github.com/bats-core/bats-core.git /tmp/bats-core
+          sudo /tmp/bats-core/install.sh /usr/local
       
       - name: Run agent validation tests
         run: bats tests/test_agents_websearch.bats
@@ -82,12 +87,15 @@ jobs:
   test-websearch-skills:
     name: Validate WebSearch Skills
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       
-      - name: Install BATS
-        run: sudo apt-get update && sudo apt-get install -y bats
+      - name: Install bats-core (official, latest stable)
+        run: |
+          git clone --depth 1 --branch v1.11.1 https://github.com/bats-core/bats-core.git /tmp/bats-core
+          sudo /tmp/bats-core/install.sh /usr/local
       
       - name: Run skill validation tests
         run: bats tests/test_skills_websearch.bats
@@ -123,15 +131,18 @@ jobs:
   test-websearch-integration:
     name: Integration Test
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [test-websearch-config, test-websearch-agents, test-websearch-skills]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       
-      - name: Install dependencies
+      - name: Install bats-core (official, latest stable)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y bats jq
+          git clone --depth 1 --branch v1.11.1 https://github.com/bats-core/bats-core.git /tmp/bats-core
+          sudo /tmp/bats-core/install.sh /usr/local
+          sudo apt-get install -y parallel jq
+          mkdir -p ~/.parallel && touch ~/.parallel/will-cite
       
       - name: Make scripts executable
         run: |
