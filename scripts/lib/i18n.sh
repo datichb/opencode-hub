@@ -117,10 +117,10 @@ t() {
       help.config_unset.desc) printf '%s' "Supprime la configuration d'un projet" ;;
       help.config_language.cmd)  printf '%s' "config set language <en|fr>" ;;
       help.config_language.desc) printf '%s' "Définit la langue d'affichage du CLI (global)" ;;
-      help.provider_list.cmd) printf '%s' "provider list" ;;
-      help.provider_list.desc) printf '%s' "Liste les providers disponibles" ;;
-      help.provider_set_default.cmd)  printf '%s' "provider set-default" ;;
-      help.provider_set_default.desc) printf '%s' "Configure le provider par défaut du hub (interactif)" ;;
+      help.config_list_providers.cmd)  printf '%s' "config list --providers" ;;
+      help.config_list_providers.desc) printf '%s' "Liste les providers disponibles" ;;
+      help.config_init_providers.cmd)  printf '%s' "config init-providers [--force]" ;;
+      help.config_init_providers.desc) printf '%s' "Initialise les fichiers de configuration provider (config/providers/*.json)" ;;
       # Deploy targets
       help.deploy_target.opencode) printf '%s' "opencode     → .opencode/agents/ + opencode.json" ;;
       # Projects
@@ -200,6 +200,16 @@ t() {
       config.written)         printf '%s' "Configuration enregistrée pour" ;;
       config.apply_now)       printf '%s' "Appliquer maintenant au projet (re-déployer opencode.json) ? [Y/n] : " ;;
       config.apply_later)     printf '%s' "Appliquer plus tard : ./oc.sh deploy all" ;;
+      config.no_path)         printf '%s' "Chemin introuvable pour" ;;
+      config.apply_via)       printf '%s' "— appliquer via : ./oc.sh deploy all" ;;
+      config.hub_provider_saved) printf '%s' "Provider du hub enregistré :" ;;
+      config.regenerating_adapter) printf '%s' "Mise à jour de l'adapter" ;;
+      config.init_providers_title) printf '%s' "Initialisation des providers opencode" ;;
+      config.init_providers_actions) printf '%s' "Actions manuelles requises :" ;;
+      config.init_providers_bedrock) printf '%s' "configurer ~/.aws/credentials ou AWS_PROFILE" ;;
+      config.created)         printf '%s' "créé" ;;
+      config.exists)          printf '%s' "existant" ;;
+      websearch.manage_desc)  printf '%s' "Gérer l'intégration WebSearch (Exa AI)" ;;
       config.no_path)         printf '%s' "Chemin non enregistré pour" ;;
       config.apply_via)       printf '%s' "— appliquer via : ./oc.sh deploy all" ;;
       config.api_key.required) printf '%s' "Clé API requise" ;;
@@ -262,9 +272,13 @@ t() {
       provider.project_title) printf '%s' "Fournisseur LLM —" ;;
       provider.choose_default) printf '%s' "Choisir le fournisseur par défaut pour tous les projets :" ;;
       provider.choose_project) printf '%s' "Choisir le fournisseur pour ce projet :" ;;
-      provider.current)       printf '%s' "Fournisseur actuel :" ;;
+      provider.current)       printf '%s' "Fournisseur actuel" ;;
       provider.current_project) printf '%s' "Fournisseur actuel du projet :" ;;
-      provider.hub_default)   printf '%s' "Fournisseur du hub (par défaut) :" ;;
+      provider.hub_default)   printf '%s' "fournisseur du hub (par défaut)" ;;
+      provider.hub_default_no_key) printf '%s' "fournisseur du hub (clé non configurée)" ;;
+      provider.key)           printf '%s' "clé" ;;
+      provider.key_missing)   printf '%s' "clé non configurée" ;;
+      provider.menu_prompt)   printf '%s' "Numéro" ;;
       provider.selected)      printf '%s' "Fournisseur sélectionné :" ;;
       provider.saved)         printf '%s' "Fournisseur par défaut enregistré :" ;;
       provider.set_done)      printf '%s' "Fournisseur configuré pour" ;;
@@ -277,9 +291,6 @@ t() {
       provider.source_project) printf '%s' "Source : configuration du projet" ;;
       provider.source_hub)    printf '%s' "Source : fournisseur par défaut du hub" ;;
       provider.apply_hint)    printf '%s' "Appliquer aux projets : ./oc.sh deploy all <PROJECT_ID>" ;;
-      provider.usage)         printf '%s' "Usage : ./oc.sh provider <sous-commande>" ;;
-      provider.list_cmd)      printf '%s' "list                           Liste les fournisseurs disponibles" ;;
-      provider.set_default_cmd) printf '%s' "set-default                    Configure le fournisseur par défaut (hub)" ;;
 
       # ── cmd-skills.sh ──────────────────────────────────────────────────────
       skills.title)           printf '%s' "oc skills — Gestion des skills externes" ;;
@@ -388,11 +399,11 @@ t() {
       install.provider_title) printf '%s' "Fournisseur LLM" ;;
       install.provider_choose) printf '%s' "Quel fournisseur d'IA utiliser pour tous vos projets ?" ;;
       install.provider_recommended) printf '%s' "(recommandé)" ;;
-      install.provider_skip)  printf '%s' "Ignorer (configurer plus tard via ./oc.sh provider set-default)" ;;
+      install.provider_skip)  printf '%s' "Ignorer (configurer plus tard via ./oc.sh config set)" ;;
       install.provider_api_key) printf '%s' "(laisser vide pour ignorer) :" ;;
       install.provider_base_url) printf '%s' "URL de base" ;;
       install.provider_configured) printf '%s' "Fournisseur configuré :" ;;
-      install.provider_skipped) printf '%s' "Fournisseur non configuré — utiliser : ./oc.sh provider set-default" ;;
+      install.provider_skipped) printf '%s' "Fournisseur non configuré — utiliser : ./oc.sh config set" ;;
       install.projects_ready)  printf '%s' "projects.md prêt" ;;
       install.paths_created)   printf '%s' "paths.local.md créé" ;;
       install.api_keys_ready)  printf '%s' "api-keys.local.md prêt (permissions 600)" ;;
@@ -687,12 +698,12 @@ t_en() {
     help.config_list.desc)  printf '%s' "List all saved configurations" ;;
     help.config_unset.cmd)  printf '%s' "config unset <PROJECT_ID>" ;;
     help.config_unset.desc) printf '%s' "Delete project configuration" ;;
-    help.config_language.cmd)  printf '%s' "config set language <en|fr>" ;;
-    help.config_language.desc) printf '%s' "Set CLI display language (global)" ;;
-    help.provider_list.cmd) printf '%s' "provider list" ;;
-    help.provider_list.desc) printf '%s' "List available providers" ;;
-    help.provider_set_default.cmd)  printf '%s' "provider set-default" ;;
-    help.provider_set_default.desc) printf '%s' "Configure the hub default provider (interactive)" ;;
+      help.config_language.cmd)  printf '%s' "config set language <en|fr>" ;;
+      help.config_language.desc) printf '%s' "Set CLI display language (global)" ;;
+      help.config_list_providers.cmd)  printf '%s' "config list --providers" ;;
+      help.config_list_providers.desc) printf '%s' "List available providers" ;;
+      help.config_init_providers.cmd)  printf '%s' "config init-providers [--force]" ;;
+      help.config_init_providers.desc) printf '%s' "Initialize provider config files (config/providers/*.json)" ;;
     # Deploy targets
     help.deploy_target.opencode) printf '%s' "opencode     → .opencode/agents/ + opencode.json" ;;
     # Projects
@@ -776,8 +787,16 @@ t_en() {
     config.written)         printf '%s' "Configuration saved for" ;;
     config.apply_now)       printf '%s' "Apply now to project (redeploy opencode.json)? [Y/n]: " ;;
     config.apply_later)     printf '%s' "Apply later: ./oc.sh deploy all" ;;
-    config.no_path)         printf '%s' "Path not registered for" ;;
+    config.no_path)         printf '%s' "Path not found for" ;;
     config.apply_via)       printf '%s' "— apply via: ./oc.sh deploy all" ;;
+    config.hub_provider_saved) printf '%s' "Hub provider saved:" ;;
+    config.regenerating_adapter) printf '%s' "Updating adapter" ;;
+    config.init_providers_title) printf '%s' "Initializing opencode providers" ;;
+    config.init_providers_actions) printf '%s' "Manual actions required:" ;;
+    config.init_providers_bedrock) printf '%s' "configure ~/.aws/credentials or AWS_PROFILE" ;;
+    config.created)         printf '%s' "created" ;;
+    config.exists)          printf '%s' "existing" ;;
+    websearch.manage_desc)  printf '%s' "Manage WebSearch (Exa AI) integration" ;;
     config.api_key.required) printf '%s' "API key required" ;;
     config.api_key.unchanged) printf '%s' "API key unchanged" ;;
     config.language.invalid) printf '%s' "Invalid language value (accepted: en, fr)" ;;
@@ -843,9 +862,13 @@ t_en() {
     provider.project_title) printf '%s' "LLM provider —" ;;
     provider.choose_default) printf '%s' "Choose the default provider for all projects:" ;;
     provider.choose_project) printf '%s' "Choose the provider for this project:" ;;
-    provider.current)       printf '%s' "Current provider:" ;;
+    provider.current)       printf '%s' "Current provider" ;;
     provider.current_project) printf '%s' "Current project provider:" ;;
-    provider.hub_default)   printf '%s' "Hub default provider:" ;;
+    provider.hub_default)   printf '%s' "hub default provider" ;;
+    provider.hub_default_no_key) printf '%s' "hub default provider (no key configured)" ;;
+    provider.key)           printf '%s' "key" ;;
+    provider.key_missing)   printf '%s' "key not configured" ;;
+    provider.menu_prompt)   printf '%s' "Number" ;;
     provider.selected)      printf '%s' "Provider selected:" ;;
     provider.saved)         printf '%s' "Default provider saved:" ;;
     provider.set_done)      printf '%s' "Provider configured for" ;;
@@ -858,9 +881,6 @@ t_en() {
     provider.source_project) printf '%s' "Source: project configuration" ;;
     provider.source_hub)    printf '%s' "Source: hub default provider" ;;
     provider.apply_hint)    printf '%s' "Apply to projects: ./oc.sh deploy all <PROJECT_ID>" ;;
-    provider.usage)         printf '%s' "Usage: ./oc.sh provider <subcommand>" ;;
-    provider.list_cmd)      printf '%s' "list                           List available providers" ;;
-    provider.set_default_cmd) printf '%s' "set-default                    Configure the default provider (hub)" ;;
 
     # ── cmd-skills.sh ────────────────────────────────────────────────────────
     skills.title)           printf '%s' "oc skills — External skill management" ;;
@@ -969,11 +989,11 @@ t_en() {
     install.provider_title) printf '%s' "LLM Provider" ;;
     install.provider_choose) printf '%s' "Which AI provider to use for all your projects?" ;;
     install.provider_recommended) printf '%s' "(recommended)" ;;
-    install.provider_skip)  printf '%s' "Skip (configure later via ./oc.sh provider set-default)" ;;
+    install.provider_skip)  printf '%s' "Skip (configure later via ./oc.sh config set)" ;;
     install.provider_api_key) printf '%s' "(leave empty to skip):" ;;
     install.provider_base_url) printf '%s' "Base URL" ;;
     install.provider_configured) printf '%s' "Provider configured:" ;;
-    install.provider_skipped) printf '%s' "Provider not configured — use: ./oc.sh provider set-default" ;;
+    install.provider_skipped) printf '%s' "Provider not configured — use: ./oc.sh config set" ;;
     install.projects_ready)  printf '%s' "projects.md ready" ;;
     install.paths_created)   printf '%s' "paths.local.md created" ;;
     install.api_keys_ready)  printf '%s' "api-keys.local.md ready (permissions 600)" ;;

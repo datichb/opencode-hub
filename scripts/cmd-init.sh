@@ -416,7 +416,7 @@ else
     log_info "Fournisseur du hub utilisé : ${_hub_provider_label}"
     PROVIDER_SUMMARY="${_hub_provider_label} (depuis le hub)"
   else
-    log_info "Fournisseur non configuré — utiliser : ./oc.sh provider set-default"
+    log_info "Fournisseur non configuré — utiliser : ./oc.sh config set"
     PROVIDER_SUMMARY="non configuré"
   fi
 fi

@@ -161,8 +161,138 @@ cmd_get_language() {
   log_info "Current CLI language: ${lang:-en}"
 }
 
+# ────────────────────────────────────────────────────────────────────────────────
+# Templates des providers — config/providers/*.json
+# ────────────────────────────────────────────────────────────────────────────────
+_template_mammouth() { cat <<'TMPL'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "litellm/claude-sonnet-4-5",
+  "provider": {
+    "litellm": {
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "apiKey": "REPLACE_ME",
+        "baseURL": "https://api.mammouth.ai/v1"
+      }
+    }
+  }
+}
+TMPL
+}
+
+_template_github-copilot() { cat <<'TMPL'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "github-copilot/claude-sonnet-4.5",
+  "provider": {
+    "github-copilot": {}
+  }
+}
+TMPL
+}
+
+_template_openrouter() { cat <<'TMPL'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "openrouter/anthropic/claude-sonnet-4-5",
+  "provider": {
+    "openrouter": {
+      "apiKey": "sk-or-v1-REPLACE_ME"
+    }
+  }
+}
+TMPL
+}
+
+_template_ollama() { cat <<'TMPL'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "ollama/REPLACE_ME",
+  "provider": {
+    "ollama": {
+      "baseURL": "http://localhost:11434/v1"
+    }
+  }
+}
+TMPL
+}
+
+_template_bedrock() { cat <<'TMPL'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "amazon-bedrock/anthropic.claude-sonnet-4-6",
+  "provider": {
+    "amazon-bedrock": {
+      "options": {
+        "region": "eu-west-3"
+      }
+    }
+  }
+}
+TMPL
+}
+
+# Régénère opencode.json du hub via l'adapter opencode
+_regenerate_hub_adapter() {
+  source "$HUB_DIR/scripts/lib/adapter-manager.sh"
+  local _synced=false
+  while IFS= read -r target; do
+    [ -z "$target" ] && continue
+    load_adapter "$target"
+    if declare -F adapter_deploy &>/dev/null; then
+      log_info "$(t config.regenerating_adapter) ${target}..."
+      adapter_deploy "$HUB_DIR" ""
+      _synced=true
+    fi
+  done <<< "opencode"
+  [ "$_synced" = false ] && log_info "$(t provider.apply_hint)"
+}
+
+# Configure le provider/modèle du hub dans hub.json (non-interactif)
+_write_hub_provider() {
+  local provider="$1" model="$2" api_key="$3" base_url="$4" region="${5:-}"
+  local tmp; tmp=$(mktemp)
+
+  # S'assurer que default_provider existe dans hub.json
+  if ! jq -e '.default_provider' "$HUB_CONFIG" >/dev/null 2>&1; then
+    jq '. + {"default_provider":{"name":"","api_key":"","base_url":""}}' "$HUB_CONFIG" > "$tmp" && mv "$tmp" "$HUB_CONFIG"
+  fi
+
+  tmp=$(mktemp)
+  if [ -n "$region" ]; then
+    jq --arg name "$provider" \
+       --arg key  "$api_key" \
+       --arg url  "$base_url" \
+       --arg reg  "$region" \
+       '.default_provider.name = $name | .default_provider.api_key = $key | .default_provider.base_url = $url | .default_provider.region = $reg' \
+       "$HUB_CONFIG" > "$tmp"
+  else
+    jq --arg name "$provider" \
+       --arg key  "$api_key" \
+       --arg url  "$base_url" \
+       '.default_provider.name = $name | .default_provider.api_key = $key | .default_provider.base_url = $url | del(.default_provider.region)' \
+       "$HUB_CONFIG" > "$tmp"
+  fi
+  mv "$tmp" "$HUB_CONFIG"
+
+  # Mettre à jour .opencode.model si model fourni
+  if [ -n "$model" ]; then
+    tmp=$(mktemp)
+    jq --arg m "$model" '.opencode.model = $m' "$HUB_CONFIG" > "$tmp" && mv "$tmp" "$HUB_CONFIG"
+  fi
+
+  # Protéger hub.json si clé présente
+  if [ -n "$api_key" ]; then
+    local gitignore="$HUB_DIR/.gitignore"
+    if [ ! -f "$gitignore" ] || ! grep -qx "config/hub.json" "$gitignore"; then
+      echo "config/hub.json" >> "$gitignore"
+      log_info "$(t provider.hub_json_added_gitignore)"
+    fi
+  fi
+}
+
 _cmd_set_hub() {
-  # Parse --family-model et --agent-model au niveau hub (pas de PROJECT_ID)
   if ! command -v jq >/dev/null 2>&1; then
     log_error "jq is required for hub-level config"
     exit 1
@@ -171,31 +301,163 @@ _cmd_set_hub() {
     log_error "hub.json not found — run first: ./oc.sh install"
     exit 1
   fi
+
+  # Parse tous les flags hub
+  local flag_provider="" flag_model="" flag_api_key="" flag_base_url=""
+  local flag_family_models=() flag_agent_models=()
   while [ $# -gt 0 ]; do
     case "$1" in
+      --provider) [ $# -ge 2 ] || { log_error "Option $1 requiert une valeur"; exit 1; }; flag_provider="$2"; shift 2 ;;
+      --model)    [ $# -ge 2 ] || { log_error "Option $1 requiert une valeur"; exit 1; }; flag_model="$2";    shift 2 ;;
+      --api-key)  [ $# -ge 2 ] || { log_error "Option $1 requiert une valeur"; exit 1; }; flag_api_key="$2";  shift 2 ;;
+      --base-url) [ $# -ge 2 ] || { log_error "Option $1 requiert une valeur"; exit 1; }; flag_base_url="$2"; shift 2 ;;
       --family-model)
         [ $# -ge 2 ] || { log_error "Option $1 requiert une valeur (format: key=value)"; exit 1; }
-        local fm_key="${2%%=*}" fm_value="${2#*=}"
-        [ "$fm_key" = "$2" ] && { log_error "--family-model requiert le format key=value"; exit 1; }
-        _validate_family_name "$fm_key" || { log_error "Unknown family '$fm_key' — available: $(cd "$CANONICAL_AGENTS_DIR" 2>/dev/null && printf '%s, ' */ | sed 's/, $//')"; exit 1; }
-        _warn_unknown_model "$fm_value"
-        local tmp; tmp=$(mktemp)
-        jq --arg k "$fm_key" --arg v "$fm_value" '.agent_models.families[$k] = $v' "$HUB_CONFIG" > "$tmp" && mv "$tmp" "$HUB_CONFIG"
-        log_success "Hub family model set: $fm_key=$fm_value"
-        shift 2 ;;
+        flag_family_models+=("$2"); shift 2 ;;
       --agent-model)
         [ $# -ge 2 ] || { log_error "Option $1 requiert une valeur (format: key=value)"; exit 1; }
-        local am_key="${2%%=*}" am_value="${2#*=}"
-        [ "$am_key" = "$2" ] && { log_error "--agent-model requiert le format key=value"; exit 1; }
-        _validate_agent_name "$am_key" || { log_error "Unknown agent '$am_key' — no matching file in $CANONICAL_AGENTS_DIR/*/"; exit 1; }
-        _warn_unknown_model "$am_value"
-        local tmp; tmp=$(mktemp)
-        jq --arg k "$am_key" --arg v "$am_value" '.agent_models.agents[$k] = $v' "$HUB_CONFIG" > "$tmp" && mv "$tmp" "$HUB_CONFIG"
-        log_success "Hub agent model set: $am_key=$am_value"
-        shift 2 ;;
+        flag_agent_models+=("$2"); shift 2 ;;
       *) log_error "Option inconnue : $1"; exit 1 ;;
     esac
   done
+
+  # Traiter --family-model (logique existante inchangée)
+  local _wrote_models=false
+  for entry in "${flag_family_models[@]}"; do
+    local fk="${entry%%=*}" fv="${entry#*=}"
+    [ "$fk" = "$entry" ] && { log_error "--family-model requiert le format key=value"; exit 1; }
+    _validate_family_name "$fk" || { log_error "Unknown family '$fk' — available: $(cd "$CANONICAL_AGENTS_DIR" 2>/dev/null && printf '%s, ' */ | sed 's/, $//')"; exit 1; }
+    _warn_unknown_model "$fv"
+    local tmp; tmp=$(mktemp)
+    jq --arg k "$fk" --arg v "$fv" '.agent_models.families[$k] = $v' "$HUB_CONFIG" > "$tmp" && mv "$tmp" "$HUB_CONFIG"
+    log_success "Hub family model set: $fk=$fv"
+    _wrote_models=true
+  done
+
+  # Traiter --agent-model (logique existante inchangée)
+  for entry in "${flag_agent_models[@]}"; do
+    local ak="${entry%%=*}" av="${entry#*=}"
+    [ "$ak" = "$entry" ] && { log_error "--agent-model requiert le format key=value"; exit 1; }
+    _validate_agent_name "$ak" || { log_error "Unknown agent '$ak' — no matching file in $CANONICAL_AGENTS_DIR/*/"; exit 1; }
+    _warn_unknown_model "$av"
+    local tmp; tmp=$(mktemp)
+    jq --arg k "$ak" --arg v "$av" '.agent_models.agents[$k] = $v' "$HUB_CONFIG" > "$tmp" && mv "$tmp" "$HUB_CONFIG"
+    log_success "Hub agent model set: $ak=$av"
+    _wrote_models=true
+  done
+
+  # Si uniquement --family-model/--agent-model traités → terminé
+  if [ "$_wrote_models" = true ] && \
+     [ -z "$flag_provider" ] && [ -z "$flag_model" ] && [ -z "$flag_api_key" ] && [ -z "$flag_base_url" ]; then
+    return
+  fi
+
+  # Mode NON-INTERACTIF : au moins un flag provider/model/api-key/base-url fourni
+  if [ -n "$flag_provider" ] || [ -n "$flag_model" ] || [ -n "$flag_api_key" ] || [ -n "$flag_base_url" ]; then
+    # Si --model seul, sans provider → mettre à jour uniquement .opencode.model
+    if [ -z "$flag_provider" ] && [ -n "$flag_model" ]; then
+      local tmp; tmp=$(mktemp)
+      jq --arg m "$flag_model" '.opencode.model = $m' "$HUB_CONFIG" > "$tmp" && mv "$tmp" "$HUB_CONFIG"
+      log_success "Hub model set: $flag_model"
+      return
+    fi
+
+    # Valider le provider
+    flag_provider=$(echo "$flag_provider" | tr '[:upper:]' '[:lower:]')
+    local valid_providers="anthropic mammouth github-models bedrock ollama github-copilot openrouter"
+    if [ -f "$PROVIDERS_FILE" ] && command -v jq &>/dev/null; then
+      valid_providers=$(jq -r '.providers | keys | join(" ")' "$PROVIDERS_FILE" 2>/dev/null || echo "$valid_providers")
+    fi
+    local _found=false
+    for _p in $valid_providers; do
+      [ "$_p" = "$flag_provider" ] && _found=true && break
+    done
+    if [ "$_found" = false ]; then
+      log_error "Provider non supporté : $flag_provider"
+      log_info  "Providers disponibles : $valid_providers"
+      exit 1
+    fi
+
+    # Vérifier si le provider nécessite une clé
+    local requires_api_key; requires_api_key=$(_resolve_requires_api_key "$flag_provider")
+    if [ "$requires_api_key" = "true" ] && [ -z "$flag_api_key" ]; then
+      log_warn "$(t provider.api_key_empty_warn)"
+    fi
+
+    # Gérer base_url par défaut si provider a une URL par défaut
+    if [ -z "$flag_base_url" ] && [ -f "$PROVIDERS_FILE" ]; then
+      local default_url; default_url=$(get_provider_info "$flag_provider" "default_base_url" 2>/dev/null || echo "")
+      [ -n "$default_url" ] && flag_base_url="$default_url"
+    fi
+
+    # Gérer la région pour bedrock
+    local flag_region=""
+    if [ "$flag_provider" = "bedrock" ] && [ -f "$PROVIDERS_FILE" ]; then
+      flag_region=$(get_provider_info "$flag_provider" "default_region" 2>/dev/null || echo "")
+    fi
+
+    _write_hub_provider "$flag_provider" "$flag_model" "$flag_api_key" "$flag_base_url" "$flag_region"
+    log_success "$(t config.hub_provider_saved) ${flag_provider}"
+    [ -n "$flag_model" ] && log_info "Modèle : ${flag_model}"
+    [ -n "$flag_base_url" ] && log_info "URL de base : ${flag_base_url}"
+    _regenerate_hub_adapter
+    return
+  fi
+
+  # Mode INTERACTIF : aucun flag provider/model/api-key fourni
+  if [ ! -f "$PROVIDERS_FILE" ]; then
+    log_error "$(t provider.no_catalog)"
+    exit 1
+  fi
+
+  echo ""
+  log_title "$(t provider.default_title)"
+
+  # Afficher le provider actuel
+  local current_provider; current_provider=$(get_hub_default_provider)
+  local current_api_key; current_api_key=$(get_hub_default_api_key)
+  if [ -n "$current_provider" ]; then
+    local current_label; current_label=$(get_provider_info "$current_provider" "label" 2>/dev/null || echo "$current_provider")
+    if [ -n "$current_api_key" ]; then
+      local masked="${current_api_key:0:4}***"
+      echo -e "  $(t provider.current) : ${BOLD}${current_label}${RESET} ($(t provider.key) : ${masked})"
+    else
+      echo -e "  $(t provider.current) : ${BOLD}${current_label}${RESET} ${YELLOW}($(t provider.key_missing))${RESET}"
+    fi
+    echo ""
+  fi
+
+  log_info "$(t provider.choose_default)"
+  echo ""
+  local providers_array=()
+  _build_provider_menu providers_array
+  echo ""
+
+  read -rp "  $(t provider.menu_prompt) (1-${#providers_array[@]}) : " _choice
+  if ! [[ "$_choice" =~ ^[0-9]+$ ]] || [ "$_choice" -lt 1 ] || [ "$_choice" -gt "${#providers_array[@]}" ]; then
+    log_error "Choix invalide : '$_choice'"
+    exit 1
+  fi
+
+  local selected_provider="${providers_array[$((_choice - 1))]}"
+  local selected_label; selected_label=$(get_provider_info "$selected_provider" "label")
+  echo ""
+  log_info "$(t provider.selected) ${BOLD}${selected_label}${RESET}"
+
+  _cred_api_key=""
+  _cred_base_url=""
+  _collect_provider_credentials "$selected_provider" "$selected_label"
+
+  local requires_api_key; requires_api_key=$(get_provider_info "$selected_provider" "requires_api_key")
+  if [ "$requires_api_key" = "true" ] && [ -z "$_cred_api_key" ]; then
+    log_warn "$(t provider.api_key_empty_warn)"
+  fi
+
+  _write_hub_provider "$selected_provider" "" "$_cred_api_key" "$_cred_base_url" "${_cred_region:-}"
+  echo ""
+  log_success "$(t provider.saved) ${selected_label}"
+  [ -n "$_cred_base_url" ] && log_info "URL de base : ${_cred_base_url}"
+  _regenerate_hub_adapter
 }
 
 # Ajoute ou remplace une ligne key=value dans une section [ID] de api-keys.local.md
@@ -414,6 +676,12 @@ cmd_get() {
 }
 
 cmd_list() {
+  # oc config list --providers → liste le catalogue providers
+  if [ "${1:-}" = "--providers" ]; then
+    _cmd_list_providers
+    return
+  fi
+
   if [ ! -f "$API_KEYS_FILE" ]; then
     log_info "$(t config.no_file)"
     exit 0
@@ -429,6 +697,74 @@ cmd_list() {
     _display_entry "$id"
     echo ""
   done <<< "$sections"
+}
+
+# Affiche le catalogue des providers disponibles
+_cmd_list_providers() {
+  log_title "$(t provider.title)"
+  echo ""
+
+  if [ ! -f "$PROVIDERS_FILE" ]; then
+    log_error "$(t provider.no_catalog)"
+    exit 1
+  fi
+
+  local hub_provider; hub_provider=$(get_hub_default_provider)
+  local hub_api_key; hub_api_key=$(get_hub_default_api_key)
+
+  jq -r '.providers | keys[]' "$PROVIDERS_FILE" | while read -r pname; do
+    local label; label=$(get_provider_info "$pname" "label")
+    local desc; desc=$(get_provider_info "$pname" "description")
+
+    # Statut hub
+    local status=""
+    if [ "$pname" = "$hub_provider" ]; then
+      if [ -n "$hub_api_key" ]; then
+        status=" ${GREEN}◆ $(t provider.hub_default)${RESET}"
+      else
+        status=" ${YELLOW}◆ $(t provider.hub_default_no_key)${RESET}"
+      fi
+    fi
+
+    printf "  ${BOLD}%s${RESET}%b\n" "$label" "$status"
+    printf "    %s\n" "$desc"
+    echo ""
+  done
+}
+
+# Initialise les fichiers config/providers/*.json (switcher ocp)
+cmd_init_providers() {
+  local force=false
+  [ "${1:-}" = "--force" ] && force=true
+
+  local providers_dir="$HUB_DIR/config/providers"
+  mkdir -p "$providers_dir"
+
+  log_title "$(t config.init_providers_title)"
+  echo ""
+
+  for name in mammouth github-copilot openrouter ollama bedrock; do
+    local file="$providers_dir/${name}.json"
+    if [ ! -f "$file" ] || [ "$force" = true ]; then
+      "_template_${name}" > "$file"
+      log_success "${name}.json [$(t config.created)]"
+    else
+      log_info "${name}.json [$(t config.exists)]"
+    fi
+  done
+
+  # Créer .gitignore si absent
+  local gitignore="$providers_dir/.gitignore"
+  if [ ! -f "$gitignore" ] || [ "$force" = true ]; then
+    printf '# Fichiers de configuration provider — contiennent des clés API en clair\n*.json\n# Autoriser les fichiers d'\''exemple\n!*.example.json\n' > "$gitignore"
+    log_success ".gitignore $(t config.created)"
+  fi
+
+  echo ""
+  log_info "$(t config.init_providers_actions)"
+  log_info "  openrouter : oc config set --provider openrouter --api-key <clé>"
+  log_info "  ollama     : oc config set --provider ollama --model <modèle> (ex: qwen2.5-coder:7b)"
+  log_info "  bedrock    : $(t config.init_providers_bedrock)"
 }
 
 cmd_unset() {
@@ -682,39 +1018,35 @@ cmd_websearch_status() {
 # Si sourcé pour les fonctions uniquement, ne pas exécuter le dispatcher
 if [ "${_CMD_CONFIG_SOURCE_ONLY:-}" = "1" ]; then return 0 2>/dev/null || exit 0; fi
 
+_config_usage() {
+  echo -e "${BOLD}$(t config.title)${RESET}"
+  echo ""
+  printf "  ${CYAN}%-56s${RESET}  %s\n" "$(t help.config_set.cmd)"              "$(t help.config_set.desc)"
+  printf "  ${CYAN}%-56s${RESET}  %s\n" "$(t help.config_get.cmd)"              "$(t help.config_get.desc)"
+  printf "  ${CYAN}%-56s${RESET}  %s\n" "$(t help.config_list.cmd)"             "$(t help.config_list.desc)"
+  printf "  ${CYAN}%-56s${RESET}  %s\n" "$(t help.config_list_providers.cmd)"   "$(t help.config_list_providers.desc)"
+  printf "  ${CYAN}%-56s${RESET}  %s\n" "$(t help.config_unset.cmd)"            "$(t help.config_unset.desc)"
+  printf "  ${CYAN}%-56s${RESET}  %s\n" "$(t help.config_language.cmd)"         "$(t help.config_language.desc)"
+  printf "  ${CYAN}%-56s${RESET}  %s\n" "$(t help.config_init_providers.cmd)"   "$(t help.config_init_providers.desc)"
+  echo ""
+  printf "  ${CYAN}%-56s${RESET}  %s\n" "oc config websearch <enable|disable|status> [PROJECT_ID]" "$(t websearch.manage_desc)"
+}
+
 case "$SUBCOMMAND" in
-  set)   cmd_set "$@" ;;
-  get)   cmd_get "$@" ;;
-  list)  cmd_list ;;
-  unset) cmd_unset "$@" ;;
-  websearch) cmd_websearch "$@" ;;
+  set)            cmd_set "$@" ;;
+  get)            cmd_get "$@" ;;
+  list)           cmd_list "$@" ;;
+  unset)          cmd_unset "$@" ;;
+  websearch)      cmd_websearch "$@" ;;
+  init-providers) cmd_init_providers "$@" ;;
   "")
-    echo -e "${BOLD}$(t config.title)${RESET}"
-    echo ""
-    echo "  $(t help.config_set)"
-    echo "  $(t help.config_set_desc)"
-    echo "  $(t help.config_language)"
-    echo "  $(t help.config_get)"
-    echo "  $(t help.config_list)"
-    echo "  $(t help.config_unset)"
-    echo ""
-    echo "  oc config websearch <enable|disable|status> [PROJECT_ID]"
-    echo "  Manage WebSearch (Exa AI) integration"
+    _config_usage
     exit 0
     ;;
   *)
     log_error "$(t subcmd.unknown) : $SUBCOMMAND"
     echo ""
-    echo -e "${BOLD}$(t config.title)${RESET}"
-    echo ""
-    echo "  $(t help.config_set)"
-    echo "  $(t help.config_set_desc)"
-    echo "  $(t help.config_language)"
-    echo "  $(t help.config_get)"
-    echo "  $(t help.config_list)"
-    echo "  $(t help.config_unset)"
-    echo ""
-    echo "  oc config websearch <enable|disable|status> [PROJECT_ID]"
+    _config_usage
     exit 1
     ;;
 esac

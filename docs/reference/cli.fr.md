@@ -633,7 +633,7 @@ oc version
 
 ## `oc config`
 
-Gère les clés API et les modèles IA par projet. Les données sont stockées dans `projects/api-keys.local.md` (non versionné).
+Gère les clés API et les modèles IA par projet, ainsi que la configuration des providers LLM au niveau du hub. Les données projet sont stockées dans `projects/api-keys.local.md` (non versionné) ; la configuration hub dans `config/hub.json`.
 
 ```bash
 oc config <sous-commande> [options]
@@ -641,10 +641,11 @@ oc config <sous-commande> [options]
 
 | Sous-commande | Description |
 |---------------|-------------|
-| `set <PROJECT_ID> [options]` | Configure la clé API, le modèle et le provider pour un projet |
+| `set [PROJECT_ID] [options]` | Configure la clé API, le modèle et le provider (projet ou hub) |
 | `get <PROJECT_ID>` | Affiche la configuration d'un projet (clé masquée) |
-| `list` | Liste toutes les configurations enregistrées |
+| `list [--providers]` | Liste toutes les configurations enregistrées, ou tous les providers du catalogue |
 | `unset <PROJECT_ID>` | Supprime la configuration d'un projet (avec confirmation) |
+| `init-providers [--force]` | Initialise les fichiers de configuration switcher dans `config/providers/` |
 
 **Options de `oc config set` :**
 
@@ -654,43 +655,44 @@ oc config <sous-commande> [options]
 | `--provider <provider>` | Provider LLM — en mode interactif, un menu numéroté est proposé depuis le catalogue `providers.json` |
 | `--api-key <clé>` | Clé API (saisie masquée en mode interactif) |
 | `--base-url <url>` | URL de base (providers compatibles OpenAI) |
+| `--family-model <modèle>` | Modèle IA pour les agents de type `family` |
+| `--agent-model <modèle>` | Modèle IA pour les agents |
 
-> Sans options, `set` est interactif — propose les valeurs actuelles comme défaut et affiche un menu numéroté des providers disponibles.
-> Après un `set`, propose de re-déployer les agents dans le projet si le chemin est connu.
+**Comportement de `oc config set` selon les arguments :**
+
+- **`oc config set <PROJECT_ID>`** — interactif, configure le provider et la clé pour ce projet
+- **`oc config set`** (sans `PROJECT_ID`) — wizard interactif de configuration du provider **hub** (équivalent à l'ancien `oc provider set-default`)
+- **`oc config set --provider anthropic --api-key sk-...`** — configure le provider hub en mode non-interactif
+- **`oc config set --provider bedrock`** — provider hub sans clé API (ex. Bedrock avec auth AWS)
+- **`oc config set --model claude-opus-4`** — met à jour uniquement le modèle par défaut du hub
+- **`oc config set --provider p --api-key k --model m`** — configure provider, clé et modèle hub en une commande
+
+> Après un `set` avec `PROJECT_ID`, propose de re-déployer les agents dans le projet si le chemin est connu.
+
+**`oc config list --providers` :**
+
+Liste tous les providers du catalogue avec leur statut de configuration au niveau du hub.
+
+**`oc config init-providers [--force]` :**
+
+Crée le dossier `config/providers/` et génère les fichiers JSON utilisés par `ocp` : `mammouth.json`, `copilot.json`, `openrouter.json`, `ollama.json`, `bedrock.json`. Crée également `config/providers/.gitignore` pour protéger les clés API. Sans `--force`, les fichiers existants ne sont pas écrasés.
 
 **Exemples :**
 
 ```bash
-oc config set MON-APP                                 # mode interactif
+oc config set                                         # wizard interactif hub (provider par défaut)
+oc config set --provider anthropic --api-key sk-ant-... # configure le provider hub
+oc config set --provider bedrock                      # provider hub sans clé API
+oc config set --model claude-opus-4                   # met à jour le modèle hub uniquement
+oc config set MON-APP                                 # mode interactif pour MON-APP
 oc config set MON-APP --model claude-opus-4-5 --provider anthropic --api-key sk-ant-...
 oc config set MON-APP --provider litellm --api-key sk-... --base-url https://api.example.com/v1
 oc config get MON-APP                                 # affiche la config (clé masquée)
-oc config list                                        # liste toutes les entrées
+oc config list                                        # liste toutes les entrées projet
+oc config list --providers                            # liste tous les providers du catalogue
 oc config unset MON-APP                               # supprime (avec confirmation)
-```
-
----
-
-## `oc provider`
-
-Gère les providers LLM au niveau **hub** (configuration globale partagée par tous les projets).
-
-```bash
-oc provider <sous-commande>
-```
-
-| Sous-commande | Description |
-|---------------|-------------|
-| `list` | Liste tous les providers du catalogue avec leur statut hub |
-| `set-default` | Configure le provider par défaut du hub (interactif) |
-
-> Pour configurer le provider d'un **projet spécifique**, utiliser `oc config set <PROJECT_ID>`.
-
-**Exemples :**
-
-```bash
-oc provider list         # liste tous les providers disponibles
-oc provider set-default  # wizard interactif pour choisir le provider hub
+oc config init-providers                              # initialise les fichiers switcher ocp
+oc config init-providers --force                      # réinitialise tous les fichiers switcher
 ```
 
 ---

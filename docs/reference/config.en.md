@@ -191,7 +191,7 @@ OTHER-APP=~/dev/other-app
 
 ## `projects/api-keys.local.md`
 
-Stores API keys and models configured per project via `oc config` or `oc provider`.
+Stores API keys and models configured per project via `oc config`.
 **Git-ignored** — never commit this file.
 
 ### Format
@@ -252,15 +252,16 @@ For OpenCode, the key is injected as `ANTHROPIC_API_KEY` at `oc start` time (Ant
 
 ## `oc config` — CLI command
 
-Manages entries in `projects/api-keys.local.md`.
+Manages entries in `projects/api-keys.local.md` as well as hub-level LLM provider configuration (`config/hub.json`).
 
 ### Sub-commands
 
 ```
-oc config set <PROJECT_ID> [options]   Create or update a configuration
+oc config set [PROJECT_ID] [options]   Create or update a configuration (project or hub)
 oc config get <PROJECT_ID>             Display the configuration (masked key)
-oc config list                         List all configurations
+oc config list [--providers]           List all configurations, or providers in the catalogue
 oc config unset <PROJECT_ID>           Delete a configuration
+oc config init-providers [--force]     Initialise switcher files in config/providers/
 ```
 
 ### `oc config set` options
@@ -271,20 +272,51 @@ oc config unset <PROJECT_ID>           Delete a configuration
 | `--provider <provider>` | `anthropic`, `mammouth`, `github-models`, `bedrock`, `ollama`, or `litellm` |
 | `--api-key <key>` | API key (if omitted: interactive masked input) |
 | `--base-url <url>` | Base URL (optional for most providers) |
+| `--family-model <model>` | AI model for `family`-type agents |
+| `--agent-model <model>` | AI model for agents |
 
-If called without flags, the flow is interactive with current values as defaults.
+**Behaviour depending on arguments:**
+
+- `oc config set <PROJECT_ID>` — interactive, configures the provider and key for that project
+- `oc config set` (no `PROJECT_ID`) — interactive **hub** provider setup wizard
+- `oc config set --provider anthropic --api-key sk-...` — non-interactive hub provider configuration
+- `oc config set --provider bedrock` — hub provider without API key
+- `oc config set --model claude-opus-4` — update hub default model only
+- `oc config set --provider p --api-key k --model m` — configure provider, key and hub model in one command
+
+`oc config list --providers` lists all providers in the catalogue with their hub configuration status.
+
+`oc config init-providers` creates `config/providers/` and generates the JSON files used by `ocp` (`mammouth.json`, `copilot.json`, `openrouter.json`, `ollama.json`, `bedrock.json`) as well as `config/providers/.gitignore`. Without `--force`, existing files are not overwritten.
 
 ### Example
 
 ```sh
-# Interactive flow
+# Interactive hub wizard (default provider)
+./oc.sh config set
+
+# Configure hub provider on the command line
+./oc.sh config set --provider anthropic --api-key sk-ant-...
+
+# Hub provider without API key (e.g. Bedrock)
+./oc.sh config set --provider bedrock
+
+# Update hub default model only
+./oc.sh config set --model claude-opus-4
+
+# Interactive project configuration
 ./oc.sh config set MY-PROJECT
 
-# Command line (outside CI: prefer interactive flow for the key)
+# Project configuration on the command line
 ./oc.sh config set MY-PROJECT --model claude-opus-4-5 --provider anthropic
 
 # With MammouthAI
 ./oc.sh config set MY-PROJECT --provider mammouth --api-key sk-xxx
+
+# List providers in the catalogue
+./oc.sh config list --providers
+
+# Initialise ocp switcher files
+./oc.sh config init-providers
 
 # Check
 ./oc.sh config get MY-PROJECT
@@ -295,65 +327,11 @@ If called without flags, the flow is interactive with current values as defaults
 
 ---
 
-## `oc provider` — CLI command
-
-Manages LLM provider configuration at the hub (default) and project levels.
-
-### Sub-commands
-
-```
-oc provider list                          List all available providers
-oc provider set-default                   Configure the hub default provider
-```
-
-### Example
-
-```sh
-# List providers
-./oc.sh provider list
-
-# Configure hub default (interactive)
-./oc.sh provider set-default
-```
-
-> **Note:** Per-project provider configuration is managed via `oc config set <PROJECT_ID>` (see the `oc config` section above).
-
-### `oc provider init` — initializing switcher files
-
-Creates the `config/providers/` directory and generates 5 JSON files used by `ocp`:
-`mammouth.json`, `copilot.json`, `openrouter.json`, `ollama.json`, `bedrock.json`.
-
-Also creates `config/providers/.gitignore` to protect API keys.
-
-Idempotent: without `--force`, existing files are not overwritten.
-
-```sh
-# First initialization
-./oc.sh provider init
-
-# Reinitialize all files
-./oc.sh provider init --force
-```
-
-### `oc provider set-key` and `oc provider set-model`
-
-Modify an existing provider file in `config/providers/` atomically (tmpfile + mv).
-
-```sh
-# Set openrouter key
-./oc.sh provider set-key openrouter sk-or-v1-xxx...
-
-# Set ollama model
-./oc.sh provider set-model ollama qwen2.5-coder:7b
-```
-
----
-
 ## `ocp` — interactive provider switcher
 
 Shell function injected into `~/.zshrc` by the hub. Launches opencode with a chosen provider while preserving the full `oc start` logic (agent deployment, `--dev` mode, Beads sync, onboarding, etc.).
 
-Requires `config/providers/` to be initialized via `oc provider init`.
+Requires `config/providers/` to be initialized via `oc config init-providers`.
 
 ### Usage
 

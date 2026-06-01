@@ -24,7 +24,7 @@ if [ $# -eq 0 ]; then
   done
   if [ ${#providers[@]} -eq 0 ]; then
     echo "❌ Aucun provider trouvé dans $PROVIDERS_DIR" >&2
-    echo "   Lancer : oc provider init" >&2
+    echo "   Lancer : oc config init-providers" >&2
     exit 1
   fi
   if command -v fzf &>/dev/null; then

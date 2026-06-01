@@ -89,10 +89,10 @@ _section help.section.config
 _cmd help.config_set
 _cmd help.config_get
 _cmd help.config_list
+_cmd help.config_list_providers
 _cmd help.config_unset
 _cmd help.config_language
-_cmd help.provider_list
-_cmd help.provider_set_default
+_cmd help.config_init_providers
 
 _section help.section.deploy_targets
 _note "$(t help.deploy_target.opencode)"

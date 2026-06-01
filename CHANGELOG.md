@@ -9,7 +9,32 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 
 ## [Unreleased]
 
+### Breaking Changes
+
+- **`oc provider` supprimé** — toute la configuration provider passe désormais par `oc config` :
+  - `oc provider set-default` → `oc config set` (mode interactif sans arguments)
+  - `oc provider list` → `oc config list --providers`
+  - `oc provider init [--force]` → `oc config init-providers [--force]`
+  - `oc provider set-key <nom> <clé>` → `oc config set --provider <nom> --api-key <clé>`
+  - `oc provider set-model <nom> <modèle>` → `oc config set --provider <nom> --model <modèle>`
+
 ### Added
+
+- **`oc config set` unifié (hub-level)** — `oc config set` sans PROJECT_ID supporte désormais tous les flags provider :
+  - Mode interactif (sans flags) : lance le wizard de sélection provider identique à l'ancien `oc provider set-default`
+  - `--provider <nom>` — configure le provider par défaut du hub
+  - `--api-key <clé>` — configure la clé API du provider
+  - `--model <modèle>` — met à jour le modèle par défaut du hub (`.opencode.model`)
+  - `--base-url <url>` — configure l'URL de base (litellm, ollama, etc.)
+  - Les flags `--family-model` et `--agent-model` existants restent inchangés
+  - Tous les flags peuvent être combinés en une seule commande
+- **`oc config list --providers`** — affiche le catalogue des providers disponibles avec leur statut hub
+- **`oc config init-providers [--force]`** — initialise les fichiers `config/providers/*.json` pour le switcher `ocp`
+
+### Removed
+
+- **`scripts/cmd-provider.sh`** — supprimé, fonctionnalités absorbées par `cmd-config.sh`
+- **`oc provider`** — commande supprimée de `oc.sh`
 
 - **Enrichissement agent `onboarder` v1.1** — 3 nouvelles phases d'exploration pour un onboarding complet :
   - **Phase 1.4 — Exploration contexte métier** : détection automatique du domaine (e-commerce, fintech, santé, RH, SaaS, éduc, immobilier), identification des utilisateurs cibles, extraction des concepts clés (≥ 3 occurrences), analyse sémantique de la codebase (classes, interfaces, services), détection du glossaire (`docs/glossary.md`), identification du pattern d'architecture (DDD, CQRS, Layered, MVC), analyse des tickets Beads pour patterns métier récurrents

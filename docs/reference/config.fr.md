@@ -189,7 +189,7 @@ AUTRE-APP=~/dev/autre-app
 
 ## `projects/api-keys.local.md`
 
-Stocke les clés API et modèles configurés par projet via `oc config` ou `oc provider`.
+Stocke les clés API et modèles configurés par projet via `oc config`.
 **Ignoré par git** — ne jamais committer ce fichier.
 
 ### Format
@@ -250,15 +250,16 @@ Pour OpenCode, la clé est injectée comme `ANTHROPIC_API_KEY` au moment du `oc 
 
 ## `oc config` — commande CLI
 
-Gère les entrées de `projects/api-keys.local.md`.
+Gère les entrées de `projects/api-keys.local.md` ainsi que la configuration des providers LLM au niveau du hub (`config/hub.json`).
 
 ### Sous-commandes
 
 ```
-oc config set <PROJECT_ID> [options]   Créer ou mettre à jour une configuration
+oc config set [PROJECT_ID] [options]   Créer ou mettre à jour une configuration (projet ou hub)
 oc config get <PROJECT_ID>             Afficher la configuration (clé masquée)
-oc config list                         Lister toutes les configurations
+oc config list [--providers]           Lister toutes les configurations, ou les providers du catalogue
 oc config unset <PROJECT_ID>           Supprimer une configuration
+oc config init-providers [--force]     Initialiser les fichiers switcher dans config/providers/
 ```
 
 ### Options de `oc config set`
@@ -269,20 +270,51 @@ oc config unset <PROJECT_ID>           Supprimer une configuration
 | `--provider <provider>` | `anthropic`, `mammouth`, `github-models`, `bedrock`, `ollama`, ou `litellm` |
 | `--api-key <key>` | Clé API (si omis : saisie masquée interactive) |
 | `--base-url <url>` | Base URL (optionnel pour la plupart des providers) |
+| `--family-model <model>` | Modèle IA pour les agents de type `family` |
+| `--agent-model <model>` | Modèle IA pour les agents |
 
-Si appelé sans flags, le flux est interactif avec les valeurs actuelles comme défauts.
+**Comportement selon les arguments :**
+
+- `oc config set <PROJECT_ID>` — interactif, configure le provider et la clé pour ce projet
+- `oc config set` (sans `PROJECT_ID`) — wizard interactif de configuration du provider **hub**
+- `oc config set --provider anthropic --api-key sk-...` — configure le provider hub en mode non-interactif
+- `oc config set --provider bedrock` — provider hub sans clé API
+- `oc config set --model claude-opus-4` — met à jour uniquement le modèle par défaut du hub
+- `oc config set --provider p --api-key k --model m` — configure provider, clé et modèle hub en une commande
+
+`oc config list --providers` liste tous les providers du catalogue avec leur statut hub.
+
+`oc config init-providers` crée `config/providers/` et génère les fichiers JSON utilisés par `ocp` (`mammouth.json`, `copilot.json`, `openrouter.json`, `ollama.json`, `bedrock.json`) ainsi que `config/providers/.gitignore`. Sans `--force`, les fichiers existants ne sont pas écrasés.
 
 ### Exemple
 
 ```sh
-# Flux interactif
+# Wizard interactif hub (provider par défaut)
+./oc.sh config set
+
+# Configurer le provider hub en ligne de commande
+./oc.sh config set --provider anthropic --api-key sk-ant-...
+
+# Provider hub sans clé API (ex. Bedrock)
+./oc.sh config set --provider bedrock
+
+# Mettre à jour uniquement le modèle hub
+./oc.sh config set --model claude-opus-4
+
+# Configuration projet interactive
 ./oc.sh config set MON-PROJET
 
-# En ligne de commande (hors CI : préférer le flux interactif pour la clé)
+# Configuration projet en ligne de commande
 ./oc.sh config set MON-PROJET --model claude-opus-4-5 --provider anthropic
 
 # Avec MammouthAI
 ./oc.sh config set MON-PROJET --provider mammouth --api-key sk-xxx
+
+# Lister les providers du catalogue
+./oc.sh config list --providers
+
+# Initialiser les fichiers switcher ocp
+./oc.sh config init-providers
 
 # Vérifier
 ./oc.sh config get MON-PROJET
@@ -293,76 +325,13 @@ Si appelé sans flags, le flux est interactif avec les valeurs actuelles comme d
 
 ---
 
-## `oc provider` — commande CLI
-
-Gère la configuration des providers LLM au niveau du hub, des projets, et des fichiers de switcher `ocp`.
-
-### Sous-commandes
-
-```
-oc provider list                          Lister tous les providers disponibles
-oc provider set-default                   Configurer le provider par défaut du hub
-oc provider init [--force]               Créer les fichiers config/providers/*.json (switcher ocp)
-oc provider set-key <nom> <clé>          Mettre à jour la clé API d'un fichier provider
-oc provider set-model <nom> <modèle>     Mettre à jour le modèle d'un fichier provider
-```
-
-### `oc provider init` — initialisation des fichiers switcher
-
-Crée le dossier `config/providers/` et génère les 5 fichiers JSON utilisés par `ocp` :
-`mammouth.json`, `copilot.json`, `openrouter.json`, `ollama.json`, `bedrock.json`.
-
-Crée également `config/providers/.gitignore` pour protéger les clés API en clair.
-
-Idempotent : sans `--force`, les fichiers existants ne sont pas réécrasés.
-
-```sh
-# Première initialisation
-./oc.sh provider init
-
-# Réinitialiser tous les fichiers
-./oc.sh provider init --force
-```
-
-### `oc provider set-key` et `oc provider set-model`
-
-Modifient un fichier provider existant dans `config/providers/` de façon atomique (tmpfile + mv).
-
-```sh
-# Configurer la clé openrouter
-./oc.sh provider set-key openrouter sk-or-v1-xxx...
-
-# Configurer le modèle ollama
-./oc.sh provider set-model ollama qwen2.5-coder:7b
-```
-
-### Exemple
-
-```sh
-# Lister les providers
-./oc.sh provider list
-
-# Initialiser les fichiers switcher ocp
-./oc.sh provider init
-
-# Mettre à jour une clé
-./oc.sh provider set-key openrouter sk-or-v1-xxx
-
-# Configurer le hub par défaut (interactif)
-./oc.sh provider set-default
-```
-
-> **Note :** La configuration du provider par projet se gère via `oc config set <PROJECT_ID>` (voir section `oc config` ci-dessus).
-
----
-
 ## `ocp` — switcher interactif de providers
 
 Fonction shell injectée dans `~/.zshrc` par le hub. Permet de lancer opencode
 en choisissant le provider à utiliser, tout en conservant la logique complète de `oc start`
 (déploiement des agents, mode `--dev`, sync Beads, onboarding, etc.).
 
-Requiert que `config/providers/` soit initialisé via `oc provider init`.
+Requiert que `config/providers/` soit initialisé via `oc config init-providers`.
 
 ### Usage
 

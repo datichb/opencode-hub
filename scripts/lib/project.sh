@@ -78,7 +78,7 @@ ensure_hub_config() {
   if [ ! -f "$HUB_CONFIG" ]; then
     if [ -f "$HUB_CONFIG_EXAMPLE" ]; then
       cp "$HUB_CONFIG_EXAMPLE" "$HUB_CONFIG"
-      log_info "config/hub.json créé depuis hub.json.example — configurez votre provider avec : ./oc.sh provider set-default"
+      log_info "config/hub.json créé depuis hub.json.example — configurez votre provider avec : ./oc.sh config set"
     else
       # Fallback : hub.json.example absent — générer un squelette minimal
       # Version "0.0.0" pour signaler explicitement le problème à l'utilisateur
@@ -103,7 +103,7 @@ ensure_hub_config() {
 }
 HUBEOF
       log_warn "config/hub.json.example introuvable — squelette généré avec version ${_fallback_version}"
-      log_info "config/hub.json créé (vide) — configurez votre provider avec : ./oc.sh provider set-default"
+      log_info "config/hub.json créé (vide) — configurez votre provider avec : ./oc.sh config set"
     fi
   fi
 }

@@ -31,7 +31,7 @@ OpenCode Hub supports provider configuration at two levels:
 Set a provider that applies to all projects by default:
 
 ```bash
-./oc.sh provider set-default
+./oc.sh config set
 ```
 
 This prompts you to:
@@ -84,12 +84,12 @@ model=claude-opus
 
 ## Command Reference
 
-### `oc provider list`
+### `oc config list --providers`
 
 Display all available providers with their status (default, configured, supported targets):
 
 ```bash
-./oc.sh provider list
+./oc.sh config list --providers
 ```
 
 Example output:
@@ -108,12 +108,12 @@ MammouthAI
 ...
 ```
 
-### `oc provider set-default`
+### `oc config set`
 
 Interactively configure the hub default provider:
 
 ```bash
-./oc.sh provider set-default
+./oc.sh config set
 ```
 
 You'll be prompted to:
@@ -122,6 +122,19 @@ You'll be prompted to:
 3. Optionally enter a custom base URL
 
 The configuration is written to `config/hub.json` **and `opencode.json` is regenerated immediately** — no need to run `oc deploy` manually.
+
+In non-interactive mode, you can pass flags directly:
+
+```bash
+# Configure a provider with an API key
+./oc.sh config set --provider anthropic --api-key sk-...
+
+# Configure a provider without an API key (e.g. AWS credentials)
+./oc.sh config set --provider bedrock
+
+# Update only the hub default model
+./oc.sh config set --model claude-opus-4
+```
 
 > **Note:** Per-project provider configuration is managed via `oc config set <PROJECT_ID>` — see `./oc.sh config set --help` or the [configuration reference](../reference/config.en.md).
 
@@ -132,7 +145,7 @@ The configuration is written to `config/hub.json` **and `opencode.json` is regen
 **Supported targets**: OpenCode, OpenCode
 
 1. Get your API key from [console.anthropic.com](https://console.anthropic.com)
-2. Run `./oc.sh provider set-default` or `./oc.sh config set <PROJECT_ID>`
+2. Run `./oc.sh config set` or `./oc.sh config set <PROJECT_ID>`
 3. Choose "Anthropic" and enter your API key
 
 ### MammouthAI
@@ -142,7 +155,7 @@ The configuration is written to `config/hub.json` **and `opencode.json` is regen
 MammouthAI is an OpenAI-compatible proxy hosted in France that works with Anthropic models.
 
 1. Get your API key from [mammouth.ai](https://mammouth.ai)
-2. Run `./oc.sh provider set-default`
+2. Run `./oc.sh config set`
 3. Choose "MammouthAI" (option 2)
 4. Enter your API key (default base URL will be used: `https://api.mammouth.ai/v1`)
 
@@ -158,7 +171,7 @@ MammouthAI is an OpenAI-compatible proxy hosted in France that works with Anthro
 GitHub Models provides access to various models via the GitHub/Copilot API.
 
 1. Get your token from [github.com/settings/tokens](https://github.com/settings/tokens)
-2. Run `./oc.sh provider set-default`
+2. Run `./oc.sh config set`
 3. Choose "GitHub Models" (option 3)
 4. Enter your GitHub token
 5. Optionally override the base URL (default: `https://models.inference.ai.azure.com`)
@@ -184,7 +197,7 @@ AWS Bedrock uses the **native `amazon-bedrock` provider** built into OpenCode. I
 
 1. Generate a bearer token from the [Amazon Bedrock console](https://console.aws.amazon.com/bedrock/) under **API Keys**
 2. Request model access in the **Model catalog** for the models you want
-3. Run `./oc.sh provider set-default`
+3. Run `./oc.sh config set`
 4. Choose "AWS Bedrock (natif)" and enter your bearer token
 
 The generated `opencode.json` will look like:
@@ -216,7 +229,7 @@ Ollama allows you to run LLMs locally.
 
 1. Install Ollama from [ollama.ai](https://ollama.ai)
 2. Start the Ollama server: `ollama serve`
-3. Run `./oc.sh provider set-default`
+3. Run `./oc.sh config set`
 4. Choose "Ollama" (option 5)
 5. The default base URL (`http://localhost:11434/v1`) will be used
 
@@ -254,7 +267,7 @@ opencode auth
 2. Set GitHub Copilot as the hub default provider:
 
 ```bash
-./oc.sh provider set-default
+./oc.sh config set
 # → Choose "GitHub Copilot"
 ```
 
@@ -298,7 +311,7 @@ The generated `opencode.json` will look like:
 
 ```bash
 # Set hub default to Anthropic
-./oc.sh provider set-default
+./oc.sh config set
 # → Choose Anthropic
 
 # Override specific project to use GitHub Models
@@ -314,7 +327,7 @@ To change a provider configuration:
 
 ```bash
 # For hub default:
-./oc.sh provider set-default
+./oc.sh config set
 
 # For a project:
 ./oc.sh config set MY-PROJECT
@@ -355,7 +368,7 @@ A safe, secret-free template is committed at `config/hub.json.example`. On first
 
 ```bash
 # After a fresh clone, run this to configure your provider:
-./oc.sh provider set-default
+./oc.sh config set
 ```
 
 ## Troubleshooting
@@ -385,7 +398,7 @@ This is expected. OpenCode only supports Anthropic. If you need to use OpenCode:
 
 ### Provider changes not applied
 
-After `oc provider set-default`, `opencode.json` is automatically regenerated — no manual step needed.
+After `oc config set`, `opencode.json` is automatically regenerated — no manual step needed.
 
 For project-level changes (`oc config set`), redeploy:
 
@@ -395,8 +408,10 @@ For project-level changes (`oc config set`), redeploy:
 
 ## Related Commands
 
-- `./oc.sh config set` — Manage project-level provider and model configuration
+- `./oc.sh config set` — Manage hub-level or project-level provider and model configuration
+- `./oc.sh config list --providers` — Display available providers and their status
 - `./oc.sh config get` — View effective configuration for a project
+- `./oc.sh config init-providers [--force]` — Initialize provider configuration
 - `./oc.sh deploy all` — Deploy agents with current provider config
 - `./oc.sh start` — Start OpenCode with the configured provider
 - `./oc.sh init` — Set up a new project (includes provider step)

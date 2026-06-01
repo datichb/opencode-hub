@@ -417,3 +417,330 @@ teardown() {
   count=$(grep -c "agent_models.families.planning" "$API_KEYS_FILE")
   [ "$count" -eq 1 ]
 }
+
+# ── Hub-level provider config (mode non-interactif) ──────────────────────────
+
+@test "_cmd_set_hub : --provider + --api-key écrit dans hub.json" {
+  _CMD_CONFIG_SOURCE_ONLY=1 source "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  HUB_CONFIG="$TEST_DIR/hub.json"
+  PROVIDERS_FILE="$TEST_DIR/providers.json"
+  printf '{"opencode":{"model":"claude-sonnet-4-5"}}\n' > "$HUB_CONFIG"
+  printf '{"providers":{"anthropic":{"label":"Anthropic","requires_api_key":true,"requires_base_url":false,"default_base_url":""}}}\n' > "$PROVIDERS_FILE"
+
+  _regenerate_hub_adapter() { true; }
+
+  _cmd_set_hub --provider anthropic --api-key "sk-ant-test123"
+
+  run jq -r '.default_provider.name' "$HUB_CONFIG"
+  [ "$output" = "anthropic" ]
+  run jq -r '.default_provider.api_key' "$HUB_CONFIG"
+  [ "$output" = "sk-ant-test123" ]
+}
+
+@test "_cmd_set_hub : --provider bedrock (sans api-key) écrit dans hub.json" {
+  _CMD_CONFIG_SOURCE_ONLY=1 source "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  HUB_CONFIG="$TEST_DIR/hub.json"
+  PROVIDERS_FILE="$TEST_DIR/providers.json"
+  printf '{"opencode":{"model":"claude-sonnet-4-5"}}\n' > "$HUB_CONFIG"
+  printf '{"providers":{"bedrock":{"label":"Bedrock","requires_api_key":false,"requires_base_url":false,"default_base_url":"","default_region":"eu-west-3"}}}\n' > "$PROVIDERS_FILE"
+
+  _regenerate_hub_adapter() { true; }
+
+  _cmd_set_hub --provider bedrock
+
+  run jq -r '.default_provider.name' "$HUB_CONFIG"
+  [ "$output" = "bedrock" ]
+}
+
+@test "_cmd_set_hub : --provider invalide → exit non-zero" {
+  _CMD_CONFIG_SOURCE_ONLY=1 source "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  HUB_CONFIG="$TEST_DIR/hub.json"
+  PROVIDERS_FILE="$TEST_DIR/providers.json"
+  printf '{"opencode":{"model":"claude-sonnet-4-5"}}\n' > "$HUB_CONFIG"
+  printf '{"providers":{"anthropic":{"label":"Anthropic","requires_api_key":true}}}\n' > "$PROVIDERS_FILE"
+
+  run _cmd_set_hub --provider "provider-inexistant" --api-key "sk-test"
+  [ "$status" -ne 0 ]
+}
+
+@test "_cmd_set_hub : --model seul met à jour .opencode.model dans hub.json" {
+  _CMD_CONFIG_SOURCE_ONLY=1 source "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  HUB_CONFIG="$TEST_DIR/hub.json"
+  printf '{"opencode":{"model":"claude-sonnet-4-5"}}\n' > "$HUB_CONFIG"
+
+  _cmd_set_hub --model "claude-opus-4"
+
+  run jq -r '.opencode.model' "$HUB_CONFIG"
+  [ "$output" = "claude-opus-4" ]
+}
+
+@test "_cmd_set_hub : --provider + --model met à jour les deux champs" {
+  _CMD_CONFIG_SOURCE_ONLY=1 source "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  HUB_CONFIG="$TEST_DIR/hub.json"
+  PROVIDERS_FILE="$TEST_DIR/providers.json"
+  printf '{"opencode":{"model":"claude-sonnet-4-5"}}\n' > "$HUB_CONFIG"
+  printf '{"providers":{"anthropic":{"label":"Anthropic","requires_api_key":true,"requires_base_url":false,"default_base_url":""}}}\n' > "$PROVIDERS_FILE"
+
+  _regenerate_hub_adapter() { true; }
+
+  _cmd_set_hub --provider anthropic --api-key "sk-ant-xyz" --model "claude-opus-4"
+
+  run jq -r '.default_provider.name' "$HUB_CONFIG"
+  [ "$output" = "anthropic" ]
+  run jq -r '.opencode.model' "$HUB_CONFIG"
+  [ "$output" = "claude-opus-4" ]
+}
+
+@test "_cmd_set_hub : --provider + --base-url écrit base_url dans hub.json" {
+  _CMD_CONFIG_SOURCE_ONLY=1 source "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  HUB_CONFIG="$TEST_DIR/hub.json"
+  PROVIDERS_FILE="$TEST_DIR/providers.json"
+  printf '{"opencode":{"model":"claude-sonnet-4-5"}}\n' > "$HUB_CONFIG"
+  printf '{"providers":{"mammouth":{"label":"MammouthAI","requires_api_key":true,"requires_base_url":true,"default_base_url":"https://api.mammouth.ai/v1"}}}\n' > "$PROVIDERS_FILE"
+
+  _regenerate_hub_adapter() { true; }
+
+  _cmd_set_hub --provider mammouth --api-key "sk-mm-test" --base-url "https://api.mammouth.ai/v1"
+
+  run jq -r '.default_provider.base_url' "$HUB_CONFIG"
+  [ "$output" = "https://api.mammouth.ai/v1" ]
+}
+
+@test "_cmd_set_hub : --family-model + --provider traités tous les deux" {
+  _CMD_CONFIG_SOURCE_ONLY=1 source "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  HUB_CONFIG="$TEST_DIR/hub.json"
+  PROVIDERS_FILE="$TEST_DIR/providers.json"
+  printf '{"opencode":{"model":"claude-sonnet-4-5"},"agent_models":{"families":{},"agents":{}}}\n' > "$HUB_CONFIG"
+  printf '{"providers":{"anthropic":{"label":"Anthropic","requires_api_key":true,"requires_base_url":false,"default_base_url":""}}}\n' > "$PROVIDERS_FILE"
+
+  CANONICAL_AGENTS_DIR="$TEST_DIR/agents"
+  mkdir -p "$CANONICAL_AGENTS_DIR/planning"
+
+  _regenerate_hub_adapter() { true; }
+
+  _cmd_set_hub --family-model "planning=claude-opus-4" --provider anthropic --api-key "sk-ant-test"
+
+  run jq -r '.agent_models.families.planning' "$HUB_CONFIG"
+  [ "$output" = "claude-opus-4" ]
+  run jq -r '.default_provider.name' "$HUB_CONFIG"
+  [ "$output" = "anthropic" ]
+}
+
+# ── config list --providers ───────────────────────────────────────────────────
+
+@test "cmd_list --providers : affiche Anthropic" {
+  _CMD_CONFIG_SOURCE_ONLY=1 source "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  PROVIDERS_FILE="$BATS_TEST_DIRNAME/../config/providers.json"
+  HUB_CONFIG="$TEST_DIR/hub.json"
+  printf '{"opencode":{}}\n' > "$HUB_CONFIG"
+  log_title() { echo "$1"; }
+
+  run cmd_list --providers
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Anthropic"* ]]
+}
+
+@test "cmd_list --providers : affiche MammouthAI" {
+  _CMD_CONFIG_SOURCE_ONLY=1 source "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  PROVIDERS_FILE="$BATS_TEST_DIRNAME/../config/providers.json"
+  HUB_CONFIG="$TEST_DIR/hub.json"
+  printf '{"opencode":{}}\n' > "$HUB_CONFIG"
+  log_title() { echo "$1"; }
+
+  run cmd_list --providers
+  [[ "$output" == *"MammouthAI"* ]]
+}
+
+@test "cmd_list --providers : affiche Bedrock" {
+  _CMD_CONFIG_SOURCE_ONLY=1 source "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  PROVIDERS_FILE="$BATS_TEST_DIRNAME/../config/providers.json"
+  HUB_CONFIG="$TEST_DIR/hub.json"
+  printf '{"opencode":{}}\n' > "$HUB_CONFIG"
+  log_title() { echo "$1"; }
+
+  run cmd_list --providers
+  [[ "$output" == *"Bedrock"* ]]
+}
+
+@test "cmd_list --providers : sans providers.json → exit non-zero" {
+  _CMD_CONFIG_SOURCE_ONLY=1 source "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  PROVIDERS_FILE="$TEST_DIR/providers-absent.json"
+
+  run cmd_list --providers
+  [ "$status" -ne 0 ]
+}
+
+# ── config init-providers ─────────────────────────────────────────────────────
+
+@test "cmd_init_providers : crée les fichiers dans config/providers/" {
+  _CMD_CONFIG_SOURCE_ONLY=1 source "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  HUB_DIR="$TEST_DIR"
+  log_title() { echo "$1"; }
+
+  cmd_init_providers
+
+  [ -f "$TEST_DIR/config/providers/mammouth.json" ]
+  [ -f "$TEST_DIR/config/providers/bedrock.json" ]
+  [ -f "$TEST_DIR/config/providers/openrouter.json" ]
+  [ -f "$TEST_DIR/config/providers/ollama.json" ]
+  [ -f "$TEST_DIR/config/providers/github-copilot.json" ]
+}
+
+@test "cmd_init_providers : crée le .gitignore" {
+  _CMD_CONFIG_SOURCE_ONLY=1 source "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  HUB_DIR="$TEST_DIR"
+  log_title() { echo "$1"; }
+
+  cmd_init_providers
+
+  [ -f "$TEST_DIR/config/providers/.gitignore" ]
+  run grep '*.json' "$TEST_DIR/config/providers/.gitignore"
+  [ "$status" -eq 0 ]
+}
+
+@test "cmd_init_providers --force : écrase les fichiers existants" {
+  _CMD_CONFIG_SOURCE_ONLY=1 source "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  HUB_DIR="$TEST_DIR"
+  log_title() { echo "$1"; }
+
+  mkdir -p "$TEST_DIR/config/providers"
+  echo '{"old":"content"}' > "$TEST_DIR/config/providers/mammouth.json"
+
+  cmd_init_providers --force
+
+  run grep -c '"old"' "$TEST_DIR/config/providers/mammouth.json"
+  [ "$output" -eq 0 ]
+}
+
+@test "cmd_init_providers sans --force : ne réécrit pas un fichier existant" {
+  _CMD_CONFIG_SOURCE_ONLY=1 source "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  HUB_DIR="$TEST_DIR"
+  log_title() { echo "$1"; }
+
+  mkdir -p "$TEST_DIR/config/providers"
+  echo '{"old":"content"}' > "$TEST_DIR/config/providers/mammouth.json"
+
+  cmd_init_providers
+
+  run grep '"old"' "$TEST_DIR/config/providers/mammouth.json"
+  [ "$status" -eq 0 ]
+}
+
+# ── providers.json catalog (anciennement dans test_cmd_provider.bats) ─────────
+
+@test "providers.json : existe" {
+  [ -f "$BATS_TEST_DIRNAME/../config/providers.json" ]
+}
+
+@test "providers.json : contient anthropic" {
+  run grep -q "anthropic" "$BATS_TEST_DIRNAME/../config/providers.json"
+  [ "$status" -eq 0 ]
+}
+
+@test "providers.json : contient mammouth" {
+  run grep -q "mammouth" "$BATS_TEST_DIRNAME/../config/providers.json"
+  [ "$status" -eq 0 ]
+}
+
+@test "providers.json : contient github-models" {
+  run grep -q "github-models" "$BATS_TEST_DIRNAME/../config/providers.json"
+  [ "$status" -eq 0 ]
+}
+
+@test "providers.json : contient bedrock" {
+  run grep -q "bedrock" "$BATS_TEST_DIRNAME/../config/providers.json"
+  [ "$status" -eq 0 ]
+}
+
+@test "providers.json : contient ollama" {
+  run grep -q "ollama" "$BATS_TEST_DIRNAME/../config/providers.json"
+  [ "$status" -eq 0 ]
+}
+
+@test "providers.json : bedrock.litellm est false (provider natif)" {
+  result=$(jq -r '.providers.bedrock.litellm' "$BATS_TEST_DIRNAME/../config/providers.json")
+  [ "$result" = "false" ]
+}
+
+@test "providers.json : bedrock a un opencode_prefix amazon-bedrock" {
+  prefix=$(jq -r '.providers.bedrock.opencode_prefix' "$BATS_TEST_DIRNAME/../config/providers.json")
+  [ "$prefix" = "amazon-bedrock" ]
+}
+
+# ── cmd-config.sh : vérifications de contenu ─────────────────────────────────
+
+@test "cmd-config.sh : contient le provider mammouth" {
+  run grep -q "mammouth" "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  [ "$status" -eq 0 ]
+}
+
+@test "cmd-config.sh : contient le provider github-models" {
+  run grep -q "github-models" "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  [ "$status" -eq 0 ]
+}
+
+@test "cmd-config.sh : contient le provider bedrock" {
+  run grep -q "bedrock" "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  [ "$status" -eq 0 ]
+}
+
+@test "cmd-config.sh : contient le provider ollama" {
+  run grep -q "ollama" "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  [ "$status" -eq 0 ]
+}
+
+@test "cmd-config.sh : contient init-providers" {
+  run grep -q "init-providers" "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  [ "$status" -eq 0 ]
+}
+
+@test "cmd-config.sh : ne référence plus cmd-provider.sh" {
+  run grep -q "cmd-provider" "$BATS_TEST_DIRNAME/../scripts/cmd-config.sh"
+  [ "$status" -ne 0 ]
+}
+
+# ── opencode.adapter.sh : vérifications de contenu ───────────────────────────
+
+@test "opencode.adapter.sh : a le support mammouth" {
+  run grep -q "mammouth" "$BATS_TEST_DIRNAME/../scripts/adapters/opencode.adapter.sh"
+  [ "$status" -eq 0 ]
+}
+
+@test "opencode.adapter.sh : a le support bedrock (amazon-bedrock)" {
+  run grep -q "amazon-bedrock" "$BATS_TEST_DIRNAME/../scripts/adapters/opencode.adapter.sh"
+  [ "$status" -eq 0 ]
+}
+
+@test "opencode.adapter.sh : injecte AWS_BEARER_TOKEN_BEDROCK au démarrage" {
+  run grep -q "AWS_BEARER_TOKEN_BEDROCK" "$BATS_TEST_DIRNAME/../scripts/adapters/opencode.adapter.sh"
+  [ "$status" -eq 0 ]
+}
+
+# ── hub.json structure ────────────────────────────────────────────────────────
+
+@test "hub.json.example : contient le champ default_provider" {
+  run grep -q "default_provider" "$BATS_TEST_DIRNAME/../config/hub.json.example"
+  [ "$status" -eq 0 ]
+}
+
+@test "hub.json.example : default_provider a un champ name" {
+  result=$(jq -r '.default_provider | has("name")' "$BATS_TEST_DIRNAME/../config/hub.json.example")
+  [ "$result" = "true" ]
+}
+
+@test "hub.json.example : default_provider a un champ api_key" {
+  result=$(jq -r '.default_provider | has("api_key")' "$BATS_TEST_DIRNAME/../config/hub.json.example")
+  [ "$result" = "true" ]
+}
+
+# ── oc.sh : oc provider est supprimé ─────────────────────────────────────────
+
+@test "oc.sh : ne contient plus de routage vers cmd-provider.sh" {
+  run grep -q "cmd-provider.sh" "$BATS_TEST_DIRNAME/../oc.sh"
+  [ "$status" -ne 0 ]
+}
+
+@test "oc provider : commande inconnue → exit non-zero" {
+  run bash "$BATS_TEST_DIRNAME/../oc.sh" provider list
+  [ "$status" -ne 0 ]
+}

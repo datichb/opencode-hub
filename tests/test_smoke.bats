@@ -101,8 +101,8 @@ teardown() {
   [ "$status" -eq 0 ]
 }
 
-@test "cmd-provider.sh a une syntaxe bash valide" {
-  run bash -n "$HUB_ROOT/scripts/cmd-provider.sh"
+@test "cmd-config.sh a une syntaxe bash valide" {
+  run bash -n "$HUB_ROOT/scripts/cmd-config.sh"
   [ "$status" -eq 0 ]
 }
 
