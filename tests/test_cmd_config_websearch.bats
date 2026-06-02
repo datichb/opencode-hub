@@ -58,6 +58,7 @@ EOF
 
 teardown() {
   rm -rf "$TEST_DIR"
+  unset -f jq command 2>/dev/null || true
 }
 
 # ── cmd_websearch_enable : Hub level ──────────────────────────────────

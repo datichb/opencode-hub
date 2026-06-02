@@ -40,6 +40,7 @@ EOF
 
 teardown() {
   rm -rf "$TEST_DIR"
+  unset -f log_info log_success log_warn log_error 2>/dev/null || true
 }
 
 # ── oc.sh principal ───────────────────────────────────────────────────────────

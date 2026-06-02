@@ -416,6 +416,11 @@ common_setup() {
   touch "$API_KEYS_FILE"
   touch "$PATHS_FILE"
   
+  # OC_NON_INTERACTIVE=1 par défaut (cohérent avec CI).
+  # Les tests qui ont besoin de lire stdin (pipe) doivent explicitement
+  # exporter OC_NON_INTERACTIVE=0 dans leur setup().
+  export OC_NON_INTERACTIVE="${OC_NON_INTERACTIVE:-1}"
+  
   # Mock get_hub_version par défaut
   get_hub_version() {
     echo "test"
@@ -425,8 +430,46 @@ common_setup() {
 
 # Teardown standard
 # Usage : common_teardown (à appeler dans teardown())
+#
+# IMPORTANT : nettoie TOUTES les fonctions exportées par export -f dans les tests.
+# Dans bats, tous les @test d'un même fichier partagent le même processus bash.
+# Sans ce nettoyage, un mock export-f dans le test N pollue le test N+1.
+# La liste couvre tous les builtins et commandes système mockés dans la suite.
 common_teardown() {
-  [ -n "$TEST_DIR" ] && rm -rf "$TEST_DIR"
+  [ -n "${TEST_DIR:-}" ] && rm -rf "$TEST_DIR"
+
+  # ── Builtins bash critiques ────────────────────────────────────────────────
+  unset -f command read bash 2>/dev/null || true
+
+  # ── Commandes système souvent mockées ─────────────────────────────────────
+  unset -f sleep clear tput cp curl npm node brew volta jq git bd 2>/dev/null || true
+
+  # ── Fonctions log (mock_log_functions) ────────────────────────────────────
+  unset -f log_info log_success log_warn log_error log_title 2>/dev/null || true
+
+  # ── Fonctions UI / TUI ────────────────────────────────────────────────────
+  unset -f _intro _outro _prompt _progress_bar _progress_done 2>/dev/null || true
+
+  # ── Fonctions utilitaires souvent mockées ──────────────────────────────────
+  unset -f detect_os get_hub_version 2>/dev/null || true
+  unset -f normalize_project_id resolve_project_path get_project_path 2>/dev/null || true
+
+  # ── Guards / validateurs ──────────────────────────────────────────────────
+  unset -f _require_bd _require_beads_init require_project_id 2>/dev/null || true
+  unset -f _require_project_config 2>/dev/null || true
+
+  # ── Fonctions deploy / render ─────────────────────────────────────────────
+  unset -f _render_board _render_column 2>/dev/null || true
+  unset -f _deploy_agents _deploy_prompts _deploy_env 2>/dev/null || true
+
+  # ── Fonctions node-installer ──────────────────────────────────────────────
+  unset -f _install_with_volta _install_with_brew _install_with_nvm 2>/dev/null || true
+  unset -f _verify_node_in_path _detect_and_install_node _get_latest_nvm_version 2>/dev/null || true
+
+  # ── Fonctions beads/providers/adapters ────────────────────────────────────
+  unset -f _require_bd require_project_id 2>/dev/null || true
+  unset -f adapter_validate adapter_start adapter_deploy adapter_deploy_config 2>/dev/null || true
+  unset -f adapter_deploy_files adapter_install adapter_update adapter_needs_node 2>/dev/null || true
 }
 
 # ── Helpers spécifiques tests cmd-beads ───────────────────────────────────────

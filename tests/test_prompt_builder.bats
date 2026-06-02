@@ -50,6 +50,7 @@ SKILLEOF
 
 teardown() {
   rm -rf "$TEST_DIR"
+  unset -f bd git 2>/dev/null || true
 }
 
 # ── extract_frontmatter_value ─────────────────────────────────────────────────

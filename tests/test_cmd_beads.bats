@@ -115,6 +115,8 @@ EOF
 
 teardown() {
   rm -rf "$TEST_DIR"
+  unset -f bd git jq command curl 2>/dev/null || true
+  unset -f _require_bd _require_beads_init resolve_project_path 2>/dev/null || true
 }
 
 # ── _resolve_tracker ──────────────────────────────────────────────────────────
