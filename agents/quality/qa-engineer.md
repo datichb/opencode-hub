@@ -23,7 +23,6 @@ permission:
   grep: allow
   write: allow
   edit: deny  # QA ne modifie jamais le code existant
-targets: [opencode]
 skills: [developer/dev-standards-universal, developer/dev-standards-testing, developer/dev-standards-git, posture/expert-posture, posture/tool-question, qa/qa-protocol, qa/qa-handoff-format]
 ---
 

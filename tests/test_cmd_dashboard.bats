@@ -18,7 +18,6 @@ setup() {
   cat > "$FAKE_HUB/config/hub.json" <<'HUBEOF'
 {
   "version": "1.5.0",
-  "default_target": "opencode",
   "cli": {"language": "fr"}
 }
 HUBEOF

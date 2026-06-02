@@ -1,14 +1,12 @@
 #!/bin/bash
-# Charge et expose les adaptateurs par cible (opencode)
+# Charge et expose l'adaptateur opencode
 
-# Charge l'adaptateur d'une cible et expose ses fonctions
+# Charge l'adaptateur opencode et expose ses fonctions
 load_adapter() {
-  local target="$1"
-  local adapter_file="$ADAPTERS_DIR/${target}.adapter.sh"
+  local adapter_file="$ADAPTERS_DIR/opencode.adapter.sh"
 
   if [ ! -f "$adapter_file" ]; then
-    log_error "Adaptateur inconnu : $target"
-    log_info "Cibles disponibles : opencode"
+    log_error "Adaptateur opencode introuvable : $adapter_file"
     exit 1
   fi
 
@@ -29,7 +27,7 @@ load_adapter() {
   local fn
   for fn in "${required_fns[@]}"; do
     if ! declare -F "$fn" &>/dev/null; then
-      log_error "Contrat adapter invalide : ${target}.adapter.sh ne définit pas ${fn}()"
+      log_error "Contrat adapter invalide : opencode.adapter.sh ne définit pas ${fn}()"
       exit 1
     fi
   done

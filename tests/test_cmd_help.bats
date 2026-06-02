@@ -11,7 +11,6 @@ setup_file() {
   export HUB_CONFIG="$BATS_FILE_TMPDIR/hub.json"
 
   mkdir -p "$BATS_FILE_TMPDIR"
-  printf '{"version":"1.0.0","default_target":"opencode","active_targets":["opencode"],"cli":{"language":"fr"}}\n' \
     > "$HUB_CONFIG"
 
   # Exécuter cmd-help.sh une seule fois et mettre l'output en cache

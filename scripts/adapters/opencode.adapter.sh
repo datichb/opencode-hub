@@ -293,7 +293,7 @@ adapter_deploy_files() {
     
     # Build avec gestion d'erreur
     local _build_err=""
-    if ! _build_err=$(build_agent_content "$_asource" "opencode" "$lang" "$deploy_dir" "$_precomputed_stacks" 2>&1 > "$out_dir/${_aid}.md"); then
+    if ! _build_err=$(build_agent_content "$_asource" "$lang" "$deploy_dir" "$_precomputed_stacks" 2>&1 > "$out_dir/${_aid}.md"); then
       # Échec du build - afficher l'erreur
       _progress_bar $((_i + 1)) "$_total" "$_aid" "error"
       _progress_done

@@ -12,7 +12,6 @@ setup() {
 
   # Isoler HUB_CONFIG
   export HUB_CONFIG="$TEST_DIR/hub.json"
-  printf '{"version":"1.0.0","default_target":"opencode","active_targets":["opencode"],"cli":{"language":"fr"}}\n' \
     > "$HUB_CONFIG"
 
   CMD_REVIEW="$BATS_TEST_DIRNAME/../scripts/cmd-review.sh"

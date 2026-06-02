@@ -236,17 +236,13 @@ TMPL
 # Régénère opencode.json du hub via l'adapter opencode
 _regenerate_hub_adapter() {
   source "$HUB_DIR/scripts/lib/adapter-manager.sh"
-  local _synced=false
-  while IFS= read -r target; do
-    [ -z "$target" ] && continue
-    load_adapter "$target"
-    if declare -F adapter_deploy &>/dev/null; then
-      log_info "$(t config.regenerating_adapter) ${target}..."
-      adapter_deploy "$HUB_DIR" ""
-      _synced=true
-    fi
-  done <<< "opencode"
-  [ "$_synced" = false ] && log_info "$(t provider.apply_hint)"
+  load_adapter
+  if declare -F adapter_deploy &>/dev/null; then
+    log_info "$(t config.regenerating_adapter) opencode..."
+    adapter_deploy "$HUB_DIR" ""
+  else
+    log_info "$(t provider.apply_hint)"
+  fi
 }
 
 # Configure le provider/modèle du hub dans hub.json (non-interactif)

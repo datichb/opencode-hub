@@ -53,9 +53,8 @@ PROJECT_ID=$(normalize_project_id "$PROJECT_ID")
 PROJECT_PATH=$(resolve_project_path "$PROJECT_ID")
 
 # ── Résolution de la cible ────────────────────────────────────────────────────
-default_target="opencode"
-load_adapter "$default_target"
-adapter_validate || { log_error "$(t review.target_unavailable)'${default_target}' $(t review.target_unavailable_suffix)"; exit 1; }
+load_adapter
+adapter_validate || { log_error "$(t review.target_unavailable)'opencode' $(t review.target_unavailable_suffix)"; exit 1; }
 
 # ── Résolution de la branche ──────────────────────────────────────────────────
 if [ -z "$BRANCH" ]; then
@@ -69,16 +68,12 @@ fi
 # ── Agent requis ─────────────────────────────────────────────────────────────
 REQUIRED_AGENT="reviewer"
 
-# ── Dossier d'agents déployés selon la cible ─────────────────────────────────
-case "$default_target" in
-  opencode)    agents_dir="$PROJECT_PATH/.opencode/agents" ;;
-  *)           agents_dir="" ;;
-esac
+# ── Dossier d'agents déployés ────────────────────────────────────────────────
+agents_dir="$PROJECT_PATH/.opencode/agents"
 
 # ── Bloc d'intro TUI ─────────────────────────────────────────────────────────
 _intro "oc review  ${PROJECT_ID}"
 printf "${DIM}│${RESET}  %-12s %s\n" "$(t review.label_path)"   "$PROJECT_PATH"
-printf "${DIM}│${RESET}  %-12s %s\n" "$(t review.label_target)"  "$default_target"
 printf "${DIM}│${RESET}  %-12s %s\n" "$(t review.label_branch)"  "$BRANCH"
 printf "${DIM}│${RESET}  %-12s %s\n" "$(t review.label_agent)"   "$REQUIRED_AGENT"
 
@@ -104,7 +99,7 @@ if [ "$agents_csv" != "all" ]; then
         bash "$SCRIPTS_DIR/cmd-deploy.sh" "$PROJECT_ID"
         echo ""
       else
-        log_info "$(t review.redeploy_later)$default_target $PROJECT_ID"
+        log_info "$(t review.redeploy_later)opencode $PROJECT_ID"
       fi
     fi
   fi
@@ -114,7 +109,7 @@ fi
 echo -e "${DIM}│${RESET}"
 
 if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ]; then
-  log_warn "$(t review.agents_not_deployed)${default_target}"
+  log_warn "$(t review.agents_not_deployed)opencode"
   _prompt _deploy_now "$(t review.deploy_now_prompt)"
   if [[ "${_deploy_now:-Y}" =~ ^[Yy]$ ]]; then
     echo ""
@@ -122,7 +117,7 @@ if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ]; then
     echo ""
   else
     log_warn "$(t review.deploy_skipped)"
-    log_info  "$(t review.deploy_later)$default_target $PROJECT_ID"
+    log_info  "$(t review.deploy_later)opencode $PROJECT_ID"
   fi
 elif [ -n "$agents_dir" ] && [ -d "$agents_dir" ] && [ ! -f "$agents_dir/${REQUIRED_AGENT}.md" ]; then
   log_warn "$(t review.agent_not_deployed)${REQUIRED_AGENT}"
@@ -143,7 +138,7 @@ echo -e "${DIM}│${RESET}"
 log_info "$(t review.main_agent)${REQUIRED_AGENT}"
 
 # ── Confirmation avant lancement ─────────────────────────────────────────────
-_outro "$(t review.launching)${default_target}…"
+_outro "$(t review.launching)opencode…"
 IFS= read -rp "" _
 
 adapter_start "$PROJECT_PATH" "$PROMPT" "$PROJECT_ID" "$REQUIRED_AGENT"

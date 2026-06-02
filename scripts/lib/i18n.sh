@@ -92,11 +92,11 @@ t() {
       help.metrics.cmd)       printf '%s' "metrics" ;;
       help.metrics.desc)      printf '%s' "Affiche les métriques de vélocité du workflow" ;;
       # Maintenance
-      help.deploy.cmd)        printf '%s' "deploy [target] [PROJECT_ID]" ;;
-      help.deploy.desc)       printf '%s' "Déploie les agents (opencode/all)" ;;
-      help.deploy_check.cmd)  printf '%s' "deploy --check [target] [PROJECT_ID]" ;;
+      help.deploy.cmd)        printf '%s' "deploy [PROJECT_ID]" ;;
+      help.deploy.desc)       printf '%s' "Déploie les agents" ;;
+      help.deploy_check.cmd)  printf '%s' "deploy --check [PROJECT_ID]" ;;
       help.deploy_check.desc) printf '%s' "Vérifie si les agents déployés sont à jour" ;;
-      help.deploy_diff.cmd)   printf '%s' "deploy --diff [target] [PROJECT_ID]" ;;
+      help.deploy_diff.cmd)   printf '%s' "deploy --diff [PROJECT_ID]" ;;
       help.deploy_diff.desc)  printf '%s' "Diff sources → déployés (propose le deploy si écart)" ;;
       help.sync.cmd)          printf '%s' "sync" ;;
       help.sync.desc)         printf '%s' "Redéploie les agents sur tous les projets enregistrés" ;;
@@ -165,7 +165,7 @@ t() {
       agent.select_cmd)       printf '%s' "select <PROJECT_ID>   Choisir les agents à déployer pour un projet" ;;
       agent.mode_cmd)         printf '%s' "mode <PROJECT_ID>     Afficher / overrider les modes primary/subagent" ;;
       agent.validate_cmd)     printf '%s' "validate [agent-id]   Valider la cohérence de tous les agents (ou d'un seul)" ;;
-      agent.deploy_cmd)       printf '%s' "deploy <agent-id> [PROJECT_ID]  Déployer un seul agent sur les cibles actives" ;;
+      agent.deploy_cmd)       printf '%s' "deploy <agent-id> [PROJECT_ID]  Déployer un seul agent" ;;
       agent.keytest_cmd)      printf '%s' "keytest               Diagnostic clavier — affiche les octets reçus" ;;
       agent.usage.info)       printf '%s' "Usage : oc agent info <agent-id>" ;;
       agent.usage.edit)       printf '%s' "Usage : oc agent edit <agent-id>" ;;
@@ -391,9 +391,9 @@ t() {
       install.jq_manual)      printf '%s' "Installer jq manuellement :" ;;
       install.choose_prompt)  printf '%s' "Choisir (défaut: 1) : " ;;
       install.hub_json_exists) printf '%s' "config/hub.json existe déjà." ;;
-      install.hub_json_overwrite) printf '%s' "Écraser avec les nouvelles cibles ? [y/N] : " ;;
+      install.hub_json_overwrite) printf '%s' "Écraser ? [y/N] : " ;;
       install.hub_json_kept)  printf '%s' "config/hub.json conservé tel quel." ;;
-      install.hub_json_created) printf '%s' "config/hub.json créé (cibles :" ;;
+      install.hub_json_created) printf '%s' "config/hub.json créé" ;;
       install.provider_title) printf '%s' "Fournisseur LLM" ;;
       install.provider_choose) printf '%s' "Quel fournisseur d'IA utiliser pour tous vos projets ?" ;;
       install.provider_recommended) printf '%s' "(recommandé)" ;;
@@ -673,11 +673,11 @@ t_en() {
     help.metrics.cmd)       printf '%s' "metrics" ;;
     help.metrics.desc)      printf '%s' "Display workflow velocity metrics" ;;
     # Maintenance
-    help.deploy.cmd)        printf '%s' "deploy [target] [PROJECT_ID]" ;;
-    help.deploy.desc)       printf '%s' "Deploy agents (opencode/all)" ;;
-    help.deploy_check.cmd)  printf '%s' "deploy --check [target] [PROJECT_ID]" ;;
+    help.deploy.cmd)        printf '%s' "deploy [PROJECT_ID]" ;;
+    help.deploy.desc)       printf '%s' "Deploy agents" ;;
+    help.deploy_check.cmd)  printf '%s' "deploy --check [PROJECT_ID]" ;;
     help.deploy_check.desc) printf '%s' "Check if deployed agents are up to date" ;;
-    help.deploy_diff.cmd)   printf '%s' "deploy --diff [target] [PROJECT_ID]" ;;
+    help.deploy_diff.cmd)   printf '%s' "deploy --diff [PROJECT_ID]" ;;
     help.deploy_diff.desc)  printf '%s' "Diff sources → deployed (proposes deploy if gap)" ;;
     help.sync.cmd)          printf '%s' "sync" ;;
     help.sync.desc)         printf '%s' "Redeploy agents on all registered projects" ;;
@@ -750,7 +750,7 @@ t_en() {
     agent.select_cmd)       printf '%s' "select <PROJECT_ID>   Choose agents to deploy for a project" ;;
     agent.mode_cmd)         printf '%s' "mode <PROJECT_ID>     Show / override primary/subagent modes" ;;
     agent.validate_cmd)     printf '%s' "validate [agent-id]   Validate consistency of all agents (or one)" ;;
-    agent.deploy_cmd)       printf '%s' "deploy <agent-id> [PROJECT_ID]  Deploy a single agent to active targets" ;;
+    agent.deploy_cmd)       printf '%s' "deploy <agent-id> [PROJECT_ID]  Deploy a single agent" ;;
     agent.keytest_cmd)      printf '%s' "keytest               Keyboard diagnostic — show bytes received" ;;
     agent.usage.info)       printf '%s' "Usage: oc agent info <agent-id>" ;;
     agent.usage.edit)       printf '%s' "Usage: oc agent edit <agent-id>" ;;
@@ -981,9 +981,9 @@ t_en() {
     install.jq_manual)      printf '%s' "Install jq manually:" ;;
     install.choose_prompt)  printf '%s' "Choose (default: 1): " ;;
     install.hub_json_exists) printf '%s' "config/hub.json already exists." ;;
-    install.hub_json_overwrite) printf '%s' "Overwrite with new targets? [y/N]: " ;;
+     install.hub_json_overwrite) printf '%s' "Overwrite? [y/N]: " ;;
     install.hub_json_kept)  printf '%s' "config/hub.json kept as-is." ;;
-    install.hub_json_created) printf '%s' "config/hub.json created (targets:" ;;
+    install.hub_json_created) printf '%s' "config/hub.json created" ;;
     install.provider_title) printf '%s' "LLM Provider" ;;
     install.provider_choose) printf '%s' "Which AI provider to use for all your projects?" ;;
     install.provider_recommended) printf '%s' "(recommended)" ;;

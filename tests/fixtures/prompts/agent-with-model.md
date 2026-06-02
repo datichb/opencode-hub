@@ -2,7 +2,6 @@
 id: test-agent-with-model
 label: Test Agent With Model
 description: Agent de test avec modèle custom
-targets: [opencode]
 skills: []
 model: claude-opus-4
 ---

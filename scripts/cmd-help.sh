@@ -94,9 +94,6 @@ _cmd help.config_unset
 _cmd help.config_language
 _cmd help.config_init_providers
 
-_section help.section.deploy_targets
-_note "$(t help.deploy_target.opencode)"
-
 _section help.section.beads
 _cmd help.beads_status
 _cmd help.beads_init

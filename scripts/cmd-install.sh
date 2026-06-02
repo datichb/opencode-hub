@@ -30,8 +30,6 @@ fi
 
 _outro "$(t install.os_done) $OS"
 
-active_targets=("opencode")
-
 # ── Installation opencode ────────────────
 _intro "$(t install.opencode_title)"
 
@@ -69,14 +67,12 @@ if [ "$_write_hub_json" = true ]; then
   }
 }
 HUBJSON
-  log_success "$(t install.hub_json_created) ${active_targets[*]})"
+  log_success "$(t install.hub_json_created)"
 fi
 
-# ── Installer chaque cible sélectionnée ──
-for target in "${active_targets[@]}"; do
-  load_adapter "$target"
-  adapter_install
-done
+# ── Installer opencode ──
+load_adapter
+adapter_install
 
 _outro "$(t install.opencode_done)"
 

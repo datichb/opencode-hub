@@ -10,7 +10,6 @@ permission:
   write: deny
   websearch: allow
   webfetch: allow
-targets: [opencode]
 skills: [designer/ui-protocol, developer/beads-plan, design/design-planner-format, posture/expert-posture, posture/tool-question, design/design-handoff-format, shared/websearch-usage, design/websearch-design-patterns]
 ---
 

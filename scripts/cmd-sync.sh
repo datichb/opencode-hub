@@ -31,8 +31,6 @@ if [ ${#project_ids[@]} -eq 0 ]; then
   exit 0
 fi
 
-active_targets=("opencode")
-
 deployed_count=0
 skipped_count=0
 stale_count=0   # utilisé uniquement en dry-run
@@ -71,65 +69,56 @@ for project_id in "${project_ids[@]}"; do
     project_stale=0
     project_ok=0
 
-    for tgt in "${active_targets[@]}"; do
-      gen_dir=""
-      case "$tgt" in
-        opencode) gen_dir="$local_path/.opencode/agents" ;;
-        *) continue ;;
-      esac
+    local gen_dir="$local_path/.opencode/agents"
 
-      # Collecter les fichiers agents pour progression
-      agent_files=()
-      while IFS= read -r agent_file; do
-        [ -f "$agent_file" ] && agent_files+=("$agent_file")
-      done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
+    # Collecter les fichiers agents pour progression
+    agent_files=()
+    while IFS= read -r agent_file; do
+      [ -f "$agent_file" ] && agent_files+=("$agent_file")
+    done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
+    
+    total_agents=${#agent_files[@]}
+    current_agent=0
+
+    # Boucle sur les agents avec progression
+    for agent_file in "${agent_files[@]}"; do
+      current_agent=$((current_agent + 1))
+      agent_id=$(get_agent_id "$agent_file")
       
-      total_agents=${#agent_files[@]}
-      current_agent=0
+      # Afficher progression agents (sous-barre)
+      _progress_bar $current_agent $total_agents "$agent_id"
 
-      # Boucle sur les agents avec progression
-      for agent_file in "${agent_files[@]}"; do
-        current_agent=$((current_agent + 1))
-        agent_id=$(get_agent_id "$agent_file")
-        
-        # Afficher progression agents (sous-barre)
-        _progress_bar $current_agent $total_agents "$agent_id"
+      local gen_file="$gen_dir/${agent_id}.md"
 
-        gen_file=""
-        case "$tgt" in
-          opencode) gen_file="$gen_dir/${agent_id}.md" ;;
-        esac
+      if [ ! -f "$gen_file" ]; then
+        project_stale=$((project_stale + 1))
+        continue
+      fi
 
-        if [ ! -f "$gen_file" ]; then
-          project_stale=$((project_stale + 1))
-          continue
+      gen_mtime=$(stat -c %Y "$gen_file" 2>/dev/null || stat -f %m "$gen_file" 2>/dev/null)
+      max_src_mtime=0
+
+      agent_mtime=$(stat -c %Y "$agent_file" 2>/dev/null || stat -f %m "$agent_file" 2>/dev/null)
+      [ "$agent_mtime" -gt "$max_src_mtime" ] && max_src_mtime=$agent_mtime
+
+      while IFS= read -r skill; do
+        [ -z "$skill" ] && continue
+        skill_file="$SKILLS_DIR/${skill}.md"
+        [ -f "$skill_file" ] || continue
+        skill_mtime=$(stat -c %Y "$skill_file" 2>/dev/null || stat -f %m "$skill_file" 2>/dev/null)
+        if [ "$skill_mtime" -gt "$max_src_mtime" ]; then
+          max_src_mtime=$skill_mtime
         fi
+      done < <(extract_frontmatter_list "$agent_file" "skills")
 
-        gen_mtime=$(stat -c %Y "$gen_file" 2>/dev/null || stat -f %m "$gen_file" 2>/dev/null)
-        max_src_mtime=0
-
-        agent_mtime=$(stat -c %Y "$agent_file" 2>/dev/null || stat -f %m "$agent_file" 2>/dev/null)
-        [ "$agent_mtime" -gt "$max_src_mtime" ] && max_src_mtime=$agent_mtime
-
-        while IFS= read -r skill; do
-          [ -z "$skill" ] && continue
-          skill_file="$SKILLS_DIR/${skill}.md"
-          [ -f "$skill_file" ] || continue
-          skill_mtime=$(stat -c %Y "$skill_file" 2>/dev/null || stat -f %m "$skill_file" 2>/dev/null)
-          if [ "$skill_mtime" -gt "$max_src_mtime" ]; then
-            max_src_mtime=$skill_mtime
-          fi
-        done < <(extract_frontmatter_list "$agent_file" "skills")
-
-        if [ "$max_src_mtime" -gt "$gen_mtime" ]; then
-          project_stale=$((project_stale + 1))
-        else
-          project_ok=$((project_ok + 1))
-        fi
-      done
-      
-      _progress_done
+      if [ "$max_src_mtime" -gt "$gen_mtime" ]; then
+        project_stale=$((project_stale + 1))
+      else
+        project_ok=$((project_ok + 1))
+      fi
     done
+    
+    _progress_done
 
     stale_count=$((stale_count + project_stale))
     ok_count=$((ok_count + project_ok))
@@ -137,15 +126,13 @@ for project_id in "${project_ids[@]}"; do
   else
     # ── Mode déploiement ──────────────────────────────────────────────────────
     deploy_ok=true
-    for tgt in "${active_targets[@]}"; do
-      load_adapter "$tgt"
-      if adapter_validate 2>/dev/null; then
-        adapter_deploy "$local_path" "$project_id" >/dev/null 2>&1 && deploy_ok=true \
-          || deploy_ok=false
-      else
-        deploy_ok=false
-      fi
-    done
+    load_adapter
+    if adapter_validate 2>/dev/null; then
+      adapter_deploy "$local_path" "$project_id" >/dev/null 2>&1 && deploy_ok=true \
+        || deploy_ok=false
+    else
+      deploy_ok=false
+    fi
     if [ "$deploy_ok" = "true" ]; then
       deployed_count=$((deployed_count + 1))
     else

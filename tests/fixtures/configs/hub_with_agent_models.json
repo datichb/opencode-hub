@@ -1,7 +1,5 @@
 {
   "version": "test",
-  "default_target": "opencode",
-  "active_targets": ["opencode"],
   "opencode": {
     "model": "claude-sonnet-4-5",
     "disabled_native_agents": []

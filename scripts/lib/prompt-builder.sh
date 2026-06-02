@@ -697,21 +697,17 @@ _get_precomputed_stack_skills() {
 }
 
 # Construit le contenu final : corps de l'agent + skills injectés → stdout
-# $2 (target) est transmis par les appelants (cmd-deploy.sh, cmd-agent.sh, opencode.adapter.sh)
-#   mais non utilisé ici — conservé pour rétrocompatibilité de signature.
-# $3 (lang) optionnel — si non vide, injecte une instruction de langue en tête de l'agent
-# $4 (project_path) optionnel — si non vide, détecte la stack et injecte les skills correspondants
-# $5 (precomputed_stacks) optionnel — si non vide, utilise les stack skills précalculés (chemin rapide)
+# $2 (lang) optionnel — si non vide, injecte une instruction de langue en tête de l'agent
+# $3 (project_path) optionnel — si non vide, détecte la stack et injecte les skills correspondants
+# $4 (precomputed_stacks) optionnel — si non vide, utilise les stack skills précalculés (chemin rapide)
 #   fourni par adapter_deploy_files via precompute_stack_skills ; zéro fork supplémentaire.
 #   Si vide, fallback sur detect_stack + resolve_stack_skills (rétrocompatibilité).
-#   Note : ignoré silencieusement si $4 (project_path) est vide ou inexistant.
+#   Note : ignoré silencieusement si $3 (project_path) est vide ou inexistant.
 build_agent_content() {
   local agent_file="$1"
-  # shellcheck disable=SC2034
-  local target="${2:-}"  # transmis par les appelants — non utilisé (rétrocompatibilité de signature)
-  local lang="${3:-}"
-  local project_path="${4:-}"
-  local precomputed_stacks="${5:-}"
+  local lang="${2:-}"
+  local project_path="${3:-}"
+  local precomputed_stacks="${4:-}"
   [ -f "$agent_file" ] || { log_warn "Agent introuvable : $agent_file" >&2; return 1; }
 
   build_generated_header

@@ -9,7 +9,6 @@ permission:
   write: deny
   websearch: allow
   webfetch: allow
-targets: [opencode]
 skills: [auditor/audit-protocol-light, auditor/audit-architecture, posture/expert-posture, auditor/audit-handoff-format, shared/websearch-usage]
 ---
 

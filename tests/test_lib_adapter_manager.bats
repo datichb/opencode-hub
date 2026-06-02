@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 # Tests unitaires pour scripts/lib/adapter-manager.sh
-# Fonctions testées : load_adapter
+# Fonctions testées : load_adapter (charge toujours opencode.adapter.sh)
 
 load helpers
 
@@ -26,9 +26,9 @@ teardown() {
 
 # ── load_adapter ────────────────────────────────────────────────────────────
 
-@test "load_adapter : charge adaptateur valide" {
-  # Créer un adaptateur de test
-  cat > "$ADAPTERS_DIR/test.adapter.sh" <<'EOF'
+@test "load_adapter : charge opencode.adapter.sh" {
+  # Créer un adaptateur opencode de test
+  cat > "$ADAPTERS_DIR/opencode.adapter.sh" <<'EOF'
 adapter_validate() { return 0; }
 adapter_needs_node() { return 0; }
 adapter_deploy_files() { return 0; }
@@ -40,32 +40,33 @@ adapter_start() { return 0; }
 EOF
   
   # Appeler sans run pour que les fonctions restent visibles dans le shell courant
-  load_adapter "test"
+  load_adapter
   
   # Vérifier que les fonctions sont définies
   run declare -F adapter_validate
   [ "$status" -eq 0 ]
 }
 
-@test "load_adapter : échoue si adaptateur absent" {
-  run load_adapter "nonexistent"
+@test "load_adapter : échoue si opencode.adapter.sh absent" {
+  # ADAPTERS_DIR vide → pas de opencode.adapter.sh
+  run load_adapter
   [ "$status" -ne 0 ]
 }
 
-@test "load_adapter : échoue si fonction manquante" {
+@test "load_adapter : échoue si fonction manquante dans opencode.adapter.sh" {
   # Adaptateur incomplet
-  cat > "$ADAPTERS_DIR/incomplete.adapter.sh" <<'EOF'
+  cat > "$ADAPTERS_DIR/opencode.adapter.sh" <<'EOF'
 adapter_validate() { return 0; }
 adapter_needs_node() { return 0; }
 # Fonctions manquantes...
 EOF
   
-  run load_adapter "incomplete"
+  run load_adapter
   [ "$status" -ne 0 ]
 }
 
 @test "load_adapter : exporte toutes les fonctions requises" {
-  cat > "$ADAPTERS_DIR/complete.adapter.sh" <<'EOF'
+  cat > "$ADAPTERS_DIR/opencode.adapter.sh" <<'EOF'
 adapter_validate() { echo "validate"; }
 adapter_needs_node() { echo "needs_node"; }
 adapter_deploy_files() { echo "deploy_files"; }
@@ -76,7 +77,7 @@ adapter_update() { echo "update"; }
 adapter_start() { echo "start"; }
 EOF
   
-  load_adapter "complete"
+  load_adapter
   
   run adapter_validate
   [ "$output" = "validate" ]
@@ -87,11 +88,10 @@ EOF
 
 # ── Intégration ─────────────────────────────────────────────────────────────
 
-@test "Intégration : load multiple adapters" {
-  # Créer 2 adaptateurs
-  for name in adapter1 adapter2; do
-    cat > "$ADAPTERS_DIR/$name.adapter.sh" <<EOF
-adapter_validate() { echo "$name"; }
+@test "Intégration : rechargement de load_adapter remplace les fonctions" {
+  # Premier chargement
+  cat > "$ADAPTERS_DIR/opencode.adapter.sh" <<'EOF'
+adapter_validate() { echo "v1"; }
 adapter_needs_node() { return 0; }
 adapter_deploy_files() { return 0; }
 adapter_deploy_config() { return 0; }
@@ -100,13 +100,24 @@ adapter_install() { return 0; }
 adapter_update() { return 0; }
 adapter_start() { return 0; }
 EOF
-  done
-  
-  load_adapter "adapter1"
+
+  load_adapter
   run adapter_validate
-  [ "$output" = "adapter1" ]
-  
-  load_adapter "adapter2"
+  [ "$output" = "v1" ]
+
+  # Réécrire et recharger
+  cat > "$ADAPTERS_DIR/opencode.adapter.sh" <<'EOF'
+adapter_validate() { echo "v2"; }
+adapter_needs_node() { return 0; }
+adapter_deploy_files() { return 0; }
+adapter_deploy_config() { return 0; }
+adapter_deploy() { return 0; }
+adapter_install() { return 0; }
+adapter_update() { return 0; }
+adapter_start() { return 0; }
+EOF
+
+  load_adapter
   run adapter_validate
-  [ "$output" = "adapter2" ]
+  [ "$output" = "v2" ]
 }

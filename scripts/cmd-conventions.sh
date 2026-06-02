@@ -47,10 +47,9 @@ PROJECT_ID=$(normalize_project_id "$PROJECT_ID")
 PROJECT_PATH=$(resolve_project_path "$PROJECT_ID")
 
 # ── Résolution de la cible ─────────────────────────────────────────────────────
-default_target="opencode"
-load_adapter "$default_target"
+load_adapter
 adapter_validate || {
-  log_error "Cible '$default_target' non disponible → oc install"
+  log_error "opencode non disponible → oc install"
   exit 1
 }
 
@@ -58,7 +57,6 @@ adapter_validate || {
 CONVENTIONS_FILE="$PROJECT_PATH/CONVENTIONS.md"
 _intro "Conventions — ${PROJECT_ID}"
 printf "${DIM}│${RESET}  %-10s %s\n" "Chemin" "$PROJECT_PATH"
-printf "${DIM}│${RESET}  %-10s %s\n" "Cible"  "$default_target"
 echo -e "${DIM}│${RESET}"
 
 if [ -f "$CONVENTIONS_FILE" ] && [ "$FORCE" = false ]; then
@@ -88,7 +86,7 @@ echo -e "${DIM}│${RESET}    3. Lire les configs Git et de test"
 echo -e "${DIM}│${RESET}    4. Écrire CONVENTIONS.md à la racine du projet"
 echo -e "${DIM}│${RESET}"
 
-_outro "Lancement de ${default_target}…"
+_outro "Lancement de opencode…"
 IFS= read -rp "" _
 
 adapter_start "$PROJECT_PATH" "$PROMPT" "$PROJECT_ID" "$AGENT_NAME"

@@ -134,8 +134,6 @@ make_test_hub_config() {
   cat > "$HUB_CONFIG" <<EOF
 {
   "version": "test",
-  "default_target": "opencode",
-  "active_targets": ["opencode"],
   "opencode": {
     "model": "$model",
     "disabled_native_agents": []
@@ -154,8 +152,6 @@ make_test_hub_config_with_agent_models() {
   cat > "$HUB_CONFIG" <<'EOF'
 {
   "version": "test",
-  "default_target": "opencode",
-  "active_targets": ["opencode"],
   "opencode": {
     "model": "claude-sonnet-4-5",
     "disabled_native_agents": []

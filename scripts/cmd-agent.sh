@@ -184,50 +184,6 @@ _pick_skills() {
 }
 
 ##
-# Sélection interactive de cibles (targets) avec navigation flèches + espace.
-# Compatible bash 3.2 (macOS). Résultat dans $PICKED_TARGETS (CSV).
-# Wrapper autour de _pick_from_list.
-# @param {string} $1 — sélection courante (CSV de cibles)
-##
-_pick_targets() {
-  local current_csv="${1:-opencode}"
-
-  # Initialiser _pick_items avec les cibles disponibles
-  _pick_items=("opencode")
-  _pick_total=${#_pick_items[@]}
-
-  # Nettoyer le CSV courant
-  local clean_csv
-  clean_csv=$(printf '%s' "$current_csv" | tr -d '"' | tr ',' '\n' \
-    | sed 's/^ *//;s/ *$//' | grep -v '^$' | tr '\n' ',' | sed 's/,$//')
-
-  # Initialiser le tableau de sélection
-  _pick_checked=()
-  local i=0
-  while [ "$i" -lt "$_pick_total" ]; do
-    if echo ",$clean_csv," | grep -qF ",${_pick_items[$i]},"; then
-      _pick_checked+=("1")
-    else
-      _pick_checked+=("0")
-    fi
-    i=$((i + 1))
-  done
-
-  _pick_render_fn="_render_targets_page"
-  _pick_allow_zero=0
-  _PICK_RESULT=""
-
-  _pick_from_list "$current_csv" "$current_csv"
-
-  # Aucune cible cochée → garder la sélection courante
-  if [ -z "$_PICK_RESULT" ]; then
-    PICKED_TARGETS="$current_csv"
-  else
-    PICKED_TARGETS="$_PICK_RESULT"
-  fi
-}
-
-##
 # Convertit un CSV de skills/targets en format YAML inline ["a","b","c"].
 # @param {string} $1 — CSV à convertir
 # Retourne la valeur sur stdout (usage interne uniquement — pas de TUI).
@@ -350,26 +306,18 @@ cmd_create() {
   read -rp "Description courte : " description
   description="${description:-Assistant $label}"
 
-  # ── 4. Cibles ─────────────────────────────────────────────────────────────
-  PICKED_TARGETS=""
-  _pick_targets "opencode"
-  local targets_csv="$PICKED_TARGETS"
-  [ "$targets_csv" = "all" ] && targets_csv="opencode"
-
-  # ── 5. Skills ─────────────────────────────────────────────────────────────
+  # ── 4. Skills ─────────────────────────────────────────────────────────────
   PICKED_SKILLS=""
   _pick_skills ""
   local skills_csv="$PICKED_SKILLS"
 
-  # ── 6. Corps (génération IA optionnelle) ──────────────────────────────────
-  GENERATED_BODY=""
+  # ── 6. Corps (génération IA optionnelle) ──────────────────────────────────  GENERATED_BODY=""
   _generate_body "$agent_id" "$label" "$description" "$skills_csv"
   local body="$GENERATED_BODY"
 
   # ── 7. Construire le contenu final ────────────────────────────────────────
-  local skills_yaml targets_yaml
+  local skills_yaml
   skills_yaml=$(_csv_to_yaml_list "$skills_csv")
-  targets_yaml=$(_csv_to_yaml_list "$targets_csv")
 
   local file_content
   file_content=$(
@@ -377,7 +325,6 @@ cmd_create() {
     printf 'id: %s\n'          "$agent_id"
     printf 'label: %s\n'       "$label"
     printf 'description: %s\n' "$description"
-    printf 'targets: %s\n'     "$targets_yaml"
     printf 'skills: %s\n'      "$skills_yaml"
     printf '%s\n' "---"
     printf '\n'
@@ -440,18 +387,16 @@ cmd_list() {
   local found=0
   while IFS= read -r f; do
     [ -f "$f" ] || continue
-    local id label description targets skills_count
+    local id label description skills_count
     id=$(grep '^id:' "$f" | head -1 | sed 's/^id:[[:space:]]*//')
     label=$(grep '^label:' "$f" | head -1 | sed 's/^label:[[:space:]]*//')
     description=$(grep '^description:' "$f" | head -1 | sed 's/^description:[[:space:]]*//')
     skills_count=$(grep '^skills:' "$f" | head -1 \
       | sed 's/^skills:[[:space:]]*//' | tr -d '[]"' \
       | tr ',' '\n' | sed 's/^ *//;s/ *$//' | grep -v '^$' | wc -l | tr -d ' ')
-    targets=$(grep '^targets:' "$f" | head -1 | sed 's/^targets:[[:space:]]*//')
     local family; family=$(basename "$(dirname "$f")")
     echo -e "  ${BOLD}${id}${RESET}  (${label})  [${family}]"
     echo "    → $description"
-    echo "    cibles : $targets"
     echo "    skills : $skills_count skill(s) configuré(s)"
     echo ""
     found=1
@@ -516,16 +461,14 @@ cmd_edit() {
   log_title "Modifier l'agent : $name"
 
   # Lire les valeurs courantes
-  local cur_label cur_desc cur_targets cur_skills
+  local cur_label cur_desc cur_skills
   cur_label=$(grep '^label:' "$file" | head -1 | sed 's/^label:[[:space:]]*//')
   cur_desc=$(grep '^description:' "$file" | head -1 | sed 's/^description:[[:space:]]*//')
-  cur_targets=$(grep '^targets:' "$file" | head -1 | sed 's/^targets:[[:space:]]*//' | tr -d '[]"')
   cur_skills=$(grep '^skills:' "$file" | head -1 | sed 's/^skills:[[:space:]]*//' | tr -d '[]"')
 
   echo ""
   echo -e "  label       : ${BOLD}${cur_label}${RESET}"
   echo   "  description : $cur_desc"
-  echo   "  targets     : $cur_targets"
   echo   "  skills      : $cur_skills"
   echo ""
 
@@ -537,17 +480,6 @@ cmd_edit() {
   read -rp "Nouvelle description [${cur_desc}] : " new_desc
   new_desc="${new_desc:-$cur_desc}"
 
-  # Targets
-  echo ""
-  read -rp "Modifier les cibles ? (y/N) : " edit_targets </dev/tty
-  local new_targets="$cur_targets"
-  if [[ "$edit_targets" =~ ^[Yy]$ ]]; then
-    PICKED_TARGETS=""
-    _pick_targets "$cur_targets"
-    new_targets="$PICKED_TARGETS"
-    [ "$new_targets" = "all" ] && new_targets="opencode"
-  fi
-
   # Skills (toujours proposé)
   PICKED_SKILLS=""
   _pick_skills "$cur_skills"
@@ -558,7 +490,6 @@ cmd_edit() {
   echo -e "${BOLD}Récapitulatif des modifications :${RESET}"
   echo "  label       : $new_label"
   echo "  description : $new_desc"
-  echo "  targets     : $new_targets"
   echo "  skills      : ${new_skills:-aucun}"
   echo ""
   read -rp "Appliquer ? (Y/n) : " confirm </dev/tty
@@ -566,9 +497,8 @@ cmd_edit() {
   [[ "$confirm" =~ ^[Yy]$ ]] || { log_info "Annulé."; exit 0; }
 
   # Réécriture du frontmatter
-  local skills_yaml targets_yaml
+  local skills_yaml
   skills_yaml=$(_csv_to_yaml_list "$new_skills")
-  targets_yaml=$(_csv_to_yaml_list "$new_targets")
 
   local body
   body=$(awk 'BEGIN{f=0;d=0} /^---$/{if(!f){f=1;next}else if(!d){d=1;next}} d{print}' "$file")
@@ -578,7 +508,6 @@ cmd_edit() {
     printf 'id: %s\n'          "$name"
     printf 'label: %s\n'       "$new_label"
     printf 'description: %s\n' "$new_desc"
-    printf 'targets: %s\n'     "$targets_yaml"
     printf 'skills: %s\n'      "$skills_yaml"
     printf '%s\n' "---"
     printf '\n'
@@ -866,11 +795,10 @@ cmd_validate() {
   for f in "${agent_files[@]}"; do
     [ -f "$f" ] || continue
 
-    local agent_id label description targets_raw skills_raw mode_raw
+    local agent_id label description skills_raw mode_raw
     agent_id=$(grep    '^id:'          "$f" 2>/dev/null | head -1 | sed 's/^id:[[:space:]]*//')
     label=$(grep       '^label:'       "$f" 2>/dev/null | head -1 | sed 's/^label:[[:space:]]*//')
     description=$(grep '^description:' "$f" 2>/dev/null | head -1 | sed 's/^description:[[:space:]]*//')
-    targets_raw=$(grep '^targets:'     "$f" 2>/dev/null | head -1 | sed 's/^targets:[[:space:]]*//')
     skills_raw=$(grep  '^skills:'      "$f" 2>/dev/null | head -1 | sed 's/^skills:[[:space:]]*//')
     mode_raw=$(grep    '^mode:'        "$f" 2>/dev/null | head -1 | sed 's/^mode:[[:space:]]*//')
 
@@ -884,13 +812,12 @@ cmd_validate() {
     local has_err=0 has_warn=0
 
     # ── Champs requis ──────────────────────────────────────────────────────
-    for field_name in id label description targets skills; do
+    for field_name in id label description skills; do
       local val
       case "$field_name" in
         id)          val="$agent_id" ;;
         label)       val="$label" ;;
         description) val="$description" ;;
-        targets)     val="$targets_raw" ;;
         skills)      val="$skills_raw" ;;
       esac
       if [ -z "$val" ]; then
@@ -916,21 +843,6 @@ cmd_validate() {
         *) issues="${issues}    mode invalide : ${mode_raw} (attendu : primary|subagent|all)\n"
            has_err=1 ;;
       esac
-    fi
-
-    # ── Targets valides ────────────────────────────────────────────────────
-    if [ -n "$targets_raw" ]; then
-      # Normaliser : retirer [ ] et virgules → liste mots
-      local targets_clean
-      targets_clean=$(printf '%s' "$targets_raw" | tr -d '[]' | tr ',' ' ')
-      local t
-      for t in $targets_clean; do
-        case "$t" in
-          opencode) ;;
-          *) issues="${issues}    target invalide : ${t} (attendu : opencode)\n"
-             has_err=1 ;;
-        esac
-      done
     fi
 
     # ── Skills existants ───────────────────────────────────────────────────
@@ -1017,9 +929,6 @@ cmd_deploy() {
     log_info "Projet cible : $project_id ($deploy_dir)"
   fi
 
-  # Résoudre les cibles
-  local targets=("opencode")
-
   # Langue du projet
   local lang=""
   [ -n "$project_id" ] && lang=$(get_project_language "$project_id" 2>/dev/null || true)
@@ -1028,36 +937,15 @@ cmd_deploy() {
   log_title "Déploiement de l'agent : $agent_id"
   echo ""
 
-  local deployed=0
-  for tgt in "${targets[@]}"; do
-    # Répertoire de sortie selon la cible
-    local out_dir="" out_file=""
-    case "$tgt" in
-      opencode)
-        out_dir="$deploy_dir/.opencode/agents"
-        out_file="$out_dir/${agent_id}.md"
-        ;;
-
-      *)
-        log_warn "Cible non reconnue : $tgt — ignorée"
-        continue
-        ;;
-    esac
-
-    mkdir -p "$out_dir"
-    if build_agent_content "$agent_file" "$tgt" "$lang" "$deploy_dir" > "$out_file"; then
-      log_success "$tgt : $agent_id → $out_file"
-      deployed=$((deployed + 1))
-    else
-      log_error "$tgt : échec du déploiement de $agent_id"
-    fi
-  done
-
-  echo ""
-  if [ "$deployed" -gt 0 ]; then
-    log_success "$agent_id déployé sur $deployed cible(s)"
+  local out_dir="$deploy_dir/.opencode/agents"
+  local out_file="$out_dir/${agent_id}.md"
+  mkdir -p "$out_dir"
+  if build_agent_content "$agent_file" "$lang" "$deploy_dir" > "$out_file"; then
+    log_success "opencode : $agent_id → $out_file"
+    echo ""
+    log_success "$agent_id déployé"
   else
-    log_warn "Aucune cible n'a accepté $agent_id"
+    log_error "opencode : échec du déploiement de $agent_id"
   fi
   echo ""
 }

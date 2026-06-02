@@ -11,7 +11,6 @@ permission:
   task:
     "*": deny
     "documentarian": allow
-targets: [opencode]
 skills: [quality/debugger-workflow, quality/debugger-handoff-format, auditor/living-docs-enrichment, posture/expert-posture]
 ---
 

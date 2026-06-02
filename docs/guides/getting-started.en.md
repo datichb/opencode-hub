@@ -31,7 +31,7 @@ The script automates:
 - Checking for missing dependencies (`jq`, `Node.js`, `opencode`, `bun`) — **confirmation requested before each installation**
 - Creating the `oc` alias in `~/.zshrc` or `~/.bashrc` (offers to keep / replace / rename if an `oc` alias already exists)
 - Initialising local config files
-- Interactive configuration of AI targets and LLM provider
+- Interactive configuration of the LLM provider
 
 After installation, reload your shell:
 
@@ -56,7 +56,7 @@ echo 'alias oc="~/.opencode-hub/oc.sh"' >> ~/.zshrc && source ~/.zshrc
 oc install
 ```
 
-`oc install` is interactive and asks you to choose which targets to activate:
+`oc install` is interactive and configures the opencode integration:
 
 | Choice | Targets configured |
 |--------|--------------------|
@@ -89,10 +89,9 @@ If you did not deploy during `oc init`:
 ```bash
 # Deploy to a specific project
 oc deploy opencode MY-APP
-oc deploy all MY-APP   # all active targets
+oc deploy MY-APP       # deploy agents to MY-APP
 ```
 
-Expected output per target:
 
 | Target | Files generated in the project |
 |--------|-------------------------------|
@@ -210,8 +209,8 @@ curl -fsSL https://raw.githubusercontent.com/datichb/opencode-hub/main/install.s
 | `oc: command not found` | Re-run `source ~/.zshrc` (or `~/.bashrc`) after installation |
 | `curl: command not found` | Install curl, then re-run the one-liner |
 | `Node.js not found` | Re-run `oc install` — offers available installers |
-| Agent missing in the tool | Re-run `oc deploy <target> MY-APP` |
-| Outdated agent (`⚠ OUTDATED`) | `oc deploy <target> MY-APP` to resynchronise |
+| Agent missing in the tool | Re-run `oc deploy MY-APP` |
+| Outdated agent (`⚠ OUTDATED`) | `oc deploy MY-APP` to resynchronise |
 | `bd: command not found` | Install Beads: `brew install beads` |
 | Install directory already exists | `OPENCODE_HUB_DIR=~/other-path bash install.sh` |
 

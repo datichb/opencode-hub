@@ -11,7 +11,6 @@ permission:
   grep: allow
   edit: allow
   write: allow
-targets: [opencode]
 skills: [developer/dev-standards-universal, developer/dev-standards-simplicity, developer/dev-standards-security, developer/quick-fix, developer/stacks/dev-standards-python, developer/stacks/dev-standards-pandas, developer/stacks/dev-standards-dbt, developer/stacks/dev-standards-airflow, developer/stacks/dev-standards-pyspark, developer/dev-standards-testing, developer/dev-standards-git, developer/beads-plan, developer/beads-dev, developer/developer-handoff-format]
 ---
 

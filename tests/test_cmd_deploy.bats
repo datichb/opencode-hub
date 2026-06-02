@@ -46,8 +46,6 @@ AGENTEOF
   cat > "$FAKE_HUB/config/hub.json" <<'HUBEOF'
 {
   "version": "1.5.0",
-  "default_target": "opencode",
-  "active_targets": ["opencode"],
   "default_provider": {"name": "", "api_key": "", "base_url": "", "model": ""},
   "opencode": {"model": "claude-sonnet-4-5", "disabled_native_agents": []},
   "cli": {"language": "fr"}
@@ -162,22 +160,4 @@ teardown() {
 
   run bash -c "echo n | bash '$HUB_ROOT/scripts/cmd-deploy.sh' --diff"
   [[ "$output" == *"inchangé"* ]]
-}
-
-# ── Mode normal : aucune cible ────────────────────────────────────────────────
-
-@test "deploy normal : exit 0 si aucune cible active dans hub.json" {
-  cat > "$FAKE_HUB/config/hub.json" <<'HUBEOF'
-{
-  "version": "1.5.0",
-  "default_target": "opencode",
-  "active_targets": [],
-  "default_provider": {"name": "", "api_key": "", "base_url": "", "model": ""},
-  "opencode": {"model": "claude-sonnet-4-5", "disabled_native_agents": []},
-  "cli": {"language": "fr"}
-}
-HUBEOF
-
-  run bash "$HUB_ROOT/scripts/cmd-deploy.sh"
-  [ "$status" -eq 0 ]
 }

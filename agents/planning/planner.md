@@ -38,7 +38,6 @@ permission:
     "*": deny
     "documentarian": allow
 model: anthropic/claude-opus-4
-targets: [opencode]
 skills: [developer/beads-plan, planning/planner-workflow, planning/planner-handoff-format, design/design-planner-format, adapters/figma-planner-protocol, posture/expert-posture, posture/tool-question, auditor/living-docs-enrichment, shared/websearch-usage, planning/websearch-stack-research]
 mcpServers: [figma]
 ---

@@ -11,7 +11,6 @@ permission:
   grep: allow
   edit: allow
   write: allow
-targets: [opencode]
 skills: [developer/dev-standards-universal, developer/dev-standards-simplicity, developer/dev-standards-security, developer/quick-fix, developer/stacks/dev-standards-react-native, developer/stacks/dev-standards-flutter, developer/stacks/dev-standards-swift, developer/stacks/dev-standards-kotlin, developer/dev-standards-testing, developer/dev-standards-git, developer/beads-plan, developer/beads-dev, developer/developer-handoff-format]
 ---
 

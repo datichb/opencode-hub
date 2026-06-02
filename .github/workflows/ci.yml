@@ -39,7 +39,7 @@ jobs:
             [ -f "$agent_file" ] || continue
             name=$(basename "$agent_file")
 
-            for field in id label description targets skills; do
+            for field in id label description skills; do
               if ! grep -q "^${field}:" "$agent_file"; then
                 echo "::error file=${agent_file}::Champ frontmatter manquant : '${field}' dans ${name}"
                 errors=$((errors + 1))
@@ -74,18 +74,13 @@ jobs:
             source scripts/lib/adapter-manager.sh
             source scripts/lib/spinner.sh
 
-            load_adapter()     { source scripts/adapters/opencode.adapter.sh; }
             adapter_validate() { return 0; }
             _spinner_start()   { true; }
             _spinner_stop()    { true; }
 
-            targets=('opencode')
             deploy_dir=\"\$HUB_DIR\"
-
-            for target in \"\${targets[@]}\"; do
-              load_adapter \"\$target\"
-              adapter_deploy \"\$deploy_dir\" ''
-            done
+            load_adapter
+            adapter_deploy \"\$deploy_dir\" ''
           "
 
       - name: Check staleness (opencode target — hub level)

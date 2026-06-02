@@ -89,10 +89,9 @@ fi
 
 # ── Résolution de la cible ────────────────
 source "$LIB_DIR/adapter-manager.sh"
-default_target="opencode"
 
-load_adapter "$default_target"
-adapter_validate || { log_error "$(t start.target_unavailable) (puis sélectionner $default_target)"; exit 1; }
+load_adapter
+adapter_validate || { log_error "$(t start.target_unavailable) (puis sélectionner opencode)"; exit 1; }
 
 # ── Vérifier que les agents sont déployés ──────────────
 agents_dir="$PROJECT_PATH/.opencode/agents"
@@ -100,19 +99,18 @@ agents_dir="$PROJECT_PATH/.opencode/agents"
 # ── Bloc contextuel ───────────────────────────────────────────────────────────
 _intro "${PROJECT_ID}"
 printf "${DIM}│${RESET}  %-10s %s\n" "Chemin"  "$PROJECT_PATH"
-printf "${DIM}│${RESET}  %-10s %s\n" "Cible"   "$default_target"
 
 # Agents non déployés : proposer le déploiement (uniquement en mode interactif)
 if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ] && [ -t 0 ]; then
   echo -e "${DIM}│${RESET}"
-  log_warn "$(t start.agents_not_deployed) ${default_target}"
+  log_warn "$(t start.agents_not_deployed) opencode"
   _prompt _deploy_now "$(t start.deploy_now)"
   if [[ "${_deploy_now:-Y}" =~ ^[Yy]$ ]]; then
     echo ""
     bash "$SCRIPTS_DIR/cmd-deploy.sh" "$PROJECT_ID" ${PROVIDER_OVERRIDE:+--provider "$PROVIDER_OVERRIDE"}
     echo ""
   else
-    log_info "$(t deploy_later) ${default_target} ${PROJECT_ID}"
+    log_info "$(t deploy_later) opencode ${PROJECT_ID}"
   fi
 fi
 
@@ -248,7 +246,7 @@ if [ "$ONBOARD_MODE" = true ]; then
 fi
 
 # ── Confirmation avant lancement ──────────────────────────────────────────────
-_outro "$(t start.press_enter) ${default_target}…"
+_outro "$(t start.press_enter) opencode…"
 IFS= read -rp "" _ || true
 
 adapter_start "$PROJECT_PATH" "$PROMPT" "$PROJECT_ID" "${AGENT_NAME:-}" "$PROVIDER_OVERRIDE"

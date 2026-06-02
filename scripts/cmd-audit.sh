@@ -69,24 +69,19 @@ PROJECT_ID=$(normalize_project_id "$PROJECT_ID")
 PROJECT_PATH=$(resolve_project_path "$PROJECT_ID")
 
 # ── Résolution de la cible ────────────────────────────────────────────────────
-default_target="opencode"
-load_adapter "$default_target"
-adapter_validate || { log_error "$(t audit.target_unavailable)$default_target' non disponible → oc install"; exit 1; }
+load_adapter
+adapter_validate || { log_error "$(t audit.target_unavailable)opencode' non disponible → oc install"; exit 1; }
 
 # ── Agents nécessaires ────────────────────────────────────────────────────────
 REQUIRED_AGENTS=("auditor")
 [ -n "$AUDIT_TYPE" ] && REQUIRED_AGENTS+=("auditor-${AUDIT_TYPE}")
 
-# ── Dossier d'agents déployés selon la cible ─────────────────────────────────
-case "$default_target" in
-  opencode)    agents_dir="$PROJECT_PATH/.opencode/agents" ;;
-  *)           agents_dir="" ;;
-esac
+# ── Dossier d'agents déployés ────────────────────────────────────────────────
+agents_dir="$PROJECT_PATH/.opencode/agents"
 
 # ── Bloc d'intro TUI ─────────────────────────────────────────────────────────
 _intro "oc audit  ${PROJECT_ID}"
 printf "${DIM}│${RESET}  %-12s %s\n" "$(t audit.label_path)"  "$PROJECT_PATH"
-printf "${DIM}│${RESET}  %-12s %s\n" "$(t audit.label_target)"   "$default_target"
 if [ -n "$AUDIT_TYPE" ]; then
   printf "${DIM}│${RESET}  %-12s %s\n" "$(t audit.label_type)"  "$AUDIT_TYPE"
 fi
@@ -128,7 +123,7 @@ if [ "$agents_csv" != "all" ]; then
         bash "$SCRIPTS_DIR/cmd-deploy.sh" "$PROJECT_ID"
         echo ""
       else
-        log_info "$(t audit.redeploy_later)$default_target $PROJECT_ID"
+        log_info "$(t audit.redeploy_later)opencode $PROJECT_ID"
       fi
     else
       # Refus → lister les agents audit physiquement déployés
@@ -147,7 +142,7 @@ if [ "$agents_csv" != "all" ]; then
 
       if [ ${#available_audit_agents[@]} -eq 0 ]; then
         log_error "$(t audit.no_agents_deployed)$agents_dir"
-        log_info  "$(t audit.deploy_hint)$default_target $PROJECT_ID"
+        log_info  "$(t audit.deploy_hint)opencode $PROJECT_ID"
         log_info  "$(t audit.add_agents_hint)$PROJECT_ID"
         exit 1
       fi
@@ -174,7 +169,7 @@ fi
 echo -e "${DIM}│${RESET}"
 
 if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ]; then
-  log_warn "$(t audit.agents_not_deployed)${default_target} (dossier absent : $agents_dir)"
+  log_warn "$(t audit.agents_not_deployed)opencode (dossier absent : $agents_dir)"
   _prompt _deploy_now "$(t audit.deploy_now_prompt)"
   if [[ "${_deploy_now:-Y}" =~ ^[Yy]$ ]]; then
     echo ""
@@ -182,7 +177,7 @@ if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ]; then
     echo ""
   else
     log_warn "$(t audit.deploy_skipped)"
-    log_info  "$(t audit.deploy_later)$default_target $PROJECT_ID"
+    log_info  "$(t audit.deploy_later)opencode $PROJECT_ID"
   fi
 else
   # Vérifier chaque agent requis individuellement
@@ -214,7 +209,7 @@ echo -e "${DIM}│${RESET}"
 log_info "$(t audit.main_agent)${AGENT_NAME}"
 
 # ── Confirmation avant lancement ─────────────────────────────────────────────
-_outro "$(t audit.launching)${default_target}…"
+_outro "$(t audit.launching)opencode…"
 IFS= read -rp "" _
 
 adapter_start "$PROJECT_PATH" "$PROMPT" "$PROJECT_ID" "$AGENT_NAME"

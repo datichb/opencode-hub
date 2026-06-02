@@ -5,8 +5,7 @@ source "$LIB_DIR/adapter-manager.sh"
 
 log_title "$(t update.title)"
 
-target="opencode"
-load_adapter "$target"
+load_adapter
 adapter_update
 
 log_info "$(t update.beads_updating)"

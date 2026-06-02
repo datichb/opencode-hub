@@ -126,21 +126,16 @@ _show_project_status() {
     *)       _status_ok   "Tracker : $tracker" ;;
   esac
 
-  # ── Agents déployés (cible par défaut) ────────────────────────────────────
+  # ── Agents déployés ───────────────────────────────────────────────────────
   if [ -n "$path" ]; then
-    local default_target
-    default_target="opencode"
-    local agents_dir=""
-    case "$default_target" in
-      opencode) agents_dir="$path/.opencode/agents" ;;
-    esac
+    local agents_dir="$path/.opencode/agents"
 
-    if [ -n "$agents_dir" ] && [ -d "$agents_dir" ]; then
+    if [ -d "$agents_dir" ]; then
       local count
       count=$(find "$agents_dir" -name "*.md" -o -name "*.json" 2>/dev/null | wc -l | tr -d ' ')
-      _status_ok "$(t status.agents_deployed) (${default_target}) : ${count} fichier(s)"
+      _status_ok "$(t status.agents_deployed) (opencode) : ${count} fichier(s)"
     else
-      _status_warn "$(t status.agents_missing) ${default_target}  (./oc.sh deploy all $id)"
+      _status_warn "$(t status.agents_missing) opencode  (./oc.sh deploy all $id)"
     fi
   fi
 }

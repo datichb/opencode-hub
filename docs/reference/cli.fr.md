@@ -14,7 +14,7 @@ oc <commande> [sous-commande] [options] [arguments]
 
 ## `oc install`
 
-Installe les outils, crée la structure du hub et configure les cibles actives.
+Installe les outils et crée la structure du hub.
 
 ```bash
 oc install
@@ -68,8 +68,8 @@ Génère les fichiers agents pour une cible dans un projet. Quand un `PROJECT_ID
 
 ```bash
 oc deploy <target> [PROJECT_ID]
-oc deploy --check [target] [PROJECT_ID]
-oc deploy --diff  [target] [PROJECT_ID]
+oc deploy --check [PROJECT_ID]
+oc deploy --diff  [PROJECT_ID]
 ```
 
 **Arguments :**
@@ -97,8 +97,8 @@ Ainsi, un agent `developer-frontend` déployé sur un projet React/Vitest/Playwr
 ```bash
 oc deploy opencode              # déploie OpenCode au niveau du hub (pas de détection de stack)
 oc deploy opencode MON-APP      # déploie OpenCode dans MON-APP (avec détection de stack)
-oc deploy all MON-APP           # déploie toutes les cibles actives dans MON-APP
-oc deploy --check               # vérifie toutes les cibles actives (hub)
+oc deploy MON-APP               # déploie les agents dans MON-APP
+oc deploy --check               # vérifie les agents du hub
 oc deploy --check opencode      # vérifie OpenCode (hub)
 oc deploy --check all MON-APP   # vérifie toutes les cibles pour MON-APP
 oc deploy --diff all MON-APP    # affiche le diff sources → déployés pour MON-APP
@@ -714,7 +714,7 @@ oc agent <sous-commande>
 | `select <PROJECT_ID>` | Choisit les agents à déployer pour un projet |
 | `mode <PROJECT_ID>` | Affiche / overrides les modes `primary`/`subagent` par projet |
 | `validate [agent-id]` | Valide la cohérence des agents (champs requis, skills existants, targets valides, unicité des id) |
-| `deploy <agent-id> [PROJECT_ID]` | Déploie **un seul agent** sur les cibles actives (ou celles du projet) |
+| `deploy <agent-id> [PROJECT_ID]` | Déploie **un seul agent** |
 
 ### `oc agent create` — workflow interactif
 
@@ -746,13 +746,11 @@ Retourne le code 1 si au moins une erreur est détectée.
 ### `oc agent deploy`
 
 ```bash
-oc agent deploy <agent-id>                # déploie sur les cibles actives du hub
 oc agent deploy <agent-id> <PROJECT_ID>   # déploie sur les cibles configurées du projet
 ```
 
 Déploie **un seul agent** sans tout redéployer. Utile après modification d'un agent ou d'un skill.
 
-- Respecte les cibles du projet si `PROJECT_ID` est fourni (sinon cibles actives du hub)
 - Vérifie que l'agent supporte la cible avant de déployer
 - Applique la détection de langue du projet (si configurée)
 

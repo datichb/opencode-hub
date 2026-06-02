@@ -12,7 +12,6 @@ setup() {
   export API_KEYS_FILE="$TEST_DIR/api-keys.local.md"
   export HUB_CONFIG="$TEST_DIR/hub.json"
 
-  printf '{"version":"1.0.0","default_target":"opencode","active_targets":["opencode"],"cli":{"language":"fr"}}\n' \
     > "$HUB_CONFIG"
 
   SCRIPT_DIR="$BATS_TEST_DIRNAME/../scripts"

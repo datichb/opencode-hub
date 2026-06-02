@@ -2,7 +2,6 @@
 id: test-agent-with-permissions
 label: Test Agent With Permissions
 description: Agent de test avec permissions
-targets: [opencode]
 skills: []
 permission:
   websearch: allow

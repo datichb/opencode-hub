@@ -25,8 +25,6 @@ setup() {
   cat > "$HUB_CONFIG_TEST" <<'HUBEOF'
 {
   "version": "1.5.0",
-  "default_target": "opencode",
-  "active_targets": ["opencode"],
   "default_provider": {"name": "", "api_key": "", "base_url": "", "model": ""},
   "opencode": {"model": "claude-sonnet-4-5", "disabled_native_agents": []},
   "cli": {"language": "fr"}

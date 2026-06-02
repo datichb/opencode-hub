@@ -16,7 +16,7 @@ oc <command> [sub-command] [options] [arguments]
 
 ## `oc install`
 
-Installs tools, creates the hub structure and configures active targets.
+Installs tools and creates the hub structure.
 
 ```bash
 oc install
@@ -70,8 +70,8 @@ Generates agent files for a target in a project. When a `PROJECT_ID` is provided
 
 ```bash
 oc deploy <target> [PROJECT_ID]
-oc deploy --check [target] [PROJECT_ID]
-oc deploy --diff  [target] [PROJECT_ID]
+oc deploy --check [PROJECT_ID]
+oc deploy --diff  [PROJECT_ID]
 ```
 
 **Arguments:**
@@ -99,8 +99,8 @@ This means a `developer-frontend` agent deployed on a React/Vitest/Playwright pr
 ```bash
 oc deploy opencode              # deploy OpenCode at hub level (no stack detection)
 oc deploy opencode MY-APP       # deploy OpenCode in MY-APP (with stack detection)
-oc deploy all MY-APP            # deploy all active targets in MY-APP
-oc deploy --check               # check all active targets (hub)
+oc deploy MY-APP                # deploy agents to MY-APP
+oc deploy --check               # check hub agents
 oc deploy --check opencode      # check OpenCode (hub)
 oc deploy --check all MY-APP    # check all targets for MY-APP
 oc deploy --diff all MY-APP     # show diff sources → deployed for MY-APP
@@ -716,7 +716,7 @@ oc agent <sub-command>
 | `select <PROJECT_ID>` | Choose which agents to deploy for a project |
 | `mode <PROJECT_ID>` | Display / override `primary`/`subagent` modes per project |
 | `validate [agent-id]` | Validate agent consistency (required fields, existing skills, valid targets, id uniqueness) |
-| `deploy <agent-id> [PROJECT_ID]` | Deploy **a single agent** to active targets (or project targets) |
+| `deploy <agent-id> [PROJECT_ID]` | Deploy **a single agent** |
 
 ### `oc agent create` — interactive workflow
 
@@ -754,7 +754,6 @@ oc agent deploy <agent-id> <PROJECT_ID>   # deploy to project-configured targets
 
 Deploys **a single agent** without redeploying everything. Useful after modifying an agent or a skill.
 
-- Respects the project's configured targets if `PROJECT_ID` is provided (otherwise hub active targets)
 - Checks that the agent supports the target before deploying
 - Applies the project's language setting (if configured)
 

@@ -15,8 +15,6 @@ setup() {
   cat > "$TEST_DIR/hub.json" <<'EOF'
 {
   "version": "test",
-  "default_target": "opencode",
-  "active_targets": ["opencode"],
   "opencode": {"model": "claude-sonnet-4-5"}
 }
 EOF

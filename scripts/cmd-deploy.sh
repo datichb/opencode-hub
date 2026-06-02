@@ -170,7 +170,7 @@ _cmd_deploy_diff() {
     local tmpfile; tmpfile=$(mktemp /tmp/oc-diff-XXXXXX.md)
     local diff_deploy_dir="$deploy_dir"
     # TODO perf: transmettre precomputed_stacks ici comme pour adapter_deploy_files et --check
-    if ! build_agent_content "$agent_file" "$tgt" "$lang" "$diff_deploy_dir" > "$tmpfile" 2>/dev/null; then
+    if ! build_agent_content "$agent_file" "$lang" "$diff_deploy_dir" > "$tmpfile" 2>/dev/null; then
       rm -f "$tmpfile"
       log_warn "  Génération échouée pour $agent_id — ignoré"
       continue
@@ -214,13 +214,6 @@ _cmd_deploy_diff() {
 # ── Dispatch : --check, --diff ou déploiement normal ─────────────────────────
 # Only runs when executed directly (not sourced)
 [[ "${BASH_SOURCE[0]}" != "$0" ]] && return 0
-
-# ── Vérifier s'il y a des cibles actives ────────────────────────────────────
-_hub_active_targets=$(jq -r '.active_targets // [] | length' "$HUB_CONFIG" 2>/dev/null || echo "0")
-if [ "$_hub_active_targets" = "0" ]; then
-  log_info "Aucune cible active dans hub.json — déploiement ignoré."
-  exit 0
-fi
 
 # Analyser les arguments pour détecter --check / --diff (peut être en 1ère ou 2ème position)
 CHECK_MODE=false
@@ -285,7 +278,7 @@ echo ""
 
 echo -e "${BOLD}── Déploiement opencode${RESET}"
 echo ""
-load_adapter "opencode"
+load_adapter
 adapter_validate || { log_error "opencode non disponible — déploiement ignoré"; exit 1; }
 
 # ── Phase 1 : copie des fichiers agents ────────────────────────────────────

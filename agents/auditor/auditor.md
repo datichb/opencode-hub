@@ -12,7 +12,6 @@ permission:
     "*": deny
     "auditor-*": allow
     "documentarian": allow
-targets: [opencode]
 skills: [posture/coordination-only, posture/retranscription-coordinateur, auditor/auditor-workflow, auditor/audit-protocol-light, auditor/audit-handoff-format, auditor/living-docs-enrichment, posture/tool-question]
 ---
 

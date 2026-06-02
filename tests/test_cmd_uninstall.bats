@@ -10,7 +10,6 @@ setup() {
   export HUB_DIR="$TEST_DIR/hub"
   export HUB_CONFIG="$TEST_DIR/hub.json"
   mkdir -p "$HUB_DIR"
-  printf '{"version":"1.0.0","default_target":"opencode","active_targets":["opencode"],"cli":{"language":"fr"}}\n' \
     > "$HUB_CONFIG"
 
   CMD_UNINSTALL="$BATS_TEST_DIRNAME/../scripts/cmd-uninstall.sh"
