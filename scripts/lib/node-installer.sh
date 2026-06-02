@@ -109,7 +109,7 @@ _install_node_with() {
   local method="$1"
 
   echo ""
-  read -rp "$(echo -e "  ${YELLOW}?${RESET}  Installer automatiquement ? [Y/n] ")" confirm
+  _prompt confirm "  Installer automatiquement ? [Y/n] "
   confirm="${confirm:-Y}"
 
   if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
@@ -163,7 +163,7 @@ _choose_installer() {
     printf "  ${BLUE}%d${RESET}) %s\n" "$((i+1))" "${labels[$i]}" >&2
   done
   echo "" >&2
-  read -rp "  Numéro (défaut: 1) : " choice </dev/tty
+  _prompt choice "  Numéro (défaut: 1) : "
   choice="${choice:-1}"
 
   local idx=$(( choice - 1 ))

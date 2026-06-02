@@ -210,29 +210,26 @@ teardown() {
 }
 
 @test "get_hub_default_provider : utilise un cache pour éviter lectures multiples" {
-  # Réinitialiser le cache
-  _HUB_DEFAULT_PROVIDER_CACHE=""
-  _HUB_DEFAULT_PROVIDER_CACHE_LOADED=0
-  
-  # Premier appel charge le cache
-  result1=$(get_hub_default_provider)
-  [ "$result1" = "anthropic" ]
-  
-  # Modifier hub.json après le premier appel
-  cat > "$HUB_CONFIG" <<'EOF'
-{
-  "default_provider": {
-    "name": "bedrock"
-  }
-}
-EOF
-  
-  # Deuxième appel utilise le cache (pas le fichier modifié)
-  result2=$(get_hub_default_provider)
-  
-  # Les deux résultats doivent être identiques (cache fonctionne)
-  [ "$result1" = "anthropic" ]
-  [ "$result2" = "anthropic" ]
+  # Le cache utilise des variables shell globales — doit être testé dans un
+  # seul shell continu pour que le cache persiste entre les appels.
+  run bash -c '
+    source "'"$BATS_TEST_DIRNAME"'/../scripts/common.sh"
+    export HUB_CONFIG="'"$HUB_CONFIG"'"
+    export PROVIDERS_FILE="'"$PROVIDERS_FILE"'"
+    _HUB_DEFAULT_PROVIDER_CACHE=""
+    _HUB_DEFAULT_PROVIDER_CACHE_LOADED=0
+
+    # Premier appel direct (pas en subshell) pour charger le cache
+    get_hub_default_provider >/dev/null
+
+    # Modifier hub.json après le premier appel
+    echo "{\"default_provider\":{\"name\":\"bedrock\"}}" > "$HUB_CONFIG"
+
+    # Deuxième appel : doit retourner la valeur en cache (pas le fichier modifié)
+    get_hub_default_provider
+  '
+  [ "$status" -eq 0 ]
+  [ "$output" = "anthropic" ]
 }
 
 @test "get_hub_default_provider : retourne vide si hub.json inexistant" {

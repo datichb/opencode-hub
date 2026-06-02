@@ -72,6 +72,7 @@ get_hub_language() {
 # Priority: project Langue field > global hub.json .cli.language > "en"
 # Normalises french/English → fr/en.
 # @param $1 — PROJECT_ID (optional)
+# shellcheck disable=SC2120
 resolve_oc_lang() {
   local project_id="${1:-}"
   local lang=""

@@ -2,6 +2,8 @@
 # Tests unitaires pour scripts/lib/node-installer.sh
 # Fonctions testées : ensure_node, _choose_installer, installers, helpers
 
+bats_require_minimum_version 1.5.0
+
 load helpers
 
 setup() {
@@ -11,6 +13,9 @@ setup() {
   export SCRIPT_DIR="$BATS_TEST_DIRNAME/../scripts"
   export LIB_DIR="$SCRIPT_DIR/lib"
   source "$SCRIPT_DIR/common.sh"
+  
+  # Empêcher le sourcing de nvm.sh réel (peut générer des Mio de sortie dans bats)
+  export NVM_DIR="$TEST_DIR/no-nvm"
   
   # Sourcer le module
   source "$BATS_TEST_DIRNAME/../scripts/lib/node-installer.sh"
@@ -50,24 +55,33 @@ teardown() {
 }
 
 @test "_print_manual_instructions : affiche instructions volta" {
+  # log_info doit imprimer pour que $output soit testable
+  log_info() { echo "$@"; }
+  export -f log_info
   run _print_manual_instructions "volta"
   [ "$status" -eq 0 ]
   [[ "$output" == *"volta.sh"* ]]
 }
 
 @test "_print_manual_instructions : affiche instructions brew" {
+  log_info() { echo "$@"; }
+  export -f log_info
   run _print_manual_instructions "brew"
   [ "$status" -eq 0 ]
   [[ "$output" == *"brew install node"* ]]
 }
 
 @test "_print_manual_instructions : affiche instructions nvm" {
+  log_info() { echo "$@"; }
+  export -f log_info
   run _print_manual_instructions "nvm"
   [ "$status" -eq 0 ]
   [[ "$output" == *"nvm-sh/nvm"* ]]
 }
 
 @test "_print_manual_instructions : affiche instructions génériques si méthode inconnue" {
+  log_info() { echo "$@"; }
+  export -f log_info
   run _print_manual_instructions "unknown"
   [ "$status" -eq 0 ]
   [[ "$output" == *"nodejs.org"* ]]
@@ -133,7 +147,9 @@ teardown() {
   }
   export -f bash
   
-  # Créer faux nvm.sh
+  # Pointer HOME vers TEST_DIR pour que le code de production fasse
+  # export NVM_DIR="$HOME/.nvm" = "$TEST_DIR/.nvm" (là où le faux nvm.sh est créé)
+  export HOME="$TEST_DIR"
   export NVM_DIR="$TEST_DIR/.nvm"
   mkdir -p "$NVM_DIR"
   cat > "$NVM_DIR/nvm.sh" <<'EOF'
@@ -194,48 +210,18 @@ EOF
 # ── _choose_installer ───────────────────────────────────────────────────────
 
 @test "_choose_installer : retourne volta par défaut" {
-  # Mock detect_os
-  detect_os() {
-    echo "linux"
-  }
-  export -f detect_os
-  
-  # Mock command pour dire qu'aucun outil n'est installé
-  command() {
-    return 1
-  }
-  export -f command
-  
-  # Mock read pour simuler l'appui sur Entrée (choix par défaut = 1 = volta)
-  read() {
-    eval "${!#}=''"
-    return 0
-  }
-  export -f read
-
-  run _choose_installer "linux"
+  # Pas de mock command : volta/nvm ne sont pas dans PATH en test de toute façon.
+  # --separate-stderr évite que les menus (>&2) ne polluent $output.
+  run --separate-stderr _choose_installer "linux"
   [ "$status" -eq 0 ]
   [ "$output" = "volta" ]
 }
 
 @test "_choose_installer : inclut brew sur macOS" {
-  # Mock command
-  command() {
-    if [ "$2" = "brew" ]; then
-      return 0  # brew existe
-    fi
-    return 1
-  }
-  export -f command
-  
-  # Mock read pour simuler l'appui sur Entrée (choix par défaut = 1 = volta)
-  read() {
-    eval "${!#}=''"
-    return 0
-  }
-  export -f read
-
-  run _choose_installer "macos"
+  # Même approche : séparation stderr/stdout.
+  # Sur macOS, brew est présent en PATH, donc il sera détecté comme "déjà installé".
+  # Le choix par défaut (1 = volta) doit être retourné.
+  run --separate-stderr _choose_installer "macos"
   [ "$status" -eq 0 ]
   # Sur macOS avec brew, les options sont: volta, brew, nvm
   # Le défaut devrait être volta
@@ -289,24 +275,18 @@ EOF
 # ── _install_node_with ──────────────────────────────────────────────────────
 
 @test "_install_node_with : skip si utilisateur refuse" {
-  # Simuler réponse 'n'
-  read() {
-    eval "$2='n'"
-    return 0
-  }
-  export -f read
+  # Simuler réponse 'n' via _prompt (remplace read — _install_node_with utilise _prompt)
+  _prompt() { printf -v "$1" '%s' 'n'; }
+  export -f _prompt
   
   run _install_node_with "volta"
   [ "$status" -ne 0 ]
 }
 
 @test "_install_node_with : installe si utilisateur accepte" {
-  # Simuler réponse 'Y'
-  read() {
-    eval "$2='Y'"
-    return 0
-  }
-  export -f read
+  # Simuler réponse 'Y' via _prompt
+  _prompt() { printf -v "$1" '%s' 'Y'; }
+  export -f _prompt
   
   # Mock _install_with_volta
   _install_with_volta() {
@@ -325,11 +305,9 @@ EOF
 }
 
 @test "_install_node_with : gère erreur installation" {
-  read() {
-    eval "$2='Y'"
-    return 0
-  }
-  export -f read
+  # Simuler réponse 'Y' via _prompt
+  _prompt() { printf -v "$1" '%s' 'Y'; }
+  export -f _prompt
   
   # Mock installation qui échoue
   _install_with_brew() {
@@ -399,6 +377,10 @@ EOF
     builtin command "$@"
   }
   export -f command
+  
+  # log_success doit imprimer pour que $output soit testable (mock_log_functions le silençait)
+  log_success() { echo "$@"; }
+  export -f log_success
   
   run ensure_node
   [ "$status" -eq 0 ]
