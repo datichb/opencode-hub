@@ -1583,6 +1583,62 @@ Mettre à jour les champs manquants dans la section du projet concerné dans `pr
 
 ---
 
+### ÉTAPE 5.4 — Générer le cache de contexte
+
+**Toujours exécuter cette étape après CONVENTIONS.md et projects.md**, sauf si le CONTEXTE initial contient `no-cache: true`.
+
+Générer `.opencode/context.json` avec :
+
+```json
+{
+  "version": "1.0",
+  "generated_at": "<timestamp ISO8601 UTC>",
+  "stack": {
+    "languages": ["<langages détectés en Phase 1>"],
+    "frameworks": ["<frameworks détectés en Phase 1>"]
+  },
+  "conventions": {
+    "source": "CONVENTIONS.md",
+    "hash": "<sha256 du fichier CONVENTIONS.md>"
+  },
+  "key_files": {
+    "<fichier_structurant>": "<sha256>",
+    "...": "..."
+  }
+}
+```
+
+**Fichiers structurants à inclure dans `key_files` (ceux qui existent dans le projet) :**
+
+```
+package.json, tsconfig.json, tsconfig.base.json, pyproject.toml, Cargo.toml,
+go.mod, composer.json, pom.xml, Gemfile, requirements.txt,
+eslint.config.js, eslint.config.mjs, .eslintrc.json, .prettierrc, .prettierrc.json,
+biome.json, CONVENTIONS.md, ONBOARDING.md
+```
+
+**Calcul des hashes :**
+- Utiliser `shasum -a 256 <fichier>` (macOS) ou `sha256sum <fichier>` (Linux)
+- Format : `sha256:<empreinte_hex>`
+
+**Protocole d'écriture :**
+1. S'assurer que le dossier `.opencode/` existe à la racine du projet (le créer si absent)
+2. Écrire `.opencode/context.json` avec le contenu structuré ci-dessus
+3. Ajouter `.opencode/context.json` au `.git/info/exclude` (si pas déjà présent)
+4. Ne pas modifier `.gitignore`
+
+**Si `.opencode/context.json` existe déjà :**
+- L'écraser sans question (mise à jour normale lors d'un re-onboarding)
+
+**Message de confirmation dans la discussion (pas de question outil) :**
+```
+✅ Cache de contexte généré : .opencode/context.json
+   Stack : <langages et frameworks>
+   Fichiers indexés : <N fichiers structurants trouvés>
+```
+
+---
+
 ### Récap de fin de Phase 5
 
 ```markdown
@@ -1591,7 +1647,8 @@ Mettre à jour les champs manquants dans la section du projet concerné dans `pr
 **Fichiers créés/modifiés :**
 - ✅ `ONBOARDING.md` — créé/écrasé à la racine du projet
 - ✅ `CONVENTIONS.md` — créé/écrasé à la racine du projet
-- ✅ `.git/info/exclude` — ONBOARDING.md et CONVENTIONS.md ajoutés
+- ✅ `.opencode/context.json` — cache de contexte généré
+- ✅ `.git/info/exclude` — ONBOARDING.md, CONVENTIONS.md et .opencode/context.json ajoutés
 - ✅ `projects.md` — champ Stack mis à jour (si applicable)
 
 **Résumé du rapport :**

@@ -1,0 +1,193 @@
+# Architecture du cache — opencode-hub
+
+## Vue d'ensemble
+
+opencode-hub utilise deux niveaux de cache complémentaires, chacun avec un rôle distinct.
+
+---
+
+## Deux niveaux de cache
+
+### Cache natif OpenCode (API / Runtime)
+
+**Rôle :** Réutiliser le contexte de prompt entre requêtes API côté fournisseur.
+
+**Configuration :** `opencode.json` (racine du hub)
+
+```json
+{
+  "provider": {
+    "anthropic": {
+      "options": {
+        "setCacheKey": true
+      }
+    }
+  },
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 10000
+  }
+}
+```
+
+**Options :**
+| Clé | Description |
+|-----|-------------|
+| `setCacheKey` | Maintient un cache key stable pour réutilisation côté Anthropic (économie de tokens ~30-50%) |
+| `compaction.auto` | Compact automatiquement le contexte quand il est plein |
+| `compaction.prune` | Supprime les anciens tool outputs pour libérer de l'espace |
+| `compaction.reserved` | Buffer de tokens réservé pour la compaction (évite le débordement) |
+
+**Bénéfice :** Économie de tokens par réutilisation du cache de prompt.
+**Portée :** Chaque session OpenCode (transversal à tous les projets).
+
+---
+
+### Cache projet (Session / Exploration)
+
+**Rôle :** Éviter la ré-exploration du projet à chaque session.
+
+**Fichier :** `.opencode/context.json` (dans chaque projet)
+
+**Format :**
+```json
+{
+  "version": "1.0",
+  "generated_at": "2026-05-28T10:30:00Z",
+  "stack": {
+    "languages": ["typescript"],
+    "frameworks": ["vue"]
+  },
+  "conventions": {
+    "source": "CONVENTIONS.md",
+    "hash": "sha256:abc123..."
+  },
+  "key_files": {
+    "package.json": "sha256:def456...",
+    "tsconfig.json": "sha256:ghi789...",
+    "CONVENTIONS.md": "sha256:abc123..."
+  }
+}
+```
+
+**Bénéfice :** Gain de temps au démarrage (~2-5s), contexte projet disponible immédiatement.
+**Portée :** Un fichier par projet, local à la machine.
+
+---
+
+## Quand utiliser quoi ?
+
+| Besoin | Solution |
+|--------|----------|
+| Réduire les tokens API | Cache natif (`setCacheKey`) |
+| Accélérer le démarrage d'une session | Cache projet (`.opencode/context.json`) |
+| Projet ou conventions modifiés | `oc start --onboard --refresh` |
+| Re-onboarder sans effacer le cache | `oc start --onboard` (cache écrasé automatiquement) |
+| Diagnostiquer un démarrage lent | Vérifier si le cache projet est valide |
+
+---
+
+## Cycle de vie du cache projet
+
+### Génération
+
+Le cache `.opencode/context.json` est généré automatiquement par l'agent **onboarder** à la fin de la Phase 5 (étape 5.4).
+
+**Déclencheur :** `oc start --onboard [PROJECT_ID]`
+
+**Contenu :** Stack détectée en Phase 1, hashes SHA-256 des fichiers structurants (package.json, tsconfig.json, CONVENTIONS.md, etc.)
+
+### Validation au démarrage
+
+À chaque `oc start`, le hub vérifie le cache avant d'afficher le contexte :
+
+1. Cache absent → pas d'affichage (comportement normal)
+2. Cache valide (hashes identiques) → `✅ Cache contexte valide (2026-05-28)`
+3. Cache invalide (un fichier a changé) → `⚠️ Cache invalide — oc start --onboard --refresh recommandé`
+
+La validation n'est jamais bloquante.
+
+### Régénération forcée
+
+```bash
+# Invalider le cache et re-onboarder
+oc start --onboard --refresh [PROJECT_ID]
+```
+
+Comportement :
+1. Supprime `.opencode/context.json`
+2. Lance l'agent onboarder qui re-explore le projet
+3. Génère un nouveau cache à la fin de l'onboarding
+
+### Invalidation automatique
+
+Le cache est considéré invalide si :
+- Un fichier listé dans `key_files` a été modifié (hash SHA-256 différent)
+- Un fichier listé dans `key_files` a été supprimé
+- `context.json` est corrompu (JSON invalide)
+
+---
+
+## Graphe de dépendances
+
+**Fichier :** `.opencode/dependency-graph.json` (optionnel)
+
+**Génération :** Automatiquement lors de `oc deploy [PROJECT_ID]`, si le projet contient des fichiers TypeScript ou JavaScript.
+
+**Format :**
+```json
+{
+  "version": "1.0",
+  "generated_at": "2026-05-28T10:30:00Z",
+  "root": "/path/to/project",
+  "stats": { "files_scanned": 42, "total_imports": 128 },
+  "nodes": {
+    "src/services/user.service.ts": {
+      "imports": ["src/repositories/user.repository.ts"],
+      "imported_by": ["src/controllers/user.controller.ts"]
+    }
+  }
+}
+```
+
+**Utilisation :** L'orchestrateur-dev consulte ce graphe avant de lancer des tickets en parallèle pour détecter les conflits potentiels (fichiers dans la même chaîne d'imports).
+
+**Limites :**
+- TypeScript, JavaScript, TSX et JSX uniquement
+- Imports relatifs uniquement (`./` ou `../`)
+- Maximum 2000 fichiers scannés par projet
+- Regex simplifié (pas d'AST) — précision ~90%
+
+---
+
+## Interaction entre les deux caches
+
+Les deux systèmes sont **complémentaires**, pas concurrents :
+
+```
+Session OpenCode
+│
+├── Cache natif (setCacheKey)
+│   └── Réduit les tokens API pour chaque échange avec le modèle
+│
+└── Cache projet (.opencode/context.json)
+    └── Évite la re-lecture des fichiers projet à chaque session
+        └── L'orchestrateur charge le contexte sans re-lire ONBOARDING.md intégralement
+```
+
+Le cache natif agit au niveau de l'API (économie de tokens), le cache projet agit au niveau du contexte de l'agent (économie de temps et d'efforts d'exploration).
+
+---
+
+## Fichiers techniques
+
+| Fichier | Rôle |
+|---------|------|
+| `scripts/lib/context-cache.sh` | Lib bash : génération, validation, lecture du cache projet |
+| `scripts/lib/dependency-graph.sh` | Lib bash : génération et requêtes du graphe de dépendances |
+| `scripts/cmd-start.sh` | Valide le cache au démarrage (`--refresh` pour invalider) |
+| `scripts/cmd-deploy.sh` | Génère le graphe de dépendances après le déploiement |
+| `skills/planning/onboarder-workflow.md` | Étape 5.4 : génère `.opencode/context.json` |
+| `skills/orchestrator/orchestrator-protocol.md` | Étape 0.0 CP-0 : charge le cache si valide |
+| `skills/orchestrator/orchestrator-dev-protocol.md` | Détection de conflits via graphe avant parallélisme |

@@ -499,6 +499,24 @@ L'utilisateur fournit directement un ou plusieurs IDs de tickets.
 
 ## CP-0 — Démarrage de la feature
 
+### Étape 0.0 — Validation du cache de contexte (optionnelle)
+
+Avant d'afficher les tickets, vérifier si `.opencode/context.json` est disponible :
+
+**Si `.opencode/context.json` existe et est valide** (hashes cohérents avec les fichiers actuels) :
+- Charger les informations de stack et de conventions depuis le cache
+- Afficher dans la discussion : `✅ Cache de contexte valide (généré le <date>)`
+- Utiliser la stack et les conventions du cache au lieu de relire ONBOARDING.md intégralement
+- Priorité : cache > ONBOARDING.md (si le cache est valide, il est la source de vérité)
+
+**Si le cache est absent ou invalide :**
+- Lire ONBOARDING.md et CONVENTIONS.md normalement (comportement inchangé)
+- Si le cache est invalide (fichier modifié depuis la génération) : signaler dans la discussion :
+  `⚠️ Cache de contexte invalide — recommandation : oc start --onboard --refresh`
+- Ne pas bloquer le démarrage — continuer avec la lecture classique
+
+---
+
 Afficher les tickets selon l'`### Ordre de traitement` défini par le planner.
 **Ne jamais réordonner ni classifier les tickets de façon autonome** — utiliser l'ordre fourni par le planner.
 

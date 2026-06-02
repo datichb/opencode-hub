@@ -342,3 +342,12 @@ fi
 echo ""
 
 log_success "Déploiement terminé en ${SECONDS}s"
+
+# ── Graphe de dépendances (optionnel, non-bloquant) ──────────────────────────
+# Généré uniquement si le projet contient des fichiers TS/JS
+if [ -n "$PROJECT_ID" ] && [ -n "$deploy_dir" ]; then
+  source "$LIB_DIR/dependency-graph.sh"
+  if generate_dependency_graph "$deploy_dir" 2>/dev/null; then
+    log_info "Graphe de dépendances généré : .opencode/dependency-graph.json ($(depgraph_stats "$deploy_dir" 2>/dev/null || echo "stats indisponibles"))"
+  fi
+fi

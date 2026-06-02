@@ -8,6 +8,7 @@ ensure_projects_file
 # ── Parsing des arguments (--dev, --onboard, --label, --assignee sont des flags libres) ───
 DEV_MODE=false
 ONBOARD_MODE=false
+REFRESH_MODE=false
 DEV_LABEL=""
 DEV_ASSIGNEE=""
 AGENT_NAME=""
@@ -24,6 +25,7 @@ for arg in "$@"; do
   case "$arg" in
     --dev)      DEV_MODE=true ;;
     --onboard)  ONBOARD_MODE=true ;;
+    --refresh)  REFRESH_MODE=true ;;
     --label|--assignee|--agent|--provider) _prev="$arg" ;;
     *)          ARGS+=("$arg") ;;
   esac
@@ -34,6 +36,12 @@ PROMPT="${ARGS[1]:-}"
 # --dev et --onboard sont mutuellement exclusifs
 if [ "$DEV_MODE" = true ] && [ "$ONBOARD_MODE" = true ]; then
   log_error "$(t start.dev_onboard_exclusive)"
+  exit 1
+fi
+
+# --refresh nécessite --onboard
+if [ "$REFRESH_MODE" = true ] && [ "$ONBOARD_MODE" = false ]; then
+  log_error "--refresh nécessite --onboard (usage : oc start --onboard --refresh $PROJECT_ID)"
   exit 1
 fi
 
@@ -91,7 +99,7 @@ fi
 source "$LIB_DIR/adapter-manager.sh"
 
 load_adapter
-adapter_validate || { log_error "opencode non disponible → oc install"; exit 1; }
+adapter_validate || { log_error "$(t start.target_unavailable) (puis sélectionner opencode)"; exit 1; }
 
 # ── Vérifier que les agents sont déployés ──────────────
 agents_dir="$PROJECT_PATH/.opencode/agents"
@@ -99,6 +107,17 @@ agents_dir="$PROJECT_PATH/.opencode/agents"
 # ── Bloc contextuel ───────────────────────────────────────────────────────────
 _intro "${PROJECT_ID}"
 printf "${DIM}│${RESET}  %-10s %s\n" "Chemin"  "$PROJECT_PATH"
+
+# ── Validation du cache de contexte ──────────────────────────────────────────
+source "$LIB_DIR/context-cache.sh"
+if cache_exists "$PROJECT_PATH"; then
+  if validate_context_cache "$PROJECT_PATH"; then
+    _cache_date=$(cache_get_generated_at "$PROJECT_PATH")
+    printf "${DIM}│${RESET}  %-10s %s\n" "Contexte" "✅ Cache valide (${_cache_date})"
+  else
+    printf "${DIM}│${RESET}  %-10s %s\n" "Contexte" "⚠️  Cache invalide — oc start --onboard --refresh recommandé"
+  fi
+fi
 
 # Agents non déployés : proposer le déploiement (uniquement en mode interactif)
 if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ] && [ -t 0 ]; then
@@ -239,10 +258,21 @@ fi
 # ── Mode --onboard : prompt de découverte projet ────────────────────────────
 if [ "$ONBOARD_MODE" = true ]; then
   source "$LIB_DIR/prompt-builder.sh"
+  # --refresh : invalider le cache existant avant le re-onboarding
+  if [ "$REFRESH_MODE" = true ]; then
+    source "$LIB_DIR/context-cache.sh"
+    if cache_invalidate "$PROJECT_PATH"; then
+      log_info "Cache de contexte supprimé — re-onboarding complet"
+    fi
+  fi
   PROMPT=$(build_onboard_bootstrap_prompt "$PROJECT_PATH" "$PROJECT_ID" "$HUB_DIR")
   AGENT_NAME="${AGENT_NAME:-onboarder}"
   echo ""
-  log_info "Mode --onboard  découverte projet activée  agent: ${AGENT_NAME}"
+  if [ "$REFRESH_MODE" = true ]; then
+    log_info "Mode --onboard --refresh  re-découverte projet + régénération cache  agent: ${AGENT_NAME}"
+  else
+    log_info "Mode --onboard  découverte projet activée  agent: ${AGENT_NAME}"
+  fi
 fi
 
 # ── Confirmation avant lancement ──────────────────────────────────────────────
