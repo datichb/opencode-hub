@@ -110,9 +110,105 @@ _cmd_deploy_check() {
   done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
 
   echo ""
+  echo -e "Résultat agents : ${GREEN}$ok_count à jour${RESET}  |  ${stale_count:+${YELLOW}}$stale_count obsolète(s)/manquant(s)${RESET}"
 
-  echo -e "Résultat : ${GREEN}$ok_count à jour${RESET}  |  ${stale_count:+${YELLOW}}$stale_count obsolète(s)/manquant(s)${RESET}"
-  if [ "$stale_count" -gt 0 ]; then
+  # ── Vérification des skills natives déployées ─────────────────────────────
+  echo ""
+  log_title "Vérification de fraîcheur des skills déployées"
+  local skill_stale_count=0
+  local skill_ok_count=0
+
+  local skills_out_dir="$deploy_dir/.opencode/skills"
+
+  # Collecter toutes les skills natives attendues (union native_skills + stack skills, tous agents retenus)
+  local _expected_skill_names=()
+  local _expected_skill_sources=()
+  local _seen_skill_names=()
+
+  while IFS= read -r agent_file; do
+    [ -f "$agent_file" ] || continue
+    read_agent_frontmatter "$agent_file"
+    local agent_id="$_fm_id"
+    [ -z "$agent_id" ] && agent_id=$(basename "$agent_file" .md)
+    should_deploy_agent "$project_id" "$agent_id" || continue
+
+    # native_skills explicites du frontmatter
+    local _ns
+    while IFS= read -r _ns; do
+      [ -z "$_ns" ] && continue
+      local _ns_name; _ns_name=$(basename "$_ns" .md)
+      local _already=0
+      for _s in "${_seen_skill_names[@]:-}"; do
+        [ "$_s" = "$_ns_name" ] && _already=1 && break
+      done
+      if [ "$_already" = "0" ]; then
+        _seen_skill_names+=("$_ns_name")
+        _expected_skill_names+=("$_ns_name")
+        _expected_skill_sources+=("$SKILLS_DIR/${_ns}.md")
+      fi
+    done < <(extract_frontmatter_list "$agent_file" "native_skills")
+
+    # Stack skills dynamiques
+    if [ -n "$_check_precomputed_stack_skills" ]; then
+      local _ss
+      while IFS= read -r _ss; do
+        [ -z "$_ss" ] && continue
+        local _ss_name; _ss_name=$(basename "$_ss" .md)
+        local _already=0
+        for _s in "${_seen_skill_names[@]:-}"; do
+          [ "$_s" = "$_ss_name" ] && _already=1 && break
+        done
+        if [ "$_already" = "0" ]; then
+          _seen_skill_names+=("$_ss_name")
+          _expected_skill_names+=("$_ss_name")
+          _expected_skill_sources+=("$SKILLS_DIR/${_ss}.md")
+        fi
+      done < <(_get_precomputed_stack_skills "$agent_id" "$_check_precomputed_stack_skills")
+    fi
+  done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
+
+  if [ "${#_expected_skill_names[@]}" -eq 0 ]; then
+    echo -e "  ${BLUE}(aucune skill native attendue pour cette cible)${RESET}"
+  else
+    local _si=0
+    while [ "$_si" -lt "${#_expected_skill_names[@]}" ]; do
+      local _sname="${_expected_skill_names[$_si]}"
+      local _ssrc="${_expected_skill_sources[$_si]}"
+
+      # Résoudre le nom final depuis le frontmatter de la skill source
+      local _final_name="$_sname"
+      if [ -f "$_ssrc" ]; then
+        local _fm_name_val
+        _fm_name_val=$(extract_frontmatter_value "$_ssrc" "name")
+        [ -n "$_fm_name_val" ] && _final_name="$_fm_name_val"
+      fi
+
+      local _deployed_file="$skills_out_dir/${_final_name}/SKILL.md"
+
+      if [ ! -f "$_deployed_file" ]; then
+        echo -e "  ${RED}✗ MANQUANT${RESET}  $_sname → ${_final_name}/SKILL.md"
+        skill_stale_count=$((skill_stale_count + 1))
+      elif [ ! -f "$_ssrc" ]; then
+        echo -e "  ${YELLOW}⚠ OBSOLÈTE${RESET}  $_sname → ${_final_name}/SKILL.md  (source introuvable)"
+        skill_stale_count=$((skill_stale_count + 1))
+      elif [ "$_ssrc" -nt "$_deployed_file" ]; then
+        echo -e "  ${YELLOW}⚠ OBSOLÈTE${RESET}  $_sname → ${_final_name}/SKILL.md  (source modifiée)"
+        skill_stale_count=$((skill_stale_count + 1))
+      else
+        echo -e "  ${GREEN}✓ À JOUR${RESET}    $_sname → ${_final_name}/SKILL.md"
+        skill_ok_count=$((skill_ok_count + 1))
+      fi
+
+      _si=$((_si + 1))
+    done
+  fi
+
+  echo ""
+  echo -e "Résultat skills : ${GREEN}$skill_ok_count à jour${RESET}  |  ${skill_stale_count:+${YELLOW}}$skill_stale_count obsolète(s)/manquant(s)${RESET}"
+
+  # ── Bilan global ──────────────────────────────────────────────────────────
+  local total_stale=$((stale_count + skill_stale_count))
+  if [ "$total_stale" -gt 0 ]; then
     echo ""
     log_info "Régénérer : ./oc.sh deploy${project_id:+ $project_id}"
     exit 1
@@ -305,8 +401,25 @@ else
 fi
 echo ""
 
-# ── Phase 2 : configuration provider / model ───────────────────────────────
-echo -e "${CYAN}⚙️  Phase 2 — Configuration${RESET}"
+# ── Phase 2 : déploiement des skills natives ───────────────────────────────
+echo -e "${CYAN}🧩  Phase 2 — Déploiement des skills${RESET}"
+
+if adapter_deploy_skills "$deploy_dir" "$PROJECT_ID"; then
+  summary_lines=()
+  summary_lines+=("$_DEPLOY_NATIVE_SKILLS_COUNT skills déployées")
+  [ "${_DEPLOY_NATIVE_SKILLS_SKIPPED:-0}" -gt 0 ] && \
+    summary_lines+=("$_DEPLOY_NATIVE_SKILLS_SKIPPED skills ignorées (source introuvable)")
+  
+  _progress_summary "Phase 2 terminée" "${summary_lines[@]}"
+else
+  echo ""
+  log_error "Échec de la Phase 2"
+  exit 1
+fi
+echo ""
+
+# ── Phase 3 : configuration provider / model ───────────────────────────────
+echo -e "${CYAN}⚙️  Phase 3 — Configuration${RESET}"
 
 if adapter_deploy_config "$deploy_dir" "$PROJECT_ID" "$PROVIDER_OVERRIDE"; then
   # Cas particulier : fichier conservé (aucun changement)
@@ -331,12 +444,17 @@ if adapter_deploy_config "$deploy_dir" "$PROJECT_ID" "$PROVIDER_OVERRIDE"; then
     if [ "$_DEPLOY_CONFIG_PERMS" -gt 0 ]; then
       summary_lines+=("Permissions : $_DEPLOY_CONFIG_PERMS agents avec restrictions")
     fi
+
+    # Planchers modèle appliqués
+    if [ "${_DEPLOY_CONFIG_CLAMPS:-0}" -gt 0 ]; then
+      summary_lines+=("Planchers modèle : $_DEPLOY_CONFIG_CLAMPS agent(s) clampés au plancher défini")
+    fi
     
-    _progress_summary "Phase 2 terminée" "${summary_lines[@]}"
+    _progress_summary "Phase 3 terminée" "${summary_lines[@]}"
   fi
 else
   echo ""
-  log_error "Échec de la Phase 2"
+  log_error "Échec de la Phase 3"
   exit 1
 fi
 echo ""

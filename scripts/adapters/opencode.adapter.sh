@@ -4,7 +4,7 @@
 source "$HUB_DIR/scripts/lib/prompt-builder.sh"
 
 # Initialisations globales des tableaux _DEPLOY_FILES_* — obligatoires sous set -u.
-# Sans ces déclarations, adapter_deploy_config() appelée directement (Phase 2 sans Phase 1)
+# Sans ces déclarations, adapter_deploy_config() appelée directement (Phase 3 sans Phase 1+2)
 # échoue à la garde «if [ "${#_DEPLOY_FILES_AGENT_KEYS[@]}" -eq 0 ]»
 # avec «variable sans liaison» car set -u est hérité de ocp.sh.
 _DEPLOY_FILES_AGENT_KEYS=()
@@ -13,6 +13,9 @@ _DEPLOY_FILES_AGENT_FILES=()
 _DEPLOY_FILES_COUNT=0
 _DEPLOY_NATIVE_SKILLS_COUNT=0
 _DEPLOY_NATIVE_SKILLS_SKIPPED=0
+_DEPLOY_PRECOMPUTED_STACKS=""
+_CLAMP_APPLIED_AGENTS=""
+_DEPLOY_CONFIG_CLAMPS=0
 
 # Applique le préfixe opencode et les model_aliases du provider au modèle court.
 # $1 = modèle (nom court, ex: claude-sonnet-4-5)
@@ -360,7 +363,40 @@ deploy_native_skills() {
 
 adapter_needs_node() { return 0; }
 
-# ── Phase 1 : copie des fichiers agents ──────────────────────────────────────
+# ── Phase 2 : déploiement des skills natives ─────────────────────────────────
+# Déploie les skills natives dans .opencode/skills/<name>/SKILL.md
+# Autonome : charge les métadonnées agents et précalcule les stacks si la Phase 1
+# n'a pas été exécutée au préalable.
+#
+# $1 = deploy_dir, $2 = project_id (optionnel)
+adapter_deploy_skills() {
+  local deploy_dir="${1:-$HUB_DIR}"
+  local project_id="${2:-}"
+
+  source "$LIB_DIR/prompt-builder.sh"
+
+  # Charger les métadonnées agents si les tableaux sont vides (appel direct sans Phase 1)
+  if [ "${#_DEPLOY_FILES_AGENT_KEYS[@]}" -eq 0 ]; then
+    _load_agent_metadata "$project_id"
+  fi
+
+  # Réutiliser les stacks précalculés par la Phase 1, ou recalculer si appel autonome
+  local _stacks="${_DEPLOY_PRECOMPUTED_STACKS:-}"
+  if [ -z "$_stacks" ] && [ -n "$deploy_dir" ] && [ -d "$deploy_dir" ]; then
+    local _stack_skills_config="${HUB_DIR:-}/config/stack-skills.json"
+    if [ -f "$_stack_skills_config" ]; then
+      local _detected
+      _detected=$(detect_stack "$deploy_dir" 2>/dev/null | sort -u || true)
+      if [ -n "$_detected" ]; then
+        _stacks=$(precompute_stack_skills "$_detected" "$_stack_skills_config")
+      fi
+    fi
+  fi
+
+  deploy_native_skills "$deploy_dir" "$_stacks"
+}
+
+
 # Copie les agents canoniques vers .opencode/agents/ et charge les métadonnées
 # nécessaires à la phase de configuration via les variables globales :
 #   _DEPLOY_FILES_AGENT_KEYS / _DEPLOY_FILES_AGENT_VALS / _DEPLOY_FILES_AGENT_FILES / _DEPLOY_FILES_COUNT
@@ -436,8 +472,9 @@ adapter_deploy_files() {
   # Finaliser la progression
   _progress_done
 
-  # ── Phase 1b : Déploiement des skills natives ─────────────────────────────
-  deploy_native_skills "$deploy_dir" "$_precomputed_stacks"
+  # Exposer les stacks précalculés pour que adapter_deploy_skills() puisse les réutiliser
+  # sans recalcul (performance : une seule invocation jq/detect_stack pour tout le déploiement)
+  _DEPLOY_PRECOMPUTED_STACKS="$_precomputed_stacks"
 
   # Compter les familles avec sort/uniq (compatible bash 3.2)
   # Format résultat : "11 developer, 8 auditor, 3 planning, ..."
@@ -447,10 +484,10 @@ adapter_deploy_files() {
   _DEPLOY_FILES_STACKS="$_detected_stacks"
 }
 
-# ── Phase 2 : configuration provider/model (opencode.json) ───────────────────
+# ── Phase 3 : configuration provider/model (opencode.json) ───────────────────
 # Génère opencode.json à la racine du projet cible.
 # Autonome : charge elle-même les métadonnées agents via _load_agent_metadata()
-# si les tableaux _DEPLOY_FILES_* ne sont pas déjà remplis (appel direct sans Phase 1).
+# si les tableaux _DEPLOY_FILES_* ne sont pas déjà remplis (appel direct sans Phase 1+2).
 #
 # $1 = deploy_dir, $2 = project_id (optionnel), $3 = provider_override (optionnel)
 adapter_deploy_config() {
@@ -464,7 +501,7 @@ adapter_deploy_config() {
     _load_agent_metadata "$project_id"
   fi
 
-  # Définir les étapes de la Phase 2 pour la progression
+  # Définir les étapes de la Phase 3 pour la progression
   local _config_steps=4
   local _step=0
 
@@ -507,6 +544,9 @@ adapter_deploy_config() {
   # Deux tableaux parallèles : identifiants et fragments JSON des agents à inclure
   local _agent_ids=()
   local _agent_jsons=()
+
+  # Réinitialiser le collecteur de clamps pour cette phase
+  _CLAMP_APPLIED_AGENTS=""
 
   # Précalculer les 3 niveaux hub.json une seule fois (évite N×3 lectures de hub.json en boucle)
   # Si jq absent ou HUB_CONFIG inexistant, les vars restent vides → resolve_agent_model bascule sur le chemin lent (sed) — dégradation gracieuse.
@@ -748,6 +788,12 @@ adapter_deploy_config() {
     _DEPLOY_CONFIG_SUBAGENTS="$subagent_count"
     _DEPLOY_CONFIG_DISABLED="$disabled_count"
     _DEPLOY_CONFIG_PERMS="$_perm_count"
+    # Compter les agents dont le plancher modèle a été appliqué
+    local _clamp_count=0
+    if [ -n "${_CLAMP_APPLIED_AGENTS:-}" ]; then
+      _clamp_count=$(printf '%s' "$_CLAMP_APPLIED_AGENTS" | tr -cd ';' | wc -c | tr -d ' ')
+    fi
+    _DEPLOY_CONFIG_CLAMPS="$_clamp_count"
     _DEPLOY_CONFIG_SKIP=false
   else
     _progress_done
@@ -756,7 +802,7 @@ adapter_deploy_config() {
 }
 
 # ── Wrapper de compatibilité ─────────────────────────────────────────────────
-# Enchaîne les deux phases pour les usages qui ne distinguent pas files/config
+# Enchaîne les trois phases pour les usages qui ne distinguent pas files/skills/config
 # (cmd-deploy.sh --diff, cmd-sync, cmd-provider, etc.)
 adapter_deploy() {
   local deploy_dir="${1:-$HUB_DIR}"
@@ -764,6 +810,7 @@ adapter_deploy() {
   local provider_override="${3:-}"
 
   adapter_deploy_files "$deploy_dir" "$project_id" "$provider_override"
+  adapter_deploy_skills "$deploy_dir" "$project_id"
   adapter_deploy_config "$deploy_dir" "$project_id" "$provider_override"
   log_success "[opencode] $_DEPLOY_FILES_COUNT agent(s) → ${deploy_dir}/.opencode/agents/"
 }

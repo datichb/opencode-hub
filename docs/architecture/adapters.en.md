@@ -7,35 +7,39 @@ of a target AI tool (e.g., opencode).
 
 ## Mandatory Contract
 
-Every adapter (`scripts/adapters/<target>.adapter.sh`) must export **8 functions**.
+Every adapter (`scripts/adapters/<target>.adapter.sh`) must export **9 functions**.
 Loading is performed by `load_adapter()` in `scripts/lib/adapter-manager.sh`,
-which verifies via `declare -F` that the 8 functions exist after the `source`.
+which verifies via `declare -F` that the 9 functions exist after the `source`.
 
 | Function | Role | Signature |
 |----------|------|-----------|
 | `adapter_validate` | Checks that the target tool is installed and accessible | `adapter_validate()` — returns 0/1 |
 | `adapter_needs_node` | Indicates whether Node.js is required for the tool | `adapter_needs_node()` — `return 0` (yes) or `return 1` (no) |
 | `adapter_deploy_files` | **Phase 1** — Copies canonical agents to the target project | `adapter_deploy_files deploy_dir project_id [provider_override]` |
-| `adapter_deploy_config` | **Phase 2** — Applies provider/model configuration (e.g. `opencode.json`) | `adapter_deploy_config deploy_dir project_id [provider_override]` |
-| `adapter_deploy` | Compatibility wrapper — chains Phase 1 + Phase 2 | `adapter_deploy deploy_dir project_id [provider_override]` |
+| `adapter_deploy_skills` | **Phase 2** — Deploys native skills to `.opencode/skills/` | `adapter_deploy_skills deploy_dir project_id` |
+| `adapter_deploy_config` | **Phase 3** — Applies provider/model configuration (e.g. `opencode.json`) | `adapter_deploy_config deploy_dir project_id [provider_override]` |
+| `adapter_deploy` | Compatibility wrapper — chains Phase 1 + Phase 2 + Phase 3 | `adapter_deploy deploy_dir project_id [provider_override]` |
 | `adapter_install` | Installs the target tool (called by `oc install`) | `adapter_install()` |
 | `adapter_update` | Updates the target tool (called by `oc update`) | `adapter_update()` |
 | `adapter_start` | Launches the tool in the project (called by `oc start`) | `adapter_start project_path prompt project_id` |
 
 ### Phase separation
 
-`oc deploy` runs both phases sequentially with a distinct visual section for each:
+`oc deploy` runs all three phases sequentially with a distinct visual section for each:
 
 ```
 ▶  Phase 1 — Copy agents
 ◆  12 agent(s) deployed
 
-▶  Phase 2 — Provider / model configuration
+▶  Phase 2 — Deploy skills
+◆  8 skills deployed
+
+▶  Phase 3 — Provider / model configuration
 ◆  opencode.json  (model: amazon-bedrock/..., provider: bedrock)
 ```
 
-`oc start --provider <provider>` only runs **Phase 2** when agents are already in place —
-Phase 1 is unnecessary in that case.
+`oc start --provider <provider>` only runs **Phase 3** when agents are already in place —
+Phases 1 and 2 are unnecessary in that case.
 
 ### Parameter Details
 
@@ -51,6 +55,21 @@ Responsibilities:
 2. Load agent metadata via `_load_agent_metadata` (scan without writing)
 3. For each retained agent: call `build_agent_content` and write the `.md` file
 4. Populate global variables `_DEPLOY_FILES_AGENT_KEYS/VALS/FILES/COUNT`
+5. Expose `_DEPLOY_PRECOMPUTED_STACKS` for reuse by Phase 2 (avoids double computation)
+
+#### `adapter_deploy_skills deploy_dir project_id`
+
+- `deploy_dir`: path of the project directory
+- `project_id`: project identifier (for stack detection if Phase 1 was not run)
+
+Responsibilities:
+1. Reuse `_DEPLOY_PRECOMPUTED_STACKS` exposed by Phase 1 — or recompute if called standalone
+2. Collect all unique native skills: `native_skills` from agent frontmatters + resolved stack skills
+3. Deploy each skill to `.opencode/skills/<name>/SKILL.md`
+4. Expose `_DEPLOY_NATIVE_SKILLS_COUNT` and `_DEPLOY_NATIVE_SKILLS_SKIPPED`
+
+**Autonomy:** this function can be called standalone without having run `adapter_deploy_files`
+first — it loads metadata and recomputes stacks as needed.
 
 #### `adapter_deploy_config deploy_dir project_id [provider_override]`
 
@@ -62,14 +81,15 @@ Responsibilities:
 1. Load agent metadata if `_DEPLOY_FILES_AGENT_KEYS` is empty (direct call without Phase 1)
 2. Resolve the effective model and provider
 3. Build and write the configuration file (e.g. `opencode.json`)
-4. For adapters without configuration: explicit no-op
+4. Expose `_DEPLOY_CONFIG_CLAMPS`: number of agents whose model floor was applied
+5. For adapters without configuration: explicit no-op
 
 **Autonomy:** this function can be called standalone without having run `adapter_deploy_files`
 first — it loads the necessary metadata itself.
 
 #### `adapter_deploy deploy_dir project_id [provider_override]`
 
-Compatibility wrapper that chains `adapter_deploy_files` then `adapter_deploy_config`.
+Compatibility wrapper that chains `adapter_deploy_files`, `adapter_deploy_skills`, then `adapter_deploy_config`.
 Used by `cmd-deploy.sh --diff`, `cmd-sync.sh`, `cmd-provider.sh` and tests.
 
 #### `adapter_start project_path prompt project_id`
@@ -100,7 +120,7 @@ An adapter has access to functions from `common.sh` and `prompt-builder.sh`:
 
 ### Global variables populated by `adapter_deploy_files` / `_load_agent_metadata`
 
-These variables are available to `adapter_deploy_config` after Phase 1:
+These variables are available to `adapter_deploy_skills` and `adapter_deploy_config` after Phase 1:
 
 | Variable | Content |
 |----------|---------|
@@ -108,12 +128,34 @@ These variables are available to `adapter_deploy_config` after Phase 1:
 | `_DEPLOY_FILES_AGENT_VALS` | Array of effective modes (`primary`, `subagent`, …) |
 | `_DEPLOY_FILES_AGENT_FILES` | Array of canonical source file paths |
 | `_DEPLOY_FILES_COUNT` | Number of retained agents |
+| `_DEPLOY_PRECOMPUTED_STACKS` | Pre-computed stack skills (reused by Phase 2) |
+
+Variables exposed by `adapter_deploy_skills` after Phase 2:
+
+| Variable | Content |
+|----------|---------|
+| `_DEPLOY_NATIVE_SKILLS_COUNT` | Number of native skills deployed |
+| `_DEPLOY_NATIVE_SKILLS_SKIPPED` | Number of skills skipped (source not found) |
+
+Variables exposed by `adapter_deploy_config` after Phase 3:
+
+| Variable | Content |
+|----------|---------|
+| `_DEPLOY_CONFIG_MODEL` | Resolved global model |
+| `_DEPLOY_CONFIG_PROVIDER` | Effective provider |
+| `_DEPLOY_CONFIG_SIZE` | Size of the generated `opencode.json` |
+| `_DEPLOY_CONFIG_TOTAL` | Total number of configured agents |
+| `_DEPLOY_CONFIG_SUBAGENTS` | Number of agents in subagent mode |
+| `_DEPLOY_CONFIG_DISABLED` | Number of disabled native agents |
+| `_DEPLOY_CONFIG_PERMS` | Number of agents with restricted permissions |
+| `_DEPLOY_CONFIG_CLAMPS` | Number of agents whose model floor was applied |
+| `_DEPLOY_CONFIG_SKIP` | `true` if `opencode.json` was already up-to-date (no rewrite) |
 
 ---
 
 ## Creating a New Adapter
 
-1. Create `scripts/adapters/<target>.adapter.sh` with the **8 contract functions**
+1. Create `scripts/adapters/<target>.adapter.sh` with the **9 contract functions**
 2. The file will be loaded automatically by `load_adapter` — no modification of
    `adapter-manager.sh` is needed
 3. Test: `oc deploy <target>` then verify the generated files
@@ -144,6 +186,7 @@ adapter_deploy_files() {
   _DEPLOY_FILES_AGENT_VALS=()
   _DEPLOY_FILES_AGENT_FILES=()
   _DEPLOY_FILES_COUNT=0
+  _DEPLOY_PRECOMPUTED_STACKS=""
 
   while IFS= read -r f; do
     [ -f "$f" ] || continue
@@ -158,7 +201,14 @@ adapter_deploy_files() {
   done < <(find "$CANONICAL_AGENTS_DIR" -name "*.md" | sort)
 }
 
-# Phase 2: provider/model configuration (no-op if not applicable)
+# Phase 2: native skills deployment (no-op if not applicable)
+adapter_deploy_skills() {
+  _DEPLOY_NATIVE_SKILLS_COUNT=0
+  _DEPLOY_NATIVE_SKILLS_SKIPPED=0
+  # Implement deploy_native_skills if the tool supports on-demand skill loading
+}
+
+# Phase 3: provider/model configuration (no-op if not applicable)
 adapter_deploy_config() {
   log_info "  No provider/model configuration to apply (not supported by my-tool)"
 }
@@ -166,6 +216,7 @@ adapter_deploy_config() {
 # Compatibility wrapper
 adapter_deploy() {
   adapter_deploy_files "${1:-}" "${2:-}" "${3:-}"
+  adapter_deploy_skills "${1:-}" "${2:-}"
   adapter_deploy_config "${1:-}" "${2:-}" "${3:-}"
 }
 
@@ -192,7 +243,7 @@ adapter_start() {
 
 | Target | File | Node required | Specifics |
 |--------|------|--------------|-----------|
-| opencode | `opencode.adapter.sh` | Yes | Phase 1: `.opencode/agents/*.md` — Phase 2: `opencode.json` (provider, model, subagent modes, permissions, disabled agents) |
+| opencode | `opencode.adapter.sh` | Yes | Phase 1: `.opencode/agents/*.md` — Phase 2: `.opencode/skills/<name>/SKILL.md` — Phase 3: `opencode.json` (provider, model, subagent modes, permissions, disabled agents) |
 
 ### Mode Behavior by Target
 

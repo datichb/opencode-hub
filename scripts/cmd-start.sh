@@ -134,7 +134,7 @@ if [ -n "$agents_dir" ] && [ ! -d "$agents_dir" ] && [ -t 0 ]; then
 fi
 
 # Si --provider est fourni et agents déjà déployés : régénérer opencode.json avec le bon provider
-# Seule la Phase 2 (configuration) est nécessaire — les fichiers agents sont déjà en place
+# Seule la Phase 3 (configuration) est nécessaire — les fichiers agents et skills sont déjà en place
 if [ -n "$PROVIDER_OVERRIDE" ] && [ -n "$agents_dir" ] && [ -d "$agents_dir" ]; then
   if ! adapter_deploy_config "$PROJECT_PATH" "$PROJECT_ID" "$PROVIDER_OVERRIDE"; then
     log_error "Échec de la régénération d'opencode.json — lancement annulé"

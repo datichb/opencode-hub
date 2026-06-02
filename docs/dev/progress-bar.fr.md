@@ -655,12 +655,14 @@ graph TB
     
     subgraph "cmd-deploy.sh"
         H[Phase 1: adapter_deploy_files]
-        I[Phase 2: adapter_deploy_config]
+        H2[Phase 2: adapter_deploy_skills]
+        I[Phase 3: adapter_deploy_config]
         J[Appels _progress_summary]
     end
     
     subgraph "opencode.adapter.sh"
         K[Boucle: _progress_bar N fois]
+        K2[Boucle: deploy_native_skills]
         L[Étapes: _progress_bar 1/4, 2/4, ...]
     end
     
@@ -673,6 +675,7 @@ graph TB
     E --> G
     
     H --> K
+    H2 --> K2
     I --> L
     H --> J
     I --> J
@@ -889,8 +892,16 @@ _progress_summary "Phase 1 terminée" \
 
 echo ""
 
-# Phase 2 : Pattern étapes
-echo "⚙️  Phase 2 — Configuration"
+# Phase 2 : Déploiement des skills (pattern boucle simple)
+echo "🧩  Phase 2 — Déploiement des skills"
+deploy_skills
+_progress_summary "Phase 2 terminée" \
+  "8 skills déployées"
+
+echo ""
+
+# Phase 3 : Pattern étapes
+echo "⚙️  Phase 3 — Configuration"
 config_steps=4
 
 # Étape 1/4
@@ -916,7 +927,7 @@ sleep 1
 _progress_done
 
 # Récapitulatif
-_progress_summary "Phase 2 terminée" \
+_progress_summary "Phase 3 terminée" \
   "opencode.json généré (12K)" \
   "Modèle : anthropic/claude-sonnet-4-5" \
   "Provider : anthropic"
@@ -935,10 +946,15 @@ log_success "Déploiement terminé en ${SECONDS}s"
        · Familles : 11 developer, 8 auditor
          - 18 en mode subagent
 
-⚙️  Phase 2 — Configuration
-    [████████████████████] 100% (4/4) Écriture fichier
+🧩  Phase 2 — Déploiement des skills
 
     ✅ Phase 2 terminée
+       · 8 skills déployées
+
+⚙️  Phase 3 — Configuration
+    [████████████████████] 100% (4/4) Écriture fichier
+
+    ✅ Phase 3 terminée
        · opencode.json généré (12K)
        · Modèle : anthropic/claude-sonnet-4-5
        · Provider : anthropic

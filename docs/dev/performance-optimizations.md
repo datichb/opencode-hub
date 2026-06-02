@@ -11,7 +11,7 @@ Ce document décrit les optimisations de performance apportées au workflow `oc 
 | Métrique | Avant | Après | Gain |
 |----------|-------|-------|------|
 | Temps deploy (30 agents) | ~40s | ~38s | -5% (-2s) |
-| Appels subprocess (Phase 2) | 90+ | 30 | -67% |
+| Appels subprocess (Phase 3) | 90+ | 30 | -67% |
 | Lectures api-keys.local.md | 30+ | 1 | -97% |
 | Lectures hub.json (provider) | 30 | 1 | -97% |
 
@@ -136,7 +136,7 @@ get_hub_default_provider() {
 
 ### 5. Précalcul dans adapter_deploy_config() (scripts/adapters/opencode.adapter.sh)
 
-**Optimisation** : Calcul de `_hub_default_provider` en une seule fois au début de Phase 2, au lieu de 30 fois dans la boucle.
+**Optimisation** : Calcul de `_hub_default_provider` en une seule fois au début de Phase 3, au lieu de 30 fois dans la boucle.
 
 ```bash
 # Précalculer les 3 niveaux hub.json + provider en une seule fois

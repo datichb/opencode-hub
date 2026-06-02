@@ -56,7 +56,7 @@ jobs:
           echo "Tous les agents ont un frontmatter valide."
 
   check-staleness:
-    name: Check deployed agents are up to date
+    name: Check deployed agents and skills are up to date
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -65,9 +65,9 @@ jobs:
       - name: Install jq
         run: sudo apt-get install -y jq
 
-      - name: Deploy agents (generates .opencode/agents/ from sources)
+      - name: Deploy agents and skills (generates .opencode/agents/ and .opencode/skills/ from sources)
         run: |
-          # Les agents sont gitignorés — il faut les générer avant de vérifier leur fraîcheur.
+          # Les agents et skills sont gitignorés — il faut les générer avant de vérifier leur fraîcheur.
           # On mock adapter_validate pour ne pas exiger qu'opencode soit installé en CI.
           bash -c "
             source scripts/common.sh
@@ -86,7 +86,7 @@ jobs:
       - name: Check staleness (hub level)
         run: |
           bash scripts/cmd-deploy.sh --check || {
-            echo "::error::Des agents déployés sont obsolètes ou manquants après deploy — vérifier les sources agents/ et skills/"
+            echo "::error::Des agents ou skills déployés sont obsolètes ou manquants après deploy — vérifier les sources agents/ et skills/"
             exit 1
           }
 

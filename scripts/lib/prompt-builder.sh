@@ -123,7 +123,8 @@ clamp_model() {
   rank_resolved=$(_get_model_rank "$resolved")
   rank_floor=$(_get_model_rank "$floor")
   if [ "$rank_resolved" -lt "$rank_floor" ]; then
-    log_warn "Modèle résolu '$resolved' inférieur au plancher '$floor' pour l'agent '$agent_id' — plancher appliqué"
+    # Collecter silencieusement pour le récapitulatif — pas de log direct pendant le déploiement
+    _CLAMP_APPLIED_AGENTS="${_CLAMP_APPLIED_AGENTS:-}${agent_id}:${resolved}→${floor};"
     echo "$floor"
   else
     echo "$resolved"

@@ -13,11 +13,12 @@ load_adapter() {
   # shellcheck source=/dev/null
   source "$adapter_file"
 
-  # Vérifier que les 8 fonctions du contrat adapter sont définies
+  # Vérifier que les 9 fonctions du contrat adapter sont définies
   local required_fns=(
     adapter_validate
     adapter_needs_node
     adapter_deploy_files
+    adapter_deploy_skills
     adapter_deploy_config
     adapter_deploy
     adapter_install

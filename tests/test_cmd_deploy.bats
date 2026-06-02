@@ -170,3 +170,121 @@ teardown() {
   run bash -c "echo n | bash '$HUB_ROOT/scripts/cmd-deploy.sh' --diff"
   [[ "$output" == *"inchangé"* ]]
 }
+
+# ── --check : skills natives ──────────────────────────────────────────────────
+
+# Ajoute une skill native dans l'agent de test et crée le fichier source
+_setup_native_skill() {
+  cat > "$FAKE_HUB/agents/quality/test-agent.md" <<'AGENTEOF'
+---
+id: test-agent
+label: TestAgent
+description: Agent de test minimal
+mode: primary
+targets: [opencode]
+skills: []
+native_skills: [shared/test-native-skill]
+---
+
+# TestAgent
+
+Contenu de l'agent de test.
+AGENTEOF
+
+  mkdir -p "$FAKE_HUB/skills/shared"
+  cat > "$FAKE_HUB/skills/shared/test-native-skill.md" <<'SKILLEOF'
+---
+name: test-native-skill
+description: Skill de test pour bats
+---
+
+Contenu de la skill de test.
+SKILLEOF
+}
+
+@test "deploy --check : skill native manquante retourne exit 1" {
+  _setup_native_skill
+
+  # Déployer l'agent (mais pas la skill)
+  sleep 0.1
+  cp "$FAKE_HUB/agents/quality/test-agent.md" "$FAKE_HUB/.opencode/agents/test-agent.md"
+  # Pas de .opencode/skills/ → MANQUANT
+
+  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check
+  [ "$status" -eq 1 ]
+}
+
+@test "deploy --check : affiche MANQUANT pour skill native absente" {
+  _setup_native_skill
+
+  sleep 0.1
+  cp "$FAKE_HUB/agents/quality/test-agent.md" "$FAKE_HUB/.opencode/agents/test-agent.md"
+
+  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check 2>&1 || true
+  [[ "$output" == *"MANQUANT"* ]]
+}
+
+@test "deploy --check : skill native obsolète retourne exit 1" {
+  _setup_native_skill
+
+  # Déployer l'agent et la skill
+  sleep 0.1
+  cp "$FAKE_HUB/agents/quality/test-agent.md" "$FAKE_HUB/.opencode/agents/test-agent.md"
+  mkdir -p "$FAKE_HUB/.opencode/skills/test-native-skill"
+  cp "$FAKE_HUB/skills/shared/test-native-skill.md" \
+     "$FAKE_HUB/.opencode/skills/test-native-skill/SKILL.md"
+
+  # Toucher la source pour la rendre plus récente que la skill déployée
+  sleep 0.1
+  touch "$FAKE_HUB/skills/shared/test-native-skill.md"
+
+  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check
+  [ "$status" -eq 1 ]
+}
+
+@test "deploy --check : affiche OBSOLÈTE pour skill native plus récente que déployée" {
+  _setup_native_skill
+
+  sleep 0.1
+  cp "$FAKE_HUB/agents/quality/test-agent.md" "$FAKE_HUB/.opencode/agents/test-agent.md"
+  mkdir -p "$FAKE_HUB/.opencode/skills/test-native-skill"
+  cp "$FAKE_HUB/skills/shared/test-native-skill.md" \
+     "$FAKE_HUB/.opencode/skills/test-native-skill/SKILL.md"
+  sleep 0.1
+  touch "$FAKE_HUB/skills/shared/test-native-skill.md"
+
+  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check 2>&1 || true
+  [[ "$output" == *"OBSOLÈTE"* ]]
+}
+
+@test "deploy --check : skill native à jour retourne exit 0" {
+  _setup_native_skill
+
+  # Déployer l'agent
+  sleep 0.1
+  cp "$FAKE_HUB/agents/quality/test-agent.md" "$FAKE_HUB/.opencode/agents/test-agent.md"
+
+  # Déployer la skill APRÈS la source → déployée est plus récente
+  sleep 0.1
+  mkdir -p "$FAKE_HUB/.opencode/skills/test-native-skill"
+  cp "$FAKE_HUB/skills/shared/test-native-skill.md" \
+     "$FAKE_HUB/.opencode/skills/test-native-skill/SKILL.md"
+
+  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check
+  [ "$status" -eq 0 ]
+}
+
+@test "deploy --check : affiche À JOUR pour skill native fraîche" {
+  _setup_native_skill
+
+  sleep 0.1
+  cp "$FAKE_HUB/agents/quality/test-agent.md" "$FAKE_HUB/.opencode/agents/test-agent.md"
+  sleep 0.1
+  mkdir -p "$FAKE_HUB/.opencode/skills/test-native-skill"
+  cp "$FAKE_HUB/skills/shared/test-native-skill.md" \
+     "$FAKE_HUB/.opencode/skills/test-native-skill/SKILL.md"
+
+  run bash "$HUB_ROOT/scripts/cmd-deploy.sh" --check
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"À JOUR"* ]]
+}

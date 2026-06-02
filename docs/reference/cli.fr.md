@@ -74,7 +74,7 @@ oc deploy --diff  [PROJECT_ID]
 
 | Option | Description |
 |--------|-------------|
-| `--check` | Vérifie si les fichiers sont à jour sans déployer |
+| `--check` | Vérifie si les agents **et les skills** sont à jour sans déployer |
 | `--diff` | Compare les sources avec les fichiers déployés ; propose le déploiement si un écart est détecté |
 
 **Détection de stack :**
@@ -97,11 +97,11 @@ oc deploy --diff MON-APP        # affiche le diff sources → déployés pour MO
 
 | Cible | Fichiers générés |
 |-------|-----------------|
-| `opencode` | `.opencode/agents/*.md` + `opencode.json` (régénéré si une clé API ou un PROJECT_ID est défini) |
+| `opencode` | `.opencode/agents/*.md` (Phase 1) + `.opencode/skills/<name>/SKILL.md` (Phase 2) + `opencode.json` (Phase 3, si clé API ou PROJECT_ID défini) |
 
 **Codes de sortie `--check` :**
-- `0` : tout est à jour
-- `1` : au moins un fichier est obsolète ou manquant
+- `0` : agents et skills tous à jour
+- `1` : au moins un agent ou une skill est obsolète ou manquant(e)
 
 > Un spinner animé (`⠋⠙⠹…`) est affiché pendant le déploiement.
 
