@@ -69,7 +69,7 @@ for project_id in "${project_ids[@]}"; do
     project_stale=0
     project_ok=0
 
-    local gen_dir="$local_path/.opencode/agents"
+    gen_dir="$local_path/.opencode/agents"
 
     # Collecter les fichiers agents pour progression
     agent_files=()
@@ -88,7 +88,7 @@ for project_id in "${project_ids[@]}"; do
       # Afficher progression agents (sous-barre)
       _progress_bar $current_agent $total_agents "$agent_id"
 
-      local gen_file="$gen_dir/${agent_id}.md"
+      gen_file="$gen_dir/${agent_id}.md"
 
       if [ ! -f "$gen_file" ]; then
         project_stale=$((project_stale + 1))

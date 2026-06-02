@@ -13,6 +13,14 @@ setup() {
   export PATHS_FILE="$TEST_DIR/paths.local.md"
   export API_KEYS_FILE="$TEST_DIR/api-keys.local.md"
 
+  # hub.json de test avec langue française — resolve_oc_lang lit ce fichier
+  # dans le subprocess cmd-remove.sh et fixe OC_LANG=fr pour les messages d'erreur
+  mkdir -p "$TEST_DIR/config"
+  cat > "$TEST_DIR/config/hub.json" <<'HUBEOF'
+{"version":"1.0.0","cli":{"language":"fr"}}
+HUBEOF
+  export HUB_CONFIG="$TEST_DIR/config/hub.json"
+
   # Script sous test
   CMD_REMOVE="$BATS_TEST_DIRNAME/../scripts/cmd-remove.sh"
 

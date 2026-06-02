@@ -155,8 +155,17 @@ teardown() {
 # ── --diff : agent inchangé ───────────────────────────────────────────────────
 
 @test "deploy --diff : affiche 'inchangé' si agent déjà identique" {
-  # Pré-déployer l'agent pour avoir le bon contenu généré
-  bash "$HUB_ROOT/scripts/cmd-deploy.sh" 2>/dev/null || true
+  # Pré-déployer l'agent via build_agent_content direct (bypass adapter_validate —
+  # opencode n'est pas nécessairement installé en CI)
+  bash -c "
+    export HUB_DIR='$FAKE_HUB'
+    export CANONICAL_AGENTS_DIR='$FAKE_HUB/agents'
+    source '$HUB_ROOT/scripts/common.sh'
+    source '$HUB_ROOT/scripts/lib/prompt-builder.sh'
+    mkdir -p '$FAKE_HUB/.opencode/agents'
+    build_agent_content '$FAKE_HUB/agents/quality/test-agent.md' 'fr' '$FAKE_HUB' \
+      > '$FAKE_HUB/.opencode/agents/test-agent.md'
+  " 2>/dev/null
 
   run bash -c "echo n | bash '$HUB_ROOT/scripts/cmd-deploy.sh' --diff"
   [[ "$output" == *"inchangé"* ]]
