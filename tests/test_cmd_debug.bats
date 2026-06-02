@@ -117,12 +117,6 @@ teardown() {
   [[ "$output" =~ "debugger" ]]
 }
 
-@test "debug : affiche la cible (opencode)" {
-  run bash -c 'printf "\n" | bash "$1" DEBUG-PROJ' _ "$CMD_DEBUG"
-  [ "$status" -eq 0 ]
-  [[ "$output" =~ "opencode" ]]
-}
-
 # ── Agents non déployés ───────────────────────────────────────────────────────
 
 @test "debug : projet sans agents déployés → propose deploy (réponse N)" {

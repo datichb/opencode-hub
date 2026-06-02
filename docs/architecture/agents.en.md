@@ -2,7 +2,7 @@
 
 27 agents in total, organized into 6 families.
 Each agent is defined in `agents/<family>/<id>.md` with a frontmatter declaring its metadata,
-targets, and skills.
+skills, and mode.
 
 ---
 
@@ -16,7 +16,6 @@ description: <Short description — visible in AI tools>
 mode: primary         # primary (default) | subagent
 permission:
   question: allow     # optional — enables OpenCode's question tool (interactive primary agents only)
-targets: [opencode]
 skills: [path/to/skill, ...]
 ---
 
@@ -28,16 +27,15 @@ skills: [path/to/skill, ...]
 | Field | Role |
 |-------|------|
 | `id` | Unique identifier, used by adapters and `oc agent` |
-| `label` | Name displayed in the target tool |
+| `label` | Name displayed in the tool |
 | `description` | Short phrase describing the role — appears in agent lists |
-| `mode` | `primary` (default) or `subagent` — controls visibility in target tools |
+| `mode` | `primary` (default) or `subagent` — controls visibility in OpenCode |
 | `permission.question` | `allow` — enables OpenCode's `question` tool for this agent. Reserved for interactive `primary` agents. Always paired with the `posture/tool-question` skill. |
-| `targets` | Supported targets: `opencode` |
 | `skills` | Paths relative to `skills/` — injected in declaration order |
 
 ### Primary / Subagent Modes
 
-The `mode:` field controls how an agent is exposed in each target tool:
+The `mode:` field controls how an agent is exposed in OpenCode:
 
 | Mode | OpenCode |
 |------|----------|

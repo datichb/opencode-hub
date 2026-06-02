@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # Tests pour scripts/cmd-review.sh
 # cmd-review.sh est un script top-level (non sourceable) — testé via exécution directe.
-# adapter_start fait exec → on mock l'outil cible (opencode) comme un script PATH.
+# adapter_start fait exec → on mock opencode comme un script PATH.
 
 setup() {
   TEST_DIR="$(mktemp -d)"

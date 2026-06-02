@@ -83,7 +83,7 @@ jobs:
             adapter_deploy \"\$deploy_dir\" ''
           "
 
-      - name: Check staleness (opencode target — hub level)
+      - name: Check staleness (hub level)
         run: |
           bash scripts/cmd-deploy.sh --check || {
             echo "::error::Des agents déployés sont obsolètes ou manquants après deploy — vérifier les sources agents/ et skills/"

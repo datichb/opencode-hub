@@ -2,7 +2,7 @@
 
 27 agents au total, organisés en 6 familles.
 Chaque agent est défini dans `agents/<famille>/<id>.md` avec un frontmatter déclarant ses métadonnées,
-ses cibles et ses skills.
+ses skills et son mode.
 
 ---
 
@@ -16,7 +16,6 @@ description: <Description courte — visible dans les outils IA>
 mode: primary         # primary (défaut) | subagent
 permission:
   question: allow     # optionnel — autorise l'outil question d'OpenCode (agents primary interactifs uniquement)
-targets: [opencode]
 skills: [chemin/vers/skill, ...]
 ---
 
@@ -28,16 +27,15 @@ skills: [chemin/vers/skill, ...]
 | Champ | Rôle |
 |-------|------|
 | `id` | Identifiant unique, utilisé par les adapters et `oc agent` |
-| `label` | Nom affiché dans l'outil cible |
+| `label` | Nom affiché dans l'outil |
 | `description` | Phrase courte décrivant le rôle — apparaît dans les listes d'agents |
-| `mode` | `primary` (défaut) ou `subagent` — contrôle la visibilité dans les outils cibles |
+| `mode` | `primary` (défaut) ou `subagent` — contrôle la visibilité dans OpenCode |
 | `permission.question` | `allow` — active l'outil `question` d'OpenCode pour cet agent. Réservé aux agents `primary` interactifs. Toujours associé à la skill `posture/tool-question`. |
-| `targets` | Cibles supportées : `opencode` |
 | `skills` | Chemins relatifs à `skills/` — injectés dans l'ordre de déclaration |
 
 ### Modes primary / subagent
 
-Le champ `mode:` contrôle comment un agent est exposé dans chaque outil cible :
+Le champ `mode:` contrôle comment un agent est exposé dans OpenCode :
 
 | Mode | OpenCode |
 |------|----------|

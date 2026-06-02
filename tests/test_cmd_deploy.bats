@@ -42,7 +42,7 @@ skills: []
 Contenu de l'agent de test.
 AGENTEOF
 
-  # hub.json minimal avec opencode comme cible active
+  # hub.json minimal
   cat > "$FAKE_HUB/config/hub.json" <<'HUBEOF'
 {
   "version": "1.5.0",

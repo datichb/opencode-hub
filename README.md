@@ -44,7 +44,7 @@ curl -fsSL https://raw.githubusercontent.com/datichb/opencode-hub/main/install.s
 ```
 
 The script automates everything: clones to `~/.opencode-hub`, checks dependencies
-with confirmation prompts, creates the `oc` alias, and interactively configures AI targets.
+with confirmation prompts, creates the `oc` alias, and configures the LLM provider.
 
 After installation, reload your shell:
 

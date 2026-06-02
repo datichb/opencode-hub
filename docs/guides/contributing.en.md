@@ -26,7 +26,6 @@ Follow the naming convention:
 id: <unique-identifier>
 label: <DisplayName>
 description: <Short description in one sentence — visible in agent lists>
-targets: [opencode]
 skills: [path/to/skill, ...]
 ---
 ```
@@ -35,7 +34,6 @@ skills: [path/to/skill, ...]
 - `id`: unique slug, lowercase, hyphens allowed, no spaces
 - `label`: PascalCase, displayed in the AI tool
 - `description`: one sentence, starts with a verb or a role name
-- `targets`: at least `[opencode]` — add others if the format is compatible
 - `skills`: paths relative to `skills/`, in the desired injection order
 
 ### 3. Agent body

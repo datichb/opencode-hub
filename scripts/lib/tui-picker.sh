@@ -55,7 +55,7 @@ _pick_from_list() {
   local current_csv="${1:-}"
   local cancel_value="${2:-$current_csv}"
 
-  # Variables partagées par dynamic scoping depuis les callers (agent-picker, target-picker, cmd-agent)
+  # Variables partagées par dynamic scoping depuis les callers (agent-picker, cmd-agent)
   # shellcheck disable=SC2154
   : "${_pick_total:?_pick_total must be set by caller}" "${_pick_render_fn:?_pick_render_fn must be set by caller}"
 

@@ -74,12 +74,6 @@ teardown() {
   [[ "$output" =~ "$TEST_DIR/proj-conv" ]]
 }
 
-@test "conventions : affiche la cible opencode" {
-  run bash -c 'printf "\n" | bash "$1" CONV-PROJ' _ "$CMD_CONVENTIONS"
-  [ "$status" -eq 0 ]
-  [[ "$output" =~ "opencode" ]]
-}
-
 # ── CONVENTIONS.md existant — demande confirmation ────────────────────────────
 
 @test "conventions : CONVENTIONS.md existant + réponse N → annule" {

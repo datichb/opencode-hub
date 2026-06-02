@@ -112,7 +112,7 @@ echo -e "${DIM}│${RESET}"
 # ── Load adapter ──────────────────────────────────────────────────────────────
 source "$LIB_DIR/adapter-manager.sh"
 load_adapter
-adapter_validate || { log_error "$(t start.target_unavailable)"; exit 1; }
+adapter_validate || { log_error "opencode non disponible → oc install"; exit 1; }
 
 # ── Check agents deployment ───────────────────────────────────────────────────
 agents_dir="$PROJECT_PATH/.opencode/agents"

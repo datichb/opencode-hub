@@ -37,12 +37,6 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
 | `opencode.model` | string | — | Modèle IA injecté dans `opencode.json` des projets déployés (si `default_provider.model` est vide) |
 | `opencode.disabled_native_agents` | array | `[]` | Agents natifs OpenCode désactivés par défaut (`build`, `plan`, `general`, `explore`) — surchargeables par projet via `- Disable agents :` dans `projects.md` |
 
-### Cibles disponibles
-
-| Valeur | Outil cible |
-|--------|-------------|
-| `opencode` | OpenCode (`opencode run`) |
-
 ### Exemple minimal (OpenCode uniquement)
 
 ```json
@@ -113,7 +107,6 @@ le sien. Créé automatiquement depuis `projects/projects.example.md` au premier
 - Labels : label1, label2, label3
 - Langue : english        # optionnel — si absent : agents en français par défaut
 - Agents : all            # optionnel — all (défaut) ou liste CSV d'agent-ids
-- Targets : opencode  # optionnel — cible(s) à utiliser pour ce projet
 - Modes : agent-id:mode,agent-id:mode  # optionnel — override des modes primary/subagent par agent
 - Disable agents : plan,build  # optionnel — surcharge hub.json pour ce projet
 ```
@@ -136,7 +129,6 @@ le sien. Créé automatiquement depuis `projects/projects.example.md` au premier
 - Labels : feature, fix, api
 - Langue : english
 - Agents : orchestrator,orchestrator-dev,developer-backend,developer-api
-- Targets : opencode
 - Modes : developer-backend:primary,developer-api:primary
 ```
 
@@ -146,7 +138,6 @@ le sien. Créé automatiquement depuis `projects/projects.example.md` au premier
 - `Tracker` : `jira`, `gitlab` ou `none`
 - `Langue` : optionnel — valeur libre (ex: `english`, `spanish`) — si absent, les agents s'expriment en français
 - `Agents` : optionnel — `all` ou CSV d'identifiants d'agents — filtré au déploiement
-- `Targets` : optionnel — CSV de cibles (`opencode`) — surcharge la cible par défaut du hub
 - `Modes` : optionnel — CSV de paires `agent-id:mode` — surcharge le frontmatter des agents. Modes : `primary`, `subagent`. Laisser vide pour revenir aux valeurs frontmatter.
 - `Disable agents` : optionnel — CSV d'agents natifs OpenCode à désactiver (`build`, `plan`, `general`, `explore`) — surcharge `opencode.disabled_native_agents` de `hub.json`. Vide = utiliser le défaut hub.
 - Ce fichier est **local** — ne jamais le committer
@@ -224,18 +215,18 @@ base_url=https://models.inference.ai.azure.com
 
 ### Providers supportés
 
-| Provider | Cibles | Requis API Key | Base URL défaut | Description |
-|----------|--------|----------------|-----------------|-------------|
-| `anthropic` | OpenCode | oui | — | API Anthropic directe |
-| `mammouth` | OpenCode | oui | `https://api.mammouth.ai/v1` | Proxy OpenAI-compatible (FR-hosted) |
-| `github-models` | OpenCode | oui | `https://models.inference.ai.azure.com` | GitHub Models API |
-| `bedrock` | OpenCode | oui | — (spécifique AWS) | AWS Bedrock |
-| `ollama` | OpenCode | non | `http://localhost:11434/v1` | LLM local compatible OpenAI |
-| `litellm` | OpenCode | oui | ⚠️ requis | Proxy litellm générique (custom) |
+| Provider | Requis API Key | Base URL défaut | Description |
+|----------|----------------|-----------------|-------------|
+| `anthropic` | oui | — | API Anthropic directe |
+| `mammouth` | oui | `https://api.mammouth.ai/v1` | Proxy OpenAI-compatible (FR-hosted) |
+| `github-models` | oui | `https://models.inference.ai.azure.com` | GitHub Models API |
+| `bedrock` | oui | — (spécifique AWS) | AWS Bedrock |
+| `ollama` | non | `http://localhost:11434/v1` | LLM local compatible OpenAI |
+| `litellm` | oui | ⚠️ requis | Proxy litellm générique (custom) |
 
 ### Effets lors du déploiement
 
-Lors d'un `oc deploy opencode <PROJECT_ID>`, si une entrée existe pour le projet :
+Lors d'un `oc deploy <PROJECT_ID>`, si une entrée existe pour le projet :
 
 - `opencode.json` et `.opencode/` sont ajoutés au `.git/info/exclude` du projet cible **avant** l'écriture du fichier (exclusion locale, invisible pour les autres devs)
 - `opencode.json` est régénéré avec le bloc `provider` complet
@@ -364,7 +355,7 @@ le bloc entre les délimiteurs `# >>> opencode providers switcher (ocp) >>>` / `
 ## `opencode.json`
 
 Fichier de configuration OpenCode à la racine d'un projet cible.
-Créé par `oc deploy opencode` — **régénéré si une clé API est configurée, si `PROJECT_ID` est
+Créé par `oc deploy` — **régénéré si une clé API est configurée, si `PROJECT_ID` est
 défini (pour retirer un ancien bloc provider), ou si le fichier est absent** ; conservé tel quel sinon.
 
 ### Contenu sans clé API

@@ -86,7 +86,7 @@ model=claude-opus
 
 ### `oc config list --providers`
 
-Display all available providers with their status (default, configured, supported targets):
+Display all available providers with their status (default, configured):
 
 ```bash
 ./oc.sh config list --providers
@@ -142,7 +142,6 @@ In non-interactive mode, you can pass flags directly:
 
 ### Anthropic (Default)
 
-**Supported targets**: OpenCode, OpenCode
 
 1. Get your API key from [console.anthropic.com](https://console.anthropic.com)
 2. Run `./oc.sh config set` or `./oc.sh config set <PROJECT_ID>`
@@ -150,7 +149,6 @@ In non-interactive mode, you can pass flags directly:
 
 ### MammouthAI
 
-**Supported targets**: OpenCode
 
 MammouthAI is an OpenAI-compatible proxy hosted in France that works with Anthropic models.
 
@@ -166,7 +164,6 @@ MammouthAI is an OpenAI-compatible proxy hosted in France that works with Anthro
 
 ### GitHub Models
 
-**Supported targets**: OpenCode
 
 GitHub Models provides access to various models via the GitHub/Copilot API.
 
@@ -186,7 +183,6 @@ GitHub Models provides access to various models via the GitHub/Copilot API.
 
 ### AWS Bedrock
 
-**Supported targets**: OpenCode
 
 AWS Bedrock uses the **native `amazon-bedrock` provider** built into OpenCode. It requires a **Bedrock bearer token** (generated from the Amazon Bedrock console — long-term API key).
 
@@ -223,7 +219,6 @@ AWS_BEARER_TOKEN_BEDROCK=<token> opencode
 
 ### Ollama (Local)
 
-**Supported targets**: OpenCode
 
 Ollama allows you to run LLMs locally.
 
@@ -244,7 +239,6 @@ Note: Ollama doesn't require an API key, but one can be set for custom authentic
 
 ### GitHub Copilot
 
-**Supported targets**: OpenCode
 
 GitHub Copilot uses **OAuth authentication** — no API key is required. Authentication is handled via `opencode auth`, which opens an OAuth flow with GitHub directly.
 

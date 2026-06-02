@@ -46,7 +46,7 @@ fi
 PROJECT_ID=$(normalize_project_id "$PROJECT_ID")
 PROJECT_PATH=$(resolve_project_path "$PROJECT_ID")
 
-# ── Résolution de la cible ─────────────────────────────────────────────────────
+# ── Validation opencode ────────────────────────────────────────────────────────
 load_adapter
 adapter_validate || {
   log_error "opencode non disponible → oc install"

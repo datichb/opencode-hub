@@ -270,9 +270,9 @@ if [ "${PROJECT_TRACKER:-none}" != "none" ]; then
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ÉTAPE 3 — Agents & cibles
+# ÉTAPE 3 — Agents
 # ─────────────────────────────────────────────────────────────────────────────
-_step 3 5 "Agents & cibles"
+_step 3 5 "Agents"
 
 _prompt select_agents "Sélectionner les agents à déployer ? [y/N] : "
 AGENTS_SUMMARY=""
@@ -295,10 +295,7 @@ else
 fi
 
 # ── Agents natifs OpenCode (désactivation) ────────────────────────────────────
-# opencode est toujours la cible active
-_is_opencode_target=true
-
-if [ "$_is_opencode_target" = true ] && [ -t 0 ]; then
+if [ -t 0 ]; then
   echo ""
   _hub_disabled=$(get_hub_disabled_native_agents)
   if [ -n "$_hub_disabled" ]; then

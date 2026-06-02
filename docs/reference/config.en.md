@@ -39,12 +39,6 @@ Global hub configuration. Created by `oc install` and editable manually.
 | `opencode.model` | string | — | AI model injected into `opencode.json` of deployed projects (if `default_provider.model` is empty) |
 | `opencode.disabled_native_agents` | array | `[]` | Native OpenCode agents disabled by default (`build`, `plan`, `general`, `explore`) — overridable per project via `- Disable agents:` in `projects.md` |
 
-### Available targets
-
-| Value | Target tool |
-|-------|-------------|
-| `opencode` | OpenCode (`opencode run`) |
-
 ### Minimal example (OpenCode only)
 
 ```json
@@ -115,7 +109,6 @@ their own. Automatically created from `projects/projects.example.md` on the firs
 - Labels: label1, label2, label3
 - Language: english        # optional — if absent: agents respond in French by default
 - Agents: all             # optional — all (default) or CSV list of agent-ids
-- Targets: opencode  # optional — target(s) to use for this project
 - Modes: agent-id:mode,agent-id:mode  # optional — override primary/subagent modes per agent
 - Disable agents: plan,build  # optional — overrides hub.json for this project
 ```
@@ -138,7 +131,6 @@ their own. Automatically created from `projects/projects.example.md` on the firs
 - Labels: feature, fix, api
 - Language: english
 - Agents: orchestrator,orchestrator-dev,developer-backend,developer-api
-- Targets: opencode
 - Modes: developer-backend:primary,developer-api:primary
 ```
 
@@ -148,7 +140,6 @@ their own. Automatically created from `projects/projects.example.md` on the firs
 - `Tracker`: `jira`, `gitlab` or `none`
 - `Language`: optional — free value (e.g. `english`, `spanish`) — if absent, agents respond in French
 - `Agents`: optional — `all` or CSV of agent identifiers — filtered at deployment
-- `Targets`: optional — CSV of targets (`opencode`) — overrides the hub default target
 - `Modes`: optional — CSV of `agent-id:mode` pairs — overrides agent frontmatter. Modes: `primary`, `subagent`. Leave empty to revert to frontmatter values.
 - `Disable agents`: optional — CSV of native OpenCode agents to disable (`build`, `plan`, `general`, `explore`) — overrides `opencode.disabled_native_agents` in `hub.json`. Empty = use hub default.
 - This file is **local** — never commit it
@@ -226,18 +217,18 @@ base_url=https://models.inference.ai.azure.com
 
 ### Supported providers
 
-| Provider | Targets | API Key required | Default base URL | Description |
-|----------|---------|-----------------|-----------------|-------------|
-| `anthropic` | OpenCode | yes | — | Direct Anthropic API |
-| `mammouth` | OpenCode | yes | `https://api.mammouth.ai/v1` | OpenAI-compatible proxy (FR-hosted) |
-| `github-models` | OpenCode | yes | `https://models.inference.ai.azure.com` | GitHub Models API |
-| `bedrock` | OpenCode | yes | — (AWS-specific) | AWS Bedrock |
-| `ollama` | OpenCode | no | `http://localhost:11434/v1` | OpenAI-compatible local LLM |
-| `litellm` | OpenCode | yes | ⚠️ required | Generic litellm proxy (custom) |
+| Provider | API Key required | Default base URL | Description |
+|----------|-----------------|-----------------|-------------|
+| `anthropic` | yes | — | Direct Anthropic API |
+| `mammouth` | yes | `https://api.mammouth.ai/v1` | OpenAI-compatible proxy (FR-hosted) |
+| `github-models` | yes | `https://models.inference.ai.azure.com` | GitHub Models API |
+| `bedrock` | yes | — (AWS-specific) | AWS Bedrock |
+| `ollama` | no | `http://localhost:11434/v1` | OpenAI-compatible local LLM |
+| `litellm` | yes | ⚠️ required | Generic litellm proxy (custom) |
 
 ### Effects during deployment
 
-During `oc deploy opencode <PROJECT_ID>`, if an entry exists for the project:
+During `oc deploy <PROJECT_ID>`, if an entry exists for the project:
 
 - `opencode.json` and `.opencode/` are added to the target project's `.git/info/exclude` **before** writing the file (local exclusion, invisible to other devs)
 - `opencode.json` is regenerated with the complete `provider` block

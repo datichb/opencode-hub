@@ -35,7 +35,7 @@ _cmd() {
   fi
 }
 
-# Print a plain indented note (used for deploy targets, examples, …).
+# Print a plain indented note (used for examples, …).
 _note() {
   echo "  $1"
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # Tests pour scripts/cmd-start.sh — gate exec + bd init interactif
 # cmd-start.sh est un script top-level (non sourceable) — testé via exécution directe.
-# adapter_start fait exec → on mock l'outil cible (opencode) comme un script PATH.
+# adapter_start fait exec → on mock opencode comme un script PATH.
 
 setup() {
   TEST_DIR="$(mktemp -d)"
@@ -37,7 +37,7 @@ EOF
 
   : > "$API_KEYS_FILE"
 
-  # ── Mock opencode dans le PATH (cible par défaut) ────────────────────────────
+  # ── Mock opencode dans le PATH ────────────────────────────────────────────────
   OPENCODE_LOG="$TEST_DIR/opencode_calls.log"
   export OPENCODE_LOG
   : > "$OPENCODE_LOG"
@@ -87,7 +87,7 @@ exec "$REAL_GIT" "$@"
 GITEOF
   chmod +x "$TEST_DIR/bin/git"
 
-  # Mock jq : common.sh utilise "opencode" comme cible fixe si jq est absent ou hub.json absent
+  # Mock jq : common.sh utilise "opencode" si jq est absent ou hub.json absent
   # On s'assure que le mock opencode est trouvé par adapter_validate
   export PATH="$TEST_DIR/bin:$PATH"
 }

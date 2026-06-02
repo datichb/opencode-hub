@@ -23,17 +23,8 @@ oc install
 ```
 
 **Behaviour:**
-- Interactive — presents a target selection menu
 - Checks and **requests confirmation** before installing each dependency (Node.js, opencode, Beads, bun)
 - If `config/hub.json` already exists, requests confirmation before overwriting
-
-**Target options:**
-
-| Choice | Targets configured |
-|--------|--------------------|
-| 1 (default) | OpenCode |
-| 2 | OpenCode |
-| 3 | All |
 
 ---
 
@@ -66,10 +57,10 @@ Guides the uninstallation through 4 optional steps, all with explicit confirmati
 
 ## `oc deploy`
 
-Generates agent files for a target in a project. When a `PROJECT_ID` is provided, **automatically detects the project's stack** and injects the corresponding stack-specific skills into developer agents (in addition to their statically declared skills).
+Generates agent files for a project. When a `PROJECT_ID` is provided, **automatically detects the project's stack** and injects the corresponding stack-specific skills into developer agents (in addition to their statically declared skills).
 
 ```bash
-oc deploy <target> [PROJECT_ID]
+oc deploy [PROJECT_ID]
 oc deploy --check [PROJECT_ID]
 oc deploy --diff  [PROJECT_ID]
 ```
@@ -78,7 +69,6 @@ oc deploy --diff  [PROJECT_ID]
 
 | Argument | Values | Description |
 |----------|--------|-------------|
-| `<target>` | `opencode`, `all` | Target to deploy |
 | `[PROJECT_ID]` | ID of a registered project | Optional — deploys at hub level if absent (no stack detection) |
 
 **Options:**
@@ -97,13 +87,11 @@ This means a `developer-frontend` agent deployed on a React/Vitest/Playwright pr
 **Examples:**
 
 ```bash
-oc deploy opencode              # deploy OpenCode at hub level (no stack detection)
-oc deploy opencode MY-APP       # deploy OpenCode in MY-APP (with stack detection)
-oc deploy MY-APP                # deploy agents to MY-APP
+oc deploy                       # deploy at hub level (no stack detection)
+oc deploy MY-APP                # deploy agents to MY-APP (with stack detection)
 oc deploy --check               # check hub agents
-oc deploy --check opencode      # check OpenCode (hub)
-oc deploy --check all MY-APP    # check all targets for MY-APP
-oc deploy --diff all MY-APP     # show diff sources → deployed for MY-APP
+oc deploy --check MY-APP        # check MY-APP agents
+oc deploy --diff MY-APP         # show diff sources → deployed for MY-APP
 ```
 
 **Generated outputs:**
@@ -116,7 +104,7 @@ oc deploy --diff all MY-APP     # show diff sources → deployed for MY-APP
 - `0`: everything is up to date
 - `1`: at least one file is outdated or missing
 
-> An animated spinner (`⠋⠙⠹…`) is displayed while deploying each target.
+> An animated spinner (`⠋⠙⠹…`) is displayed while deploying.
 
 ---
 
@@ -440,7 +428,7 @@ oc init [PROJECT_ID] [path]
 |------|---------|
 | 1 — Project information | PROJECT_ID, path, directory verification/creation, name, stack, labels, tracker |
 | 2 — Beads & tracker | `bd init`, Git upstream, tracker configuration |
-| 3 — Agents & targets | Agent selection, deployment targets, and native OpenCode agents to disable |
+| 3 — Agents | Agent selection and native OpenCode agents to disable |
 | 4 — LLM provider | Project-specific provider configuration (overrides hub) |
 | 5 — Deployment | Immediate deployment proposal |
 
@@ -581,7 +569,7 @@ oc remove <PROJECT_ID> [--clean]
 
 | Option | Description |
 |--------|-------------|
-| `--clean` | Also removes deployed agent files in the project directory (`.opencode/agents/`, `opencode.json`, `.opencode/agents/` depending on active targets) |
+| `--clean` | Also removes deployed agent files in the project directory (`.opencode/agents/`, `opencode.json`) |
 
 **Examples:**
 
@@ -709,13 +697,13 @@ oc agent <sub-command>
 
 | Sub-command | Description |
 |-------------|-------------|
-| `list` | List all agents with their id, label and targets |
+| `list` | List all agents with their id, label and skills |
 | `create` | Create a new agent (interactive workflow) |
 | `edit <id>` | Modify skills and metadata of an existing agent |
 | `info <id>` | Display the full detail of an agent (frontmatter + body) |
 | `select <PROJECT_ID>` | Choose which agents to deploy for a project |
 | `mode <PROJECT_ID>` | Display / override `primary`/`subagent` modes per project |
-| `validate [agent-id]` | Validate agent consistency (required fields, existing skills, valid targets, id uniqueness) |
+| `validate [agent-id]` | Validate agent consistency (required fields, existing skills, id uniqueness) |
 | `deploy <agent-id> [PROJECT_ID]` | Deploy **a single agent** |
 
 ### `oc agent create` — interactive workflow
@@ -723,11 +711,10 @@ oc agent <sub-command>
 1. **Identifier** — unique slug (e.g. `reviewer`)
 2. **Label** — short name displayed in the tool (e.g. `CodeReviewer`)
 3. **Description** — short phrase describing the role
-4. **Targets** — interactive selector ↑↓/space: `opencode`
-5. **Skills** — interactive selector ↑↓/space with description panel
-6. **Body** — if `opencode` is available, offer to auto-generate via `opencode run`
-7. **Preview** — display of the complete `.md` file before writing
-8. **Confirmation** — `Y/n` to create the file
+4. **Skills** — interactive selector ↑↓/space with description panel
+5. **Body** — if `opencode` is available, offer to auto-generate via `opencode run`
+6. **Preview** — display of the complete `.md` file before writing
+7. **Confirmation** — `Y/n` to create the file
 
 ### `oc agent validate`
 
@@ -737,10 +724,9 @@ oc agent validate <agent-id>  # validate only the specified agent
 ```
 
 Verifies for each agent:
-- Required fields present (`id`, `label`, `description`, `targets`, `skills`)
+- Required fields present (`id`, `label`, `description`, `skills`)
 - `id` uniqueness across all agents
 - Valid `mode` (`primary` | `subagent` | `all`) if present
-- All targets in `targets` recognised (`opencode`)
 - All referenced skills exist (local or external)
 
 Returns exit code 1 if at least one error is detected.
@@ -748,13 +734,12 @@ Returns exit code 1 if at least one error is detected.
 ### `oc agent deploy`
 
 ```bash
-oc agent deploy <agent-id>                # deploy to active hub targets
-oc agent deploy <agent-id> <PROJECT_ID>   # deploy to project-configured targets
+oc agent deploy <agent-id>                # deploy to hub
+oc agent deploy <agent-id> <PROJECT_ID>   # deploy to project
 ```
 
 Deploys **a single agent** without redeploying everything. Useful after modifying an agent or a skill.
 
-- Checks that the agent supports the target before deploying
 - Applies the project's language setting (if configured)
 
 **Examples:**
@@ -764,7 +749,7 @@ oc agent deploy planner            # deploy planner in the hub
 oc agent deploy planner MY-APP     # deploy planner in MY-APP only
 ```
 
-> The interactive selector (agents, targets) uses the alternate screen (`smcup`/`rmcup`) — the parent terminal content is fully preserved on close.
+> The interactive selector (agents) uses the alternate screen (`smcup`/`rmcup`) — the parent terminal content is fully preserved on close.
 > `oc agent keytest` is available to diagnose terminals where navigation doesn't work (not in help, type `oc agent keytest`).
 
 ---

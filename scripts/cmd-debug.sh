@@ -40,9 +40,9 @@ PROJECT_ID=$(normalize_project_id "$PROJECT_ID")
 # ── Validation + résolution du chemin ────────────────────────────────────────
 PROJECT_PATH=$(resolve_project_path "$PROJECT_ID")
 
-# ── Résolution de la cible ────────────────────────────────────────────────────
+# ── Validation opencode ───────────────────────────────────────────────────────
 load_adapter
-adapter_validate || { log_error "$(t debug.target_unavailable)'opencode' $(t debug.target_unavailable_suffix)"; exit 1; }
+adapter_validate || { log_error "opencode non disponible → oc install"; exit 1; }
 
 # ── Agent requis ─────────────────────────────────────────────────────────────
 REQUIRED_AGENT="debugger"

@@ -46,7 +46,7 @@ skills: [skill-a, skill-b]
 ---
 ```
 
-> **Frontmatter ordering constraint:** the `model:` field **must appear before** `skills:` in the frontmatter. The parser uses an early exit after reading `id`, `targets` and `skills` — if `model:` is placed after `skills:`, it will not be read.
+> **Frontmatter ordering constraint:** the `model:` field **must appear before** `skills:` in the frontmatter. The parser uses an early exit after reading `id` and `skills` — if `model:` is placed after `skills:`, it will not be read.
 
 After cascade resolution, if the resolved model is **lower** than the declared floor,
 the floor is applied and a warning is emitted:

@@ -184,7 +184,7 @@ _pick_skills() {
 }
 
 ##
-# Convertit un CSV de skills/targets en format YAML inline ["a","b","c"].
+# Convertit un CSV de skills en format YAML inline ["a","b","c"].
 # @param {string} $1 — CSV à convertir
 # Retourne la valeur sur stdout (usage interne uniquement — pas de TUI).
 ##
@@ -277,7 +277,7 @@ Sois concis et directement opérationnel. Pas d'introduction, pas de conclusion,
 
 ##
 # Crée un nouvel agent canonique de façon interactive.
-# Workflow : id → label → description → cibles → skills → corps (IA optionnel)
+# Workflow : id → label → description → skills → corps (IA optionnel)
 #            → prévisualisation → confirmation → écriture
 ##
 cmd_create() {
@@ -775,7 +775,7 @@ cmd_mode() {
 
 ##
 # Valide la cohérence de tous les agents canoniques (ou d'un seul si agent-id fourni).
-# Vérifie : champs requis, skills existants, targets valides, mode valide, unicité des id.
+# Vérifie : champs requis, skills existants, mode valide, unicité des id.
 # @param {string} [$1] — agent-id optionnel (valide uniquement cet agent si fourni)
 ##
 cmd_validate() {
@@ -901,7 +901,7 @@ cmd_validate() {
 # ── DEPLOY (agent unique) ─────────────────────────────────────────────────────
 
 ##
-# Déploie un seul agent canonique vers toutes les cibles actives (ou celles du projet).
+# Déploie un seul agent canonique vers opencode.
 # Utile pour redéployer un agent après modification sans tout redéployer.
 # @param {string} $1 — agent-id
 # @param {string} [$2] — PROJECT_ID (optionnel)

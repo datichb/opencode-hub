@@ -53,27 +53,17 @@ fi
 if [ "$CLEAN_MODE" = true ]; then
   source "$LIB_DIR/adapter-manager.sh"
 
-  # Déterminer les cibles actives
-  local local_targets="opencode"
-
   log_info "Nettoyage des fichiers déployés dans ${PROJECT_PATH}…"
 
-  while IFS= read -r tgt; do
-    case "$tgt" in
-      opencode)
-        # .opencode/agents/ et opencode.json
-        if [ -d "$PROJECT_PATH/.opencode/agents" ]; then
-          rm -rf "$PROJECT_PATH/.opencode/agents"
-          log_success "Supprimé : .opencode/agents/"
-        fi
-        if [ -f "$PROJECT_PATH/opencode.json" ]; then
-          rm -f "$PROJECT_PATH/opencode.json"
-          log_success "Supprimé : opencode.json"
-        fi
-        ;;
-
-    esac
-  done <<< "$local_targets"
+  # .opencode/agents/ et opencode.json
+  if [ -d "$PROJECT_PATH/.opencode/agents" ]; then
+    rm -rf "$PROJECT_PATH/.opencode/agents"
+    log_success "Supprimé : .opencode/agents/"
+  fi
+  if [ -f "$PROJECT_PATH/opencode.json" ]; then
+    rm -f "$PROJECT_PATH/opencode.json"
+    log_success "Supprimé : opencode.json"
+  fi
 fi
 
 # ── Supprimer du projects.md ──────────────

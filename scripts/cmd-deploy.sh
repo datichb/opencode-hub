@@ -22,7 +22,6 @@ _cmd_deploy_check() {
     deploy_dir=$(resolve_project_path "$project_id")
   fi
 
-  local tgt="opencode"
   local gen_dir="$deploy_dir/.opencode/agents"
 
   log_title "Vérification de fraîcheur des agents déployés"
@@ -30,8 +29,6 @@ _cmd_deploy_check() {
   local ok_count=0
 
   source "$LIB_DIR/prompt-builder.sh"
-
-  log_info "── Cible : $tgt"
 
   # Détecter les stacks et précalculer les stack skills — une seule passe jq pour tout le projet
   local _check_detected_stacks="" _check_precomputed_stack_skills=""
@@ -140,7 +137,6 @@ _cmd_deploy_diff() {
     deploy_dir=$(resolve_project_path "$project_id")
   fi
 
-  local tgt="opencode"
   local gen_dir="$deploy_dir/.opencode/agents"
 
   source "$LIB_DIR/prompt-builder.sh"
@@ -150,7 +146,6 @@ _cmd_deploy_diff() {
   local new_count=0
   local same_count=0
 
-  log_info "── Cible : $tgt"
   echo ""
 
   # Langue du projet si disponible
@@ -268,7 +263,7 @@ fi
 if [ -n "$PROJECT_ID" ]; then
   PROJECT_ID=$(normalize_project_id "$PROJECT_ID")
   deploy_dir=$(resolve_project_path "$PROJECT_ID")
-  log_info "Projet cible : $PROJECT_ID ($deploy_dir)"
+  log_info "Projet : $PROJECT_ID ($deploy_dir)"
 else
   deploy_dir="$HUB_DIR"
   log_info "Déploiement au niveau du hub"

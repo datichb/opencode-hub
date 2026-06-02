@@ -24,7 +24,6 @@ Respecter la convention de nommage :
 id: <identifiant-unique>
 label: <NomAffiché>
 description: <Description courte en une phrase — visible dans les listes d'agents>
-targets: [opencode]
 skills: [chemin/vers/skill, ...]
 ---
 ```
@@ -33,7 +32,6 @@ skills: [chemin/vers/skill, ...]
 - `id` : slug unique, minuscules, tirets autorisés, pas d'espaces
 - `label` : PascalCase, affiché dans l'outil IA
 - `description` : une phrase, commence par un verbe ou un nom de rôle
-- `targets` : au moins `[opencode]` — ajouter les autres si le format est compatible
 - `skills` : chemins relatifs à `skills/`, dans l'ordre d'injection souhaité
 
 ### 3. Corps de l'agent

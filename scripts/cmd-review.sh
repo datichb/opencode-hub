@@ -52,9 +52,9 @@ PROJECT_ID=$(normalize_project_id "$PROJECT_ID")
 # ── Validation + résolution du chemin ────────────────────────────────────────
 PROJECT_PATH=$(resolve_project_path "$PROJECT_ID")
 
-# ── Résolution de la cible ────────────────────────────────────────────────────
+# ── Validation opencode ───────────────────────────────────────────────────────
 load_adapter
-adapter_validate || { log_error "$(t review.target_unavailable)'opencode' $(t review.target_unavailable_suffix)"; exit 1; }
+adapter_validate || { log_error "opencode non disponible → oc install"; exit 1; }
 
 # ── Résolution de la branche ──────────────────────────────────────────────────
 if [ -z "$BRANCH" ]; then
@@ -74,7 +74,7 @@ agents_dir="$PROJECT_PATH/.opencode/agents"
 # ── Bloc d'intro TUI ─────────────────────────────────────────────────────────
 _intro "oc review  ${PROJECT_ID}"
 printf "${DIM}│${RESET}  %-12s %s\n" "$(t review.label_path)"   "$PROJECT_PATH"
-printf "${DIM}│${RESET}  %-12s %s\n" "$(t review.label_target)"  "opencode"
+printf "${DIM}│${RESET}  %-12s %s\n" "Outil"  "opencode"
 printf "${DIM}│${RESET}  %-12s %s\n" "$(t review.label_branch)"  "$BRANCH"
 printf "${DIM}│${RESET}  %-12s %s\n" "$(t review.label_agent)"   "$REQUIRED_AGENT"
 

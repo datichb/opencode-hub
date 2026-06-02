@@ -125,13 +125,6 @@ teardown() {
   [[ "$output" == *"skill/dev/test-skill-2"* ]]
 }
 
-@test "extract_frontmatter_list : extrait liste targets" {
-  local agent_file="$BATS_TEST_DIRNAME/fixtures/prompts/agent-simple.md"
-  run extract_frontmatter_list "$agent_file" "targets"
-  [ "$status" -eq 0 ]
-  [ "$output" = "opencode" ]
-}
-
 # ── read_agent_frontmatter ─────────────────────────────────────────────────────
 
 @test "read_agent_frontmatter : lit frontmatter complet" {

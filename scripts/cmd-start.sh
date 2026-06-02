@@ -87,11 +87,11 @@ if [ -n "$PROVIDER_OVERRIDE" ]; then
   }
 fi
 
-# ── Résolution de la cible ────────────────
+# ── Validation opencode ──────────────────
 source "$LIB_DIR/adapter-manager.sh"
 
 load_adapter
-adapter_validate || { log_error "$(t start.target_unavailable) (puis sélectionner opencode)"; exit 1; }
+adapter_validate || { log_error "opencode non disponible → oc install"; exit 1; }
 
 # ── Vérifier que les agents sont déployés ──────────────
 agents_dir="$PROJECT_PATH/.opencode/agents"

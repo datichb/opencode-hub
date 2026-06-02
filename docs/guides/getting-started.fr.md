@@ -29,7 +29,7 @@ Le script automatise :
 - Vérification des dépendances manquantes (`jq`, `Node.js`, `opencode`, `bun`) — **confirmation demandée avant chaque installation**
 - Création de l'alias `oc` dans `~/.zshrc` ou `~/.bashrc` (propose garder / remplacer / renommer si un alias `oc` existe déjà)
 - Initialisation des fichiers de config locaux
-- Configuration interactive des cibles AI et du provider LLM
+- Configuration du fournisseur LLM
 
 Après l'installation, recharger le shell :
 
@@ -53,12 +53,6 @@ echo 'alias oc="~/.opencode-hub/oc.sh"' >> ~/.zshrc && source ~/.zshrc
 # 3. Configurer
 oc install
 ```
-
-`oc install` est interactif et vous demande de choisir les cibles à activer :
-
-| Choix | Cibles configurées |
-|-------|--------------------|
-| 1 (défaut) | opencode |
 
 > Si `config/hub.json` existe déjà, une confirmation est demandée avant d'écraser
 > la configuration. Répondez `N` pour conserver votre configuration existante.
@@ -86,15 +80,14 @@ Si vous n'avez pas déployé lors du `oc init` :
 
 ```bash
 # Déployer dans un projet spécifique
-oc deploy opencode MON-APP
-oc deploy all MON-APP   # toutes les cibles actives
+oc deploy MON-APP
 ```
 
-Résultat attendu selon la cible :
+Résultat attendu :
 
-| Cible | Fichiers générés dans le projet |
-|-------|---------------------------------|
-| `opencode` | `.opencode/agents/*.md` |
+| Fichiers générés dans le projet |
+|---------------------------------|
+| `.opencode/agents/*.md` |
 
 ---
 
@@ -208,8 +201,8 @@ curl -fsSL https://raw.githubusercontent.com/datichb/opencode-hub/main/install.s
 | `oc: command not found` | Relancer `source ~/.zshrc` (ou `~/.bashrc`) après installation |
 | `curl: command not found` | Installer curl, puis relancer le one-liner |
 | `Node.js introuvable` | Relancer `oc install` — propose les installeurs disponibles |
-| Agent absent dans l'outil | Relancer `oc deploy <target> MON-APP` |
-| Agent obsolète (`⚠ OBSOLÈTE`) | `oc deploy <target> MON-APP` pour resynchroniser |
+| Agent absent dans l'outil | Relancer `oc deploy MON-APP` |
+| Agent obsolète (`⚠ OBSOLÈTE`) | `oc deploy MON-APP` pour resynchroniser |
 | `bd: command not found` | Installer Beads : `brew install beads` |
 | Dossier d'install déjà existant | `OPENCODE_HUB_DIR=~/autre-chemin bash install.sh` |
 

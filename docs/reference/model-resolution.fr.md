@@ -46,7 +46,7 @@ skills: [skill-a, skill-b]
 ---
 ```
 
-> **Contrainte d'ordre frontmatter :** le champ `model:` **doit apparaître avant** `skills:` dans le frontmatter. Le parser utilise un early exit après lecture de `id`, `targets` et `skills` — si `model:` est placé après `skills:`, il ne sera pas lu.
+> **Contrainte d'ordre frontmatter :** le champ `model:` **doit apparaître avant** `skills:` dans le frontmatter. Le parser utilise un early exit après lecture de `id` et `skills` — si `model:` est placé après `skills:`, il ne sera pas lu.
 
 Après résolution de la cascade, si le modèle résolu est **inférieur** au plancher déclaré,
 le plancher est appliqué et un warning est émis :

@@ -21,17 +21,9 @@ oc install
 ```
 
 **Comportement :**
-- Interactif — propose un menu de sélection des cibles
+**Comportement :**
 - Vérifie et **demande confirmation** avant d'installer chaque dépendance (Node.js, opencode, Beads, bun)
 - Si `config/hub.json` existe déjà, demande confirmation avant d'écraser
-
-**Options de cible :**
-
-| Choix | Cibles configurées |
-|-------|--------------------|
-| 1 (défaut) | OpenCode |
-| 2 | OpenCode |
-| 3 | Tout |
 
 ---
 
@@ -64,10 +56,10 @@ Guide la désinstallation en 4 étapes, toutes optionnelles et avec confirmation
 
 ## `oc deploy`
 
-Génère les fichiers agents pour une cible dans un projet. Quand un `PROJECT_ID` est fourni, **détecte automatiquement la stack du projet** et injecte les skills spécifiques correspondants dans les agents developer (en plus de leurs skills déclarés statiquement).
+Génère les fichiers agents pour un projet. Quand un `PROJECT_ID` est fourni, **détecte automatiquement la stack du projet** et injecte les skills spécifiques correspondants dans les agents developer (en plus de leurs skills déclarés statiquement).
 
 ```bash
-oc deploy <target> [PROJECT_ID]
+oc deploy [PROJECT_ID]
 oc deploy --check [PROJECT_ID]
 oc deploy --diff  [PROJECT_ID]
 ```
@@ -76,7 +68,6 @@ oc deploy --diff  [PROJECT_ID]
 
 | Argument | Valeurs | Description |
 |----------|---------|-------------|
-| `<target>` | `opencode`, `all` | Cible à déployer |
 | `[PROJECT_ID]` | ID d'un projet enregistré | Optionnel — déploie au niveau du hub si absent (pas de détection de stack) |
 
 **Options :**
@@ -95,13 +86,11 @@ Ainsi, un agent `developer-frontend` déployé sur un projet React/Vitest/Playwr
 **Exemples :**
 
 ```bash
-oc deploy opencode              # déploie OpenCode au niveau du hub (pas de détection de stack)
-oc deploy opencode MON-APP      # déploie OpenCode dans MON-APP (avec détection de stack)
-oc deploy MON-APP               # déploie les agents dans MON-APP
+oc deploy                       # déploie au niveau du hub (pas de détection de stack)
+oc deploy MON-APP               # déploie les agents dans MON-APP (avec détection de stack)
 oc deploy --check               # vérifie les agents du hub
-oc deploy --check opencode      # vérifie OpenCode (hub)
-oc deploy --check all MON-APP   # vérifie toutes les cibles pour MON-APP
-oc deploy --diff all MON-APP    # affiche le diff sources → déployés pour MON-APP
+oc deploy --check MON-APP       # vérifie les agents de MON-APP
+oc deploy --diff MON-APP        # affiche le diff sources → déployés pour MON-APP
 ```
 
 **Sorties générées :**
@@ -114,7 +103,7 @@ oc deploy --diff all MON-APP    # affiche le diff sources → déployés pour MO
 - `0` : tout est à jour
 - `1` : au moins un fichier est obsolète ou manquant
 
-> Un spinner animé (`⠋⠙⠹…`) est affiché pendant le déploiement de chaque cible.
+> Un spinner animé (`⠋⠙⠹…`) est affiché pendant le déploiement.
 
 ---
 
@@ -438,7 +427,7 @@ oc init [PROJECT_ID] [chemin]
 |-------|---------|
 | 1 — Informations projet | PROJECT_ID, chemin, vérification/création du dossier, nom, stack, labels, tracker |
 | 2 — Beads & tracker | `bd init`, upstream Git, configuration tracker |
-| 3 — Agents & cibles | Sélection des agents, des cibles de déploiement, et des agents natifs OpenCode à désactiver |
+| 3 — Agents | Sélection des agents et des agents natifs OpenCode à désactiver |
 | 4 — Fournisseur LLM | Configuration d'un provider spécifique au projet (surcharge le hub) |
 | 5 — Déploiement | Proposition de déploiement immédiat |
 
@@ -579,7 +568,7 @@ oc remove <PROJECT_ID> [--clean]
 
 | Option | Description |
 |--------|-------------|
-| `--clean` | Supprime également les fichiers agents déployés dans le répertoire du projet (`.opencode/agents/`, `opencode.json`, `.opencode/agents/` selon les cibles actives) |
+| `--clean` | Supprime également les fichiers agents déployés dans le répertoire du projet (`.opencode/agents/`, `opencode.json`) |
 
 **Exemples :**
 
@@ -707,13 +696,13 @@ oc agent <sous-commande>
 
 | Sous-commande | Description |
 |---------------|-------------|
-| `list` | Liste tous les agents avec leur id, label et targets |
+| `list` | Liste tous les agents avec leur id, label et skills |
 | `create` | Crée un nouvel agent (workflow interactif) |
 | `edit <id>` | Modifie les skills et métadonnées d'un agent existant |
 | `info <id>` | Affiche le détail complet d'un agent (frontmatter + corps) |
 | `select <PROJECT_ID>` | Choisit les agents à déployer pour un projet |
 | `mode <PROJECT_ID>` | Affiche / overrides les modes `primary`/`subagent` par projet |
-| `validate [agent-id]` | Valide la cohérence des agents (champs requis, skills existants, targets valides, unicité des id) |
+| `validate [agent-id]` | Valide la cohérence des agents (champs requis, skills existants, unicité des id) |
 | `deploy <agent-id> [PROJECT_ID]` | Déploie **un seul agent** |
 
 ### `oc agent create` — workflow interactif
@@ -721,11 +710,10 @@ oc agent <sous-commande>
 1. **Identifiant** — slug unique (ex: `reviewer`)
 2. **Label** — nom court affiché dans l'outil (ex: `CodeReviewer`)
 3. **Description** — phrase courte décrivant le rôle
-4. **Cibles** — sélecteur interactif ↑↓/espace : `opencode`, `opencode`
-5. **Skills** — sélecteur interactif ↑↓/espace avec panneau de description
-6. **Corps** — si `opencode` est disponible, proposition de génération automatique via `opencode run`
-7. **Prévisualisation** — affichage du fichier `.md` complet avant écriture
-8. **Confirmation** — `Y/n` pour créer le fichier
+4. **Skills** — sélecteur interactif ↑↓/espace avec panneau de description
+5. **Corps** — si `opencode` est disponible, proposition de génération automatique via `opencode run`
+6. **Prévisualisation** — affichage du fichier `.md` complet avant écriture
+7. **Confirmation** — `Y/n` pour créer le fichier
 
 ### `oc agent validate`
 
@@ -735,10 +723,9 @@ oc agent validate <agent-id>  # valide uniquement l'agent spécifié
 ```
 
 Vérifie pour chaque agent :
-- Champs requis présents (`id`, `label`, `description`, `targets`, `skills`)
+- Champs requis présents (`id`, `label`, `description`, `skills`)
 - Unicité de l'`id` sur l'ensemble des agents
 - `mode` valide (`primary` | `subagent` | `all`) si présent
-- Toutes les cibles dans `targets` reconnues (`opencode`, `opencode`)
 - Tous les skills référencés existent (local ou externe)
 
 Retourne le code 1 si au moins une erreur est détectée.
@@ -746,12 +733,12 @@ Retourne le code 1 si au moins une erreur est détectée.
 ### `oc agent deploy`
 
 ```bash
-oc agent deploy <agent-id> <PROJECT_ID>   # déploie sur les cibles configurées du projet
+oc agent deploy <agent-id>                # déploie dans le hub
+oc agent deploy <agent-id> <PROJECT_ID>   # déploie dans le projet
 ```
 
 Déploie **un seul agent** sans tout redéployer. Utile après modification d'un agent ou d'un skill.
 
-- Vérifie que l'agent supporte la cible avant de déployer
 - Applique la détection de langue du projet (si configurée)
 
 **Exemples :**
@@ -761,7 +748,7 @@ oc agent deploy planner            # déploie planner dans le hub
 oc agent deploy planner MON-APP    # déploie planner dans MON-APP uniquement
 ```
 
-> Le sélecteur interactif (agents, cibles) utilise l'écran alternatif (`smcup`/`rmcup`) — le contenu du terminal parent est intégralement préservé à la fermeture.
+> Le sélecteur interactif (agents) utilise l'écran alternatif (`smcup`/`rmcup`) — le contenu du terminal parent est intégralement préservé à la fermeture.
 > `oc agent keytest` est disponible pour diagnostiquer les terminaux où la navigation ne fonctionne pas (non documenté dans le help, taper `oc agent keytest`).
 
 ---

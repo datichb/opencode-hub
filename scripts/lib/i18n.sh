@@ -42,7 +42,6 @@ t() {
       help.section.analysis)  printf '%s' "Analyse" ;;
       help.section.maintenance) printf '%s' "Maintenance" ;;
       help.section.config)    printf '%s' "Configuration" ;;
-      help.section.deploy_targets) printf '%s' "Cibles deploy" ;;
       help.section.beads)     printf '%s' "Beads (bd)" ;;
       help.section.examples)  printf '%s' "Exemples" ;;
       # Setup
@@ -121,8 +120,6 @@ t() {
       help.config_list_providers.desc) printf '%s' "Liste les providers disponibles" ;;
       help.config_init_providers.cmd)  printf '%s' "config init-providers [--force]" ;;
       help.config_init_providers.desc) printf '%s' "Initialise les fichiers de configuration provider (config/providers/*.json)" ;;
-      # Deploy targets
-      help.deploy_target.opencode) printf '%s' "opencode     → .opencode/agents/ + opencode.json" ;;
       # Projects
       help.project_rename.cmd)  printf '%s' "project rename <OLD_ID> <NEW_ID>" ;;
       help.project_rename.desc) printf '%s' "Renomme un projet dans tous les registres" ;;
@@ -340,7 +337,7 @@ t() {
       # ── cmd-start.sh ───────────────────────────────────────────────────────
       start.no_projects)      printf '%s' "Aucun projet enregistré → ./oc.sh init" ;;
       start.choose_project)   printf '%s' "Choisir un projet :" ;;
-      start.target_unavailable) printf '%s' "Cible non disponible → oc install" ;;
+      start.opencode_unavailable) printf '%s' "opencode non disponible → oc install" ;;
       start.agents_not_deployed) printf '%s' "Agents non déployés pour" ;;
       start.deploy_now)       printf '%s' "Déployer maintenant ? [Y/n] : " ;;
       start.beads_not_init)   printf '%s' "Beads non initialisé dans ce projet (aucun .beads/ trouvé)" ;;
@@ -462,7 +459,6 @@ t() {
       sync.title_dryrun)      printf '%s' "Vérification globale des agents déployés (dry-run)" ;;
       sync.title)             printf '%s' "Synchronisation des agents sur tous les projets" ;;
       sync.no_projects)       printf '%s' "Aucun projet enregistré — lancez : ./oc.sh init" ;;
-      sync.no_targets)        printf '%s' "Aucune cible de synchronisation disponible" ;;
       sync.project_label)     printf '%s' "── Projet : " ;;
       sync.path_undefined)    printf '%s' "path non défini localement, ignoré" ;;
       sync.dir_missing)       printf '%s' "dossier introuvable : " ;;
@@ -471,7 +467,6 @@ t() {
       sync.ok)                printf '%s' "✓ À JOUR" ;;
       sync.deployed)          printf '%s' "déployé" ;;
       sync.deploy_failed)     printf '%s' "échec déploiement" ;;
-      sync.target_unavailable) printf '%s' "non disponible — ignoré" ;;
       sync.result_ok)         printf '%s' "à jour" ;;
       sync.result_stale)      printf '%s' "obsolète(s)/manquant(s)" ;;
       sync.result_skipped)    printf '%s' "ignoré(s)" ;;
@@ -514,11 +509,8 @@ t() {
       review.choose_project)      printf '%s' "Choisir un projet :" ;;
       review.choose_number)       printf '%s' "  Numéro : " ;;
       review.invalid_choice)      printf '%s' "Choix invalide : " ;;
-      review.target_unavailable)  printf '%s' "Cible '" ;;
-      review.target_unavailable_suffix) printf '%s' "non disponible → oc install" ;;
       review.no_branch)           printf '%s' "Impossible de détecter la branche courante. Utilisez --branch <branche>" ;;
       review.label_path)          printf '%s' "Chemin" ;;
-      review.label_target)        printf '%s' "Cible" ;;
       review.label_branch)        printf '%s' "Branche" ;;
       review.label_agent)         printf '%s' "Agent" ;;
       review.agent_missing_config) printf '%s' "Agent absent de la sélection projet : " ;;
@@ -539,10 +531,7 @@ t() {
       debug.choose_project)      printf '%s' "Choisir un projet :" ;;
       debug.choose_number)       printf '%s' "  Numéro : " ;;
       debug.invalid_choice)      printf '%s' "Choix invalide : " ;;
-      debug.target_unavailable)  printf '%s' "Cible '" ;;
-      debug.target_unavailable_suffix) printf '%s' "non disponible → oc install" ;;
       debug.label_path)          printf '%s' "Chemin" ;;
-      debug.label_target)        printf '%s' "Cible" ;;
       debug.label_agent)         printf '%s' "Agent" ;;
       debug.agent_missing_config) printf '%s' "Agent absent de la sélection projet : " ;;
       debug.add_agent_prompt)    printf '%s' "Ajouter debugger à la sélection du projet ? [Y/n] : " ;;
@@ -564,9 +553,7 @@ t() {
       audit.choose_project)   printf '%s' "Choisir un projet :" ;;
       audit.choose_number)    printf '%s' "  Numéro : " ;;
       audit.invalid_choice)   printf '%s' "Choix invalide : " ;;
-      audit.target_unavailable) printf '%s' "Cible '" ;;
       audit.label_path)       printf '%s' "Chemin" ;;
-      audit.label_target)     printf '%s' "Cible" ;;
       audit.label_agents)     printf '%s' "Agents" ;;
       audit.label_type)       printf '%s' "Type" ;;
       audit.agents_missing_config) printf '%s' "Agent(s) absent(s) de la sélection projet : " ;;
@@ -623,7 +610,6 @@ t_en() {
     help.section.analysis)  printf '%s' "Analysis" ;;
     help.section.maintenance) printf '%s' "Maintenance" ;;
     help.section.config)    printf '%s' "Configuration" ;;
-    help.section.deploy_targets) printf '%s' "Deploy targets" ;;
     help.section.beads)     printf '%s' "Beads (bd)" ;;
     help.section.examples)  printf '%s' "Examples" ;;
     # Setup
@@ -702,9 +688,7 @@ t_en() {
       help.config_list_providers.desc) printf '%s' "List available providers" ;;
       help.config_init_providers.cmd)  printf '%s' "config init-providers [--force]" ;;
       help.config_init_providers.desc) printf '%s' "Initialize provider config files (config/providers/*.json)" ;;
-    # Deploy targets
-    help.deploy_target.opencode) printf '%s' "opencode     → .opencode/agents/ + opencode.json" ;;
-    # Projects
+    # Projects    # Projects
     help.project_rename.cmd)  printf '%s' "project rename <OLD_ID> <NEW_ID>" ;;
     help.project_rename.desc) printf '%s' "Rename a project across all registry files" ;;
     help.project_move.cmd)    printf '%s' "project move <PROJECT_ID> <path>" ;;
@@ -930,7 +914,7 @@ t_en() {
     # ── cmd-start.sh ─────────────────────────────────────────────────────────
     start.no_projects)      printf '%s' "No registered projects → ./oc.sh init" ;;
     start.choose_project)   printf '%s' "Choose a project:" ;;
-    start.target_unavailable) printf '%s' "Target not available → oc install" ;;
+    start.opencode_unavailable) printf '%s' "opencode not available → oc install" ;;
     start.agents_not_deployed) printf '%s' "Agents not deployed for" ;;
     start.deploy_now)       printf '%s' "Deploy now? [Y/n]: " ;;
     start.beads_not_init)   printf '%s' "Beads not initialized in this project (no .beads/ found)" ;;
@@ -1052,7 +1036,6 @@ t_en() {
     sync.title_dryrun)      printf '%s' "Global check of deployed agents (dry-run)" ;;
     sync.title)             printf '%s' "Sync agents on all registered projects" ;;
     sync.no_projects)       printf '%s' "No registered projects — run: ./oc.sh init" ;;
-    sync.no_targets)        printf '%s' "No synchronization target available" ;;
     sync.project_label)     printf '%s' "── Project: " ;;
     sync.path_undefined)    printf '%s' "path not defined locally, skipped" ;;
     sync.dir_missing)       printf '%s' "directory not found: " ;;
@@ -1061,7 +1044,6 @@ t_en() {
     sync.ok)                printf '%s' "✓ UP TO DATE" ;;
     sync.deployed)          printf '%s' "deployed" ;;
     sync.deploy_failed)     printf '%s' "deploy failed" ;;
-    sync.target_unavailable) printf '%s' "not available — skipped" ;;
     sync.result_ok)         printf '%s' "up to date" ;;
     sync.result_stale)      printf '%s' "stale/missing" ;;
     sync.result_skipped)    printf '%s' "skipped" ;;
@@ -1104,11 +1086,8 @@ t_en() {
     review.choose_project)      printf '%s' "Choose a project:" ;;
     review.choose_number)       printf '%s' "  Number: " ;;
     review.invalid_choice)      printf '%s' "Invalid choice: " ;;
-    review.target_unavailable)  printf '%s' "Target '" ;;
-    review.target_unavailable_suffix) printf '%s' "unavailable → oc install" ;;
     review.no_branch)           printf '%s' "Cannot detect current branch. Use --branch <branch>" ;;
     review.label_path)          printf '%s' "Path" ;;
-    review.label_target)        printf '%s' "Target" ;;
     review.label_branch)        printf '%s' "Branch" ;;
     review.label_agent)         printf '%s' "Agent" ;;
     review.agent_missing_config) printf '%s' "Agent missing from project selection: " ;;
@@ -1129,10 +1108,7 @@ t_en() {
     debug.choose_project)      printf '%s' "Choose a project:" ;;
     debug.choose_number)       printf '%s' "  Number: " ;;
     debug.invalid_choice)      printf '%s' "Invalid choice: " ;;
-    debug.target_unavailable)  printf '%s' "Target '" ;;
-    debug.target_unavailable_suffix) printf '%s' "unavailable → oc install" ;;
     debug.label_path)          printf '%s' "Path" ;;
-    debug.label_target)        printf '%s' "Target" ;;
     debug.label_agent)         printf '%s' "Agent" ;;
     debug.agent_missing_config) printf '%s' "Agent missing from project selection: " ;;
     debug.add_agent_prompt)    printf '%s' "Add debugger to project selection? [Y/n]: " ;;
@@ -1154,9 +1130,7 @@ t_en() {
     audit.choose_project)   printf '%s' "Choose a project:" ;;
     audit.choose_number)    printf '%s' "  Number: " ;;
     audit.invalid_choice)   printf '%s' "Invalid choice: " ;;
-    audit.target_unavailable) printf '%s' "Target '" ;;
     audit.label_path)       printf '%s' "Path" ;;
-    audit.label_target)     printf '%s' "Target" ;;
     audit.label_agents)     printf '%s' "Agents" ;;
     audit.label_type)       printf '%s' "Type" ;;
     audit.agents_missing_config) printf '%s' "Agent(s) missing from project selection: " ;;

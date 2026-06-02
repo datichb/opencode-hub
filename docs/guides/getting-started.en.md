@@ -58,8 +58,8 @@ oc install
 
 `oc install` is interactive and configures the opencode integration:
 
-| Choice | Targets configured |
-|--------|--------------------|
+| Choice | Target configured |
+|--------|-------------------|
 | 1 (default) | opencode |
 
 > If `config/hub.json` already exists, confirmation is requested before overwriting
@@ -88,8 +88,7 @@ If you did not deploy during `oc init`:
 
 ```bash
 # Deploy to a specific project
-oc deploy opencode MY-APP
-oc deploy MY-APP       # deploy agents to MY-APP
+oc deploy MY-APP
 ```
 
 
