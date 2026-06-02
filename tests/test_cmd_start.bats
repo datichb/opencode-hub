@@ -11,9 +11,9 @@ setup() {
   export API_KEYS_FILE="$TEST_DIR/api-keys.local.md"
 
   # Isoler HUB_CONFIG pour éviter que le hub.json local (ex: default_provider bedrock)
-  # n'influence le comportement de adapter_start
+  # n'influence le comportement de adapter_start — langue française pour OC_LANG=fr
   export HUB_CONFIG="$TEST_DIR/hub.json"
-    > "$HUB_CONFIG"
+  echo '{"cli":{"language":"fr"}}' > "$HUB_CONFIG"
 
   CMD_START="$BATS_TEST_DIRNAME/../scripts/cmd-start.sh"
 

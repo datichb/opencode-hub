@@ -10,8 +10,7 @@ setup_file() {
   export HUB_DIR="$BATS_TEST_DIRNAME/.."
   export HUB_CONFIG="$BATS_FILE_TMPDIR/hub.json"
   mkdir -p "$BATS_FILE_TMPDIR/bin"
-
-    > "$HUB_CONFIG"
+  echo '{"cli":{"language":"fr"}}' > "$HUB_CONFIG"
 
   # Mock opencode
   cat > "$BATS_FILE_TMPDIR/bin/opencode" <<'OCEOF'

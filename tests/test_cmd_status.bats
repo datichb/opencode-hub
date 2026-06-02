@@ -9,8 +9,7 @@ setup() {
   export PATHS_FILE="$TEST_DIR/paths.local.md"
   export API_KEYS_FILE="$TEST_DIR/api-keys.local.md"
   export HUB_CONFIG="$TEST_DIR/hub.json"
-
-    > "$HUB_CONFIG"
+  echo '{"cli":{"language":"fr"}}' > "$HUB_CONFIG"
 
   CMD_STATUS="$BATS_TEST_DIRNAME/../scripts/cmd-status.sh"
 

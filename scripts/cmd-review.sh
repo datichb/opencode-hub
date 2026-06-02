@@ -74,6 +74,7 @@ agents_dir="$PROJECT_PATH/.opencode/agents"
 # ── Bloc d'intro TUI ─────────────────────────────────────────────────────────
 _intro "oc review  ${PROJECT_ID}"
 printf "${DIM}│${RESET}  %-12s %s\n" "$(t review.label_path)"   "$PROJECT_PATH"
+printf "${DIM}│${RESET}  %-12s %s\n" "$(t review.label_target)"  "opencode"
 printf "${DIM}│${RESET}  %-12s %s\n" "$(t review.label_branch)"  "$BRANCH"
 printf "${DIM}│${RESET}  %-12s %s\n" "$(t review.label_agent)"   "$REQUIRED_AGENT"
 
