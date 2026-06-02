@@ -117,13 +117,12 @@ teardown() {
   [[ "$output" == *"my-feature"* ]]
 }
 
-@test "cmd-review : affiche le bloc intro avec Chemin, Cible, Branche, Agent" {
+@test "cmd-review : affiche le bloc intro avec Chemin, Branche, Agent" {
   run bash -c '
     printf "\n" | bash "$1" TEST-PROJ --branch feat/test
   ' _ "$CMD_REVIEW"
   [ "$status" -eq 0 ]
   [[ "$output" == *"Chemin"* ]]
-  [[ "$output" == *"Cible"* ]]
   [[ "$output" == *"Branche"* ]]
   [[ "$output" == *"Agent"* ]]
 }

@@ -87,6 +87,6 @@ echo -e "${DIM}│${RESET}    4. Écrire CONVENTIONS.md à la racine du projet"
 echo -e "${DIM}│${RESET}"
 
 _outro "Lancement de opencode…"
-IFS= read -rp "" _
+_prompt _ ""
 
 adapter_start "$PROJECT_PATH" "$PROMPT" "$PROJECT_ID" "$AGENT_NAME"

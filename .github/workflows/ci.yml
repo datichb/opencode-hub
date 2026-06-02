@@ -106,16 +106,17 @@ jobs:
           mkdir -p ~/.parallel && touch ~/.parallel/will-cite
 
       - name: Run bats tests
+        env:
+          OC_NON_INTERACTIVE: "1"
         run: |
           # Collect all test files except websearch (they have their own workflow)
-          tests_to_run=()
-          for f in tests/*.bats; do
-            [[ "$f" == *websearch* ]] && continue
-            tests_to_run+=("$f")
-          done
-          
-          # Run tests in parallel (8 jobs) for faster CI execution
-          bats -j 8 "${tests_to_run[@]}" || exit 1
+          # Run via GNU parallel : --timeout 120 tue un fichier qui bloque > 2 min
+          # et identifie immédiatement quel fichier pose problème dans les logs.
+          find tests/ -name '*.bats' ! -name '*websearch*' -print0 \
+            | parallel --null --jobs 8 --timeout 120 --halt soon,fail=1 \
+                --tagstring '{/.}' \
+                'bats {}' \
+            || exit 1
 
   version-consistency:
     name: Check version consistency

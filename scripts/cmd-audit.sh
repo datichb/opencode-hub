@@ -210,6 +210,6 @@ log_info "$(t audit.main_agent)${AGENT_NAME}"
 
 # ── Confirmation avant lancement ─────────────────────────────────────────────
 _outro "$(t audit.launching)opencode…"
-IFS= read -rp "" _
+_prompt _ ""
 
 adapter_start "$PROJECT_PATH" "$PROMPT" "$PROJECT_ID" "$AGENT_NAME"

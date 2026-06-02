@@ -277,6 +277,6 @@ fi
 
 # ── Confirmation avant lancement ──────────────────────────────────────────────
 _outro "$(t start.press_enter) opencode…"
-IFS= read -rp "" _ || true
+_prompt _ ""
 
 adapter_start "$PROJECT_PATH" "$PROMPT" "$PROJECT_ID" "${AGENT_NAME:-}" "$PROVIDER_OVERRIDE"

@@ -10,19 +10,25 @@
 # IMPORTANT — isolation des sources :
 #   Les tests qui simulent une modification (OBSOLÈTE) NE TOUCHENT JAMAIS les fichiers
 #   de $HUB_ROOT/agents/ ou $HUB_ROOT/skills/ directement.
-#   Ils travaillent sur des COPIES dans $DEPLOY_DIR/tmp_* pour ne pas altérer les
+#   Ils travaillent sur des COPIES dans $BATS_TEST_TMPDIR/tmp_* pour ne pas altérer les
 #   mtimes réels du repo et casser le --check hub après les tests.
+#
+# PERF — setup_file() mutualisé :
+#   Le déploiement complet (30 agents) est effectué UNE SEULE FOIS dans setup_file()
+#   et stocké dans $BATS_FILE_TMPDIR/shared_deploy.
+#   Les tests qui ont besoin du résultat copient ce répertoire au lieu de re-déployer.
 
-setup() {
-  HUB_ROOT="$BATS_TEST_DIRNAME/.."
+# ─────────────────────────────────────────────────────────────────────────────
+# setup_file : deploy complet unique partagé par tous les tests du fichier
+# ─────────────────────────────────────────────────────────────────────────────
+setup_file() {
+  local hub_root
+  hub_root="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
+  local hub_config_shared="$BATS_FILE_TMPDIR/hub.json"
+  local shared_deploy="$BATS_FILE_TMPDIR/shared_deploy"
 
-  # DEPLOY_DIR = répertoire temporaire isolé pour tous les artefacts de test
-  DEPLOY_DIR="$(mktemp -d)"
-  mkdir -p "$DEPLOY_DIR/.opencode/agents"
-
-  # hub.json de test — opencode actif, pas de clé API
-  HUB_CONFIG_TEST="$(mktemp)"
-  cat > "$HUB_CONFIG_TEST" <<'HUBEOF'
+  # hub.json partagé — opencode actif, langue fr (pour les assertions i18n)
+  cat > "$hub_config_shared" <<'HUBEOF'
 {
   "version": "1.5.0",
   "default_provider": {"name": "", "api_key": "", "base_url": "", "model": ""},
@@ -31,26 +37,65 @@ setup() {
 }
 HUBEOF
 
+  mkdir -p "$shared_deploy/.opencode/agents"
+
+  # Deploy complet UNE SEULE FOIS (30 agents réels)
+  bash -c "
+    export HUB_DIR='$hub_root'
+    export HUB_CONFIG='$hub_config_shared'
+    export CANONICAL_AGENTS_DIR='$hub_root/agents'
+    export SKILLS_DIR='$hub_root/skills'
+    source '$hub_root/scripts/common.sh'
+    source '$hub_root/scripts/lib/prompt-builder.sh'
+    source '$hub_root/scripts/adapters/opencode.adapter.sh'
+    log_info()    { true; }
+    log_success() { true; }
+    log_warn()    { true; }
+    adapter_deploy '$shared_deploy' ''
+  " 2>/dev/null
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# setup / teardown par test
+# ─────────────────────────────────────────────────────────────────────────────
+setup() {
+  HUB_ROOT="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
+  HUB_CONFIG_TEST="$BATS_FILE_TMPDIR/hub.json"   # hub.json créé dans setup_file
+  SHARED_DEPLOY="$BATS_FILE_TMPDIR/shared_deploy" # deploy partagé (setup_file)
+
+  # Répertoire temporaire isolé par test (pour les artefacts propres à chaque test)
+  DEPLOY_DIR="$BATS_TEST_TMPDIR/deploy"
+  mkdir -p "$DEPLOY_DIR/.opencode/agents"
+
   export HUB_CONFIG="$HUB_CONFIG_TEST"
   export HUB_DIR="$HUB_ROOT"
 
-  # Helper : copier agents/ et skills/ dans DEPLOY_DIR pour isolation complète
-  # Retourne les chemins des copies via les variables TMP_AGENTS_DIR et TMP_SKILLS_DIR
-  _make_isolated_sources() {
-    TMP_AGENTS_DIR="$DEPLOY_DIR/tmp_agents"
-    TMP_SKILLS_DIR="$DEPLOY_DIR/tmp_skills"
-    cp -R "$HUB_ROOT/agents" "$TMP_AGENTS_DIR"
-    cp -R "$HUB_ROOT/skills" "$TMP_SKILLS_DIR"
+  # ── Helpers ──────────────────────────────────────────────────────────────
+
+  # Copie le deploy partagé (setup_file) dans DEPLOY_DIR pour éviter un re-deploy
+  _use_shared_deploy() {
+    cp -R "$SHARED_DEPLOY/.opencode" "$DEPLOY_DIR/"
+    [ -f "$SHARED_DEPLOY/opencode.json" ] && cp "$SHARED_DEPLOY/opencode.json" "$DEPLOY_DIR/"
   }
 
-  # Helper : préparer DEPLOY_DIR comme un hub valide (config + projects)
-  _setup_deploy_hub() {
-    mkdir -p "$DEPLOY_DIR/config" "$DEPLOY_DIR/projects"
-    cp "$HUB_CONFIG_TEST" "$DEPLOY_DIR/config/hub.json"
-    cp "$HUB_CONFIG_TEST" "$DEPLOY_DIR/config/hub.json.example"
-    echo '{"mappings": {}}' > "$DEPLOY_DIR/config/stack-skills.json"
-    echo "# Registre de test" > "$DEPLOY_DIR/projects/projects.md"
-    touch "$DEPLOY_DIR/projects/paths.local.md" "$DEPLOY_DIR/projects/api-keys.local.md"
+  # Helper : deployer quelques agents mini (OBSOLÈTE tests) — évite 30 agents entiers
+  # Copie 3 agents isolés + skills dans un sous-répertoire de DEPLOY_DIR
+  _make_mini_isolated_sources() {
+    TMP_AGENTS_DIR="$DEPLOY_DIR/mini_agents"
+    TMP_SKILLS_DIR="$DEPLOY_DIR/mini_skills"
+    mkdir -p "$TMP_AGENTS_DIR" "$TMP_SKILLS_DIR"
+
+    # Copier 3 agents (2 auditor + 1 developer qui référence dev-standards-universal)
+    mkdir -p "$TMP_AGENTS_DIR/auditor" "$TMP_AGENTS_DIR/developer"
+    cp "$HUB_ROOT/agents/auditor/auditor-accessibility.md" \
+       "$TMP_AGENTS_DIR/auditor/"
+    cp "$HUB_ROOT/agents/auditor/auditor-architecture.md" \
+       "$TMP_AGENTS_DIR/auditor/"
+    cp "$HUB_ROOT/agents/developer/developer-api.md" \
+       "$TMP_AGENTS_DIR/developer/"
+
+    # Copier l'intégralité des skills (petits fichiers markdown)
+    cp -R "$HUB_ROOT/skills/." "$TMP_SKILLS_DIR/"
   }
 
   # Helper : deploy via adapter_deploy direct (bypass adapter_validate — pas d'opencode en CI)
@@ -73,6 +118,16 @@ HUBEOF
     " 2>/dev/null
   }
 
+  # Helper : préparer DEPLOY_DIR comme un hub valide (config + projects)
+  _setup_deploy_hub() {
+    mkdir -p "$DEPLOY_DIR/config" "$DEPLOY_DIR/projects"
+    cp "$HUB_CONFIG_TEST" "$DEPLOY_DIR/config/hub.json"
+    cp "$HUB_CONFIG_TEST" "$DEPLOY_DIR/config/hub.json.example"
+    echo '{"mappings": {}}' > "$DEPLOY_DIR/config/stack-skills.json"
+    echo "# Registre de test" > "$DEPLOY_DIR/projects/projects.md"
+    touch "$DEPLOY_DIR/projects/paths.local.md" "$DEPLOY_DIR/projects/api-keys.local.md"
+  }
+
   # Helper : --check avec overrides d'environnement
   # Appelle cmd-deploy.sh dans un vrai subprocess pour que run capture le bon exit code
   # Usage : run _run_check AGENTS_DIR SKILLS_DIR
@@ -91,13 +146,15 @@ HUBEOF
 }
 
 teardown() {
-  rm -rf "$DEPLOY_DIR" "$HUB_CONFIG_TEST"
+  # BATS_TEST_TMPDIR est nettoyé automatiquement par BATS — rien à faire
+  true
 }
 
 # ── Déploiement complet ───────────────────────────────────────────────────────
 
 @test "intégration : deploy opencode génère tous les agents canoniques" {
-  _deploy_to "$HUB_ROOT/agents" "$HUB_ROOT/skills"
+  # Réutilise le deploy partagé (setup_file) — pas de re-deploy
+  _use_shared_deploy
 
   deployed_count=$(find "$DEPLOY_DIR/.opencode/agents" -name "*.md" | wc -l | tr -d ' ')
   source_count=$(find "$HUB_ROOT/agents" -name "*.md" | wc -l | tr -d ' ')
@@ -108,7 +165,7 @@ teardown() {
 
 @test "intégration : deploy puis --check retourne exit 0 (tous à jour)" {
   _setup_deploy_hub
-  _deploy_to "$HUB_ROOT/agents" "$HUB_ROOT/skills"
+  _use_shared_deploy
 
   run _run_check "$HUB_ROOT/agents" "$HUB_ROOT/skills"
   [ "$status" -eq 0 ]
@@ -125,13 +182,14 @@ teardown() {
 }
 
 # ── Scénarios OBSOLÈTE — isolation totale des sources ────────────────────────
-# Ces tests copient agents/ et skills/ dans $DEPLOY_DIR pour ne JAMAIS toucher
+# Ces tests copient 3 agents dans $DEPLOY_DIR/mini_* pour ne JAMAIS toucher
 # les fichiers réels de $HUB_ROOT, évitant d'altérer les mtimes du repo.
+# 3 agents suffisent : on teste la détection, pas l'exhaustivité.
 
 @test "intégration : --check détecte OBSOLÈTE après modification d'un agent source" {
-  _make_isolated_sources
+  _make_mini_isolated_sources
 
-  # Deploy avec les copies isolées
+  # Deploy avec les copies isolées (mini : 3 agents)
   _deploy_to "$TMP_AGENTS_DIR" "$TMP_SKILLS_DIR"
 
   # Rendre une copie d'agent plus récente que l'agent déployé
@@ -147,14 +205,14 @@ teardown() {
 }
 
 @test "intégration : --check détecte OBSOLÈTE après modification d'un skill" {
-  _make_isolated_sources
+  _make_mini_isolated_sources
 
-  # Trouver un skill référencé (dev-standards-universal est utilisé par reviewer, developer-*)
+  # Trouver un skill référencé par developer-api (dev-standards-universal)
   skill_rel="developer/dev-standards-universal"
   skill_copy="$TMP_SKILLS_DIR/${skill_rel}.md"
   [ -f "$skill_copy" ] || skip "Skill de test introuvable dans la copie"
 
-  # Deploy avec les copies isolées
+  # Deploy avec les copies isolées (mini : 3 agents)
   _deploy_to "$TMP_AGENTS_DIR" "$TMP_SKILLS_DIR"
 
   # Rendre la COPIE du skill plus récente — jamais l'original
@@ -170,7 +228,7 @@ teardown() {
 # ── Qualité des artefacts ─────────────────────────────────────────────────────
 
 @test "intégration : opencode.json est généré et valide après deploy" {
-  _deploy_to "$HUB_ROOT/agents" "$HUB_ROOT/skills"
+  _use_shared_deploy
 
   [ -f "$DEPLOY_DIR/opencode.json" ]
   command -v jq &>/dev/null || skip "jq non disponible"
@@ -239,23 +297,11 @@ AGENTEOF
 @test "intégration : adapter_deploy_config seul produit le même opencode.json que le déploiement complet" {
   command -v jq &>/dev/null || skip "jq non disponible"
 
-  DEPLOY_FULL="$(mktemp -d)"
-  DEPLOY_CONFIG_ONLY="$(mktemp -d)"
+  DEPLOY_CONFIG_ONLY="$BATS_TEST_TMPDIR/deploy_config_only"
+  mkdir -p "$DEPLOY_CONFIG_ONLY"
 
-  # Déploiement complet (Phase 1 + Phase 2)
-  bash -c "
-    export HUB_DIR='$HUB_ROOT'
-    export HUB_CONFIG='$HUB_CONFIG_TEST'
-    export CANONICAL_AGENTS_DIR='$HUB_ROOT/agents'
-    export SKILLS_DIR='$HUB_ROOT/skills'
-    source '$HUB_ROOT/scripts/common.sh'
-    source '$HUB_ROOT/scripts/lib/prompt-builder.sh'
-    source '$HUB_ROOT/scripts/adapters/opencode.adapter.sh'
-    log_info()    { true; }
-    log_success() { true; }
-    log_warn()    { true; }
-    adapter_deploy '$DEPLOY_FULL' ''
-  " 2>/dev/null
+  # Déploiement complet : réutiliser le deploy partagé (setup_file)
+  _use_shared_deploy
 
   # Phase 2 seule
   bash -c "
@@ -273,18 +319,16 @@ AGENTEOF
   " 2>/dev/null
 
   # Les deux opencode.json doivent être identiques (comparaison normalisée via jq)
-  json_full=$(jq --sort-keys . "$DEPLOY_FULL/opencode.json")
+  json_full=$(jq --sort-keys . "$DEPLOY_DIR/opencode.json")
   json_config=$(jq --sort-keys . "$DEPLOY_CONFIG_ONLY/opencode.json")
   [ "$json_full" = "$json_config" ]
-
-  rm -rf "$DEPLOY_FULL" "$DEPLOY_CONFIG_ONLY"
 }
 
 @test "adapter_deploy_config : fonctionne sous set -u sans Phase 1 préalable — non-régression #opencode-hub-5s5" {
   command -v jq &>/dev/null || skip "jq non disponible"
 
   # Répertoire agents vide : _load_agent_metadata() doit exister mais ne retenir aucun agent
-  EMPTY_AGENTS_DIR="$DEPLOY_DIR/tmp_empty_agents"
+  EMPTY_AGENTS_DIR="$BATS_TEST_TMPDIR/empty_agents"
   mkdir -p "$EMPTY_AGENTS_DIR"
 
   bash -c "

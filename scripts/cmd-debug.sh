@@ -117,6 +117,6 @@ log_info "$(t debug.main_agent)${REQUIRED_AGENT}"
 
 # ── Confirmation avant lancement ─────────────────────────────────────────────
 _outro "$(t debug.launching)opencode…"
-IFS= read -rp "" _
+_prompt _ ""
 
 adapter_start "$PROJECT_PATH" "$PROMPT" "$PROJECT_ID" "$REQUIRED_AGENT"
