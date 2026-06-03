@@ -161,7 +161,9 @@ export async function extractDesignTokens(
       ],
     };
   } catch (error) {
-    // Si l'API ne supporte pas les Variables ou retourne une erreur
+    const msg = error instanceof Error ? error.message : String(error);
+    const isUnavailable = msg.includes('indisponible') || msg.includes('timeout');
+    const isAuth = msg.includes('401') || msg.includes('403') || msg.includes('Token Figma');
     return {
       content: [
         {
@@ -169,14 +171,20 @@ export async function extractDesignTokens(
           text: [
             `## Design Tokens`,
             '',
-            '⚠️ **Extraction impossible**',
+            isUnavailable
+              ? '⚠️ **Figma indisponible** — impossible d\'extraire les tokens'
+              : isAuth
+              ? '⚠️ **Erreur d\'authentification Figma** — vérifier le token'
+              : '⚠️ **Extraction impossible**',
             '',
-            `Erreur : ${error instanceof Error ? error.message : 'Unknown error'}`,
+            `Erreur : ${msg}`,
             '',
-            '**Cause possible :**',
-            '- Les Figma Variables ne sont pas configurées sur ce fichier',
-            '- Le fichier est dans un plan Figma qui ne supporte pas les Variables',
-            '- Les permissions d\'accès sont insuffisantes',
+            ...(!isUnavailable && !isAuth ? [
+              '**Cause possible :**',
+              '- Les Figma Variables ne sont pas configurées sur ce fichier',
+              '- Le fichier est dans un plan Figma qui ne supporte pas les Variables',
+              '- Les permissions d\'accès sont insuffisantes',
+            ] : []),
           ].join('\n'),
         },
       ],

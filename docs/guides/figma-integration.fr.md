@@ -264,6 +264,26 @@ npm install
 npm run build
 ```
 
+### Timeout API Figma
+
+**Symptôme :** L'agent mentionne `⚠️ Figma indisponible (timeout)` dans son rapport.
+
+**Causes possibles :** connexion lente, gros fichier Figma, API Figma surchargée.
+
+Le client effectue automatiquement **2 retries** avec backoff (1s, puis 2s) avant d'abandonner.
+
+Pour augmenter le timeout (défaut : 30s) :
+
+```bash
+# Via oc service setup
+oc figma setup
+# → saisir une valeur pour "Timeout des requêtes (ms)", ex : 60000
+
+# Ou directement dans ~/.config/opencode/services-env.json
+# (ou dans opencode.json du projet sous mcp["figma-mcp"].environment)
+FIGMA_TIMEOUT=60000
+```
+
 ---
 
 ## Limitations actuelles (v1)

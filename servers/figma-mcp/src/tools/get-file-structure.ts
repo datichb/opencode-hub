@@ -62,11 +62,19 @@ export async function getFileStructure(
       ],
     };
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    const isUnavailable = msg.includes('indisponible') || msg.includes('timeout');
+    const isAuth = msg.includes('401') || msg.includes('403') || msg.includes('Token Figma');
+    const prefix = isUnavailable
+      ? '⚠️ Figma indisponible'
+      : isAuth
+      ? '⚠️ Erreur d\'authentification Figma'
+      : '❌ Erreur Figma';
     return {
       content: [
         {
           type: 'text',
-          text: `Erreur lors de la récupération de la structure : ${error instanceof Error ? error.message : 'Unknown error'}`,
+          text: `${prefix} lors de la récupération de la structure (${fileId}) : ${msg}`,
         },
       ],
     };

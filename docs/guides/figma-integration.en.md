@@ -275,6 +275,25 @@ npm install
 npm run build
 ```
 
+### Timeout API Figma
+
+**Symptôme :** The agent reports `⚠️ Figma indisponible (timeout)` in its output.
+
+**Causes:** slow connection, large Figma file, Figma API overloaded.
+
+The client automatically retries **2 times** with exponential backoff (1s, then 2s) before giving up.
+
+To increase the timeout (default: 30s):
+
+```bash
+# Via oc service setup
+oc figma setup
+# → enter a value for "Request timeout (ms)", e.g.: 60000
+
+# Or directly via environment variable
+FIGMA_TIMEOUT=60000
+```
+
 ### Le MCP n'est pas configuré dans opencode.json
 
 **Cause :** Le projet n'a pas encore été déployé, ou le déploiement a été fait avec une ancienne version du hub.

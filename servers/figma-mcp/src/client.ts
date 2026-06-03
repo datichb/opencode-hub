@@ -2,7 +2,7 @@
  * Client pour l'API Figma
  */
 
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance, AxiosError } from 'axios';
 import { FigmaConfig } from './config.js';
 
 export interface FigmaFile {
@@ -31,9 +31,90 @@ export interface FigmaFileResponse {
   document: FigmaNode;
 }
 
+/** Codes d'erreur axios considérés comme des erreurs réseau/timeout retriables */
+const RETRYABLE_AXIOS_CODES = new Set(['ECONNABORTED', 'ETIMEDOUT', 'ERR_NETWORK', 'ECONNRESET']);
+
+/** Statuts HTTP retriables (rate-limit, service indisponible) */
+const RETRYABLE_HTTP_STATUSES = new Set([429, 503, 504]);
+
+/**
+ * Classifie une erreur axios en catégorie lisible par l'agent.
+ */
+export function classifyFigmaError(error: unknown, attempt: number, maxRetries: number): string {
+  if (!axios.isAxiosError(error)) return String(error);
+
+  const axiosErr = error as AxiosError;
+  const status = axiosErr.response?.status;
+  const timeoutMs = (axiosErr.config?.timeout ?? 30000) / 1000;
+
+  if (axiosErr.code && RETRYABLE_AXIOS_CODES.has(axiosErr.code)) {
+    return `⚠️ Figma indisponible (timeout ${timeoutMs}s, tentative ${attempt}/${maxRetries}) — vérifier la connexion réseau`;
+  }
+
+  if (status === 401) {
+    return `⚠️ Token Figma invalide (401) — vérifier : oc figma status`;
+  }
+  if (status === 403) {
+    return `⚠️ Accès refusé Figma (403) — vérifier les scopes du token : oc figma status`;
+  }
+  if (status === 404) {
+    return `ℹ️ Ressource Figma introuvable (404) — fichier ou team inexistant`;
+  }
+  if (status === 429) {
+    return `⚠️ Limite de requêtes Figma atteinte (429) — réessayer dans quelques secondes`;
+  }
+  if (status === 503 || status === 504) {
+    return `⚠️ API Figma temporairement indisponible (${status}) — réessayer plus tard`;
+  }
+
+  const errMsg = (axiosErr.response?.data as any)?.err || axiosErr.message;
+  return `Figma API erreur ${status ?? 'réseau'} : ${errMsg}`;
+}
+
+/**
+ * Exécute une fonction async avec retry et backoff exponentiel.
+ * Retriable : timeout, erreur réseau, 429, 503, 504.
+ * Non retriable : 401, 403, 404, autres erreurs métier.
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries: number,
+  baseDelayMs: number = 1000
+): Promise<T> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        const code = error.code ?? '';
+        const isRetryable =
+          RETRYABLE_AXIOS_CODES.has(code) ||
+          (status !== undefined && RETRYABLE_HTTP_STATUSES.has(status));
+
+        if (isRetryable && attempt <= maxRetries) {
+          const delay = baseDelayMs * Math.pow(2, attempt - 1); // 1s, 2s
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+      }
+
+      // Erreur non retriable ou tentatives épuisées
+      break;
+    }
+  }
+
+  throw lastError;
+}
+
 export class FigmaClient {
   private client: AxiosInstance;
   private teamId: string;
+  private maxRetries: number;
 
   constructor(config: FigmaConfig) {
     this.client = axios.create({
@@ -41,9 +122,10 @@ export class FigmaClient {
       headers: {
         'X-Figma-Token': config.token,
       },
-      timeout: 10000,
+      timeout: config.timeout,
     });
     this.teamId = config.teamId;
+    this.maxRetries = config.maxRetries;
   }
 
   /**
@@ -51,40 +133,33 @@ export class FigmaClient {
    */
   async searchFiles(query: string): Promise<FigmaFile[]> {
     try {
-      // Récupérer tous les projets de la team
-      const { data: projectsData } = await this.client.get(
-        `/teams/${this.teamId}/projects`
+      const { data: projectsData } = await withRetry(
+        () => this.client.get(`/teams/${this.teamId}/projects`),
+        this.maxRetries
       );
 
       const allFiles: FigmaFile[] = [];
 
-      // Pour chaque projet, récupérer les fichiers
       for (const project of projectsData.projects) {
         try {
-          const { data: filesData } = await this.client.get(
-            `/projects/${project.id}/files`
+          const { data: filesData } = await withRetry(
+            () => this.client.get(`/projects/${project.id}/files`),
+            this.maxRetries
           );
 
-          // Filtrer par nom
           const matchingFiles = filesData.files.filter((file: FigmaFile) =>
             file.name.toLowerCase().includes(query.toLowerCase())
           );
 
           allFiles.push(...matchingFiles);
         } catch (error) {
-          // Ignorer les erreurs de projet individuel
           console.error(`Error fetching files for project ${project.id}:`, error);
         }
       }
 
       return allFiles;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(
-          `Figma API error: ${error.response?.status} - ${error.response?.data?.err || error.message}`
-        );
-      }
-      throw error;
+      throw new Error(classifyFigmaError(error, this.maxRetries + 1, this.maxRetries));
     }
   }
 
@@ -93,7 +168,10 @@ export class FigmaClient {
    */
   async getFile(fileId: string): Promise<FigmaFileResponse> {
     try {
-      const { data } = await this.client.get(`/files/${fileId}`);
+      const { data } = await withRetry(
+        () => this.client.get(`/files/${fileId}`),
+        this.maxRetries
+      );
 
       return {
         name: data.name,
@@ -102,12 +180,7 @@ export class FigmaClient {
         document: data.document,
       };
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(
-          `Figma API error: ${error.response?.status} - ${error.response?.data?.err || error.message}`
-        );
-      }
-      throw error;
+      throw new Error(classifyFigmaError(error, this.maxRetries + 1, this.maxRetries));
     }
   }
 
@@ -167,19 +240,20 @@ export class FigmaClient {
     effects: Array<{ name: string; type: string; radius?: number; offset?: { x: number; y: number } }>;
   }> {
     try {
-      // Récupérer les variables Figma (API endpoint pour les variables)
-      const { data } = await this.client.get(`/files/${fileId}/variables/local`);
+      const { data } = await withRetry(
+        () => this.client.get(`/files/${fileId}/variables/local`),
+        this.maxRetries
+      );
 
       const colors: Array<{ name: string; value: string; type: 'color' }> = [];
       const text: Array<{ name: string; fontSize: number; fontFamily: string; fontWeight: number }> = [];
       const spacing: Array<{ name: string; value: number }> = [];
       const effects: Array<{ name: string; type: string; radius?: number; offset?: { x: number; y: number } }> = [];
 
-      // Parser les variables selon leur type
       if (data.meta && data.meta.variableCollections) {
         for (const collectionId of Object.keys(data.meta.variableCollections)) {
           const collection = data.meta.variableCollections[collectionId];
-          
+
           for (const varId of collection.variableIds || []) {
             const variable = data.meta.variables?.[varId];
             if (!variable) continue;
@@ -187,20 +261,17 @@ export class FigmaClient {
             const varName = variable.name;
             const varType = variable.resolvedType;
 
-            // Extraire la valeur depuis le premier mode
             const firstModeId = collection.modes?.[0]?.modeId;
             if (!firstModeId) continue;
 
             const varValue = variable.valuesByMode?.[firstModeId];
             if (varValue === undefined) continue;
 
-            // Catégoriser selon le type
             if (varType === 'COLOR') {
               const { r, g, b, a } = varValue;
               const hex = this.rgbaToHex(r, g, b, a);
               colors.push({ name: varName, value: hex, type: 'color' });
             } else if (varType === 'FLOAT') {
-              // Heuristique : si le nom contient "space", "spacing", "gap", c'est un spacing
               if (/space|spacing|gap|margin|padding/i.test(varName)) {
                 spacing.push({ name: varName, value: varValue });
               }
@@ -209,33 +280,32 @@ export class FigmaClient {
         }
       }
 
-      // Récupérer les styles de texte (text styles)
-      const { data: stylesData } = await this.client.get(`/files/${fileId}/styles`);
-      
+      const { data: stylesData } = await withRetry(
+        () => this.client.get(`/files/${fileId}/styles`),
+        this.maxRetries
+      );
+
       if (stylesData.meta && stylesData.meta.styles) {
         for (const style of Object.values(stylesData.meta.styles) as any[]) {
           if (style.style_type === 'TEXT') {
-            const textStyle = style;
             text.push({
-              name: textStyle.name,
-              fontSize: textStyle.fontSize || 16,
-              fontFamily: textStyle.fontFamily || 'Sans-serif',
-              fontWeight: textStyle.fontWeight || 400,
+              name: style.name,
+              fontSize: style.fontSize || 16,
+              fontFamily: style.fontFamily || 'Sans-serif',
+              fontWeight: style.fontWeight || 400,
             });
           }
         }
       }
 
-      // Récupérer les styles d'effet (effect styles)
       if (stylesData.meta && stylesData.meta.styles) {
         for (const style of Object.values(stylesData.meta.styles) as any[]) {
           if (style.style_type === 'EFFECT') {
-            const effectStyle = style;
             effects.push({
-              name: effectStyle.name,
-              type: effectStyle.type || 'UNKNOWN',
-              radius: effectStyle.radius,
-              offset: effectStyle.offset,
+              name: style.name,
+              type: style.type || 'UNKNOWN',
+              radius: style.radius,
+              offset: style.offset,
             });
           }
         }
@@ -244,15 +314,11 @@ export class FigmaClient {
       return { colors, text, spacing, effects };
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        // Si l'endpoint n'existe pas ou retourne 404, retourner des tokens vides
         if (error.response?.status === 404 || error.response?.status === 403) {
           return { colors: [], text: [], spacing: [], effects: [] };
         }
-        throw new Error(
-          `Figma API error: ${error.response?.status} - ${error.response?.data?.err || error.message}`
-        );
       }
-      throw error;
+      throw new Error(classifyFigmaError(error, this.maxRetries + 1, this.maxRetries));
     }
   }
 
@@ -264,8 +330,35 @@ export class FigmaClient {
       const hex = Math.round(n * 255).toString(16);
       return hex.length === 1 ? '0' + hex : hex;
     };
-    
+
     const hex = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
     return a < 1 ? `${hex}${toHex(a)}` : hex;
   }
 }
+
+export interface FigmaFile {
+  key: string;
+  name: string;
+  thumbnail_url?: string;
+  last_modified: string;
+}
+
+export interface FigmaProject {
+  id: string;
+  name: string;
+}
+
+export interface FigmaNode {
+  id: string;
+  name: string;
+  type: string;
+  children?: FigmaNode[];
+}
+
+export interface FigmaFileResponse {
+  name: string;
+  lastModified: string;
+  thumbnailUrl?: string;
+  document: FigmaNode;
+}
+

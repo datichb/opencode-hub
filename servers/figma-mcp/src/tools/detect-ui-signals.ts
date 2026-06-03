@@ -178,11 +178,19 @@ export async function detectUISignals(
       ],
     };
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    const isUnavailable = msg.includes('indisponible') || msg.includes('timeout');
+    const isAuth = msg.includes('401') || msg.includes('403') || msg.includes('Token Figma');
+    const prefix = isUnavailable
+      ? '⚠️ Figma indisponible'
+      : isAuth
+      ? '⚠️ Erreur d\'authentification Figma'
+      : '❌ Erreur Figma';
     return {
       content: [
         {
           type: 'text',
-          text: `Erreur lors de la détection des signaux : ${error instanceof Error ? error.message : 'Unknown error'}`,
+          text: `${prefix} lors de la détection des signaux (${fileId}) : ${msg}`,
         },
       ],
     };

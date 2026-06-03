@@ -206,7 +206,12 @@ question({
 ✅ **Toujours mentionner** : Même si aucun fichier trouvé, le dire dans le récap
 ✅ **URLs Figma** : Toujours inclure les liens directs
 ✅ **Détection automatique** : Utiliser `detect_ui_signals`, ne pas analyser manuellement
-❌ **Ne jamais bloquer** : Si erreur Figma, continuer sans (le mentionner dans récap)
+❌ **Ne jamais bloquer** : Si un appel Figma échoue, continuer sans et le mentionner dans le récap Phase 1 :
+   - Message contient `indisponible` ou `timeout` → `⚠️ Figma indisponible (timeout) — contexte design non disponible`
+   - Message contient `401` ou `Token Figma invalide` → `⚠️ Token Figma invalide — demander à l'utilisateur de vérifier : oc figma status`
+   - Message contient `403` ou `scopes` → `⚠️ Permissions Figma insuffisantes — vérifier les scopes du token`
+   - Résultat vide → `ℹ️ Aucun fichier Figma trouvé pour cette feature`
+   - Autre erreur → noter le message brut dans le récap
 ❌ **Ne pas dupliquer** : Les données Figma enrichissent le récap existant, pas une section séparée complète
 
 ## Autocontrôle Phase 1.3

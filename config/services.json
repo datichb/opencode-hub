@@ -33,6 +33,16 @@
           "required": true,
           "help_en": "Found in the Figma URL: https://www.figma.com/files/team/<TEAM_ID>/...",
           "help_fr": "Visible dans l'URL Figma : https://www.figma.com/files/team/<TEAM_ID>/..."
+        },
+        {
+          "key": "FIGMA_TIMEOUT",
+          "label_en": "Request timeout (ms)",
+          "label_fr": "Timeout des requêtes (ms)",
+          "secret": false,
+          "required": false,
+          "default": "30000",
+          "help_en": "Timeout in milliseconds for Figma API requests (default: 30000 = 30s). Increase for slow connections or large files.",
+          "help_fr": "Timeout en millisecondes pour les requêtes API Figma (défaut : 30000 = 30s). Augmenter pour les connexions lentes ou les gros fichiers."
         }
       ]
     },

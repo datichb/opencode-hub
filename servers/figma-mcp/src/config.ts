@@ -6,6 +6,8 @@ export interface FigmaConfig {
   token: string;
   teamId: string;
   baseUrl: string;
+  timeout: number;
+  maxRetries: number;
 }
 
 export function getConfig(): FigmaConfig {
@@ -26,9 +28,17 @@ export function getConfig(): FigmaConfig {
     );
   }
 
+  const rawTimeout = parseInt(process.env.FIGMA_TIMEOUT || '30000', 10);
+  const timeout = isNaN(rawTimeout) || rawTimeout <= 0 ? 30000 : rawTimeout;
+
+  const rawRetries = parseInt(process.env.FIGMA_MAX_RETRIES || '2', 10);
+  const maxRetries = isNaN(rawRetries) || rawRetries < 0 ? 2 : rawRetries;
+
   return {
     token,
     teamId,
     baseUrl: 'https://api.figma.com/v1',
+    timeout,
+    maxRetries,
   };
 }
