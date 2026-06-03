@@ -18,6 +18,7 @@ import { searchFilesTool, searchFiles } from './tools/search-files.js';
 import { getFileStructureTool, getFileStructure } from './tools/get-file-structure.js';
 import { detectUISignalsTool, detectUISignals } from './tools/detect-ui-signals.js';
 import { extractDesignTokensTool, extractDesignTokens } from './tools/extract-design-tokens.js';
+import { getNodeDetailsTool, getNodeDetails } from './tools/get-node-details.js';
 
 // Initialisation
 let figmaClient: FigmaClient;
@@ -46,7 +47,7 @@ const server = new Server(
 // Handler: Liste des tools disponibles
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
-    tools: [searchFilesTool, getFileStructureTool, detectUISignalsTool, extractDesignTokensTool],
+    tools: [searchFilesTool, getFileStructureTool, detectUISignalsTool, extractDesignTokensTool, getNodeDetailsTool],
   };
 });
 
@@ -82,6 +83,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           throw new Error('Invalid arguments: fileId (string) is required');
         }
         return await extractDesignTokens(figmaClient, args.fileId);
+      }
+
+      case 'get_node_details': {
+        if (!args || typeof args.fileId !== 'string' || typeof args.nodeId !== 'string') {
+          throw new Error('Invalid arguments: fileId (string) and nodeId (string) are required');
+        }
+        return await getNodeDetails(figmaClient, args.fileId, args.nodeId);
       }
 
       default:

@@ -17,11 +17,41 @@ export interface FigmaProject {
   name: string;
 }
 
+/** Propriétés complètes d'un nœud Figma (layout, visuel, géométrie) */
 export interface FigmaNode {
   id: string;
   name: string;
   type: string;
   children?: FigmaNode[];
+  // Layout
+  layoutMode?: 'NONE' | 'HORIZONTAL' | 'VERTICAL';
+  primaryAxisAlignItems?: string;
+  counterAxisAlignItems?: string;
+  primaryAxisSizingMode?: string;
+  counterAxisSizingMode?: string;
+  itemSpacing?: number;
+  paddingLeft?: number;
+  paddingRight?: number;
+  paddingTop?: number;
+  paddingBottom?: number;
+  // Géométrie
+  absoluteBoundingBox?: { x: number; y: number; width: number; height: number };
+  size?: { x: number; y: number };
+  // Visuel
+  fills?: Array<{ type: string; color?: { r: number; g: number; b: number; a: number }; opacity?: number }>;
+  strokes?: Array<{ type: string; color?: { r: number; g: number; b: number; a: number } }>;
+  opacity?: number;
+  visible?: boolean;
+  // Composant
+  componentPropertyDefinitions?: Record<string, {
+    type: string;
+    defaultValue: unknown;
+    variantOptions?: string[];
+  }>;
+  componentProperties?: Record<string, { type: string; value: unknown }>;
+  // Texte
+  characters?: string;
+  style?: Record<string, unknown>;
 }
 
 export interface FigmaFileResponse {
@@ -29,6 +59,12 @@ export interface FigmaFileResponse {
   lastModified: string;
   thumbnailUrl?: string;
   document: FigmaNode;
+}
+
+export interface FigmaNodeDetail {
+  node: FigmaNode;
+  fileId: string;
+  nodeId: string;
 }
 
 /** Codes d'erreur axios considérés comme des erreurs réseau/timeout retriables */
@@ -97,13 +133,12 @@ async function withRetry<T>(
           (status !== undefined && RETRYABLE_HTTP_STATUSES.has(status));
 
         if (isRetryable && attempt <= maxRetries) {
-          const delay = baseDelayMs * Math.pow(2, attempt - 1); // 1s, 2s
+          const delay = baseDelayMs * Math.pow(2, attempt - 1);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
       }
 
-      // Erreur non retriable ou tentatives épuisées
       break;
     }
   }
@@ -185,6 +220,31 @@ export class FigmaClient {
   }
 
   /**
+   * Récupère les détails complets d'un nœud spécifique par son ID.
+   * Utilise GET /files/{fileId}/nodes?ids={nodeId}
+   */
+  async getNode(fileId: string, nodeId: string): Promise<FigmaNode> {
+    try {
+      const { data } = await withRetry(
+        () => this.client.get(`/files/${fileId}/nodes`, {
+          params: { ids: nodeId },
+        }),
+        this.maxRetries
+      );
+
+      const nodeData = data.nodes?.[nodeId];
+      if (!nodeData) {
+        throw new Error(`ℹ️ Nœud Figma introuvable (ID: ${nodeId}) dans le fichier ${fileId}`);
+      }
+
+      return nodeData.document as FigmaNode;
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('ℹ️')) throw error;
+      throw new Error(classifyFigmaError(error, this.maxRetries + 1, this.maxRetries));
+    }
+  }
+
+  /**
    * Extrait les frames d'un fichier
    */
   extractFrames(node: FigmaNode): FigmaNode[] {
@@ -223,7 +283,7 @@ export class FigmaClient {
   }
 
   /**
-   * Génère l'URL Figma vers un fichier
+   * Génère l'URL Figma vers un fichier ou un nœud spécifique
    */
   generateFileUrl(fileId: string, nodeId?: string): string {
     const baseUrl = `https://www.figma.com/file/${fileId}`;
@@ -361,4 +421,3 @@ export interface FigmaFileResponse {
   thumbnailUrl?: string;
   document: FigmaNode;
 }
-

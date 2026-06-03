@@ -38,7 +38,13 @@ Si la feature touche une interface utilisateur, explorer les maquettes Figma dis
      - Nombre de composants
    - Ajuster l'estimation initiale si nécessaire
 
-3. **Si aucun fichier trouvé :**
+3. **Si l'utilisateur fournit une URL Figma avec un node ID (`?node-id=...`) :**
+   - Extraire le `fileId` (partie de l'URL avant `?`) et le `nodeId` (valeur de `?node-id=`)
+   - Appeler `get_node_details(fileId, nodeId)` pour récupérer les propriétés exactes du nœud
+   - Utiliser ces détails pour affiner l'estimation (colonnes, filtres, formulaires complexes)
+   - Mentionner dans la section Figma Context les propriétés de layout trouvées
+
+4. **Si aucun fichier trouvé :**
    - Mentionner dans le rapport qu'aucune maquette Figma n'a été trouvée
    - Continuer avec l'estimation basée sur le code uniquement
 

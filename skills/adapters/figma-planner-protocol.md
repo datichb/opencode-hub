@@ -57,6 +57,21 @@ Argument : fileId du fichier
 → Obtenir : signaux UX/UI, complexité, recommandations
 ```
 
+#### Étape 2bis : Analyse d'un nœud spécifique (si node ID fourni)
+
+Si l'utilisateur a fourni une URL Figma contenant `?node-id=` (ex: `https://www.figma.com/file/ABC123?node-id=122-29189`) :
+
+```
+Utiliser l'outil : get_node_details
+Arguments : fileId (clé du fichier), nodeId (valeur de ?node-id=)
+→ Obtenir : layout (colonnes/lignes), spacing, padding, propriétés composant, géométrie
+```
+
+Utiliser ces détails pour :
+- Décrire précisément les colonnes, filtres ou composants d'une zone
+- Affiner le découpage en tickets (chaque nœud enfant peut être un ticket)
+- Pré-remplir le champ `--design` des tickets avec les propriétés Figma exactes
+
 #### Étape 3 : Enrichissement du contexte
 
 Intégrer les données Figma dans le récap Phase 1 :
