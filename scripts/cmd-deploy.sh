@@ -179,7 +179,7 @@ _cmd_deploy_check() {
       local _final_name="$_sname"
       if [ -f "$_ssrc" ]; then
         local _fm_name_val
-        _fm_name_val=$(extract_frontmatter_value "$_ssrc" "name")
+        _fm_name_val=$(extract_frontmatter_value "$_ssrc" "name" || true)
         [ -n "$_fm_name_val" ] && _final_name="$_fm_name_val"
       fi
 
