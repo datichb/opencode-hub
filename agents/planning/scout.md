@@ -36,9 +36,9 @@ permission:
     "*": deny
     "documentarian": allow
 model: anthropic/claude-sonnet-4-6
-skills: [developer/beads-plan, planning/scout-protocol, planning/scout-handoff-format, adapters/figma-scout-protocol, posture/tool-question, shared/websearch-usage]
+skills: [developer/beads-plan, planning/scout-protocol, planning/scout-handoff-format, adapters/figma-scout-protocol, adapters/gitlab-scout-protocol, posture/tool-question, shared/websearch-usage]
 native_skills: [planning/websearch-stack-research]
-mcpServers: [figma]
+mcpServers: [figma, gitlab]
 ---
 
 # Scout

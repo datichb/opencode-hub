@@ -30,10 +30,21 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
   - Bilingue FR/EN (détection via `OC_LANG`)
   - Compatible mode non-interactif (`OC_NON_INTERACTIVE=1` + env vars pré-définies pour CI/CD)
   - Stockage dans `~/.config/opencode/config.json` (section `env`) — compatible avec le mécanisme MCP existant
-  - Services disponibles : **Figma** (`figma-mcp`) et **GitLab** (`gitlab-mcp`, serveur MCP à venir)
+  - Services disponibles : **Figma** (`figma-mcp`) et **GitLab** (`gitlab-mcp`)
   - Nouvelle bibliothèque partagée `scripts/lib/services.sh` — 37 tests unitaires
   - 20 tests d'intégration pour `cmd-service.sh`
   - Documentation : `docs/reference/services.fr.md` + `docs/reference/services.en.md`
+
+- **MCP Server GitLab** (`servers/gitlab-mcp/`) — nouveau serveur MCP en lecture seule pour l'intégration GitLab :
+  - 5 tools MCP : `get_gitlab_issue`, `list_gitlab_issues`, `get_gitlab_merge_request`, `list_gitlab_labels`, `list_gitlab_milestones`
+  - Client `GitLabClient` avec axios, retry/backoff exponentiel (429/503/504 + erreurs réseau) et `classifyGitlabError()`
+  - Support instances self-hosted via `GITLAB_BASE_URL`
+  - SDK `@modelcontextprotocol/sdk` upgradé vers `^1.11.0` (figma-mcp + gitlab-mcp — 27 tests existants passent)
+  - 4 skills adapters : `adapters/gitlab-orchestrator-protocol`, `gitlab-scout-protocol`, `gitlab-planner-protocol`, `gitlab-onboarder-protocol`
+  - Agents mis à jour : `orchestrator`, `scout`, `planner`, `onboarder` — `mcpServers: [gitlab]` + skill adapters ajoutés
+  - Déploiement automatique via `scripts/lib/mcp-deploy.sh` (case `gitlab-mcp` ajouté)
+  - Configuration via `oc service setup gitlab` / `oc gitlab setup`
+  - Documentation : `docs/guides/gitlab-integration.fr.md` + `docs/guides/gitlab-integration.en.md`
 
 - **`oc config set` unifié (hub-level)** — `oc config set` sans PROJECT_ID supporte désormais tous les flags provider :
   - Mode interactif (sans flags) : lance le wizard de sélection provider identique à l'ancien `oc provider set-default`

@@ -8,11 +8,14 @@ Chaque sous-dossier est un MCP server indépendant :
 
 ```
 servers/
-├── figma-mcp/           ← Intégration Figma
+├── figma-mcp/           ← Intégration Figma (design, UI signals, tokens)
 │   ├── src/
 │   ├── dist/            ← Compilé (gitignored)
 │   └── package.json
-└── [futur-mcp]/         ← Futurs MCP (Linear, Notion, etc.)
+└── gitlab-mcp/          ← Intégration GitLab (issues, MRs, labels, milestones)
+    ├── src/
+    ├── dist/            ← Compilé (gitignored)
+    └── package.json
 ```
 
 ## Développement
@@ -25,17 +28,27 @@ bash scripts/build-mcp.sh
 
 # Build un seul MCP
 bash scripts/build-mcp.sh figma-mcp
+bash scripts/build-mcp.sh gitlab-mcp
 ```
 
 ### Tester un MCP localement
 
 ```bash
+# Figma
 cd servers/figma-mcp
 npm install
 npm run dev  # Mode watch
 
 # Dans un autre terminal
 FIGMA_PERSONAL_ACCESS_TOKEN=xxx npm start
+
+# GitLab
+cd servers/gitlab-mcp
+npm install
+npm run dev
+
+# Dans un autre terminal
+GITLAB_PERSONAL_ACCESS_TOKEN=glpat-xxx GITLAB_BASE_URL=https://gitlab.mycompany.com npm start
 ```
 
 ## Déploiement
@@ -55,13 +68,22 @@ Le script `deploy.sh` :
 
 ## Configuration
 
-Les tokens et variables d'environnement sont gérés dans `~/.config/opencode/config.json` :
+Les tokens et variables d'environnement sont gérés via `oc service` :
+
+```bash
+oc service setup figma    # Configure Figma
+oc service setup gitlab   # Configure GitLab
+```
+
+Ou manuellement dans `~/.config/opencode/config.json` :
 
 ```json
 {
   "env": {
-    "FIGMA_TOKEN": "figd_xxx",
-    "FIGMA_TEAM_ID": "123456"
+    "FIGMA_PERSONAL_ACCESS_TOKEN": "figd_xxx",
+    "FIGMA_TEAM_ID": "123456",
+    "GITLAB_PERSONAL_ACCESS_TOKEN": "glpat-xxx",
+    "GITLAB_BASE_URL": "https://gitlab.mycompany.com"
   }
 }
 ```
@@ -71,6 +93,7 @@ Les tokens et variables d'environnement sont gérés dans `~/.config/opencode/co
 1. Créer le dossier `servers/nouveau-mcp/`
 2. Initialiser : `npm init` + installer `@modelcontextprotocol/sdk`
 3. Implémenter `src/index.ts` (entry point MCP)
-4. Ajouter la config dans `scripts/deploy.sh` (fonction `configure_mcp_in_project`)
-5. Build : `bash scripts/build-mcp.sh nouveau-mcp`
-6. Déployer : `oc deploy opencode MY-APP`
+4. Ajouter le `case nouveau-mcp` dans `scripts/lib/mcp-deploy.sh` (fonction `configure_mcp_in_project`)
+5. Déclarer le service dans `config/services.json`
+6. Build : `bash scripts/build-mcp.sh nouveau-mcp`
+7. Déployer : `oc deploy opencode MY-APP`

@@ -158,6 +158,35 @@ configure_mcp_in_project() {
           mv "$opencode_json.bak" "$opencode_json"
         fi
         ;;
+      gitlab-mcp)
+        local global_env="{}"
+        if declare -F svc_get_all_env_for_service &>/dev/null; then
+          global_env=$(svc_get_all_env_for_service "gitlab" 2>/dev/null || printf '{}')
+        fi
+
+        local project_env="{}"
+        project_env=$(jq -r '.mcp["gitlab-mcp"].environment // {}' "$opencode_json" 2>/dev/null || printf '{}')
+
+        local merged_env
+        merged_env=$(printf '%s\n%s' "$global_env" "$project_env" \
+          | jq -s '.[0] * .[1]' 2>/dev/null || printf '{}')
+
+        local tmp
+        tmp=$(mktemp)
+        if jq --argjson env "$merged_env" \
+          '.mcp["gitlab-mcp"] = {
+            "type": "local",
+            "command": ["node", ".opencode/servers/gitlab-mcp/dist/index.js"],
+            "environment": $env
+          }' "$opencode_json" > "$tmp"; then
+          mv "$tmp" "$opencode_json"
+          configured_count=$((configured_count + 1))
+        else
+          log_error "Erreur lors de la configuration de $server_name"
+          rm -f "$tmp"
+          mv "$opencode_json.bak" "$opencode_json"
+        fi
+        ;;
       # Autres MCP servers ici...
     esac
   done

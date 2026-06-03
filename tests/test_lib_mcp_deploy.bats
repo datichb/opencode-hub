@@ -25,6 +25,14 @@ setup() {
         {"key": "FIGMA_PERSONAL_ACCESS_TOKEN", "secret": true, "required": true},
         {"key": "FIGMA_TEAM_ID", "secret": false, "required": true}
       ]
+    },
+    "gitlab": {
+      "label": "GitLab",
+      "mcp_server": "gitlab-mcp",
+      "credentials": [
+        {"key": "GITLAB_PERSONAL_ACCESS_TOKEN", "secret": true, "required": true},
+        {"key": "GITLAB_BASE_URL", "secret": false, "required": false}
+      ]
     }
   }
 }
@@ -487,4 +495,88 @@ EOF
   [ "$output" = "local" ]
   run jq -r '.mcp["figma-mcp"].environment | length' "$deploy_dir/opencode.json"
   [ "$output" = "0" ]
+}
+
+# ── gitlab-mcp ────────────────────────────────────────────────────────────────
+
+@test "configure_mcp_in_project : configure gitlab-mcp" {
+  local deploy_dir="$TEST_DIR/project"
+  mkdir -p "$deploy_dir/.opencode/servers/gitlab-mcp/dist"
+
+  cat > "$deploy_dir/opencode.json" <<'EOF'
+{
+  "$schema": "https://opencode.ai/config.json"
+}
+EOF
+
+  which jq >/dev/null 2>&1 || skip "jq non disponible"
+
+  configure_mcp_in_project "$deploy_dir"
+
+  # La config MCP gitlab-mcp doit être créée
+  assert_json_field "$deploy_dir/opencode.json" \
+    '.mcp["gitlab-mcp"].type' "local"
+  run jq -r '.mcp["gitlab-mcp"].command[1]' "$deploy_dir/opencode.json"
+  [ "$output" = ".opencode/servers/gitlab-mcp/dist/index.js" ]
+}
+
+@test "configure_mcp_in_project : injecte credentials globaux gitlab depuis services-env.json" {
+  local deploy_dir="$TEST_DIR/project"
+  mkdir -p "$deploy_dir/.opencode/servers/gitlab-mcp/dist"
+
+  cat > "$deploy_dir/opencode.json" <<'EOF'
+{
+  "$schema": "https://opencode.ai/config.json"
+}
+EOF
+
+  # Configurer credentials globaux dans services-env.json
+  printf '{"env":{"GITLAB_PERSONAL_ACCESS_TOKEN":"glpat-global","GITLAB_BASE_URL":"https://gitlab.example.com"}}\n' \
+    > "$OPENCODE_GLOBAL_CONFIG"
+
+  which jq >/dev/null 2>&1 || skip "jq non disponible"
+
+  configure_mcp_in_project "$deploy_dir"
+
+  # Les credentials globaux doivent être injectés dans environment
+  assert_json_field "$deploy_dir/opencode.json" \
+    '.mcp["gitlab-mcp"].environment.GITLAB_PERSONAL_ACCESS_TOKEN' "glpat-global"
+  assert_json_field "$deploy_dir/opencode.json" \
+    '.mcp["gitlab-mcp"].environment.GITLAB_BASE_URL' "https://gitlab.example.com"
+}
+
+@test "configure_mcp_in_project : project env gitlab écrase le global" {
+  local deploy_dir="$TEST_DIR/project"
+  mkdir -p "$deploy_dir/.opencode/servers/gitlab-mcp/dist"
+
+  # opencode.json avec override projet existant
+  cat > "$deploy_dir/opencode.json" <<'EOF'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "gitlab-mcp": {
+      "type": "local",
+      "command": ["node", ".opencode/servers/gitlab-mcp/dist/index.js"],
+      "environment": {
+        "GITLAB_PERSONAL_ACCESS_TOKEN": "glpat-project-override",
+        "GITLAB_BASE_URL": "https://gitlab.project.com"
+      }
+    }
+  }
+}
+EOF
+
+  # Credentials globaux différents
+  printf '{"env":{"GITLAB_PERSONAL_ACCESS_TOKEN":"glpat-global","GITLAB_BASE_URL":"https://gitlab.global.com"}}\n' \
+    > "$OPENCODE_GLOBAL_CONFIG"
+
+  which jq >/dev/null 2>&1 || skip "jq non disponible"
+
+  configure_mcp_in_project "$deploy_dir"
+
+  # Le token projet doit primer sur le global
+  assert_json_field "$deploy_dir/opencode.json" \
+    '.mcp["gitlab-mcp"].environment.GITLAB_PERSONAL_ACCESS_TOKEN' "glpat-project-override"
+  assert_json_field "$deploy_dir/opencode.json" \
+    '.mcp["gitlab-mcp"].environment.GITLAB_BASE_URL' "https://gitlab.project.com"
 }

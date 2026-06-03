@@ -229,5 +229,6 @@ Il suffit d'ajouter une entrée dans `config/services.json`. Aucune modification
 ## Voir aussi
 
 - [Guide d'intégration Figma](../guides/figma-integration.fr.md)
+- [Guide d'intégration GitLab](../guides/gitlab-integration.fr.md)
 - [Référence CLI complète](cli.fr.md)
 - [Architecture des serveurs MCP](../../servers/README.md)

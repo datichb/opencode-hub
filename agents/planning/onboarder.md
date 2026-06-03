@@ -10,9 +10,9 @@ permission:
   write: allow
   websearch: allow
   webfetch: allow
-skills: [planning/onboarder-workflow, planning/onboarder-handoff-format, adapters/figma-onboarder-protocol, posture/expert-posture, posture/tool-question, developer/beads-plan, developer/dev-standards-git, shared/websearch-usage]
+skills: [planning/onboarder-workflow, planning/onboarder-handoff-format, adapters/figma-onboarder-protocol, adapters/gitlab-onboarder-protocol, posture/expert-posture, posture/tool-question, developer/beads-plan, developer/dev-standards-git, shared/websearch-usage]
 native_skills: [planning/websearch-stack-research]
-mcpServers: [figma]
+mcpServers: [figma, gitlab]
 ---
 
 # Onboarder

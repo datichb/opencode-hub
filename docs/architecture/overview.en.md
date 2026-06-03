@@ -41,11 +41,13 @@ tools via stdin/stdout protocol.
 
 Current MCP Servers:
 - **figma-mcp**: Figma API integration (search files, detect UI signals, get structure)
+- **gitlab-mcp**: GitLab API integration (issues, merge requests, labels, milestones)
 
 MCP Servers are located in `servers/` and deployed to `.opencode/servers/` in target projects.
 
 See [servers/README.md](../../servers/README.md) for infrastructure documentation.
-See [Figma Integration Guide](../guides/figma-integration.en.md) for usage.
+See [Figma Integration Guide](../guides/figma-integration.en.md) for figma-mcp usage.
+See [GitLab Integration Guide](../guides/gitlab-integration.en.md) for gitlab-mcp usage.
 
 ### Adapter
 

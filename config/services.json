@@ -67,8 +67,8 @@
           "secret": true,
           "required": true,
           "validation_pattern": "^glpat-",
-          "help_en": "Create a token at GitLab > Settings > Access Tokens\nRequired scopes: api, read_user",
-          "help_fr": "Créez un token sur GitLab > Paramètres > Access Tokens\nScopes requis : api, read_user"
+          "help_en": "Create a token at <your-gitlab>/-/profile/personal_access_tokens\nRequired scopes: api (full API access including issues, MRs, labels, milestones), read_user (identity validation)\nNote: for self-hosted instances, replace the URL accordingly.",
+          "help_fr": "Créez un token sur <votre-gitlab>/-/profile/personal_access_tokens\nScopes requis : api (accès complet à l'API : issues, MRs, labels, milestones), read_user (validation d'identité)\nNote : pour une instance self-hosted, remplacer l'URL en conséquence."
         },
         {
           "key": "GITLAB_BASE_URL",
@@ -77,8 +77,18 @@
           "secret": false,
           "required": false,
           "default": "https://gitlab.com",
-          "help_en": "Your GitLab instance URL (leave empty for gitlab.com)",
-          "help_fr": "URL de votre instance GitLab (laisser vide pour gitlab.com)"
+          "help_en": "Base URL of your GitLab instance (leave empty for gitlab.com).\nExample for self-hosted: https://gitlab.mycompany.com",
+          "help_fr": "URL de base de votre instance GitLab (laisser vide pour gitlab.com).\nExemple self-hosted : https://gitlab.monentreprise.com"
+        },
+        {
+          "key": "GITLAB_TIMEOUT",
+          "label_en": "Request timeout (ms)",
+          "label_fr": "Timeout des requêtes (ms)",
+          "secret": false,
+          "required": false,
+          "default": "30000",
+          "help_en": "Timeout in milliseconds for GitLab API requests (default: 30000 = 30s). Increase for slow self-hosted instances.",
+          "help_fr": "Timeout en millisecondes pour les requêtes API GitLab (défaut : 30000 = 30s). Augmenter pour les instances self-hosted lentes."
         }
       ]
     }
