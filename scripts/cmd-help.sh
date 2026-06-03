@@ -99,6 +99,7 @@ _cmd help.service_setup
 _cmd help.service_status
 _cmd help.service_list
 _cmd help.service_remove
+_cmd help.service_deploy
 
 _section help.section.beads
 _cmd help.beads_status

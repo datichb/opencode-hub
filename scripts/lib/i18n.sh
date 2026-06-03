@@ -135,6 +135,8 @@ t() {
       help.service_list.desc)   printf '%s' "Liste les services disponibles et leur état" ;;
       help.service_remove.cmd)  printf '%s' "service remove <nom>" ;;
       help.service_remove.desc) printf '%s' "Supprime la configuration d'un service" ;;
+      help.service_deploy.cmd)  printf '%s' "service deploy <nom> [--project ID]" ;;
+      help.service_deploy.desc) printf '%s' "Déploie le serveur MCP dans un projet" ;;
       # Beads
       help.beads_status.cmd)  printf '%s' "beads status [PROJECT_ID]" ;;
       help.beads_status.desc) printf '%s' "Vérifie si Beads est initialisé (tous si sans ID)" ;;
@@ -781,6 +783,8 @@ t_en() {
     help.service_list.desc)   printf '%s' "List available services and their status" ;;
     help.service_remove.cmd)  printf '%s' "service remove <name>" ;;
     help.service_remove.desc) printf '%s' "Remove a service configuration" ;;
+    help.service_deploy.cmd)  printf '%s' "service deploy <name> [--project ID]" ;;
+    help.service_deploy.desc) printf '%s' "Deploy the MCP server into a project" ;;
     # Beads
     help.beads_status.cmd)  printf '%s' "beads status [PROJECT_ID]" ;;
     help.beads_status.desc) printf '%s' "Check if Beads is initialized (all if no ID)" ;;
