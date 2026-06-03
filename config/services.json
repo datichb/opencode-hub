@@ -22,8 +22,8 @@
           "secret": true,
           "required": true,
           "validation_pattern": "^figd_",
-          "help_en": "Create a token at https://www.figma.com/developers/api#authentication\nRequired scopes: file:read, projects:read",
-          "help_fr": "Créez un token sur https://www.figma.com/developers/api#authentication\nScopes requis : file:read, projects:read"
+          "help_en": "Create a token at https://www.figma.com/settings (Security tab > Personal access tokens)\nRequired scopes: current_user:read, file_content:read, file_metadata:read, project_metadata:read, projects:read, library_assets:read\nOptional (Enterprise only): file_variables:read\nNote: the legacy scopes file:read and files:read are deprecated.",
+          "help_fr": "Créez un token sur https://www.figma.com/settings (onglet Sécurité > Personal access tokens)\nScopes requis : current_user:read, file_content:read, file_metadata:read, project_metadata:read, projects:read, library_assets:read\nOptionnel (Enterprise uniquement) : file_variables:read\nNote : les anciens scopes file:read et files:read sont dépréciés."
         },
         {
           "key": "FIGMA_TEAM_ID",

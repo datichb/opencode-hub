@@ -76,9 +76,19 @@ EOF
 #### How to get these values:
 
 **FIGMA_PERSONAL_ACCESS_TOKEN :**
-1. Aller sur https://www.figma.com/developers/api#authentication
-2. Section "Personal access tokens"
-3. Générer un nouveau token avec scopes : `file:read`, `projects:read`
+1. Aller sur https://www.figma.com/settings (onglet **Security**)
+2. Section "Personal access tokens" → cliquer **Generate new token**
+3. Sélectionner les scopes suivants (voir détail ci-dessous) :
+   - `current_user:read` — requis pour valider le token via `/v1/me`
+   - `file_content:read` — lire le contenu des fichiers Figma
+   - `file_metadata:read` — lire les métadonnées des fichiers
+   - `project_metadata:read` — lire les métadonnées des projets
+   - `projects:read` — lister les projets et fichiers d'une team
+   - `library_assets:read` — lire les composants et styles publiés
+   - `file_variables:read` _(optionnel, Enterprise uniquement)_ — lire les variables/design tokens
+
+> **Note :** Les anciens scopes `file:read` et `files:read` sont **dépréciés** par Figma. Utiliser les scopes granulaires ci-dessus.
+> Référence officielle : https://developers.figma.com/docs/rest-api/scopes
 
 **FIGMA_TEAM_ID :**
 1. Aller sur votre team Figma
@@ -169,7 +179,7 @@ opencode
 - [ ] Token Figma obtenu
 - [ ] Team ID récupéré
 - [ ] `~/.config/opencode/config.json` créé avec les bonnes valeurs
-- [ ] Permissions token Figma : `file:read`, `projects:read`
+- [ ] Permissions token Figma : `current_user:read`, `file_content:read`, `file_metadata:read`, `project_metadata:read`, `projects:read`, `library_assets:read`
 
 ### Déploiement
 - [ ] Projet test enregistré dans le hub (`./oc.sh init TEST-PROJECT`)
@@ -194,6 +204,31 @@ opencode
 
 ## 🔧 Dépannage
 
+### Le token est refusé ("token invalide")
+
+**Erreur :** `Invalid scope(s): ... This endpoint requires the current_user:read scope`
+
+**Cause :** Le Personal Access Token a été créé sans le scope `current_user:read`, qui est obligatoire pour l'endpoint de validation `/v1/me` utilisé par `oc service status figma`.
+
+**Solution :** Régénérer un nouveau token en cochant tous les scopes requis :
+
+| Scope | Usage |
+|---|---|
+| `current_user:read` | Validation du token (endpoint `/v1/me`) |
+| `file_content:read` | Lecture du contenu des fichiers Figma |
+| `file_metadata:read` | Lecture des métadonnées de fichiers |
+| `project_metadata:read` | Lecture des métadonnées de projets |
+| `projects:read` | Listage des projets et fichiers d'une team |
+| `library_assets:read` | Lecture des composants et styles publiés |
+| `file_variables:read` | _(Optionnel, Enterprise uniquement)_ Design tokens |
+
+> Les anciens scopes `file:read` / `files:read` sont **dépréciés** — ne pas les utiliser.
+
+Une fois le nouveau token créé, le mettre à jour :
+```bash
+oc service setup figma
+```
+
 ### Le MCP ne trouve pas le token
 
 **Erreur :** `FIGMA_PERSONAL_ACCESS_TOKEN environment variable is required`
@@ -216,7 +251,7 @@ opencode
 **Solution :**
 - Vérifier le Team ID dans l'URL Figma
 - Renommer les fichiers selon les conventions
-- Vérifier les scopes du token : `file:read`, `projects:read`
+- Vérifier les scopes du token : `current_user:read`, `file_content:read`, `file_metadata:read`, `project_metadata:read`, `projects:read`, `library_assets:read`
 
 ### Erreur lors du build TypeScript
 
