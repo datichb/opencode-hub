@@ -94,61 +94,84 @@ deploy_mcp_servers() {
 }
 
 # Configure opencode.json avec les MCP servers
+# Utilise le format validé par le schéma opencode :
+#   mcp.<server-name> = { type, command (array), environment }
+# Les credentials sont injectés depuis services-env.json (global),
+# sauf si un override explicite existe déjà dans opencode.json du projet.
 configure_mcp_in_project() {
   local deploy_dir=$1
   local opencode_json="$deploy_dir/opencode.json"
-  
+
   # Vérifier que opencode.json existe
   [ ! -f "$opencode_json" ] && return 0
-  
+
   echo -e "${CYAN}⚙️  Configuration des MCP servers${RESET}"
   echo ""
-  
+
   # Sauvegarder l'original
   cp "$opencode_json" "$opencode_json.bak"
-  
+
   local configured_count=0
-  
+
   # Pour chaque MCP déployé, ajouter la config
   for server_dir in "$deploy_dir/.opencode/servers/"*/; do
     [ ! -d "$server_dir" ] && continue
-    
+
     local server_name
     server_name=$(basename "$server_dir")
-    
+
     echo "  → Configuration de $server_name"
-    
+
     # Configuration spécifique par serveur
     case "$server_name" in
       figma-mcp)
-        # Ajouter la config Figma dans opencode.json
-        # Utiliser `if jq ...; then` : évite un exit prématuré sous set -e si jq échoue
-        if jq '.mcpServers.figma = {
-          "command": "node",
-          "args": [".opencode/servers/figma-mcp/dist/index.js"]
-        }' "$opencode_json" > "$opencode_json.tmp"; then
-          mv "$opencode_json.tmp" "$opencode_json"
+        # ── Calcul des credentials à injecter ────────────────────────────
+        # 1. Lire les credentials globaux depuis services-env.json
+        local global_env="{}"
+        if declare -F svc_get_all_env_for_service &>/dev/null; then
+          global_env=$(svc_get_all_env_for_service "figma" 2>/dev/null || printf '{}')
+        fi
+
+        # 2. Lire les overrides explicites déjà présents dans opencode.json
+        local project_env="{}"
+        project_env=$(jq -r '.mcp["figma-mcp"].environment // {}' "$opencode_json" 2>/dev/null || printf '{}')
+
+        # 3. Merger : project_env écrase global_env (Option A)
+        local merged_env
+        merged_env=$(printf '%s\n%s' "$global_env" "$project_env" \
+          | jq -s '.[0] * .[1]' 2>/dev/null || printf '{}')
+
+        # ── Écriture dans opencode.json (format schéma opencode valide) ──
+        local tmp
+        tmp=$(mktemp)
+        if jq --argjson env "$merged_env" \
+          '.mcp["figma-mcp"] = {
+            "type": "local",
+            "command": ["node", ".opencode/servers/figma-mcp/dist/index.js"],
+            "environment": $env
+          }' "$opencode_json" > "$tmp"; then
+          mv "$tmp" "$opencode_json"
           configured_count=$((configured_count + 1))
         else
           log_error "Erreur lors de la configuration de $server_name"
-          rm -f "$opencode_json.tmp"
+          rm -f "$tmp"
           mv "$opencode_json.bak" "$opencode_json"
         fi
         ;;
       # Autres MCP servers ici...
     esac
   done
-  
+
   # Supprimer le backup si tout s'est bien passé
   [ -f "$opencode_json.bak" ] && rm "$opencode_json.bak"
-  
+
   echo ""
-  
+
   if [ $configured_count -eq 0 ]; then
     log_info "  Aucun MCP configuré"
   else
     log_info "  ✓ $configured_count MCP server(s) configuré(s) dans opencode.json"
   fi
-  
+
   echo ""
 }

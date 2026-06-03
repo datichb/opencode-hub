@@ -104,6 +104,8 @@ teardown() {
   unset -f svc_list_available svc_exists svc_get_field svc_credential_count \
             svc_get_credential svc_localized svc_localized_credential \
             svc_get_env_value svc_set_env_value svc_remove_env_values \
+            svc_get_project_env_value svc_set_project_env_value svc_remove_project_env_values \
+            svc_get_all_env_for_service \
             svc_is_configured svc_validate_token svc_is_mcp_built svc_build_mcp \
             _svc_ensure_config_file 2>/dev/null || true
 }
@@ -240,6 +242,9 @@ teardown() {
   svc_set_env_value "FIGMA_PERSONAL_ACCESS_TOKEN" "figd_test123"
   [ -f "$OPENCODE_GLOBAL_CONFIG" ]
   assert_json_valid "$OPENCODE_GLOBAL_CONFIG"
+  # Le fichier créé ne doit pas contenir $schema opencode (séparation des configs)
+  run jq -e '."$schema"' "$OPENCODE_GLOBAL_CONFIG"
+  [ "$status" -ne 0 ]
   assert_json_field "$OPENCODE_GLOBAL_CONFIG" '.env.FIGMA_PERSONAL_ACCESS_TOKEN' "figd_test123"
 }
 
@@ -435,4 +440,89 @@ EOF
 EOF
   run svc_is_mcp_built "nomcp"
   [ "$status" -eq 0 ]
+}
+
+# ── svc_set_project_env_value / svc_get_project_env_value ─────────────────────
+
+@test "svc_set_project_env_value : opencode.json absent -- retourne 1 sans planter" {
+  local project_dir="$TEST_DIR/no-project"
+  mkdir -p "$project_dir"
+  # Pas de opencode.json
+
+  run svc_set_project_env_value "$project_dir" "figma-mcp" "FIGMA_PERSONAL_ACCESS_TOKEN" "figd_x"
+  [ "$status" -ne 0 ]
+}
+
+@test "svc_set_project_env_value : crée mcp.<server>.environment dans opencode.json" {
+  local project_dir="$TEST_DIR/project"
+  mkdir -p "$project_dir"
+  printf '{"$schema":"https://opencode.ai/config.json","model":"claude"}\n' \
+    > "$project_dir/opencode.json"
+
+  svc_set_project_env_value "$project_dir" "figma-mcp" "FIGMA_PERSONAL_ACCESS_TOKEN" "figd_proj123"
+
+  assert_json_valid "$project_dir/opencode.json"
+  assert_json_field "$project_dir/opencode.json" '.mcp["figma-mcp"].environment.FIGMA_PERSONAL_ACCESS_TOKEN' "figd_proj123"
+}
+
+@test "svc_set_project_env_value : préserve les autres clés de opencode.json" {
+  local project_dir="$TEST_DIR/project"
+  mkdir -p "$project_dir"
+  printf '{"model":"claude","agent":{"build":{}}}\n' > "$project_dir/opencode.json"
+
+  svc_set_project_env_value "$project_dir" "figma-mcp" "FIGMA_TEAM_ID" "99999"
+
+  assert_json_field "$project_dir/opencode.json" '.model' "claude"
+  assert_json_field "$project_dir/opencode.json" '.mcp["figma-mcp"].environment.FIGMA_TEAM_ID' "99999"
+}
+
+@test "svc_get_project_env_value : clé présente -- retourne la valeur projet" {
+  local project_dir="$TEST_DIR/project"
+  mkdir -p "$project_dir"
+  printf '{"mcp":{"figma-mcp":{"environment":{"FIGMA_PERSONAL_ACCESS_TOKEN":"figd_abc"}}}}\n' \
+    > "$project_dir/opencode.json"
+
+  run svc_get_project_env_value "$project_dir" "figma-mcp" "FIGMA_PERSONAL_ACCESS_TOKEN"
+  [ "$status" -eq 0 ]
+  [ "$output" = "figd_abc" ]
+}
+
+@test "svc_get_project_env_value : clé absente -- retourne vide" {
+  local project_dir="$TEST_DIR/project"
+  mkdir -p "$project_dir"
+  printf '{"mcp":{"figma-mcp":{"environment":{}}}}\n' > "$project_dir/opencode.json"
+
+  run svc_get_project_env_value "$project_dir" "figma-mcp" "NONEXISTENT"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+# ── svc_remove_project_env_values ─────────────────────────────────────────────
+
+@test "svc_remove_project_env_values : supprime les clés figma du projet" {
+  local project_dir="$TEST_DIR/project"
+  mkdir -p "$project_dir"
+  printf '{
+    "model":"claude",
+    "mcp":{
+      "figma-mcp":{
+        "type":"local",
+        "command":["node","dist/index.js"],
+        "environment":{
+          "FIGMA_PERSONAL_ACCESS_TOKEN":"figd_x",
+          "FIGMA_TEAM_ID":"123"
+        }
+      }
+    }
+  }\n' > "$project_dir/opencode.json"
+
+  svc_remove_project_env_values "$project_dir" "figma"
+
+  assert_json_valid "$project_dir/opencode.json"
+  # Les clés Figma doivent être supprimées
+  run jq -r '.mcp["figma-mcp"].environment.FIGMA_PERSONAL_ACCESS_TOKEN // empty' \
+    "$project_dir/opencode.json"
+  [ -z "$output" ]
+  # Les autres clés du projet doivent être préservées
+  assert_json_field "$project_dir/opencode.json" '.model' "claude"
 }

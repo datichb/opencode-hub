@@ -9,8 +9,9 @@ _SERVICES_LOADED=1
 # Chemin du catalogue des services
 SERVICES_FILE="${SERVICES_FILE:-$HUB_DIR/config/services.json}"
 
-# Chemin de la config opencode globale (~/.config/opencode/config.json)
-OPENCODE_GLOBAL_CONFIG="${OPENCODE_GLOBAL_CONFIG:-$HOME/.config/opencode/config.json}"
+# Chemin du fichier de stockage des credentials de services
+# Fichier séparé de opencode.json pour ne pas invalider la config opencode
+OPENCODE_GLOBAL_CONFIG="${OPENCODE_GLOBAL_CONFIG:-$HOME/.config/opencode/services-env.json}"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers catalogue (lecture JSON)
@@ -110,15 +111,17 @@ svc_localized_credential() {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Helpers config (~/.config/opencode/config.json)
+# Helpers config (~/.config/opencode/services-env.json)
 # ─────────────────────────────────────────────────────────────────────────────
 
-# S'assure que le fichier de config global existe avec une structure minimale
+# S'assure que le fichier de credentials global existe avec une structure minimale
+# Ce fichier est intentionnellement séparé de opencode.json pour ne pas invalider
+# la config opencode (qui a additionalProperties: false et ne connaît pas "env")
 _svc_ensure_config_file() {
   local config_file="${1:-$OPENCODE_GLOBAL_CONFIG}"
   if [ ! -f "$config_file" ]; then
     mkdir -p "$(dirname "$config_file")"
-    printf '{\n  "$schema": "https://opencode.ai/config.json",\n  "env": {}\n}\n' > "$config_file"
+    printf '{\n  "env": {}\n}\n' > "$config_file"
   fi
   # S'assurer que la clé "env" existe
   if ! jq -e '.env' "$config_file" &>/dev/null; then
@@ -178,6 +181,95 @@ svc_remove_env_values() {
     rm -f "$tmp"
     return 1
   fi
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Helpers config par projet (mcp.<server>.environment dans opencode.json)
+# Les credentials projet ont priorité sur les credentials globaux.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Lit un credential depuis mcp.<server>.environment dans opencode.json d'un projet
+# Usage : svc_get_project_env_value "<project_path>" "<server_name>" "<KEY>"
+svc_get_project_env_value() {
+  local project_path="$1" server_name="$2" key="$3"
+  local opencode_json="$project_path/opencode.json"
+  [ -f "$opencode_json" ] || return 1
+  jq -r --arg s "$server_name" --arg k "$key" \
+    '.mcp[$s].environment[$k] // empty' "$opencode_json" 2>/dev/null
+}
+
+# Écrit un credential dans mcp.<server>.environment de opencode.json d'un projet (atomic)
+# Crée le bloc mcp.<server> s'il n'existe pas encore.
+# Usage : svc_set_project_env_value "<project_path>" "<server_name>" "<KEY>" "<value>"
+svc_set_project_env_value() {
+  local project_path="$1" server_name="$2" key="$3" value="$4"
+  local opencode_json="$project_path/opencode.json"
+  [ -f "$opencode_json" ] || return 1
+  local tmp
+  tmp=$(mktemp)
+  if jq --arg s "$server_name" --arg k "$key" --arg v "$value" \
+    '.mcp[$s].environment[$k] = $v' "$opencode_json" > "$tmp"; then
+    mv "$tmp" "$opencode_json"
+  else
+    rm -f "$tmp"
+    return 1
+  fi
+}
+
+# Supprime toutes les clés env d'un service dans opencode.json d'un projet
+# Usage : svc_remove_project_env_values "<project_path>" "<service_id>"
+svc_remove_project_env_values() {
+  local project_path="$1" service_id="$2"
+  local opencode_json="$project_path/opencode.json"
+  [ -f "$opencode_json" ] || return 0
+
+  local mcp_server
+  mcp_server=$(svc_get_field "$service_id" "mcp_server" 2>/dev/null || echo "")
+  [ -z "$mcp_server" ] && return 0
+
+  local count
+  count=$(svc_credential_count "$service_id")
+  [ -z "$count" ] || [ "$count" -eq 0 ] && return 0
+
+  local tmp
+  tmp=$(mktemp)
+  local jq_filter=". "
+  for (( i=0; i<count; i++ )); do
+    local cred_key
+    cred_key=$(svc_get_credential "$service_id" "$i" "key")
+    [ -n "$cred_key" ] && jq_filter+="| del(.mcp[\"$mcp_server\"].environment[\"$cred_key\"]) "
+  done
+  if jq "$jq_filter" "$opencode_json" > "$tmp"; then
+    mv "$tmp" "$opencode_json"
+  else
+    rm -f "$tmp"
+    return 1
+  fi
+}
+
+# Retourne toutes les valeurs env d'un service sous forme d'objet JSON
+# Usage : svc_get_all_env_for_service "figma"  → {"FIGMA_PERSONAL_ACCESS_TOKEN":"...","FIGMA_TEAM_ID":"..."}
+svc_get_all_env_for_service() {
+  local service_id="$1"
+  local config_file="${OPENCODE_GLOBAL_CONFIG}"
+  [ -f "$config_file" ] || { printf '{}'; return 0; }
+
+  local count
+  count=$(svc_credential_count "$service_id")
+  [ -z "$count" ] || [ "$count" -eq 0 ] && { printf '{}'; return 0; }
+
+  local result="{}"
+  for (( i=0; i<count; i++ )); do
+    local cred_key
+    cred_key=$(svc_get_credential "$service_id" "$i" "key")
+    [ -z "$cred_key" ] && continue
+    local val
+    val=$(svc_get_env_value "$cred_key")
+    if [ -n "$val" ]; then
+      result=$(printf '%s' "$result" | jq --arg k "$cred_key" --arg v "$val" '. + {($k): $v}')
+    fi
+  done
+  printf '%s' "$result"
 }
 
 # Vérifie si toutes les credentials requises d'un service sont configurées

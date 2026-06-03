@@ -12,7 +12,26 @@ setup() {
   export LIB_DIR="$SCRIPT_DIR/lib"
   export HUB_DIR="$BATS_TEST_DIRNAME/.."
   source "$SCRIPT_DIR/common.sh"
-  
+
+  # Sourcer les libs nécessaires (services.sh requis par mcp-deploy.sh)
+  export SERVICES_FILE="$TEST_DIR/services.json"
+  cat > "$SERVICES_FILE" <<'EOF'
+{
+  "services": {
+    "figma": {
+      "label": "Figma",
+      "mcp_server": "figma-mcp",
+      "credentials": [
+        {"key": "FIGMA_PERSONAL_ACCESS_TOKEN", "secret": true, "required": true},
+        {"key": "FIGMA_TEAM_ID", "secret": false, "required": true}
+      ]
+    }
+  }
+}
+EOF
+  export OPENCODE_GLOBAL_CONFIG="$TEST_DIR/services-env.json"
+  source "$SCRIPT_DIR/lib/services.sh"
+
   # Sourcer le module
   source "$BATS_TEST_DIRNAME/../scripts/lib/mcp-deploy.sh"
   
@@ -228,7 +247,7 @@ EOF
   # Créer opencode.json minimal
   cat > "$deploy_dir/opencode.json" <<'EOF'
 {
-  "mcpServers": {}
+  "$schema": "https://opencode.ai/config.json"
 }
 EOF
   
@@ -237,11 +256,14 @@ EOF
   
   configure_mcp_in_project "$deploy_dir"
   
-  # Vérifier que figma est configuré
-  run jq -r '.mcpServers.figma.command' "$deploy_dir/opencode.json"
+  # Vérifier que figma-mcp est configuré avec le bon format (schéma opencode valide)
+  run jq -r '.mcp["figma-mcp"].type' "$deploy_dir/opencode.json"
+  [ "$output" = "local" ]
+
+  run jq -r '.mcp["figma-mcp"].command[0]' "$deploy_dir/opencode.json"
   [ "$output" = "node" ]
   
-  run jq -r '.mcpServers.figma.args[0]' "$deploy_dir/opencode.json"
+  run jq -r '.mcp["figma-mcp"].command[1]' "$deploy_dir/opencode.json"
   [ "$output" = ".opencode/servers/figma-mcp/dist/index.js" ]
 }
 
@@ -251,7 +273,7 @@ EOF
   
   cat > "$deploy_dir/opencode.json" <<'EOF'
 {
-  "mcpServers": {}
+  "$schema": "https://opencode.ai/config.json"
 }
 EOF
   
@@ -290,7 +312,7 @@ EOF
   
   cat > "$deploy_dir/opencode.json" <<'EOF'
 {
-  "mcpServers": {}
+  "$schema": "https://opencode.ai/config.json"
 }
 EOF
   
@@ -300,9 +322,9 @@ EOF
   
   configure_mcp_in_project "$deploy_dir"
   
-  # mcpServers devrait rester vide
-  run jq -r '.mcpServers | keys | length' "$deploy_dir/opencode.json"
-  [ "$output" = "0" ]
+  # mcp ne doit pas contenir figma-mcp
+  run jq -r '.mcp["figma-mcp"] // empty' "$deploy_dir/opencode.json"
+  [ -z "$output" ]
 }
 
 # ── Intégration ─────────────────────────────────────────────────────────────
@@ -324,7 +346,7 @@ EOF
   # Créer opencode.json
   cat > "$deploy_dir/opencode.json" <<'EOF'
 {
-  "mcpServers": {}
+  "$schema": "https://opencode.ai/config.json"
 }
 EOF
   
@@ -345,8 +367,11 @@ EOF
   # Vérifier déploiement
   [ -f "$deploy_dir/.opencode/servers/figma-mcp/dist/index.js" ]
   
-  # Vérifier configuration
-  run jq -r '.mcpServers.figma.command' "$deploy_dir/opencode.json"
+  # Vérifier configuration : format schéma opencode valide
+  run jq -r '.mcp["figma-mcp"].type' "$deploy_dir/opencode.json"
+  [ "$output" = "local" ]
+
+  run jq -r '.mcp["figma-mcp"].command[0]' "$deploy_dir/opencode.json"
   [ "$output" = "node" ]
 }
 
@@ -375,4 +400,91 @@ EOF
   
   # Le serveur devrait être déployé même sans config
   [ -f "$deploy_dir/.opencode/servers/test-mcp/dist/index.js" ]
+}
+
+# ── Injection credentials ──────────────────────────────────────────────────
+
+@test "configure_mcp_in_project : injecte credentials globaux depuis services-env.json" {
+  local deploy_dir="$TEST_DIR/project"
+  mkdir -p "$deploy_dir/.opencode/servers/figma-mcp/dist"
+
+  cat > "$deploy_dir/opencode.json" <<'EOF'
+{
+  "$schema": "https://opencode.ai/config.json"
+}
+EOF
+
+  # Configurer credentials globaux dans services-env.json
+  printf '{"env":{"FIGMA_PERSONAL_ACCESS_TOKEN":"figd_global","FIGMA_TEAM_ID":"12345"}}\n' \
+    > "$OPENCODE_GLOBAL_CONFIG"
+
+  which jq >/dev/null 2>&1 || skip "jq non disponible"
+
+  configure_mcp_in_project "$deploy_dir"
+
+  # Les credentials globaux doivent être injectés dans environment
+  assert_json_field "$deploy_dir/opencode.json" \
+    '.mcp["figma-mcp"].environment.FIGMA_PERSONAL_ACCESS_TOKEN' "figd_global"
+  assert_json_field "$deploy_dir/opencode.json" \
+    '.mcp["figma-mcp"].environment.FIGMA_TEAM_ID' "12345"
+}
+
+@test "configure_mcp_in_project : project env écrase le global" {
+  local deploy_dir="$TEST_DIR/project"
+  mkdir -p "$deploy_dir/.opencode/servers/figma-mcp/dist"
+
+  # opencode.json avec override projet existant
+  cat > "$deploy_dir/opencode.json" <<'EOF'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "figma-mcp": {
+      "type": "local",
+      "command": ["node", ".opencode/servers/figma-mcp/dist/index.js"],
+      "environment": {
+        "FIGMA_PERSONAL_ACCESS_TOKEN": "figd_project_override",
+        "FIGMA_TEAM_ID": "99999"
+      }
+    }
+  }
+}
+EOF
+
+  # Credentials globaux différents
+  printf '{"env":{"FIGMA_PERSONAL_ACCESS_TOKEN":"figd_global","FIGMA_TEAM_ID":"00000"}}\n' \
+    > "$OPENCODE_GLOBAL_CONFIG"
+
+  which jq >/dev/null 2>&1 || skip "jq non disponible"
+
+  configure_mcp_in_project "$deploy_dir"
+
+  # Le token projet doit primer sur le global
+  assert_json_field "$deploy_dir/opencode.json" \
+    '.mcp["figma-mcp"].environment.FIGMA_PERSONAL_ACCESS_TOKEN' "figd_project_override"
+  assert_json_field "$deploy_dir/opencode.json" \
+    '.mcp["figma-mcp"].environment.FIGMA_TEAM_ID' "99999"
+}
+
+@test "configure_mcp_in_project : environment vide si services-env.json absent" {
+  local deploy_dir="$TEST_DIR/project"
+  mkdir -p "$deploy_dir/.opencode/servers/figma-mcp/dist"
+
+  cat > "$deploy_dir/opencode.json" <<'EOF'
+{
+  "$schema": "https://opencode.ai/config.json"
+}
+EOF
+
+  # Pas de services-env.json
+  rm -f "$OPENCODE_GLOBAL_CONFIG"
+
+  which jq >/dev/null 2>&1 || skip "jq non disponible"
+
+  configure_mcp_in_project "$deploy_dir"
+
+  # La config MCP doit quand même être créée, avec environment vide
+  run jq -r '.mcp["figma-mcp"].type' "$deploy_dir/opencode.json"
+  [ "$output" = "local" ]
+  run jq -r '.mcp["figma-mcp"].environment | length' "$deploy_dir/opencode.json"
+  [ "$output" = "0" ]
 }
