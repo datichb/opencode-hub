@@ -131,9 +131,9 @@ EOF
 }
 
 @test "install : propose d'écraser hub.json s'il existe" {
-  # Créer hub.json existant
+  # Créer hub.json existant avec un provider configuré (sinon considéré squelette vide)
   cat > "$HUB_DIR/config/hub.json" <<'EOF'
-{"version":"1.0.0"}
+{"version":"1.0.0","default_provider":{"name":"anthropic","api_key":"sk-test","base_url":"","model":""}}
 EOF
   
   [ -f "$HUB_DIR/config/hub.json" ]

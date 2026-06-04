@@ -40,13 +40,21 @@ mkdir -p "$HUB_DIR/projects" "$HUB_DIR/skills" "$HUB_DIR/agents" \
 
 # ── Écrire config/hub.json (seulement si absent ou si l'utilisateur confirme) ──
 if [ -f "$HUB_DIR/config/hub.json" ]; then
-  log_warn "$(t install.hub_json_exists)"
-  read -rp "  $(t install.hub_json_overwrite)" overwrite_choice
-  if [[ "${overwrite_choice:-N}" =~ ^[Yy]$ ]]; then
+  # Détecter si c'est un squelette non configuré (provider.name vide = créé par ensure_hub_config)
+  _provider_name=$(jq -r '.default_provider.name // ""' "$HUB_DIR/config/hub.json" 2>/dev/null || echo "")
+  if [ -z "$_provider_name" ]; then
+    # Squelette vide — écraser silencieusement sans demander confirmation
     _write_hub_json=true
   else
-    log_info "$(t install.hub_json_kept)"
-    _write_hub_json=false
+    # Fichier configuré par l'utilisateur — demander confirmation
+    log_warn "$(t install.hub_json_exists)"
+    read -rp "  $(t install.hub_json_overwrite)" overwrite_choice
+    if [[ "${overwrite_choice:-N}" =~ ^[Yy]$ ]]; then
+      _write_hub_json=true
+    else
+      log_info "$(t install.hub_json_kept)"
+      _write_hub_json=false
+    fi
   fi
 else
   _write_hub_json=true
