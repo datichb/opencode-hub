@@ -149,7 +149,7 @@ EOF
   # le fichier original ne doit pas être modifié
   local original_content
   original_content=$(cat "$HUB_DIR/config/hub.json")
-  [ "$original_content" = '{"version":"1.0.0"}' ]
+  [ "$original_content" = '{"version":"1.0.0","default_provider":{"name":"anthropic","api_key":"sk-test","base_url":"","model":""}}' ]
 }
 
 # ── Création dossiers requis ────────────────────────────────────────────────
