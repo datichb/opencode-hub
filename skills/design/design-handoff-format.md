@@ -12,8 +12,21 @@ Il est injecté dans `ux-designer`, `ui-designer` et `orchestrator` — producte
 
 ## Quand produire ce bloc
 
-Quand tu es invoqué depuis l'`orchestrator` (et non en standalone ou depuis le `planner`),
-tu **dois** produire dans cet ordre :
+### Détection du contexte d'invocation
+
+Au démarrage, détecter si le prompt contient `[CONTEXTE] Invoqué depuis l'orchestrateur feature`. Si oui :
+- Mémoriser **CONTEXTE = orchestrateur_feature** pour toute la session
+- Ne jamais utiliser l'outil `question` — toute interaction passe par les blocs structurés
+- En fin de session : produire la spec complète + le bloc `## Retour vers orchestrator`
+- En cas de clarification critique nécessaire en cours de session : produire `## Retour intermédiaire vers orchestrateur` + `## Question pour l'orchestrateur` et **terminer la session**
+
+Sinon (standalone ou depuis `planner`) :
+- Utiliser l'outil `question` normalement
+- Produire la spec sans le bloc `## Retour vers orchestrator`
+
+---
+
+Quand CONTEXTE = orchestrateur_feature, produire dans cet ordre :
 
 1. **La spec complète** — user flows intégraux avec tous les états, wireframes textuels, tokens, composants, critères d'acceptance UX/UI. **Cette spec doit être produite dans sa totalité, jamais résumée, même si elle est longue.** Elle est produite après la validation explicite de l'utilisateur.
 2. **Le bloc `## Retour vers orchestrator`** défini ci-dessous — synthèse structurée avec les métadonnées, contraintes et statut.
@@ -78,6 +91,58 @@ Voir spec complète ci-dessus — jamais résumée ni reproduite ici.
 
 > ❌ Ne jamais produire le bloc handoff sans avoir d'abord produit la spec complète.
 > ❌ Ne jamais résumer la spec — le bloc est une synthèse de métadonnées, pas un substitut à la spec.
+
+---
+
+## Bloc `## Retour intermédiaire vers orchestrateur` (clarification en cours de session)
+
+Produit quand une **clarification critique** est nécessaire en cours de session (CONTEXTE = orchestrateur_feature uniquement) — ex : aucun design system détecté, informations utilisateur insuffisantes, décision de direction artistique bloquante.
+
+> ⚠️ Réserver aux vrais blockers. Formuler une hypothèse documentée et continuer si possible.
+
+```markdown
+## Retour intermédiaire vers orchestrateur
+
+**Agent :** ux-designer | ui-designer
+**Phase :** Clarification en cours de session
+**task_id :** <sessionID courant>
+
+### Ce qui a été exploré jusqu'ici
+- <observation 1>
+- <observation 2>
+
+### Problème détecté
+<Description précise de la clarification nécessaire>
+
+### Impact
+<Conséquence sur la spec si on continue sans cette information>
+
+### Hypothèse possible
+<Formulation de l'hypothèse si l'utilisateur préfère continuer>
+```
+
+---
+
+## Bloc `## Question pour l'orchestrateur` (clarification en cours de session)
+
+Accompagne toujours un `## Retour intermédiaire vers orchestrateur`.
+
+```markdown
+## Question pour l'orchestrateur
+
+**Phase :** Clarification design
+**task_id :** <sessionID courant>
+
+**Contexte :** <Description du problème et de son impact>
+
+**Question :** <Question précise>
+
+**Options :**
+- `<label-a>` — <description>
+- `<label-b>` — <description>
+
+**Instruction de reprise :** "Réponse clarification design : [option]. [Information si applicable]. Reprendre la production de la spec."
+```
 
 ---
 

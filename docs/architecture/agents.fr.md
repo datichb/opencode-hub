@@ -96,6 +96,8 @@ Ne déclenche jamais automatiquement un autre agent — il suggère des invocati
 Invocable directement, depuis `oc start` (suggestion affichée), ou depuis l'`orchestrator`
 (Mode C — pré-phase sur projet inconnu).
 
+En mode `orchestrateur_feature` : utilise le mécanisme d'interruption de session — chaque fin de phase (0 à 4) produit un bloc `## Retour intermédiaire vers orchestrateur` + `## Question pour l'orchestrateur` et termine la session.
+
 ---
 
 ### `orchestrator`
@@ -147,6 +149,8 @@ CP-2 (commit ou corriger ?) est toujours manuel dans tous les modes.
 
 `bd close`, `bd comments add` et `bd update` sont toujours exécutés par les agents `developer-*` dans les prompts de délégation — jamais directement par `orchestrator-dev`. L'orchestrateur-dev se limite à la lecture des tickets Beads (`bd show`, `bd list`).
 
+En mode `orchestrateur_feature` : tous les CPs (CP-1, CP-QA, CP-3, branche dédiée, CP-2, blocage, ticket bloqué) produisent un bloc `## Question pour l'orchestrator` + `## Retour vers orchestrator` (partiel) et terminent la session pour que l'orchestrateur relaie la question à l'utilisateur.
+
 > Voir [ADR-006](./adr/006-orchestrator-configurable-mode.fr.md) — les modes s'appliquent à `orchestrator-dev` uniquement.
 
 ---
@@ -172,6 +176,8 @@ Produit une synthèse exécutive multi-domaines. Lecture seule — ne modifie ja
 `### Découvertes à documenter` des rapports reçus et propose à l'utilisateur d'enrichir
 `ONBOARDING.md` et/ou `CONVENTIONS.md`. Si accepté, délègue l'écriture au `documentarian` via `task`
 (skill `living-docs-enrichment`). Ne peut invoquer le `documentarian` sans confirmation explicite.
+
+En mode `orchestrateur_feature` : utilise le mécanisme d'interruption de session — chaque fin de phase (0 à 3) produit un bloc `## Retour intermédiaire vers orchestrateur` + `## Question pour l'orchestrateur` et termine la session.
 
 ---
 
@@ -256,6 +262,8 @@ délégation design optionnelle). Quand invoqué depuis le `planner`, produit la
 au format standardisé `## SPEC UX — [feature]` pour permettre la réintégration
 automatique dans le plan (pas de `bd close` — le planner reprend la main).
 
+En mode `orchestrateur_feature` : n'utilise jamais l'outil `question` — les clarifications critiques passent par les blocs `## Retour intermédiaire vers orchestrateur` + `## Question pour l'orchestrateur` avec terminaison de session.
+
 ---
 
 ### `ui-designer`
@@ -276,6 +284,8 @@ Invocable directement, via l'`orchestrator`, ou via le `planner` (PHASE 1.5 —
 délégation design optionnelle). Quand invoqué depuis le `planner`, produit la spec
 au format standardisé `## SPEC UI — [NomComposant]` pour permettre la réintégration
 automatique dans le plan (pas de `bd close` — le planner reprend la main).
+
+En mode `orchestrateur_feature` : n'utilise jamais l'outil `question` — les clarifications critiques passent par les blocs `## Retour intermédiaire vers orchestrateur` + `## Question pour l'orchestrateur` avec terminaison de session.
 
 ---
 
@@ -341,6 +351,8 @@ confirmation explicite. Ne corrige jamais le bug.
 levées par le diagnostic et les patterns d'erreur à mémoriser, puis propose à l'utilisateur d'enrichir
 `ONBOARDING.md` et/ou `CONVENTIONS.md`. Si accepté, délègue l'écriture au `documentarian` via `task`
 (skill `living-docs-enrichment`). Ne peut invoquer le `documentarian` sans confirmation explicite.
+
+En mode `orchestrateur_feature` : utilise le mécanisme d'interruption de session — chaque checkpoint (fin de phase, pause, confirmation d'action irréversible) produit un bloc `## Retour intermédiaire vers orchestrateur` + `## Question pour l'orchestrateur` et termine la session.
 
 > Voir [ADR-004](./adr/004-qa-debugger-separation.fr.md).
 

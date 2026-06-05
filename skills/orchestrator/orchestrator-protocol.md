@@ -162,29 +162,47 @@ un comportement inattendu ou un bug — sans contexte de feature en cours.
 Invoquer le `debugger` en lui transmettant :
 - Le problème tel que décrit par l'utilisateur (verbatim)
 - Tout contexte disponible (fichier mentionné, comportement attendu vs observé, stacktrace)
+- **Le marqueur de contexte d'invocation (obligatoire) :**
+  > `[CONTEXTE] Invoqué depuis l'orchestrateur feature. Tu dois utiliser le mécanisme d'interruption de session à chaque checkpoint et produire le bloc ## Retour vers orchestrator en fin de session.`
 
-À la réception du résultat, effectuer les vérifications suivantes dans l'ordre :
+À la réception du résultat, **détecter le type de retour** :
 
-1. **Détecter la présence du rapport de diagnostic complet** (cause racine, hypothèses explorées, impact) :
+**Cas A — retour final :** le résultat contient `## Retour vers orchestrator` mais **pas** de `## Question pour l'orchestrateur`
+→ Effectuer les vérifications :
+
+1. **Détecter la présence des blocs `## Retour intermédiaire vers orchestrateur`** (récaps de phases accumulés) :
+   - **Présents** → les afficher intégralement en texte dans la discussion, dans l'ordre, AVANT le reste
+   - **Absents** → continuer directement
+
+2. **Détecter la présence du rapport de diagnostic complet** (cause racine, hypothèses explorées, impact) :
    - **Présent** → continuer la vérification suivante
    - **Absent** → demander explicitement au debugger de produire le rapport complet avant de continuer.
 
-2. **Détecter la présence du bloc `## Retour vers orchestrator`** :
-   - **Présent** → continuer la vérification suivante
+3. **Détecter la présence du bloc `## Retour vers orchestrator`** :
+   - **Présent** → continuer
    - **Absent** → demander explicitement au debugger de produire le récapitulatif structuré avant de continuer.
 
-⚠️ **AUTOCONTRÔLE OBLIGATOIRE avant d'appeler `question` :**
+**Cas B — question montante :** le résultat contient `## Question pour l'orchestrateur`
+→ Voir section "Réception d'une question montante depuis le debugger" ci-dessous.
 
-> « Ai-je affiché le rapport de diagnostic complet en texte dans la discussion ? »
-> → NON : STOP — produire le texte MAINTENANT (voir template ci-dessous), puis appeler question
+⚠️ **AUTOCONTRÔLE OBLIGATOIRE avant d'appeler `question` (Cas A) :**
+
+> « Ai-je affiché les blocs `## Retour intermédiaire` ET le rapport de diagnostic complet en texte dans la discussion ? »
+> → NON : STOP — afficher le contenu manquant MAINTENANT, puis appeler question
 > → OUI : continuer vers question
 
 > ⚠️ Ce protocole est défini dans le skill `posture/retranscription-coordinateur` — s'y référer pour les règles complètes.
 
-**Template de retranscription obligatoire :**
+**Template de retranscription obligatoire (Cas A — retour final) :**
 
 ```
 **[Retranscription du retour debugger]**
+
+---
+
+### Récaps intermédiaires (si présents)
+
+<Copier-coller intégral de chaque bloc ## Retour intermédiaire vers orchestrateur reçu — dans l'ordre>
 
 ---
 
@@ -203,6 +221,7 @@ Invoquer le `debugger` en lui transmettant :
 **[Fin de retranscription]**
 
 **Vérification obligatoire :**
+- ✅ Blocs intermédiaires copiés dans l'ordre (ou mention explicite "aucun bloc intermédiaire")
 - ✅ Rapport de diagnostic complet copié tel quel (aucune omission)
 - ✅ Bloc structuré avec tous les champs obligatoires présents
 - ✅ Sections critiques vérifiées : `### Actions d'urgence si bug en prod`, `### Impact et régressions potentielles`
@@ -219,6 +238,47 @@ Invoquer le `debugger` en lui transmettant :
 > ❌ Ne jamais résumer le rapport — le copier intégralement
 > ❌ Ne jamais omettre le bloc structuré
 > ❌ Ne jamais inclure le rapport dans le champ `question` de l'outil
+
+---
+
+### Réception d'une question montante depuis le debugger
+
+Quand le debugger atteint un checkpoint (fin de phase, pause, confirmation d'action irréversible), il termine sa session avec un bloc `## Question pour l'orchestrateur`.
+
+> ⚠️ **RAPPEL IMPÉRATIF** : Afficher le `## Retour intermédiaire vers orchestrateur` AVANT d'appeler l'outil `question`.
+
+**Comportement obligatoire :**
+
+1. **Afficher intégralement le bloc `## Retour intermédiaire vers orchestrateur`** dans la discussion — ne jamais résumer.
+
+2. **Lire le bloc `## Question pour l'orchestrateur`** — récupérer : question, options, `task_id`, instruction de reprise.
+
+3. **Poser la question à l'utilisateur** via l'outil `question` :
+
+   ```
+   question({
+     questions: [{
+       header: "[Debugger] Phase X — Bug : <titre>",
+       question: "[Debugger — Phase X | Bug : <titre>]\n<question exacte du bloc>",
+       options: [
+         { label: "<label-option-1>", description: "<description du bloc>" },
+         { label: "<label-option-2>", description: "<description du bloc>" }
+       ]
+     }]
+   })
+   ```
+
+4. **Ré-invoquer le debugger avec `task_id`** :
+
+   ```
+   task(
+     subagent_type: "debugger",
+     task_id: "<task_id du bloc>",
+     prompt: "<Instruction de reprise du bloc>. Réponse : <option choisie>."
+   )
+   ```
+
+5. **Attendre le nouveau résultat** et recommencer la détection (Cas A ou Cas B).
 
 ---
 
@@ -269,28 +329,47 @@ question({
 
 - **Oui** → Invoquer l'`onboarder`, attendre le rapport complet.
 
-  À la réception du résultat, effectuer les vérifications suivantes dans l'ordre :
+  Invoquer avec le marqueur de contexte (obligatoire) :
+  > `[CONTEXTE] Invoqué depuis l'orchestrateur feature. Tu dois utiliser le mécanisme d'interruption de session à chaque fin de phase et produire le bloc ## Retour vers orchestrator en fin de session.`
 
-  1. **Détecter la présence du rapport d'onboarding complet** (stack, conventions, dette détectée, fichiers produits) :
+  À la réception du résultat, **détecter le type de retour** :
+
+  **Cas A — retour final :** contient `## Retour vers orchestrator` mais **pas** de `## Question pour l'orchestrateur`
+  → Effectuer les vérifications dans l'ordre :
+
+  1. **Détecter la présence des blocs `## Retour intermédiaire vers orchestrateur`** :
+     - **Présents** → les afficher intégralement en texte dans l'ordre, AVANT le reste
+     - **Absents** → continuer directement
+
+  2. **Détecter la présence du rapport d'onboarding complet** (stack, conventions, dette détectée, fichiers produits) :
      - **Présent** → continuer la vérification suivante
      - **Absent** → demander explicitement à l'onboarder de produire le rapport complet avant de continuer.
 
-  2. **Détecter la présence du bloc `## Retour vers orchestrator`** :
-     - **Présent** → continuer la vérification suivante
+  3. **Détecter la présence du bloc `## Retour vers orchestrator`** :
+     - **Présent** → continuer
      - **Absent** → demander explicitement à l'onboarder de produire le récapitulatif structuré avant de continuer.
 
-⚠️ **AUTOCONTRÔLE OBLIGATOIRE avant d'appeler `question` :**
+  **Cas B — question montante :** contient `## Question pour l'orchestrateur`
+  → Voir section "Réception d'une question montante depuis l'onboarder" ci-dessous.
 
-> « Ai-je affiché le rapport d'onboarding complet en texte dans la discussion ? »
-> → NON : STOP — produire le texte MAINTENANT (voir template ci-dessous), puis appeler question
+⚠️ **AUTOCONTRÔLE OBLIGATOIRE avant d'appeler `question` (Cas A) :**
+
+> « Ai-je affiché les blocs `## Retour intermédiaire` ET le rapport d'onboarding complet en texte dans la discussion ? »
+> → NON : STOP — afficher le contenu manquant MAINTENANT, puis appeler question
 > → OUI : continuer vers question
 
 > ⚠️ Ce protocole est défini dans le skill `posture/retranscription-coordinateur` — s'y référer pour les règles complètes.
 
-**Template de retranscription obligatoire :**
+**Template de retranscription obligatoire (Cas A — retour final) :**
 
 ```
 **[Retranscription du retour onboarder]**
+
+---
+
+### Récaps intermédiaires (si présents)
+
+<Copier-coller intégral de chaque bloc ## Retour intermédiaire vers orchestrateur reçu — dans l'ordre>
 
 ---
 
@@ -309,6 +388,7 @@ question({
 **[Fin de retranscription]**
 
 **Vérification obligatoire :**
+- ✅ Blocs intermédiaires copiés dans l'ordre (ou mention explicite "aucun bloc intermédiaire")
 - ✅ Rapport d'onboarding complet copié tel quel (aucune omission)
 - ✅ Bloc structuré avec tous les champs obligatoires présents
 - ✅ Sections critiques vérifiées : `### Zones d'incertitude`, `### Dette technique détectée`
@@ -324,6 +404,47 @@ question({
 > ❌ Ne jamais résumer le rapport — le copier intégralement
 > ❌ Ne jamais omettre le bloc structuré
 > ❌ Ne jamais inclure le rapport dans le champ `question` de l'outil
+
+---
+
+### Réception d'une question montante depuis l'onboarder
+
+Quand l'onboarder atteint un checkpoint (fin de phase), il termine sa session avec un bloc `## Question pour l'orchestrateur`.
+
+> ⚠️ **RAPPEL IMPÉRATIF** : Afficher le `## Retour intermédiaire vers orchestrateur` AVANT d'appeler l'outil `question`.
+
+**Comportement obligatoire :**
+
+1. **Afficher intégralement le bloc `## Retour intermédiaire vers orchestrateur`** dans la discussion.
+
+2. **Lire le bloc `## Question pour l'orchestrateur`** — récupérer : question, options, `task_id`, instruction de reprise.
+
+3. **Poser la question à l'utilisateur** via l'outil `question` :
+
+   ```
+   question({
+     questions: [{
+       header: "[Onboarder] Phase X — <nom projet>",
+       question: "[Onboarder — Phase X | Projet : <nom>]\n<question exacte du bloc>",
+       options: [
+         { label: "<label-option-1>", description: "<description du bloc>" },
+         { label: "<label-option-2>", description: "<description du bloc>" }
+       ]
+     }]
+   })
+   ```
+
+4. **Ré-invoquer l'onboarder avec `task_id`** :
+
+   ```
+   task(
+     subagent_type: "onboarder",
+     task_id: "<task_id du bloc>",
+     prompt: "<Instruction de reprise du bloc>. Réponse : <option choisie>."
+   )
+   ```
+
+5. **Attendre le nouveau résultat** et recommencer la détection (Cas A ou Cas B).
 
 ---
 
@@ -660,29 +781,46 @@ Le routing est entièrement délégué au planner. Voir règles de routing dans 
 3. Invoquer l'agent design avec :
    - L'ID du ticket (`bd show <ID>`)
    - Le contexte global de la feature
+   - **Le marqueur de contexte d'invocation (obligatoire) :**
+     > `[CONTEXTE] Invoqué depuis l'orchestrateur feature. Tu dois utiliser le mécanisme d'interruption de session si une clarification critique est nécessaire, et produire le bloc ## Retour vers orchestrator en fin de session.`
 
-4. À la réception du résultat, effectuer les vérifications suivantes dans l'ordre :
+4. À la réception du résultat, **détecter le type de retour** :
 
-   1. **Détecter la présence de la spec complète** (user flows, états, wireframes, tokens, critères d'acceptance UX/UI) :
+   **Cas A — retour final :** contient `## Retour vers orchestrator` mais **pas** de `## Question pour l'orchestrateur`
+
+   1. **Détecter la présence des blocs `## Retour intermédiaire vers orchestrateur`** :
+      - **Présents** → les afficher en texte dans l'ordre, AVANT le reste
+      - **Absents** → continuer
+
+   2. **Détecter la présence de la spec complète** (user flows, états, wireframes, tokens, critères d'acceptance UX/UI) :
       - **Présente** → continuer la vérification suivante
       - **Absente ou semble résumée** → demander explicitement à l'agent design de produire la spec complète avant de continuer.
 
-   2. **Détecter la présence du bloc `## Retour vers orchestrator`** :
-      - **Présent** → continuer la vérification suivante
+   3. **Détecter la présence du bloc `## Retour vers orchestrator`** :
+      - **Présent** → continuer
       - **Absent** → demander explicitement à l'agent design de produire le récapitulatif structuré avant de continuer.
 
-⚠️ **AUTOCONTRÔLE OBLIGATOIRE avant d'appeler `question` :**
+   **Cas B — question montante :** contient `## Question pour l'orchestrateur`
+   → Afficher le `## Retour intermédiaire vers orchestrateur` en texte, relayer la question via `question`, ré-invoquer avec `task_id` + réponse + marqueur `[CONTEXTE]`.
 
-> « Ai-je affiché la spec complète en texte dans la discussion ? »
-> → NON : STOP — produire le texte MAINTENANT (voir template ci-dessous), puis appeler question
+⚠️ **AUTOCONTRÔLE OBLIGATOIRE avant d'appeler `question` (Cas A) :**
+
+> « Ai-je affiché les blocs `## Retour intermédiaire` ET la spec complète en texte dans la discussion ? »
+> → NON : STOP — afficher le contenu manquant MAINTENANT, puis appeler question
 > → OUI : continuer vers question
 
 > ⚠️ Ce protocole est défini dans le skill `posture/retranscription-coordinateur` — s'y référer pour les règles complètes.
 
-**Template de retranscription obligatoire :**
+**Template de retranscription obligatoire (Cas A — retour final) :**
 
 ```
 **[Retranscription du retour ux-designer / ui-designer]**
+
+---
+
+### Récaps intermédiaires (si présents)
+
+<Copier-coller intégral de chaque bloc ## Retour intermédiaire vers orchestrateur reçu — dans l'ordre>
 
 ---
 
@@ -701,6 +839,7 @@ Le routing est entièrement délégué au planner. Voir règles de routing dans 
 **[Fin de retranscription]**
 
 **Vérification obligatoire :**
+- ✅ Blocs intermédiaires copiés dans l'ordre (ou mention explicite "aucun bloc intermédiaire")
 - ✅ Spec complète copiée telle quelle (user flows, états, wireframes, tokens, critères d'acceptance UX/UI)
 - ✅ Bloc structuré avec tous les champs obligatoires présents
 - ✅ Sections critiques vérifiées : `### Contraintes d'implémentation`, `### Points ouverts`
@@ -789,29 +928,46 @@ Le routing est entièrement délégué au planner. Voir règles de routing dans 
 3. Invoquer l'agent auditeur avec :
    - L'ID du ticket (`bd show <ID>`)
    - Le périmètre à auditer
+   - **Le marqueur de contexte d'invocation (obligatoire) :**
+     > `[CONTEXTE] Invoqué depuis l'orchestrateur feature. Tu dois utiliser le mécanisme d'interruption de session à chaque fin de phase et produire le bloc ## Retour vers orchestrator en fin de session.`
 
-4. À la réception du résultat, effectuer les vérifications suivantes dans l'ordre :
+4. À la réception du résultat, **détecter le type de retour** :
 
-   1. **Détecter la présence du rapport d'audit complet** (analyse narrative, observations item par item, preuves) :
+   **Cas A — retour final :** contient `## Retour vers orchestrator` mais **pas** de `## Question pour l'orchestrateur`
+
+   1. **Détecter la présence des blocs `## Retour intermédiaire vers orchestrateur`** :
+      - **Présents** → les afficher en texte dans l'ordre, AVANT le reste
+      - **Absents** → continuer
+
+   2. **Détecter la présence du rapport d'audit complet** (analyse narrative, observations item par item, preuves) :
       - **Présent** → continuer la vérification suivante
       - **Absent** → demander explicitement à l'agent auditeur de produire le rapport complet avant de continuer.
 
-   2. **Détecter la présence du bloc `## Retour vers orchestrator`** :
-      - **Présent** → continuer la vérification suivante
+   3. **Détecter la présence du bloc `## Retour vers orchestrator`** :
+      - **Présent** → continuer
       - **Absent** → demander explicitement à l'agent auditeur de produire le récapitulatif structuré avant de continuer.
 
-⚠️ **AUTOCONTRÔLE OBLIGATOIRE avant d'appeler `question` :**
+   **Cas B — question montante :** contient `## Question pour l'orchestrateur`
+   → Afficher le `## Retour intermédiaire vers orchestrateur` en texte, relayer la question via `question`, ré-invoquer avec `task_id` + réponse + marqueur `[CONTEXTE]`.
 
-> « Ai-je affiché le rapport d'audit complet en texte dans la discussion ? »
-> → NON : STOP — produire le texte MAINTENANT (voir template ci-dessous), puis appeler question
+⚠️ **AUTOCONTRÔLE OBLIGATOIRE avant d'appeler `question` (Cas A) :**
+
+> « Ai-je affiché les blocs `## Retour intermédiaire` ET le rapport d'audit complet en texte dans la discussion ? »
+> → NON : STOP — afficher le contenu manquant MAINTENANT, puis appeler question
 > → OUI : continuer vers question
 
 > ⚠️ Ce protocole est défini dans le skill `posture/retranscription-coordinateur` — s'y référer pour les règles complètes.
 
-**Template de retranscription obligatoire :**
+**Template de retranscription obligatoire (Cas A — retour final) :**
 
 ```
 **[Retranscription du retour auditor-<domaine>]**
+
+---
+
+### Récaps intermédiaires (si présents)
+
+<Copier-coller intégral de chaque bloc ## Retour intermédiaire vers orchestrateur reçu — dans l'ordre>
 
 ---
 
@@ -830,6 +986,7 @@ Le routing est entièrement délégué au planner. Voir règles de routing dans 
 **[Fin de retranscription]**
 
 **Vérification obligatoire :**
+- ✅ Blocs intermédiaires copiés dans l'ordre (ou mention explicite "aucun bloc intermédiaire")
 - ✅ Rapport d'audit complet copié tel quel (analyse narrative, observations item par item, preuves)
 - ✅ Bloc structuré avec tous les champs obligatoires présents
 - ✅ Sections critiques vérifiées : `### Périmètre audité`, `### Synthèse des problèmes identifiés`, `### Risque résiduel si non corrigé`

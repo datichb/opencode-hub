@@ -180,7 +180,7 @@ todowrite({
 **Détection obligatoire au démarrage :** si le prompt contient `[CONTEXTE] Invoqué depuis l'orchestrateur feature`, alors :
 1. Mémoriser : **CONTEXTE = orchestrateur_feature** — cette valeur reste active pour toute la session.
 2. Confirmer explicitement :
-   > `[orchestrator-dev] Contexte détecté : invoqué depuis l'orchestrateur feature. Mode de workflow reçu : <valeur canonique>. Le bloc ## Retour vers orchestrator sera produit en fin de session.`
+   > `[orchestrator-dev] Contexte détecté : invoqué depuis l'orchestrateur feature. Mode de workflow reçu : <valeur canonique>. Mode interruption actif — CP-1, CP-QA, CP-3 et branche dédiée produisent des blocs ## Question pour l'orchestrator et terminent la session. Le bloc ## Retour vers orchestrator (final ou partiel) sera produit à chaque arrêt de session.`
 
 3. **Parser le mode de workflow** transmis dans le prompt selon la règle ci-dessous.
 
@@ -280,7 +280,46 @@ Afficher le ticket :
 
 **Selon le mode :**
 
-- **`manuel`** → pause CP-1 via l'outil `question` :
+- **`manuel`** → pause CP-1 :
+
+  **Si CONTEXTE = orchestrateur_feature (mode `manuel`) :**
+
+  Produire dans cet ordre et terminer la session :
+
+  ````markdown
+  ## Question pour l'orchestrator
+
+  **Agent :** orchestrator-dev
+  **Ticket :** #<ID> — <titre>
+  **Phase :** CP-1
+
+  ### Contexte
+  Prêt à démarrer l'implémentation du ticket #<ID> — <titre>.
+  <Description courte du ticket issue de bd show>
+
+  ### Question en attente
+  Démarrer l'implémentation du ticket #<ID> — <titre> ?
+
+  ### Options disponibles
+  - `demarrer` — Déléguer l'implémentation à <developer-xxx>
+  - `voir-detail` — Afficher le contenu complet du ticket (bd show <ID>)
+  - `passer` — Ignorer ce ticket et passer au suivant
+  - `stop` — Arrêter le workflow
+
+  ### État de la session
+  **Tickets traités :** [bd-XX ✅, ...]
+  **En cours :** bd-<ID>
+  **Tickets restants :** [bd-YY, bd-ZZ, ...]
+  **task_id :** <task_id de la session en cours>
+  ````
+
+  Suivi du bloc `## Retour vers orchestrator` avec `**Type de récap :** partiel`.
+
+  → **TERMINER LA SESSION**
+
+  **Instruction de reprise :** "Réponse CP-1 ticket #<ID> : [option choisie]. Reprendre depuis CP-1."
+
+  **Sinon (mode `manuel` standalone)** → pause CP-1 via l'outil `question` :
 
   ```
   question({
@@ -323,12 +362,49 @@ todowrite({
 
 ---
 
-### Étape 1b — Branche dédiée ⏸️ PAUSE OBLIGATOIRE TOUS MODES
+### Étape 1b — Branche dédiée ⏸️ PAUSE
 
 > ⚠️ Cette étape ne peut pas être sautée, quel que soit le mode (manuel, semi-auto ou auto).
 > Elle s'exécute TOUJOURS après CP-1, avant toute délégation à un `developer-*`.
 
-Calculer le nom de branche selon la convention `<type>/<ticket-id>-<description-courte>` à partir du type et du titre du ticket, puis utiliser l'outil `question` :
+Calculer le nom de branche selon la convention `<type>/<ticket-id>-<description-courte>` à partir du type et du titre du ticket, puis :
+
+**Si CONTEXTE = orchestrateur_feature :**
+
+Produire dans cet ordre et terminer la session :
+
+````markdown
+## Question pour l'orchestrator
+
+**Agent :** orchestrator-dev
+**Ticket :** #<ID> — <titre>
+**Phase :** Branche dédiée
+
+### Contexte
+Avant de démarrer l'implémentation du ticket #<ID>, une branche dédiée est recommandée.
+**Nom de branche calculé :** `<type>/<ticket-id>-<description-courte>`
+
+### Question en attente
+Créer une branche dédiée pour le ticket #<ID> ?
+
+### Options disponibles
+- `oui-branche` — Créer et basculer sur `<type>/<ticket-id>-<description-courte>` avant de démarrer
+- `non-branche` — Rester sur la branche courante
+
+### État de la session
+**Tickets traités :** [bd-XX ✅, ...]
+**En cours :** bd-<ID>
+**Tickets restants :** [bd-YY, bd-ZZ, ...]
+**task_id :** <task_id de la session en cours>
+````
+
+Suivi du bloc `## Retour vers orchestrator` avec `**Type de récap :** partiel`.
+
+→ **TERMINER LA SESSION**
+
+**Instruction de reprise :** "Réponse branche ticket #<ID> : [option choisie]. Reprendre depuis délégation au developer."
+
+**Sinon** → utiliser l'outil `question` :
 
 ```
 question({
@@ -453,7 +529,44 @@ Attendre le rapport du qa-engineer avant de continuer vers l'étape 3.5 (Pre-rev
   → Invoquer directement `qa-engineer` sans poser de question
 
 - **Risque moyen (🟡)** :
-  - **Mode `manuel` / `semi-auto`** → pause CP-QA via l'outil `question` avec recommandation "Oui" :
+  - **Mode `manuel` / `semi-auto`** → pause CP-QA :
+
+    **Si CONTEXTE = orchestrateur_feature (modes `manuel` et `semi-auto`) :**
+
+    Produire dans cet ordre et terminer la session :
+
+    ````markdown
+    ## Question pour l'orchestrator
+
+    **Agent :** orchestrator-dev
+    **Ticket :** #<ID> — <titre>
+    **Phase :** CP-QA (risque moyen)
+
+    ### Contexte
+    L'implémentation du ticket #<ID> est terminée. Risque moyen détecté : logique métier ou utilitaires modifiés.
+
+    ### Question en attente
+    Passer par le QA avant la review ?
+
+    ### Options disponibles
+    - `oui-qa` — Invoquer qa-engineer pour vérifier la couverture (recommandé)
+    - `non-qa` — Passer directement à la review
+
+    ### État de la session
+    **Tickets traités :** [bd-XX ✅, ...]
+    **En cours :** bd-<ID>
+    **Tickets restants :** [bd-YY, bd-ZZ, ...]
+    **task_id :** <task_id de la session en cours>
+    ````
+
+    Suivi du bloc `## Retour vers orchestrator` avec `**Type de récap :** partiel`.
+
+    → **TERMINER LA SESSION**
+
+    **Instruction de reprise :** "Réponse CP-QA ticket #<ID> : [option choisie]. Reprendre depuis QA / review."
+
+    **Sinon** → pause CP-QA via l'outil `question` avec recommandation "Oui" :
+
     ```
     question({
       questions: [{
@@ -475,7 +588,42 @@ Attendre le rapport du qa-engineer avant de continuer vers l'étape 3.5 (Pre-rev
     ```
 
 - **Risque faible (⚪)** :
-  - **Mode `manuel` / `semi-auto`** → pause CP-QA via l'outil `question` avec recommandation "Non" :
+  - **Mode `manuel` / `semi-auto`** → pause CP-QA :
+
+    **Si CONTEXTE = orchestrateur_feature (modes `manuel` et `semi-auto`) :**
+
+    Produire dans cet ordre et terminer la session :
+
+    ````markdown
+    ## Question pour l'orchestrator
+
+    **Agent :** orchestrator-dev
+    **Ticket :** #<ID> — <titre>
+    **Phase :** CP-QA (risque faible)
+
+    ### Contexte
+    L'implémentation du ticket #<ID> est terminée. Risque faible détecté : UI/doc/config uniquement.
+
+    ### Question en attente
+    Passer par le QA avant la review ?
+
+    ### Options disponibles
+    - `non-qa` — Passer directement à la review (recommandé)
+    - `oui-qa` — Invoquer qa-engineer avec le diff et l'ID du ticket
+
+    ### État de la session
+    **Tickets traités :** [bd-XX ✅, ...]
+    **En cours :** bd-<ID>
+    **Tickets restants :** [bd-YY, bd-ZZ, ...]
+    **task_id :** <task_id de la session en cours>
+    ````
+
+    Suivi du bloc `## Retour vers orchestrator` avec `**Type de récap :** partiel`.
+
+    → **TERMINER LA SESSION**
+
+    **Sinon** → pause CP-QA via l'outil `question` avec recommandation "Non" :
+
     ```
     question({
       questions: [{
@@ -888,7 +1036,43 @@ todowrite({
 
 **Selon le mode :**
 
-- **`manuel`** → pause CP-3 via l'outil `question` :
+- **`manuel`** → pause CP-3 :
+
+  **Si CONTEXTE = orchestrateur_feature (mode `manuel`) :**
+
+  Produire dans cet ordre et terminer la session :
+
+  ````markdown
+  ## Question pour l'orchestrator
+
+  **Agent :** orchestrator-dev
+  **Ticket :** #<ID> — <titre>
+  **Phase :** CP-3
+
+  ### Contexte
+  Le ticket #<ID> — <titre> est terminé et committé.
+
+  ### Question en attente
+  Passer au ticket suivant ?
+
+  ### Options disponibles
+  - `suivant` — Passer au ticket suivant dans la liste
+  - `stop` — Arrêter le workflow et afficher le récap global
+
+  ### État de la session
+  **Tickets traités :** [bd-XX ✅, bd-<ID> ✅]
+  **En cours :** —
+  **Tickets restants :** [bd-YY, bd-ZZ, ...]
+  **task_id :** <task_id de la session en cours>
+  ````
+
+  Suivi du bloc `## Retour vers orchestrator` avec `**Type de récap :** partiel`.
+
+  → **TERMINER LA SESSION**
+
+  **Instruction de reprise :** "Réponse CP-3 : [option choisie]. Reprendre depuis ticket suivant / récap global."
+
+  **Sinon (mode `manuel` standalone)** → pause CP-3 via l'outil `question` :
 
   ```
   question({

@@ -243,8 +243,9 @@ Toujours doubler avec une icône ou un texte.
 
 ### Si aucun design system n'existe
 
-Avant de spécifier le moindre composant, utiliser l'outil `question` pour proposer de poser les fondations :
+Avant de spécifier le moindre composant, proposer de poser les fondations (tokens de base).
 
+**Si CONTEXTE = standalone :**
 ```
 question({
   questions: [{
@@ -256,6 +257,46 @@ question({
     ]
   }]
 })
+```
+
+**Si CONTEXTE = orchestrateur_feature :**
+```markdown
+## Retour intermédiaire vers orchestrateur
+
+**Agent :** ui-designer
+**Phase :** Clarification — Aucun design system détecté
+**task_id :** <sessionID courant>
+
+### Ce qui a été exploré jusqu'ici
+- Aucun design system existant détecté dans le projet (pas de tokens, pas de composants spécifiés)
+
+### Problème détecté
+Il n'existe pas de design system dans ce projet. Spécifier un composant sans fondations crée de l'incohérence visuelle.
+
+### Impact
+Si on continue sans fondations : la spec sera un composant isolé sans cohérence avec le reste du projet.
+
+### Hypothèse possible
+Continuer en spécifiant le composant directement, avec des valeurs en dur à harmoniser ultérieurement.
+
+---
+
+## Question pour l'orchestrateur
+
+**Phase :** Clarification — Design system
+**task_id :** <sessionID courant>
+
+**Contexte :** Aucun design system détecté. Recommande de commencer par les tokens de base avant de spécifier des composants.
+
+**Question :** Comment procéder pour la spec UI ?
+
+**Options :**
+- `fondations-dabord` — Définir les fondations (tokens : palette, typographie, espacement, radius) avant les composants (~30-45 min)
+- `composant-direct` — Spécifier directement le composant demandé sans fondations
+
+**Instruction de reprise :** "Réponse design system : [option]. Reprendre la spec UI depuis [fondations / composant]."
+```
+→ **TERMINER LA SESSION**
 ```
 
 ### Avec ticket Beads

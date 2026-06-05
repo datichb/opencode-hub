@@ -77,9 +77,9 @@ Utiliser ce template après chaque réception de retour final :
 **[Fin de retranscription]**
 ```
 
-### Template pour une question montante (planner / scout)
+### Template pour une question montante (planner / scout / onboarder / auditor / debugger / designers)
 
-Quand le planner ou le scout termine sa session avec `## Question pour l'orchestrateur` :
+Quand un sous-agent termine sa session avec `## Question pour l'orchestrateur` (ou `## Question pour l'orchestrator` pour orchestrator-dev) :
 
 ```
 **[Retranscription — question montante <agent>]**
@@ -88,7 +88,7 @@ Quand le planner ou le scout termine sa session avec `## Question pour l'orchest
 
 ### Récap intermédiaire
 
-<Copier-coller intégral du bloc ## Retour intermédiaire vers orchestrateur>
+<Copier-coller intégral du bloc ## Retour intermédiaire vers orchestrateur (ou ## Retour vers orchestrator partiel pour orchestrator-dev)>
 
 ---
 
@@ -143,12 +143,21 @@ Avant d'appeler `question`, vérifier :
 | **planner** (question montante) | `## Question pour l'orchestrateur` | `## Retour intermédiaire vers orchestrateur` | Contenu de la phase, contexte de la question, `task_id` |
 | **scout** (final) | `## Retour vers orchestrator` | Rapport scout complet + blocs intermédiaires si présents | `## Recommandation`, `## Signaux détectés`, `## Handoff vers planner` si escalade |
 | **scout** (question montante) | `## Question pour l'orchestrateur` | `## Retour intermédiaire vers orchestrateur` | Ce qui a été exploré, problème détecté, `task_id` |
-| **auditor-*** | Rapport d'audit complet | `## Synthèse des problèmes identifiés`, `## Risque résiduel si non corrigé` |
-| **ux-designer, ui-designer** | Spec complète (user flows, wireframes, tokens) | `### Contraintes d'implémentation`, `### Points ouverts` |
-| **debugger** | Rapport de diagnostic complet | `### Actions d'urgence si bug en prod`, `### Impact et régressions potentielles` |
-| **onboarder** | Rapport d'onboarding complet | `### Zones d'incertitude`, `### Dette technique détectée` |
-| **orchestrator-dev** | Récap global complet (tableau + comptes rendus + points d'attention) | `### Détail par ticket`, `### Points d'attention` |
-| **reviewer** | Rapport de review complet | `### Synthèse des problèmes`, `### Verdict` |
+| **onboarder** (final) | `## Retour vers orchestrator` | Rapport d'onboarding complet + blocs intermédiaires si présents | `### Zones d'incertitude`, `### Dette technique détectée` |
+| **onboarder** (question montante) | `## Question pour l'orchestrateur` | `## Retour intermédiaire vers orchestrateur` | Contenu de la phase explorée, `task_id` |
+| **auditor** coordinateur (final) | `## Retour vers orchestrator` | Synthèse exécutive multi-domaines + blocs intermédiaires si présents | `### Synthèse des problèmes identifiés`, `### Risque résiduel si non corrigé` |
+| **auditor** coordinateur (question montante) | `## Question pour l'orchestrateur` | `## Retour intermédiaire vers orchestrateur` | Domaines audités, état des sous-agents, `task_id` |
+| **auditor-*** sous-agents (final) | `## Retour vers orchestrator` | Rapport d'audit complet | `### Périmètre audité`, `### Synthèse des problèmes identifiés`, `### Risque résiduel si non corrigé` |
+| **debugger** (final) | `## Retour vers orchestrator` | Rapport de diagnostic complet + blocs intermédiaires si présents | `### Actions d'urgence si bug en prod`, `### Impact et régressions potentielles` |
+| **debugger** (question montante) | `## Question pour l'orchestrateur` | `## Retour intermédiaire vers orchestrateur` | Contenu du diagnostic en cours, `task_id` |
+| **ux-designer** (final) | `## Retour vers orchestrator` | Spec UX complète + blocs intermédiaires si présents | `### Contraintes d'implémentation`, `### Points ouverts` |
+| **ux-designer** (question montante) | `## Question pour l'orchestrateur` | `## Retour intermédiaire vers orchestrateur` | Contexte clarification, `task_id` |
+| **ui-designer** (final) | `## Retour vers orchestrator` | Spec UI complète + blocs intermédiaires si présents | `### Contraintes d'implémentation`, `### Points ouverts` |
+| **ui-designer** (question montante) | `## Question pour l'orchestrateur` | `## Retour intermédiaire vers orchestrateur` | Contexte clarification (design system), `task_id` |
+| **orchestrator-dev** (final) | `## Retour vers orchestrator` | Récap global complet (tableau + comptes rendus + points d'attention) | `### Détail par ticket`, `### Points d'attention` |
+| **orchestrator-dev** (CP à enjeu fort : CP-2, blocage, ticket bloqué) | `## Question pour l'orchestrator` | `## Retour vers orchestrator` partiel + rapport review | `### Rapport de review complet`, `### État de la session`, `task_id` |
+| **orchestrator-dev** (CPs intermédiaires : CP-1, CP-QA, CP-3, branche) | `## Question pour l'orchestrator` | `## Retour vers orchestrator` partiel | Contexte du CP, état de la session, `task_id` |
+| **reviewer** | `## Retour vers orchestrator-dev` | Rapport de review complet | `### Synthèse des problèmes`, `### Verdict` |
 
 ---
 

@@ -406,3 +406,14 @@ EOF
   # Le skill devrait être injecté via strip_frontmatter
   [[ "$output" == *"WebSearch"* ]] || [[ "$output" == *"Search capability"* ]]
 }
+
+@test "orchestrator-protocol injecte [CONTEXTE] dans les invocations des agents" {
+  local protocol_file="$BATS_TEST_DIRNAME/../skills/orchestrator/orchestrator-protocol.md"
+  
+  # Vérifier que le marqueur [CONTEXTE] est présent dans le fichier
+  run grep -c "\[CONTEXTE\] Invoqué depuis l'orchestrateur feature" "$protocol_file"
+  [ "$status" -eq 0 ]
+  
+  # Il doit y avoir au moins 5 occurrences (planner, orchestrator-dev, debugger, onboarder, auditor/design)
+  [ "$output" -ge 5 ]
+}

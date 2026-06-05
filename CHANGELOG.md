@@ -20,6 +20,23 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 
 ### Added
 
+- **Mécanisme d'interruption de session étendu à tous les agents invocables** — `orchestrator-dev`, `onboarder`, `auditor`, `debugger`, `ux-designer` et `ui-designer` implémentent maintenant le mécanisme d'interruption de session permettant à l'utilisateur de voir les récaps intermédiaires et de répondre aux questions avant chaque checkpoint, même quand ces agents sont invoqués via `task` depuis l'orchestrateur feature :
+  - `skills/orchestrator/orchestrator-dev-protocol.md` : CP-1, CP-QA (risque moyen/faible), CP-3 et branche dédiée produisent désormais un bloc `## Question pour l'orchestrator` + `## Retour vers orchestrator` (partiel) et terminent la session en mode `orchestrateur_feature` (mode `manuel` uniquement — CP-2, modes semi-auto et auto : comportement inchangé)
+  - `skills/planning/onboarder-workflow.md` : Phases 0 à 4 — blocs `## Retour intermédiaire vers orchestrateur` + `## Question pour l'orchestrateur` + terminaison de session remplacent l'outil `question` en mode `orchestrateur_feature` ; retrait de la règle obsolète du "condensé dans le champ question"
+  - `skills/auditor/auditor-workflow.md` : Phases 0 à 3 — même mécanisme
+  - `skills/quality/debugger-workflow.md` : tous les checkpoints (fin de phase, pause artefacts, clarifications, confirmation ticket Beads, retours en arrière) — même mécanisme
+  - `agents/design/ux-designer.md`, `agents/design/ui-designer.md` : section "Contexte d'invocation" ajoutée — l'outil `question` est interdit en mode `orchestrateur_feature`
+  - `skills/design/design-handoff-format.md` : condition d'activation du bloc `## Retour vers orchestrator` rendue explicite via le marqueur `[CONTEXTE]` ; blocs `## Retour intermédiaire vers orchestrateur` et `## Question pour l'orchestrateur` ajoutés pour les clarifications critiques
+  - `skills/designer/ui-protocol.md` : branche `orchestrateur_feature` pour la question "aucun design system détecté"
+  - `skills/orchestrator/orchestrator-protocol.md` : marqueurs `[CONTEXTE]` ajoutés dans les invocations de `debugger`, `onboarder`, `auditor`, `ux-designer`, `ui-designer` ; sections "Réception d'une question montante" ajoutées pour ces agents ; templates de retranscription enrichis avec les blocs intermédiaires
+  - `skills/posture/retranscription-coordinateur.md` : tableau "Règles par type de retour" étendu à tous les agents (final + question montante) ; template pour questions montantes généralisé
+
+- **Nouveau guide** `docs/guides/inter-agent-interruption.fr.md` — documentation de référence complète sur le mécanisme d'interruption de session inter-agents : principe, format des blocs, flux de reprise avec `task_id`, guide d'implémentation pour les auteurs de skills, limites connues
+
+- **Nouveaux tests** `tests/test_integration_inter_agent_interruption.bats` — 37 tests structurels vérifiant la présence des blocs, marqueurs et sections requis dans tous les fichiers skills/agents implémentant le mécanisme d'interruption
+
+- **Documentation mise à jour** : `docs/architecture/task-delegation.fr.md` (tableau des agents + tableau des checkpoints étendu + note sur les deux variantes de blocs), `docs/architecture/agents.fr.md` (comportement en mode `orchestrateur_feature` ajouté pour les 6 agents concernés)
+
 - **`oc service` — gestion générique des intégrations MCP** — nouvelle commande unifiée pour configurer, valider et gérer les services externes connectés via MCP :
   - `oc service list` : catalogue des services disponibles avec leur état (configuré / non configuré)
   - `oc service setup [nom]` : wizard interactif en N+2 étapes (credentials → validation API → sauvegarde & build MCP)

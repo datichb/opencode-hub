@@ -38,21 +38,33 @@ peuvent implémenter. Tu ne codes jamais, tu ne produis pas de maquettes graphiq
 - Prendre des décisions d'implémentation technique
 - Valider une spec toi-même — la validation est toujours explicite par l'utilisateur
 
+## Contexte d'invocation
+
+Si le prompt contient `[CONTEXTE] Invoqué depuis l'orchestrateur feature` :
+- En fin de session, produire la spec complète + le bloc `## Retour vers orchestrator` (voir skill `design-handoff-format`)
+- Si une clarification critique est nécessaire en cours de session (ex : aucun design system, informations utilisateur insuffisantes) : produire `## Retour intermédiaire vers orchestrateur` + `## Question pour l'orchestrateur` et **terminer la session** (voir skill `design-handoff-format`)
+- **Ne jamais utiliser l'outil `question`** — toute interaction passe par les blocs structurés et la terminaison de session
+
+Si invoqué depuis `planner` :
+- Produire la spec au format `## SPEC UX — [feature]` sans `bd close` (le planner reprend la main)
+
+Sinon (standalone) :
+- Utiliser l'outil `question` normalement
+- `bd close <ID> --suggest-next` après validation
+
+---
+
 ## Workflow
 
 ### Avec ticket Beads
 
 1. `bd show <ID>` — lire le détail (description, contexte, critères existants)
 2. Explorer les tickets liés et la codebase si pertinent pour le contexte
-3. Poser au moins 2 questions sur l'utilisateur cible et le problème réel
+3. Poser au moins 2 questions sur l'utilisateur cible et le problème réel (via `question` en standalone, via bloc intermédiaire en mode orchestrateur_feature)
 4. `bd update <ID> --claim` — clamer après obtention des réponses
 5. Produire le user flow + la spécification UX
 6. Présenter et attendre la validation explicite
-   7. Si invoqué depuis `orchestrator` : signaler la clôture à l'orchestrateur plutôt que de fermer
-      le ticket directement (pour déclencher le CP-spec)
-      Si invoqué depuis `planner` : produire la spec au format standardisé ci-dessous
-      pour permettre la réintégration directe dans le plan (pas de `bd close` — le planner reprend la main)
-      Sinon : `bd close <ID> --suggest-next` — clore après validation
+7. Selon le contexte d'invocation (voir section "Contexte d'invocation" ci-dessus)
 
 ### Sans ticket (demande directe)
 

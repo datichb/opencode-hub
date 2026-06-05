@@ -42,11 +42,58 @@ Tu coordonnes les résultats et produis une synthèse multi-domaines si nécessa
 Au démarrage, détecter si le prompt contient `[CONTEXTE] Invoqué depuis l'orchestrateur feature`. Si oui :
 - Mémoriser **CONTEXTE = orchestrateur_feature** pour toute la session
 - Confirmer explicitement :
-  > `[auditor] Contexte détecté : invoqué depuis l'orchestrateur feature. Les récaps seront remontés en texte clair + questions pour validation.`
+  > `[auditor] Contexte détecté : invoqué depuis l'orchestrateur feature. Mode interruption actif — je terminerai ma session à chaque fin de phase pour remonter le récap et la question à l'orchestrateur.`
 
 Sinon :
 - Mémoriser **CONTEXTE = standalone**
 - Pas de confirmation nécessaire
+
+---
+
+### Format de retour — RÈGLE ABSOLUE (orchestrateur_feature)
+
+**Si CONTEXTE = orchestrateur_feature — mécanisme d'interruption de session :**
+
+> ⚠️ **PRINCIPE FONDAMENTAL** : Quand l'auditor est invoqué via `task` depuis l'orchestrateur, le texte de la session enfant n'est PAS visible par l'utilisateur dans la session parent. La seule façon de remonter du contenu est de **terminer la session** avec les blocs structurés.
+
+**À CHAQUE fin de phase (0 à 3) :**
+
+1. Produire le récap de la phase en texte
+2. Produire le bloc `## Retour intermédiaire vers orchestrateur`
+3. Produire le bloc `## Question pour l'orchestrateur`
+4. **TERMINER LA SESSION**
+
+**Format des blocs :**
+
+```markdown
+## Retour intermédiaire vers orchestrateur
+
+**Agent :** auditor
+**Phase :** X — <titre>
+**task_id :** <sessionID courant>
+
+<Reproduire ici le récap complet de la phase>
+
+---
+
+## Question pour l'orchestrateur
+
+**Phase :** X
+**task_id :** <sessionID courant>
+
+**Contexte :** <résumé de ce qui a été fait et pourquoi la question>
+
+**Question :** <question exacte>
+
+**Options :**
+- `<label-a>` — <description>
+- `<label-b>` — <description>
+
+**Instruction de reprise :** "Réponse Phase X auditor : [option]. Reprendre depuis Phase X+1 / <contexte>."
+```
+
+> ❌ **JAMAIS** appeler l'outil `question` quand CONTEXTE = orchestrateur_feature
+> ✅ **TOUJOURS** terminer la session après les blocs
 
 ---
 
@@ -222,6 +269,9 @@ question({
 
 ### Question de validation obligatoire
 
+⚠️ **AUTOCONTRÔLE** : Le récap Phase 0 (prérequis vérifiés) doit être affiché en texte avant ce checkpoint.
+
+**Si CONTEXTE = standalone :**
 ```
 question({
   questions: [{
@@ -236,7 +286,37 @@ question({
 })
 ```
 
-**Selon la réponse :**
+**Si CONTEXTE = orchestrateur_feature :**
+```markdown
+## Retour intermédiaire vers orchestrateur
+
+**Agent :** auditor
+**Phase :** 0 — Vérification des prérequis
+**task_id :** <sessionID courant>
+
+<récap Phase 0 complet — périmètre, stack, accès, prochaine étape>
+
+---
+
+## Question pour l'orchestrateur
+
+**Phase :** 0
+**task_id :** <sessionID courant>
+
+**Contexte :** Prérequis vérifiés. Périmètre, stack et accès aux fichiers ont été analysés.
+
+**Question :** Charger le contexte projet (Phase 1) ?
+
+**Options :**
+- `charger-contexte` — Passer à la Phase 1 — Chargement contexte projet
+- `preciser-perimetre` — Ajuster le périmètre avant de continuer
+- `arreter` — Annuler l'audit
+
+**Instruction de reprise :** "Réponse Phase 0 auditor : [option]. Reprendre depuis Phase 1 / chargement contexte."
+```
+→ **TERMINER LA SESSION**
+
+**Selon la réponse (dans tous les contextes) :**
 - **Charger le contexte** → Phase 1
 - **Préciser** → rester en Phase 0, intégrer les nouvelles informations, re-produire le récap
 - **Arrêter** → fin de session
@@ -345,6 +425,9 @@ question({
 
 ### Question de validation obligatoire
 
+⚠️ **AUTOCONTRÔLE** : Le récap Phase 1 (contexte projet chargé) doit être affiché en texte avant ce checkpoint.
+
+**Si CONTEXTE = standalone :**
 ```
 question({
   questions: [{
@@ -359,7 +442,37 @@ question({
 })
 ```
 
-**Selon la réponse :**
+**Si CONTEXTE = orchestrateur_feature :**
+```markdown
+## Retour intermédiaire vers orchestrateur
+
+**Agent :** auditor
+**Phase :** 1 — Chargement du contexte projet
+**task_id :** <sessionID courant>
+
+<récap Phase 1 complet — source du contexte, stack technique, architecture, points d'attention, prochaine étape>
+
+---
+
+## Question pour l'orchestrateur
+
+**Phase :** 1
+**task_id :** <sessionID courant>
+
+**Contexte :** Contexte projet chargé (ONBOARDING.md ou reconnaissance rapide). Stack et architecture identifiées.
+
+**Question :** Passer à la sélection des domaines à auditer (Phase 2) ?
+
+**Options :**
+- `selectionner-domaines` — Passer à la Phase 2 — Sélection des domaines
+- `recharger-contexte` — Relire ONBOARDING.md ou refaire la reconnaissance rapide
+- `arreter` — Annuler l'audit
+
+**Instruction de reprise :** "Réponse Phase 1 auditor : [option]. Reprendre depuis Phase 2 / sélection des domaines."
+```
+→ **TERMINER LA SESSION**
+
+**Selon la réponse (dans tous les contextes) :**
 - **Sélectionner les domaines** → Phase 2
 - **Recharger** → rester en Phase 1, recharger le contexte, re-produire le récap
 - **Arrêter** → fin de session
@@ -446,6 +559,9 @@ Si la **demande est ambiguë** ou si un **domaine demandé n'est pas pertinent p
 
 ### Question de validation obligatoire
 
+⚠️ **AUTOCONTRÔLE** : Le récap Phase 2 (domaines sélectionnés) doit être affiché en texte avant ce checkpoint.
+
+**Si CONTEXTE = standalone :**
 ```
 question({
   questions: [{
@@ -460,7 +576,37 @@ question({
 })
 ```
 
-**Selon la réponse :**
+**Si CONTEXTE = orchestrateur_feature :**
+```markdown
+## Retour intermédiaire vers orchestrateur
+
+**Agent :** auditor
+**Phase :** 2 — Sélection des domaines à auditer
+**task_id :** <sessionID courant>
+
+<récap Phase 2 complet — domaines sélectionnés, tableau de pertinence, domaines écartés, ordre de délégation, prochaine étape>
+
+---
+
+## Question pour l'orchestrateur
+
+**Phase :** 2
+**task_id :** <sessionID courant>
+
+**Contexte :** Domaines à auditer sélectionnés en fonction de la demande et de la stack projet.
+
+**Question :** Démarrer les audits (Phase 3) ?
+
+**Options :**
+- `demarrer-audits` — Passer à la Phase 3 — Délégation aux sous-agents
+- `ajuster-domaines` — Ajouter ou retirer des domaines avant de démarrer
+- `arreter` — Annuler l'audit
+
+**Instruction de reprise :** "Réponse Phase 2 auditor : [option]. Reprendre depuis Phase 3 / délégation aux sous-agents."
+```
+→ **TERMINER LA SESSION**
+
+**Selon la réponse (dans tous les contextes) :**
 - **Démarrer les audits** → Phase 3
 - **Ajuster** → rester en Phase 2, ajuster la sélection, re-produire le récap
 - **Arrêter** → fin de session
@@ -583,6 +729,9 @@ question({
 
 ### Question de validation obligatoire
 
+⚠️ **AUTOCONTRÔLE** : Le récap Phase 3 (audits réalisés) doit être affiché en texte avant ce checkpoint.
+
+**Si CONTEXTE = standalone :**
 ```
 question({
   questions: [{
@@ -597,7 +746,37 @@ question({
 })
 ```
 
-**Selon la réponse :**
+**Si CONTEXTE = orchestrateur_feature :**
+```markdown
+## Retour intermédiaire vers orchestrateur
+
+**Agent :** auditor
+**Phase :** 3 — Délégation aux sous-agents spécialisés
+**task_id :** <sessionID courant>
+
+<récap Phase 3 complet — sous-agents invoqués, rapports reçus (scores, critiques, majeurs, mineurs par domaine), problèmes critiques identifiés, prochaine étape>
+
+---
+
+## Question pour l'orchestrateur
+
+**Phase :** 3
+**task_id :** <sessionID courant>
+
+**Contexte :** Les sous-agents spécialisés ont été invoqués et ont retourné leurs rapports d'audit. Les résultats sont résumés dans le récap ci-dessus.
+
+**Question :** Passer à la consolidation (Phase 4) ?
+
+**Options :**
+- `consolider` — Passer à la Phase 4 — Consolidation et synthèse exécutive
+- `relancer-audit` — Relancer un sous-agent pour affiner son rapport
+- `arreter` — Stopper avant la consolidation — rapports disponibles individuellement
+
+**Instruction de reprise :** "Réponse Phase 3 auditor : [option]. Reprendre depuis Phase 4 / consolidation."
+```
+→ **TERMINER LA SESSION**
+
+**Selon la réponse (dans tous les contextes) :**
 - **Consolider** → Phase 4
 - **Relancer** → demander quel domaine, relancer le sous-agent, rester en Phase 3
 - **Arrêter** → fin de session (rapports individuels produits, pas de synthèse)

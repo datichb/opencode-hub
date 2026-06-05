@@ -353,6 +353,21 @@ Cette chaîne permet à `orchestrator-dev` d'adapter son comportement.
 | Récap global | Affiché à l'utilisateur | Transmis à l'orchestrator |
 | Bloc handoff | Non produit | **Obligatoire** |
 
+### Agents implémentant le mécanisme d'interruption
+
+Les agents suivants implémentent le mécanisme d'interruption de session quand ils reçoivent ce marqueur :
+
+| Agent | Granularité des interruptions | Type d'interruption |
+|-------|------------------------------|---------------------|
+| **orchestrator-dev** | CPs à enjeu fort (CP-2, blocage, ticket bloqué) + CPs intermédiaires (CP-1, CP-QA, CP-3, branche) en mode `manuel` | Systématique à chaque CP |
+| **planner** | Fin de chaque phase (0 à 5) + pauses ad hoc | Systématique |
+| **scout** | Clarification critique détectée | Ad hoc uniquement |
+| **onboarder** | Fin de chaque phase (0 à 4) + pauses ad hoc | Systématique |
+| **auditor** (coordinateur) | Fin de chaque phase (0 à 3) + pauses ad hoc | Systématique |
+| **debugger** | Fin de chaque phase + confirmations d'action irréversible | Systématique |
+| **ux-designer** | Clarification critique (design system, informations utilisateur) | Ad hoc uniquement |
+| **ui-designer** | Clarification critique (design system inexistant) | Ad hoc uniquement |
+
 ### Détection au démarrage
 
 ```markdown
@@ -370,17 +385,17 @@ Cette chaîne permet à `orchestrator-dev` d'adapter son comportement.
 
 ### Tableau complet des checkpoints
 
-| CP | Agent | Moment | Pause modes |
-|----|-------|--------|-------------|
-| **CP-onboard** | `orchestrator` | Après `onboarder`, avant planification | Toujours manuel |
-| **CP-0** | `orchestrator` | Après planification, avant conception | Toujours manuel |
-| **CP-spec** | `orchestrator` | Après specs UX/UI, avant implémentation | Toujours manuel |
-| **CP-audit** | `orchestrator` | Après audit, avant implémentation | Toujours manuel |
-| **CP-1** | `orchestrator-dev` | Avant chaque ticket | Manuel / auto (semi-auto, auto) |
-| **CP-QA** | `orchestrator-dev` | Après implémentation, avant review | Manuel / fixé au CP-0 (auto) |
-| **CP-2** | `orchestrator-dev` | Après review — commit ou corriger ? | **Toujours manuel** |
-| **CP-3** | `orchestrator-dev` | Après commit — ticket suivant ? | Manuel / auto (semi-auto, auto) |
-| **CP-feature** | `orchestrator` | Fin de feature | Toujours manuel |
+| CP | Agent | Moment | Pause modes | **Mécanisme en mode orchestrateur_feature** |
+|----|-------|--------|-------------|----------------------------------------------|
+| **CP-onboard** | `orchestrator` | Après `onboarder`, avant planification | Toujours manuel | Question montante de l'onboarder → task_id |
+| **CP-0** | `orchestrator` | Après planification, avant conception | Toujours manuel | Question montante du planner → task_id |
+| **CP-spec** | `orchestrator` | Après specs UX/UI, avant implémentation | Toujours manuel | Question montante du designer → task_id |
+| **CP-audit** | `orchestrator` | Après audit, avant implémentation | Toujours manuel | Question montante de l'auditor → task_id |
+| **CP-1** | `orchestrator-dev` | Avant chaque ticket | Manuel / auto (semi-auto, auto) | Bloc `## Question pour l'orchestrator` → task_id (mode manuel uniquement) |
+| **CP-QA** | `orchestrator-dev` | Après implémentation, avant review | Manuel / fixé au CP-0 (auto) | Bloc `## Question pour l'orchestrator` → task_id (modes manuel/semi-auto) |
+| **CP-2** | `orchestrator-dev` | Après review — commit ou corriger ? | **Toujours manuel** | Bloc `## Question pour l'orchestrator` → task_id (inchangé, déjà implémenté) |
+| **CP-3** | `orchestrator-dev` | Après commit — ticket suivant ? | Manuel / auto (semi-auto, auto) | Bloc `## Question pour l'orchestrator` → task_id (mode manuel uniquement) |
+| **CP-feature** | `orchestrator` | Fin de feature | Toujours manuel | Retour final complet |
 
 ### Règle absolue — CP-2 est non automatisable
 
@@ -393,6 +408,17 @@ Cette règle ne peut pas être outrepassée, même en mode `auto`. Justification
 - Un score de confiance IA sur un rapport de review serait une fausse précision
 
 → [ADR-006](./adr/006-orchestrator-configurable-mode.fr.md)
+
+### Note : Deux variantes du bloc de question montante
+
+Deux noms de blocs coexistent selon l'agent producteur — ils sont sémantiquement équivalents mais l'orchestrateur doit détecter les deux :
+
+| Bloc | Producteurs | Détection |
+|------|-------------|-----------|
+| `## Question pour l'orchestrateur` (avec accent) | planner, scout, onboarder, auditor, debugger, ux-designer, ui-designer | Contient `task_id` pour reprise |
+| `## Question pour l'orchestrator` (sans accent) | orchestrator-dev | Contient `task_id` pour reprise |
+
+Les deux déclenchent le même comportement côté orchestrateur : afficher le récap intermédiaire, relayer la question via `question`, ré-invoquer avec `task_id`.
 
 ### Compteurs anti-boucle
 
