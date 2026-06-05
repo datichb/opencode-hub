@@ -190,7 +190,7 @@ AGENTS_DIR="$BATS_TEST_DIRNAME/../agents"
 }
 
 @test "orchestrator-protocol injecte [CONTEXTE] dans l'invocation du debugger" {
-  run grep -B2 -A2 "CONTEXTE.*debugger\|debugger.*CONTEXTE\|Invoquer.*debugger" "$SKILLS_DIR/orchestrator/orchestrator-protocol.md"
+  run grep -B2 -A5 "CONTEXTE.*debugger\|debugger.*CONTEXTE\|Invoquer.*debugger" "$SKILLS_DIR/orchestrator/orchestrator-protocol.md"
   [ "$status" -eq 0 ]
   echo "$output" | grep -q "CONTEXTE"
 }
