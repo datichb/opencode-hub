@@ -408,7 +408,7 @@ oc debug MON-APP       # lance le debugger sur MON-APP
 
 ## `oc init`
 
-Enregistre un projet dans le hub. Guide l'utilisateur en **5 étapes numérotées** et affiche un récapitulatif coloré à la fin.
+Enregistre un projet dans le hub. Guide l'utilisateur en **6 étapes numérotées** et affiche un récapitulatif coloré à la fin.
 
 ```bash
 oc init [PROJECT_ID] [chemin]
@@ -428,10 +428,13 @@ oc init [PROJECT_ID] [chemin]
 | 1 — Informations projet | PROJECT_ID, chemin, vérification/création du dossier, nom, stack, labels, tracker |
 | 2 — Beads & tracker | `bd init`, upstream Git, configuration tracker |
 | 3 — Agents | Sélection des agents et des agents natifs OpenCode à désactiver |
-| 4 — Fournisseur LLM | Configuration d'un provider spécifique au projet (surcharge le hub) |
-| 5 — Déploiement | Proposition de déploiement immédiat |
+| 4 — Services MCP | Sélection des intégrations MCP à activer pour ce projet (`none` par défaut) |
+| 5 — Fournisseur LLM | Configuration d'un provider spécifique au projet (surcharge le hub) |
+| 6 — Déploiement | Proposition de déploiement immédiat |
 
 > La création du dossier a lieu en **fin d'étape 1** — Beads est ainsi garanti accessible dès l'étape 2.
+
+> **Étape 4 — Services MCP :** Par défaut, aucun MCP n'est déployé (opt-in). Répondre `Y` ouvre un sélecteur multi-choix listant les services disponibles depuis `config/services.json`. La sélection est persistée dans `- MCP :` de `projects/projects.md` et appliquée à chaque `oc deploy`. Pour modifier la sélection plus tard, éditer `projects.md` directement ou relancer `oc init`.
 
 **Rendu wizard :**
 
@@ -439,14 +442,18 @@ oc init [PROJECT_ID] [chemin]
 ◆  Initialisation d'un projet
 │
 │
-◇  Étape 1/5 — Informations projet
+◇  Étape 1/6 — Informations projet
 │
 │  PROJECT_ID (ex: MON-APP) :
 │  ...
 │
-◇  Étape 2/5 — Beads & tracker
+◇  Étape 2/6 — Beads & tracker
 │
 │  ...
+│
+◇  Étape 4/6 — Services MCP
+│
+│  Activer des intégrations MCP pour ce projet ? [y/N] :
 ```
 
 **Récapitulatif final :**
@@ -458,6 +465,7 @@ oc init [PROJECT_ID] [chemin]
 │  Stack        Vue 3 + Laravel                      │
 │  Tracker      jira                                 │
 │  Beads        ◆ initialisé                         │
+│  MCP          figma-mcp                            │
 │                                                    │
 │  Prochain → ./oc.sh start MON-APP                  │
 └────────────────────────────────────────────────────┘

@@ -1,6 +1,11 @@
 #!/bin/bash
 # Déploiement des MCP servers
 # À sourcer depuis cmd-deploy.sh
+#
+# Les fonctions deploy_mcp_servers et configure_mcp_in_project acceptent
+# un paramètre optionnel PROJECT_ID pour filtrer les MCP selon le champ
+# "- MCP :" de projects.md (get_project_mcp / should_deploy_mcp).
+# Si PROJECT_ID est absent, tous les MCP disponibles sont déployés.
 
 # Vérifie et build les MCP si nécessaire
 check_and_build_mcp() {
@@ -26,8 +31,11 @@ check_and_build_mcp() {
 }
 
 # Déploie les MCP servers vers un projet
+# @param $1 — deploy_dir : chemin racine du projet
+# @param $2 — project_id (optionnel) : filtre les MCP via le champ "- MCP :" de projects.md
 deploy_mcp_servers() {
   local deploy_dir=$1
+  local project_id="${2:-}"
   
   echo -e "${CYAN}📦  Déploiement des MCP servers${RESET}"
   echo ""
@@ -44,6 +52,14 @@ deploy_mcp_servers() {
     
     local server_name
     server_name=$(basename "$server_dir")
+    
+    # Filtrer selon la sélection du projet si PROJECT_ID fourni
+    if [ -n "$project_id" ]; then
+      if ! should_deploy_mcp "$project_id" "$server_name"; then
+        echo "  ○ $server_name ignoré (non sélectionné pour $project_id)"
+        continue
+      fi
+    fi
     
     # Vérifier que le build existe
     if [ ! -d "$server_dir/dist" ]; then
@@ -98,8 +114,11 @@ deploy_mcp_servers() {
 #   mcp.<server-name> = { type, command (array), environment }
 # Les credentials sont injectés depuis services-env.json (global),
 # sauf si un override explicite existe déjà dans opencode.json du projet.
+# @param $1 — deploy_dir : chemin racine du projet
+# @param $2 — project_id (optionnel) : filtre les MCP via le champ "- MCP :" de projects.md
 configure_mcp_in_project() {
   local deploy_dir=$1
+  local project_id="${2:-}"
   local opencode_json="$deploy_dir/opencode.json"
 
   # Vérifier que opencode.json existe
@@ -119,6 +138,13 @@ configure_mcp_in_project() {
 
     local server_name
     server_name=$(basename "$server_dir")
+
+    # Filtrer selon la sélection du projet si PROJECT_ID fourni
+    if [ -n "$project_id" ]; then
+      if ! should_deploy_mcp "$project_id" "$server_name"; then
+        continue
+      fi
+    fi
 
     echo "  → Configuration de $server_name"
 

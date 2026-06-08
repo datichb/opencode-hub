@@ -409,7 +409,7 @@ oc debug MY-APP        # launch the debugger on MY-APP
 
 ## `oc init`
 
-Registers a project in the hub. Guides the user through **5 numbered steps** and displays a coloured summary at the end.
+Registers a project in the hub. Guides the user through **6 numbered steps** and displays a coloured summary at the end.
 
 ```bash
 oc init [PROJECT_ID] [path]
@@ -429,10 +429,13 @@ oc init [PROJECT_ID] [path]
 | 1 — Project information | PROJECT_ID, path, directory verification/creation, name, stack, labels, tracker |
 | 2 — Beads & tracker | `bd init`, Git upstream, tracker configuration |
 | 3 — Agents | Agent selection and native OpenCode agents to disable |
-| 4 — LLM provider | Project-specific provider configuration (overrides hub) |
-| 5 — Deployment | Immediate deployment proposal |
+| 4 — MCP Services | Selection of MCP integrations to enable for this project (`none` by default) |
+| 5 — LLM provider | Project-specific provider configuration (overrides hub) |
+| 6 — Deployment | Immediate deployment proposal |
 
 > Directory creation happens at the **end of step 1** — Beads is thus guaranteed accessible from step 2.
+
+> **Step 4 — MCP Services:** By default, no MCP server is deployed (opt-in). Answer `Y` to open a multi-select picker listing available services from `config/services.json`. The selection is persisted as `- MCP :` in `projects/projects.md` and applied on every `oc deploy`. To change the selection later, edit `projects.md` directly or re-run `oc init`.
 
 **Wizard display:**
 
@@ -440,14 +443,18 @@ oc init [PROJECT_ID] [path]
 ◆  Project initialisation
 │
 │
-◇  Step 1/5 — Project information
+◇  Step 1/6 — Project information
 │
 │  PROJECT_ID (e.g. MY-APP):
 │  ...
 │
-◇  Step 2/5 — Beads & tracker
+◇  Step 2/6 — Beads & tracker
 │
 │  ...
+│
+◇  Step 4/6 — MCP Services
+│
+│  Enable MCP integrations for this project? [y/N]:
 ```
 
 **Final summary:**
@@ -459,6 +466,7 @@ oc init [PROJECT_ID] [path]
 │  Stack        Vue 3 + Laravel                      │
 │  Tracker      jira                                 │
 │  Beads        ◆ initialised                        │
+│  MCP          figma-mcp                            │
 │                                                    │
 │  Next → ./oc.sh start MY-APP                       │
 └────────────────────────────────────────────────────┘

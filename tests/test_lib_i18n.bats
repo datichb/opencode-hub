@@ -195,3 +195,53 @@ teardown() {
   run t "no_modification"
   [[ "$output" == *"Aucune modification"* ]]
 }
+
+# ── Clés init.mcp.* ──────────────────────────────────────────────────────────
+
+@test "t : clés init.mcp FR — step_title, prompt_intro, skip" {
+  export OC_LANG=fr
+
+  run t "init.mcp.step_title"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Services MCP"* ]]
+
+  run t "init.mcp.prompt_intro"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"MCP"* ]]
+
+  run t "init.mcp.skip"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"oc service setup"* ]]
+
+  run t "init.mcp.none"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Aucun"* ]]
+
+  run t "init.mcp.all"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"activés"* ]]
+}
+
+@test "t : clés init.mcp EN — step_title, prompt_intro, skip" {
+  export OC_LANG=en
+
+  run t "init.mcp.step_title"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"MCP Services"* ]]
+
+  run t "init.mcp.prompt_intro"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"MCP"* ]]
+
+  run t "init.mcp.skip"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"oc service setup"* ]]
+
+  run t "init.mcp.none"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"No MCP"* ]]
+
+  run t "init.mcp.all"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"enabled"* ]]
+}

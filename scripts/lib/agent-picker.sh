@@ -327,6 +327,157 @@ _pick_native_agents() {
   PICKED_DISABLED_AGENTS="$_PICK_RESULT"
 }
 
+# ── Services MCP ─────────────────────────────────────────────────────────────
+
+##
+# Rendu du sélecteur de services MCP.
+# Affiche la liste plate des services disponibles.
+# Utilise les variables partagées de _pick_from_list :
+#   _pick_items, _pick_checked, _pick_cursor, _pick_total
+# Plus _pick_descriptions[] (tableau parallèle).
+##
+_render_mcp_page() {
+  # shellcheck disable=SC2154
+  printf "\033[2J\033[H"  # clear screen
+
+  # ── En-tête ────────────────────────────────────────────────────────────────
+  echo -e "${BOLD}Services MCP à activer pour ce projet${RESET}  ($((_pick_cursor+1))/$_pick_total)"
+  echo -e "  \033[0;34m↑↓\033[0m naviguer   \033[0;34mespace\033[0m cocher/décocher   \033[0;34m*\033[0m tout cocher   \033[0;34m0\033[0m tout vider   \033[0;34mentrée\033[0m valider   \033[0;34mESC\033[0m annuler"
+  echo ""
+
+  # ── Liste ──────────────────────────────────────────────────────────────────
+  local i=0
+  while [ "$i" -lt "$_pick_total" ]; do
+    local svc="${_pick_items[$i]}"
+
+    local check_icon="   "
+    local check_color=""
+    local check_reset=""
+    if [ "${_pick_checked[$i]}" = "1" ]; then
+      check_icon="[x]"
+      check_color="$GREEN"
+      check_reset="$RESET"
+    fi
+
+    if [ "$i" -eq "$_pick_cursor" ]; then
+      printf "  \033[1m> ${check_color}%-3s${check_reset}\033[1m  %-25s\033[0m  \033[2m%s\033[0m\n" \
+        "$check_icon" "$svc" "${_pick_descriptions[$i]}"
+    else
+      printf "    ${check_color}%-3s${check_reset}  %-25s  \033[2m%s\033[0m\n" \
+        "$check_icon" "$svc" "${_pick_descriptions[$i]}"
+    fi
+    i=$((i + 1))
+  done
+
+  # ── Pied ───────────────────────────────────────────────────────────────────
+  echo ""
+  local count=0
+  local v
+  for v in "${_pick_checked[@]}"; do [ "$v" = "1" ] && count=$((count+1)); done
+  echo -e "  ${BOLD}$count service(s) MCP sélectionné(s)${RESET}"
+  echo ""
+}
+
+##
+# Sélection interactive des services MCP à activer pour un projet.
+# Compatible bash 3.2 (macOS). Résultat dans $PICKED_MCP.
+# Le résultat est le CSV des mcp_server (ex: "figma-mcp,gitlab-mcp"), "all" ou "none".
+# @param {string} $1 — sélection courante (CSV, "all", "none" ou "")
+##
+_pick_mcp_services() {
+  local current_csv="${1:-none}"
+
+  # Charger la liste des services depuis services.json
+  _pick_items=()
+  _pick_descriptions=()
+  _mcp_server_names=()
+
+  if [ -f "${SERVICES_FILE:-}" ] && command -v jq &>/dev/null; then
+    while IFS=$'\t' read -r svc_key mcp_server label; do
+      [ -z "$svc_key" ] && continue
+      _pick_items+=("$svc_key")
+      _mcp_server_names+=("$mcp_server")
+      _pick_descriptions+=("${label:-$svc_key}")
+    done < <(jq -r '.services | to_entries[] | [.key, .value.mcp_server, .value.label] | @tsv' "${SERVICES_FILE}" 2>/dev/null)
+  fi
+
+  # Fallback si services.json absent ou jq indisponible
+  if [ ${#_pick_items[@]} -eq 0 ]; then
+    log_warn "Aucun service MCP disponible (services.json introuvable ou vide)."
+    PICKED_MCP="none"
+    return
+  fi
+
+  _pick_total=${#_pick_items[@]}
+
+  # Initialiser la sélection
+  _pick_checked=()
+  local i=0
+  if [ "$current_csv" = "all" ]; then
+    while [ "$i" -lt "$_pick_total" ]; do
+      _pick_checked+=("1")
+      i=$((i + 1))
+    done
+  elif [ "$current_csv" = "none" ] || [ -z "$current_csv" ]; then
+    while [ "$i" -lt "$_pick_total" ]; do
+      _pick_checked+=("0")
+      i=$((i + 1))
+    done
+  else
+    # Cocher les serveurs listés dans le CSV (comparaison sur le mcp_server_name)
+    while [ "$i" -lt "$_pick_total" ]; do
+      local srv="${_mcp_server_names[$i]}"
+      if echo ",$current_csv," | grep -qF ",$srv,"; then
+        _pick_checked+=("1")
+      else
+        _pick_checked+=("0")
+      fi
+      i=$((i + 1))
+    done
+  fi
+
+  _pick_render_fn="_render_mcp_page"
+  _pick_allow_zero=1
+  _pick_allow_star=1
+  _pick_allow_family_toggle=0
+  _PICK_RESULT=""
+
+  _pick_from_list "$current_csv" "$current_csv"
+
+  # ESC → garder la sélection courante
+  if [ "$_PICK_RESULT" = "$current_csv" ]; then
+    PICKED_MCP="$current_csv"
+    return
+  fi
+
+  # Construire le CSV de résultat à partir des mcp_server_names cochés
+  local result_csv=""
+  local all_checked=1
+  local j=0
+  while [ "$j" -lt "$_pick_total" ]; do
+    if [ "${_pick_checked[$j]}" = "1" ]; then
+      local srv="${_mcp_server_names[$j]}"
+      if [ -z "$result_csv" ]; then
+        result_csv="$srv"
+      else
+        result_csv="$result_csv,$srv"
+      fi
+    else
+      all_checked=0
+    fi
+    j=$((j + 1))
+  done
+
+  # shellcheck disable=SC2034
+  if [ "$all_checked" = "1" ] && [ "$_pick_total" -gt 0 ]; then
+    PICKED_MCP="all"
+  elif [ -z "$result_csv" ]; then
+    PICKED_MCP="none"
+  else
+    PICKED_MCP="$result_csv"
+  fi
+}
+
 ##
 # Met à jour le champ "- Agents :" dans le bloc d'un projet dans projects.md.
 # Pattern identique à _set_project_tracker dans cmd-beads.sh.

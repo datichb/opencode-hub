@@ -428,3 +428,130 @@ EOF
 
   unset -f command
 }
+
+# ── get_project_mcp / _set_project_mcp / should_deploy_mcp ────────────────────
+
+@test "get_project_mcp : retourne CSV quand le champ existe" {
+  cat >> "$PROJECTS_FILE" <<'EOF'
+
+## PROJ-MCP
+- Nom : Projet MCP
+- Stack : TypeScript
+- Agents : all
+- MCP : figma-mcp,gitlab-mcp
+EOF
+
+  run get_project_mcp "PROJ-MCP"
+  [ "$status" -eq 0 ]
+  [ "$output" = "figma-mcp,gitlab-mcp" ]
+}
+
+@test "get_project_mcp : retourne none quand le champ est absent" {
+  run get_project_mcp "PROJ-A"
+  [ "$status" -eq 0 ]
+  [ "$output" = "none" ]
+}
+
+@test "get_project_mcp : retourne all quand MCP : all" {
+  cat >> "$PROJECTS_FILE" <<'EOF'
+
+## PROJ-MCP-ALL
+- Nom : Projet MCP All
+- MCP : all
+EOF
+
+  run get_project_mcp "PROJ-MCP-ALL"
+  [ "$status" -eq 0 ]
+  [ "$output" = "all" ]
+}
+
+@test "get_project_mcp : retourne none quand MCP : none" {
+  cat >> "$PROJECTS_FILE" <<'EOF'
+
+## PROJ-MCP-NONE
+- Nom : Projet MCP None
+- MCP : none
+EOF
+
+  run get_project_mcp "PROJ-MCP-NONE"
+  [ "$status" -eq 0 ]
+  [ "$output" = "none" ]
+}
+
+@test "_set_project_mcp : écrit le champ dans projects.md" {
+  cat >> "$PROJECTS_FILE" <<'EOF'
+
+## PROJ-SET-MCP
+- Nom : Projet Set MCP
+- Agents : all
+EOF
+
+  _set_project_mcp "PROJ-SET-MCP" "figma-mcp"
+
+  run get_project_mcp "PROJ-SET-MCP"
+  [ "$output" = "figma-mcp" ]
+}
+
+@test "_set_project_mcp : met à jour un champ existant" {
+  cat >> "$PROJECTS_FILE" <<'EOF'
+
+## PROJ-UPDATE-MCP
+- Nom : Projet Update MCP
+- Agents : all
+- MCP : figma-mcp
+EOF
+
+  _set_project_mcp "PROJ-UPDATE-MCP" "figma-mcp,gitlab-mcp"
+
+  run get_project_mcp "PROJ-UPDATE-MCP"
+  [ "$output" = "figma-mcp,gitlab-mcp" ]
+}
+
+@test "should_deploy_mcp : retourne 0 (vrai) pour all" {
+  cat >> "$PROJECTS_FILE" <<'EOF'
+
+## PROJ-SDMCP-ALL
+- MCP : all
+EOF
+
+  run should_deploy_mcp "PROJ-SDMCP-ALL" "figma-mcp"
+  [ "$status" -eq 0 ]
+}
+
+@test "should_deploy_mcp : retourne 1 (faux) pour none" {
+  cat >> "$PROJECTS_FILE" <<'EOF'
+
+## PROJ-SDMCP-NONE
+- MCP : none
+EOF
+
+  run should_deploy_mcp "PROJ-SDMCP-NONE" "figma-mcp"
+  [ "$status" -eq 1 ]
+}
+
+@test "should_deploy_mcp : retourne 0 si serveur dans la liste CSV" {
+  cat >> "$PROJECTS_FILE" <<'EOF'
+
+## PROJ-SDMCP-CSV
+- MCP : figma-mcp
+EOF
+
+  run should_deploy_mcp "PROJ-SDMCP-CSV" "figma-mcp"
+  [ "$status" -eq 0 ]
+}
+
+@test "should_deploy_mcp : retourne 1 si serveur absent de la liste CSV" {
+  cat >> "$PROJECTS_FILE" <<'EOF'
+
+## PROJ-SDMCP-CSV2
+- MCP : figma-mcp
+EOF
+
+  run should_deploy_mcp "PROJ-SDMCP-CSV2" "gitlab-mcp"
+  [ "$status" -eq 1 ]
+}
+
+@test "should_deploy_mcp : retourne 1 si champ absent (défaut = none)" {
+  run should_deploy_mcp "PROJ-A" "figma-mcp"
+  [ "$status" -eq 1 ]
+}

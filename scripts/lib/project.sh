@@ -523,6 +523,70 @@ get_project_complement_agents() {
 }
 
 # ─────────────────────────────────────────
+# MCP — sélection par projet
+# ─────────────────────────────────────────
+
+# Retourne la liste des MCP activés pour un projet
+# Valeurs : CSV (ex: "figma-mcp,gitlab-mcp"), "all" ou "none"
+# Retourne "none" si le champ est absent (opt-in obligatoire)
+# @param $1 — PROJECT_ID
+get_project_mcp() {
+  local raw
+  raw=$(_get_project_field "$1" "MCP")
+  raw=$(echo "$raw" | tr -d '[:space:]')
+  echo "${raw:-none}"
+}
+
+# Écrit/met à jour le champ "- MCP :" dans le bloc d'un projet dans projects.md
+# @param $1 — PROJECT_ID
+# @param $2 — valeur : CSV, "all" ou "none"
+_set_project_mcp() {
+  local id="$1" new_val="$2"
+  # Remplacer si le champ existe déjà dans le bloc du projet
+  if perl -i -0777pe "
+    s{(^## \Q${id}\E\n.*?)(- MCP : [^\n]+)}{\${1}- MCP : ${new_val}}ms
+  " "$PROJECTS_FILE" 2>/dev/null && grep -q -- "- MCP : ${new_val}" "$PROJECTS_FILE"; then
+    return 0
+  fi
+  # Insérer après "- Agents :" si présent
+  if perl -i -0777pe "
+    s{(^## \Q${id}\E\n.*?- Agents : [^\n]+\n)}{\${1}- MCP : ${new_val}\n}ms
+  " "$PROJECTS_FILE" 2>/dev/null && grep -q -- "- MCP : ${new_val}" "$PROJECTS_FILE"; then
+    return 0
+  fi
+  # Insérer après "- Disable agents :" si présent
+  if perl -i -0777pe "
+    s{(^## \Q${id}\E\n.*?- Disable agents : [^\n]+\n)}{\${1}- MCP : ${new_val}\n}ms
+  " "$PROJECTS_FILE" 2>/dev/null && grep -q -- "- MCP : ${new_val}" "$PROJECTS_FILE"; then
+    return 0
+  fi
+  # Fallback : insérer après le dernier "- " du bloc projet
+  if perl -i -0777pe "
+    s{(^## \Q${id}\E\n(?:(?!^##)[^\n]*\n)*?- [^\n]+\n)}{\${1}- MCP : ${new_val}\n}ms
+  " "$PROJECTS_FILE" 2>/dev/null && grep -q -- "- MCP : ${new_val}" "$PROJECTS_FILE"; then
+    return 0
+  fi
+  log_error "Impossible d'insérer le champ MCP dans le bloc $id de projects.md"
+  return 1
+}
+
+# Vérifie si un MCP server doit être déployé pour un projet donné
+# Retourne 0 si oui, 1 si non
+# @param $1 — PROJECT_ID
+# @param $2 — server_name (ex: "figma-mcp")
+should_deploy_mcp() {
+  local project_id="$1" server_name="$2"
+  local mcp_csv
+  mcp_csv=$(get_project_mcp "$project_id")
+  # "all" → déployer
+  [ "$mcp_csv" = "all" ] && return 0
+  # "none" ou vide → ne pas déployer
+  [ -z "$mcp_csv" ] || [ "$mcp_csv" = "none" ] && return 1
+  # CSV → vérifier la présence du serveur
+  echo ",$mcp_csv," | grep -qF ",$server_name,"
+}
+
+# ─────────────────────────────────────────
 # WORKTREE — configuration par projet
 # ─────────────────────────────────────────
 

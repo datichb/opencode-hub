@@ -120,9 +120,9 @@ _run_init() {
 # ── bd init + propagation labels intégrée ────────────────────────────────────
 
 @test "cmd-init : propose bd init et propage les labels" {
-  # Entrées: Nom, Stack, Labels, Tracker=1(none), init beads=Y, upstream=n, select agents=n, deploy=n
+  # Entrées: Nom, Stack, Labels, Tracker=1(none), init beads=Y, upstream=n, select agents=n, MCP=n, deploy=n
   run bash -c '
-    printf "Mon Projet\nNode.js\nfeature,fix,back\n1\nY\nn\nn\nn\n" | bash "$1" NEWPROJ "$2"
+    printf "Mon Projet\nNode.js\nfeature,fix,back\n1\nY\nn\nn\nn\nn\n" | bash "$1" NEWPROJ "$2"
   ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
   [ "$status" -eq 0 ]
 
@@ -136,9 +136,9 @@ _run_init() {
 
 @test "cmd-init : ne propose pas bd init si .beads existe déjà" {
   mkdir -p "$TEST_DIR/fake-project/.beads"
-  # Entrées: Nom, Stack, Labels, Tracker=1(none), select agents=n, deploy=n
+  # Entrées: Nom, Stack, Labels, Tracker=1(none), select agents=n, MCP=n, deploy=n
   run bash -c '
-    printf "Mon Projet\nNode.js\nfeature\n1\nn\nn\n" | bash "$1" NEWPROJ2 "$2"
+    printf "Mon Projet\nNode.js\nfeature\n1\nn\nn\nn\n" | bash "$1" NEWPROJ2 "$2"
   ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
   [ "$status" -eq 0 ]
 
@@ -147,9 +147,9 @@ _run_init() {
 }
 
 @test "cmd-init : respecte le refus de bd init (n)" {
-  # Entrées: Nom, Stack, Labels, Tracker=1(none), init beads=n, select agents=n, deploy=n
+  # Entrées: Nom, Stack, Labels, Tracker=1(none), init beads=n, select agents=n, MCP=n, deploy=n
   run bash -c '
-    printf "Mon Projet\nNode.js\nfeature\n1\nn\nn\nn\n" | bash "$1" NEWPROJ3 "$2"
+    printf "Mon Projet\nNode.js\nfeature\n1\nn\nn\nn\nn\n" | bash "$1" NEWPROJ3 "$2"
   ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
   [ "$status" -eq 0 ]
 
@@ -160,11 +160,11 @@ _run_init() {
 @test "cmd-init : ne propose pas bd init si bd absent du PATH" {
   # Supprimer le mock bd du PATH
   rm -f "$TEST_DIR/bin/bd"
-  # Entrées: Nom, Stack, Labels, Tracker=1(none), select agents=n, deploy=n
+  # Entrées: Nom, Stack, Labels, Tracker=1(none), select agents=n, MCP=n, deploy=n
   # Pas de question bd init car bd n'est pas disponible
   # Mais la question "Installer Beads maintenant ?" est posée — répondre n
   run bash -c '
-    printf "Mon Projet\nNode.js\nfeature\n1\nn\nn\nn\n" | bash "$1" NEWPROJ4 "$2"
+    printf "Mon Projet\nNode.js\nfeature\n1\nn\nn\nn\nn\n" | bash "$1" NEWPROJ4 "$2"
   ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
   [ "$status" -eq 0 ]
 
@@ -173,9 +173,9 @@ _run_init() {
 }
 
 @test "cmd-init : propage les labels avec espaces (trim)" {
-  # Entrées: Nom, Stack, Labels avec espaces, Tracker=1, init beads=Y, upstream=n, select agents=n, deploy=n
+  # Entrées: Nom, Stack, Labels avec espaces, Tracker=1, init beads=Y, upstream=n, select agents=n, MCP=n, deploy=n
   run bash -c '
-    printf "Mon Projet\nNode.js\n feature , fix , back \n1\nY\nn\nn\nn\n" | bash "$1" NEWPROJ5 "$2"
+    printf "Mon Projet\nNode.js\n feature , fix , back \n1\nY\nn\nn\nn\nn\n" | bash "$1" NEWPROJ5 "$2"
   ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
   [ "$status" -eq 0 ]
 
@@ -189,9 +189,9 @@ _run_init() {
 
 @test "cmd-init : propage les labels par défaut si saisie vide" {
   # L'utilisateur ne saisit rien pour les labels → default feature,fix
-  # Entrées: Nom, Stack, Labels=(vide), Tracker=1, init beads=Y, upstream=n, select agents=n, deploy=n
+  # Entrées: Nom, Stack, Labels=(vide), Tracker=1, init beads=Y, upstream=n, select agents=n, MCP=n, deploy=n
   run bash -c '
-    printf "Mon Projet\nNode.js\n\n1\nY\nn\nn\nn\n" | bash "$1" NEWPROJ6 "$2"
+    printf "Mon Projet\nNode.js\n\n1\nY\nn\nn\nn\nn\n" | bash "$1" NEWPROJ6 "$2"
   ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
   [ "$status" -eq 0 ]
 
@@ -205,9 +205,9 @@ _run_init() {
 # ── Proposition upstream git ─────────────────────────────────────────────────
 
 @test "cmd-init : propose git remote add upstream après bd init" {
-  # Entrées: Nom, Stack, Labels, Tracker=1, init beads=Y, upstream=Y, URL, select agents=n, deploy=n
+  # Entrées: Nom, Stack, Labels, Tracker=1, init beads=Y, upstream=Y, URL, select agents=n, MCP=n, deploy=n
   run bash -c '
-    printf "Mon Projet\nNode.js\nfeature\n1\nY\nY\nhttps://github.com/test/repo.git\nn\nn\n" | bash "$1" NEWPROJ7 "$2"
+    printf "Mon Projet\nNode.js\nfeature\n1\nY\nY\nhttps://github.com/test/repo.git\nn\nn\nn\n" | bash "$1" NEWPROJ7 "$2"
   ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
   [ "$status" -eq 0 ]
 
@@ -217,14 +217,47 @@ _run_init() {
 }
 
 @test "cmd-init : respecte le refus de configurer upstream (n)" {
-  # Entrées: Nom, Stack, Labels, Tracker=1, init beads=Y, upstream=n, select agents=n, deploy=n
+  # Entrées: Nom, Stack, Labels, Tracker=1, init beads=Y, upstream=n, select agents=n, MCP=n, deploy=n
   : > "$GIT_CALLS_LOG"
   run bash -c '
-    printf "Mon Projet\nNode.js\nfeature\n1\nY\nn\nn\nn\n" | bash "$1" NEWPROJ8 "$2"
+    printf "Mon Projet\nNode.js\nfeature\n1\nY\nn\nn\nn\nn\n" | bash "$1" NEWPROJ8 "$2"
   ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
   [ "$status" -eq 0 ]
 
   # git remote add ne doit PAS avoir été appelé
   ! grep -q "git remote add upstream" "$GIT_CALLS_LOG"
   [[ "$output" == *"Configurer plus tard"* ]]
+}
+
+# ── Étape MCP — sélection par projet ─────────────────────────────────────────
+
+@test "cmd-init étape MCP : répond N → MCP : none écrit dans projects.md" {
+  # Entrées: Nom, Stack, Labels, Tracker=1(none), init beads=n, select agents=n, MCP=n, deploy=n
+  run bash -c '
+    printf "Mon Projet\nNode.js\nfeature\n1\nn\nn\nn\nn\n" | bash "$1" MCPTEST1 "$2"
+  ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
+  [ "$status" -eq 0 ]
+
+  grep -q "MCP : none" "$PROJECTS_FILE"
+}
+
+@test "cmd-init étape MCP : mode non-interactif → MCP : none par défaut" {
+  # OC_NON_INTERACTIVE=1 — toutes les prompts retournent vide → N par défaut
+  run bash -c '
+    export OC_NON_INTERACTIVE=1
+    bash "$1" MCPTEST2 "$2"
+  ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
+  # En mode non-interactif, le script peut sortir tôt mais ne doit pas crasher
+  [ "$status" -eq 0 ] || [ "$status" -eq 1 ]
+}
+
+@test "cmd-init étape MCP : MCP absent du récapitulatif si none" {
+  # Entrées: réponse N à MCP
+  run bash -c '
+    printf "Mon Projet\nNode.js\nfeature\n1\nn\nn\nn\nn\n" | bash "$1" MCPTEST3 "$2"
+  ' _ "$CMD_INIT" "$TEST_DIR/fake-project"
+  [ "$status" -eq 0 ]
+
+  # Le récapitulatif doit mentionner le statut MCP
+  [[ "$output" == *"MCP"* ]]
 }

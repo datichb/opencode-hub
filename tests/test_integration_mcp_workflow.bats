@@ -315,3 +315,75 @@ EOF
   run grep -q "integrity-test" "$PROJECT_DIR/.opencode/mcp/package.json"
   [ "$status" -eq 0 ]
 }
+
+# ── Filtrage MCP par projet — intégration deploy_mcp_servers ──────────────────
+
+@test "Intégration filtrage MCP : projet MCP:none → aucun serveur déployé" {
+  local deploy_dir="$FAKE_HUB/int-project-nomcp"
+  mkdir -p "$deploy_dir"
+
+  # Registre de projet avec MCP : none
+  cat >> "$PROJECTS_FILE" <<'PROJEOF'
+
+## INT-NOMCP
+- Nom : Projet sans MCP
+- MCP : none
+PROJEOF
+  echo "INT-NOMCP=$deploy_dir" >> "$PATHS_FILE"
+
+  # Créer un serveur buildé dans le hub
+  mkdir -p "$FAKE_HUB/servers/figma-mcp/dist"
+  echo "console.log('figma');" > "$FAKE_HUB/servers/figma-mcp/dist/index.js"
+  echo '{"name":"figma-mcp","version":"1.0.0"}' > "$FAKE_HUB/servers/figma-mcp/package.json"
+
+  # Sourcer les libs nécessaires
+  export SCRIPT_DIR="$HUB_ROOT/scripts"
+  export LIB_DIR="$SCRIPT_DIR/lib"
+  export SERVICES_FILE="$FAKE_HUB/config/services.json"
+  echo '{"services":{}}' > "$SERVICES_FILE"
+
+  run bash -c "
+    source '$SCRIPT_DIR/common.sh'
+    source '$LIB_DIR/services.sh'
+    source '$LIB_DIR/mcp-deploy.sh'
+    deploy_mcp_servers '$deploy_dir' 'INT-NOMCP'
+  "
+  [ "$status" -eq 0 ]
+  [ ! -d "$deploy_dir/.opencode/servers/figma-mcp" ]
+}
+
+@test "Intégration filtrage MCP : projet MCP:figma-mcp → seul figma-mcp est déployé" {
+  local deploy_dir="$FAKE_HUB/int-project-figma"
+  mkdir -p "$deploy_dir"
+
+  cat >> "$PROJECTS_FILE" <<'PROJEOF'
+
+## INT-FIGMAONLY
+- Nom : Projet Figma Only
+- MCP : figma-mcp
+PROJEOF
+  echo "INT-FIGMAONLY=$deploy_dir" >> "$PATHS_FILE"
+
+  # Deux serveurs buildés dans le hub
+  for srv in figma-mcp gitlab-mcp; do
+    mkdir -p "$FAKE_HUB/servers/$srv/dist"
+    echo "console.log('$srv');" > "$FAKE_HUB/servers/$srv/dist/index.js"
+    echo "{\"name\":\"$srv\",\"version\":\"1.0.0\"}" > "$FAKE_HUB/servers/$srv/package.json"
+  done
+
+  export SCRIPT_DIR="$HUB_ROOT/scripts"
+  export LIB_DIR="$SCRIPT_DIR/lib"
+  export SERVICES_FILE="$FAKE_HUB/config/services.json"
+  echo '{"services":{}}' > "$SERVICES_FILE"
+
+  run bash -c "
+    npm() { return 0; }; export -f npm
+    source '$SCRIPT_DIR/common.sh'
+    source '$LIB_DIR/services.sh'
+    source '$LIB_DIR/mcp-deploy.sh'
+    deploy_mcp_servers '$deploy_dir' 'INT-FIGMAONLY'
+  "
+  [ "$status" -eq 0 ]
+  [ -d "$deploy_dir/.opencode/servers/figma-mcp" ]
+  [ ! -d "$deploy_dir/.opencode/servers/gitlab-mcp" ]
+}

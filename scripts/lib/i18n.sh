@@ -510,6 +510,12 @@ t() {
       init.gitignore_opencode_prompt) printf '%s' "Ajouter opencode.json et .opencode/ au .git/info/exclude du projet ? [y/N] : " ;;
       init.gitignore_opencode_added)  printf '%s' "opencode.json et .opencode/ ajoutés au .git/info/exclude du projet (exclusion locale, invisible pour les autres devs)" ;;
       init.gitignore_opencode_exists) printf '%s' "opencode.json et .opencode/ déjà présents dans le .git/info/exclude du projet" ;;
+      init.mcp.step_title)    printf '%s' "Services MCP" ;;
+      init.mcp.prompt_intro)  printf '%s' "Activer des intégrations MCP pour ce projet ? [y/N] : " ;;
+      init.mcp.skip)          printf '%s' "Aucun MCP activé — configurer plus tard : oc service setup" ;;
+      init.mcp.all)           printf '%s' "Tous les services MCP activés" ;;
+      init.mcp.none)          printf '%s' "Aucun service MCP activé" ;;
+      init.mcp.selected)      printf '%s' "Services MCP activés :" ;;
 
       # ── cmd-list.sh ────────────────────────────────────────────────────────
       list.title)             printf '%s' "Projets enregistrés" ;;
@@ -1167,6 +1173,12 @@ t_en() {
     init.gitignore_opencode_prompt) printf '%s' "Add opencode.json and .opencode/ to the project .git/info/exclude? [y/N]: " ;;
     init.gitignore_opencode_added)  printf '%s' "opencode.json and .opencode/ added to project .git/info/exclude (local exclusion, invisible to other devs)" ;;
     init.gitignore_opencode_exists) printf '%s' "opencode.json and .opencode/ already present in project .git/info/exclude" ;;
+    init.mcp.step_title)    printf '%s' "MCP Services" ;;
+    init.mcp.prompt_intro)  printf '%s' "Enable MCP integrations for this project? [y/N]: " ;;
+    init.mcp.skip)          printf '%s' "No MCP enabled — configure later: oc service setup" ;;
+    init.mcp.all)           printf '%s' "All MCP services enabled" ;;
+    init.mcp.none)          printf '%s' "No MCP service enabled" ;;
+    init.mcp.selected)      printf '%s' "Enabled MCP services:" ;;
 
     # ── cmd-list.sh ──────────────────────────────────────────────────────────
     list.title)             printf '%s' "Registered projects" ;;

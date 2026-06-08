@@ -226,6 +226,46 @@ Il suffit d'ajouter une entrée dans `config/services.json`. Aucune modification
 
 ---
 
+## Sélection des MCP par projet
+
+Par défaut, **aucun serveur MCP n'est déployé** sur un projet (opt-in). La sélection est stockée dans le champ `- MCP :` de `projects/projects.md` et appliquée à chaque `oc deploy`.
+
+**Configuration lors de `oc init` :**
+
+L'étape 4 du wizard `oc init` propose :
+
+```
+◇  Étape 4/6 — Services MCP
+│
+│  Activer des intégrations MCP pour ce projet ? [y/N] :
+```
+
+Répondre `Y` ouvre un sélecteur multi-choix listant tous les services configurés. Le résultat est persisté immédiatement.
+
+**Configuration manuelle :**
+
+Éditer `projects/projects.md` directement puis relancer `oc deploy <PROJECT_ID>` :
+
+```markdown
+## MON-APP
+- MCP : figma-mcp,gitlab-mcp    # liste CSV des noms mcp_server
+# ou :
+- MCP : all                      # déploie tous les MCP disponibles
+# ou :
+- MCP : none                     # ne déploie aucun MCP (comportement par défaut si champ absent)
+```
+
+**Application d'un changement :**
+
+```bash
+# Après édition de projects.md :
+oc deploy MON-APP
+```
+
+Le champ `- MCP :` est lu lors de la phase de déploiement et contrôle quels serveurs sont copiés dans `.opencode/servers/` et configurés dans `opencode.json`.
+
+---
+
 ## Voir aussi
 
 - [Guide d'intégration Figma](../guides/figma-integration.fr.md)

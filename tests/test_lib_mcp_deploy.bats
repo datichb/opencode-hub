@@ -580,3 +580,135 @@ EOF
   assert_json_field "$deploy_dir/opencode.json" \
     '.mcp["gitlab-mcp"].environment.GITLAB_BASE_URL' "https://gitlab.project.com"
 }
+
+# ── Filtrage MCP par projet (PROJECT_ID) ────────────────────────────────────
+
+@test "deploy_mcp_servers : ne déploie rien si MCP : none" {
+  local deploy_dir="$TEST_DIR/project-filter-none"
+  mkdir -p "$deploy_dir"
+
+  # Créer un serveur buildé dans le hub
+  mkdir -p "$HUB_DIR/servers/figma-mcp/dist"
+  echo "console.log('figma');" > "$HUB_DIR/servers/figma-mcp/dist/index.js"
+  echo '{"name":"figma-mcp","version":"1.0.0"}' > "$HUB_DIR/servers/figma-mcp/package.json"
+
+  # Projet avec MCP : none
+  cat >> "$PROJECTS_FILE" <<'EOF'
+
+## PROJ-NOMCP
+- Nom : Sans MCP
+- MCP : none
+EOF
+
+  npm() { return 0; }
+  export -f npm
+
+  deploy_mcp_servers "$deploy_dir" "PROJ-NOMCP"
+
+  [ ! -d "$deploy_dir/.opencode/servers/figma-mcp" ]
+}
+
+@test "deploy_mcp_servers : déploie seulement figma-mcp si MCP : figma-mcp" {
+  local deploy_dir="$TEST_DIR/project-filter-csv"
+  mkdir -p "$deploy_dir"
+
+  # Créer 2 serveurs buildés
+  for srv in figma-mcp gitlab-mcp; do
+    mkdir -p "$HUB_DIR/servers/$srv/dist"
+    echo "console.log('$srv');" > "$HUB_DIR/servers/$srv/dist/index.js"
+    echo "{\"name\":\"$srv\",\"version\":\"1.0.0\"}" > "$HUB_DIR/servers/$srv/package.json"
+  done
+
+  cat >> "$PROJECTS_FILE" <<'EOF'
+
+## PROJ-FIGMAONLY
+- Nom : Figma Only
+- MCP : figma-mcp
+EOF
+
+  npm() { return 0; }
+  export -f npm
+
+  deploy_mcp_servers "$deploy_dir" "PROJ-FIGMAONLY"
+
+  [ -d "$deploy_dir/.opencode/servers/figma-mcp" ]
+  [ ! -d "$deploy_dir/.opencode/servers/gitlab-mcp" ]
+}
+
+@test "deploy_mcp_servers : déploie tous si MCP : all" {
+  local deploy_dir="$TEST_DIR/project-filter-all"
+  mkdir -p "$deploy_dir"
+
+  for srv in figma-mcp gitlab-mcp; do
+    mkdir -p "$HUB_DIR/servers/$srv/dist"
+    echo "console.log('$srv');" > "$HUB_DIR/servers/$srv/dist/index.js"
+    echo "{\"name\":\"$srv\",\"version\":\"1.0.0\"}" > "$HUB_DIR/servers/$srv/package.json"
+  done
+
+  cat >> "$PROJECTS_FILE" <<'EOF'
+
+## PROJ-ALLSRV
+- Nom : Tous les serveurs
+- MCP : all
+EOF
+
+  npm() { return 0; }
+  export -f npm
+
+  deploy_mcp_servers "$deploy_dir" "PROJ-ALLSRV"
+
+  [ -d "$deploy_dir/.opencode/servers/figma-mcp" ]
+  [ -d "$deploy_dir/.opencode/servers/gitlab-mcp" ]
+}
+
+@test "configure_mcp_in_project : ne configure rien si MCP : none" {
+  local deploy_dir="$TEST_DIR/project-cfg-none"
+  mkdir -p "$deploy_dir/.opencode/servers/figma-mcp/dist"
+
+  cat > "$deploy_dir/opencode.json" <<'EOF'
+{
+  "$schema": "https://opencode.ai/config.json"
+}
+EOF
+
+  cat >> "$PROJECTS_FILE" <<'EOF'
+
+## PROJ-CFG-NONE
+- MCP : none
+EOF
+
+  which jq >/dev/null 2>&1 || skip "jq non disponible"
+
+  configure_mcp_in_project "$deploy_dir" "PROJ-CFG-NONE"
+
+  run jq -r '.mcp // "null"' "$deploy_dir/opencode.json"
+  [ "$output" = "null" ]
+}
+
+@test "configure_mcp_in_project : configure seulement figma-mcp si MCP : figma-mcp" {
+  local deploy_dir="$TEST_DIR/project-cfg-csv"
+  mkdir -p "$deploy_dir/.opencode/servers/figma-mcp/dist"
+  mkdir -p "$deploy_dir/.opencode/servers/gitlab-mcp/dist"
+
+  cat > "$deploy_dir/opencode.json" <<'EOF'
+{
+  "$schema": "https://opencode.ai/config.json"
+}
+EOF
+
+  cat >> "$PROJECTS_FILE" <<'EOF'
+
+## PROJ-CFG-CSV
+- MCP : figma-mcp
+EOF
+
+  which jq >/dev/null 2>&1 || skip "jq non disponible"
+
+  configure_mcp_in_project "$deploy_dir" "PROJ-CFG-CSV"
+
+  run jq -r '.mcp["figma-mcp"].type' "$deploy_dir/opencode.json"
+  [ "$output" = "local" ]
+
+  run jq -r '.mcp["gitlab-mcp"] // "null"' "$deploy_dir/opencode.json"
+  [ "$output" = "null" ]
+}

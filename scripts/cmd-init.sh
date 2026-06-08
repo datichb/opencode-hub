@@ -22,7 +22,7 @@ _step() {
 # ── Récapitulatif final ────────────────────────────────────────────────────────
 _summary() {
   local id="$1" path="$2" name="$3" stack="$4" tracker="$5" beads_ok="$6"
-  local git_remote="$7" agents="$8" provider="$9" deployed="${10}"
+  local git_remote="$7" agents="$8" mcp="$9" provider="${10}" deployed="${11}"
   local width=54
   local bar=""
   local i=0
@@ -43,6 +43,7 @@ _summary() {
   fi
   [ -n "$git_remote" ] && printf "${GREEN}│${RESET}  %-14s %-36s ${GREEN}│${RESET}\n" "Git remote"  "${git_remote:0:36}"
   [ -n "$agents"     ] && printf "${GREEN}│${RESET}  %-14s %-36s ${GREEN}│${RESET}\n" "Agents"      "${agents:0:36}"
+  [ -n "$mcp"        ] && printf "${GREEN}│${RESET}  %-14s %-36s ${GREEN}│${RESET}\n" "MCP"         "${mcp:0:36}"
   [ -n "$provider"   ] && printf "${GREEN}│${RESET}  %-14s %-36s ${GREEN}│${RESET}\n" "Provider"    "${provider:0:36}"
   [ -n "$deployed"   ] && printf "${GREEN}│${RESET}  %-14s %-36s ${GREEN}│${RESET}\n" "Déployé"     "${deployed}"
   echo -e "${GREEN}│${RESET}"
@@ -67,7 +68,7 @@ _intro "Initialisation d'un projet"
 # ─────────────────────────────────────────────────────────────────────────────
 # ÉTAPE 1 — Informations projet
 # ─────────────────────────────────────────────────────────────────────────────
-_step 1 5 "Informations projet"
+_step 1 6 "Informations projet"
 
 if [ -z "$PROJECT_ID" ]; then
   _prompt PROJECT_ID "PROJECT_ID (ex: MON-APP) : "
@@ -153,7 +154,7 @@ fi
 # ─────────────────────────────────────────────────────────────────────────────
 # ÉTAPE 2 — Beads
 # ─────────────────────────────────────────────────────────────────────────────
-_step 2 5 "Beads & tracker"
+_step 2 6 "Beads & tracker"
 
 BEADS_OK=0
 GIT_REMOTE_STATUS=""
@@ -272,7 +273,7 @@ fi
 # ─────────────────────────────────────────────────────────────────────────────
 # ÉTAPE 3 — Agents
 # ─────────────────────────────────────────────────────────────────────────────
-_step 3 5 "Agents"
+_step 3 6 "Agents"
 
 _prompt select_agents "Sélectionner les agents à déployer ? [y/N] : "
 AGENTS_SUMMARY=""
@@ -318,9 +319,37 @@ if [ -t 0 ]; then
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ÉTAPE 4 — Fournisseur LLM (optionnel, surcharge le hub)
+# ÉTAPE 4 — Services MCP
 # ─────────────────────────────────────────────────────────────────────────────
-_step 4 5 "Fournisseur LLM"
+_step 4 6 "$(t 'init.mcp.step_title')"
+
+MCP_SUMMARY=""
+_prompt setup_mcp "$(t 'init.mcp.prompt_intro')"
+# shellcheck disable=SC2154
+if [[ "$setup_mcp" =~ ^[Yy]$ ]] && [ -t 0 ]; then
+  PICKED_MCP=""
+  _pick_mcp_services "none"
+  _set_project_mcp "$PROJECT_ID" "${PICKED_MCP:-none}"
+  if [ "${PICKED_MCP:-none}" = "none" ] || [ -z "${PICKED_MCP:-}" ]; then
+    log_info "$(t 'init.mcp.none')"
+    MCP_SUMMARY="$(t 'init.mcp.none')"
+  elif [ "$PICKED_MCP" = "all" ]; then
+    log_success "$(t 'init.mcp.all')"
+    MCP_SUMMARY="$(t 'init.mcp.all')"
+  else
+    log_success "$(t 'init.mcp.selected') $PICKED_MCP"
+    MCP_SUMMARY="$PICKED_MCP"
+  fi
+else
+  _set_project_mcp "$PROJECT_ID" "none"
+  log_info "$(t 'init.mcp.skip')"
+  MCP_SUMMARY="$(t 'init.mcp.none')"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ÉTAPE 5 — Fournisseur LLM (optionnel, surcharge le hub)
+# ─────────────────────────────────────────────────────────────────────────────
+_step 5 6 "Fournisseur LLM"
 
 # Afficher le fournisseur actuel du hub comme contexte
 _hub_provider_name=$(get_hub_default_provider 2>/dev/null || echo "")
@@ -423,7 +452,7 @@ fi
 # ─────────────────────────────────────────────────────────────────────────────
 # ÉTAPE 5 — Déploiement
 # ─────────────────────────────────────────────────────────────────────────────
-_step 5 5 "Déploiement"
+_step 6 6 "Déploiement"
 
 if [ -d "$PROJECT_PATH" ]; then
   DEPLOYED="non"
@@ -514,6 +543,7 @@ _summary \
   "$BEADS_OK" \
   "${GIT_REMOTE_STATUS:-}" \
   "${AGENTS_SUMMARY:-}" \
+  "${MCP_SUMMARY:-}" \
   "${PROVIDER_SUMMARY:-}" \
   "${DEPLOYED:-}"
 _outro "Projet ${PROJECT_ID} prêt — ./oc.sh start ${PROJECT_ID}"
