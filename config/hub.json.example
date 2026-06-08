@@ -12,7 +12,8 @@
       "build",
       "plan",
       "general",
-      "explore"
+      "explore",
+      "scout"
     ]
   },
   "agent_models": {

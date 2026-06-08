@@ -228,7 +228,7 @@ _pick_agents() {
 # ── Agents natifs OpenCode ────────────────────────────────────────────────────
 
 ##
-# Rendu du sélecteur d'agents natifs OpenCode (build, plan, general, explore).
+# Rendu du sélecteur d'agents natifs OpenCode (build, plan, general, explore, scout).
 # Affiche la liste plate sans séparateurs de famille.
 # Utilise les variables partagées de _pick_from_list :
 #   _pick_items, _pick_checked, _pick_cursor, _pick_total
@@ -286,14 +286,15 @@ _render_native_agents_page() {
 _pick_native_agents() {
   local current_csv="${1:-}"
 
-  _pick_items=("build" "plan" "general" "explore")
+  _pick_items=("build" "plan" "general" "explore" "scout")
   _pick_descriptions=(
     "Lance des builds/compilations automatiquement"
     "Génère un plan avant d'exécuter les tâches"
     "Agent généraliste polyvalent"
     "Exploration et analyse du code"
+    "Recherche de documentation et dépendances externes"
   )
-  _pick_total=4
+  _pick_total=5
 
   # Initialiser le tableau de sélection depuis le CSV courant
   _pick_checked=()

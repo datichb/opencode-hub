@@ -9,6 +9,15 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 
 ## [Unreleased]
 
+### Changed
+
+- **Agent natif `scout` désactivé par défaut** — OpenCode v1.16.0 introduit un agent natif `scout` (subagent read-only pour la recherche de documentation et dépendances externes) dont l'ID entre en collision avec l'agent hub `planning/scout`. Il est maintenant masqué au même titre que `build`, `plan`, `general` et `explore` :
+  - `config/hub.json` : `scout` ajouté dans `opencode.disabled_native_agents`
+  - `config/hub.json.example` : idem pour les nouvelles installations
+  - `scripts/lib/agent-picker.sh` : `scout` ajouté dans `_pick_native_agents()` (TUI `oc init`) avec description "Recherche de documentation et dépendances externes" — `_pick_total` passe de 4 à 5
+  - `scripts/lib/project.sh` : `scout` ajouté dans le squelette fallback de `hub.json`
+  - `docs/reference/config.fr.md` + `docs/reference/config.en.md` : listes canoniques de `disabled_native_agents` et `Disable agents` mises à jour (L38/L142 FR, L40/L144 EN)
+
 ### Added
 
 - **Enrichissement continu des documents vivants — extension à tous les agents** — le mécanisme d'amélioration continue de `ONBOARDING.md` et `CONVENTIONS.md` est étendu de 3 agents (auditor, planner, debugger) à l'ensemble du hub. Chaque agent propose désormais systématiquement la capitalisation de ses découvertes après son travail, toujours avec confirmation explicite de l'utilisateur et délégation au `documentarian` :

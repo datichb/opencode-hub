@@ -95,7 +95,7 @@ ensure_hub_config() {
   },
   "opencode": {
     "model": "${DEFAULT_MODEL}",
-    "disabled_native_agents": ["build", "plan", "general", "explore"]
+    "disabled_native_agents": ["build", "plan", "general", "explore", "scout"]
   },
   "cli": {
     "language": "fr"
