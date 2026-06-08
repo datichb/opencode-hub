@@ -13,7 +13,7 @@ import type { Plugin } from "@opencode-ai/plugin"
 // - Copy this file to ~/.config/opencode/plugins/rtk.ts
 // - Or use: oc plugin install rtk
 //
-// Version: 1.0.0 (2026-05-29)
+// Version: 1.1.0 (2026-06-08)
 // Compatible with: RTK 0.42.0+, OpenCode 1.15.0+
 
 export const RtkOpenCodePlugin: Plugin = async ({ $, client }) => {
@@ -290,10 +290,12 @@ export const RtkOpenCodePlugin: Plugin = async ({ $, client }) => {
     },
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Hook: Session Idle (Summary Report)
+    // Hook: Dispose (Session Summary Report)
+    // Replaces the non-existent "session.idle" hook — "dispose" is the
+    // official lifecycle hook called when the plugin is torn down at session end.
     // ─────────────────────────────────────────────────────────────────────────
     
-    "session.idle": async () => {
+    "dispose": async () => {
       if (!sessionStarted) return
       
       // Don't show summary if no commands were rewritten
