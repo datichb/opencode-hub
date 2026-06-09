@@ -1,7 +1,7 @@
 # WebSearch Stack Research — Planning Agent Protocol
 
 **Version**: 1.0.0  
-**Target**: Planning agents (scout, onboarder, planner)  
+**Target**: Planning agents (pathfinder, onboarder, planner)  
 **Extends**: `skills/shared/websearch-usage.md`
 
 ## Purpose
@@ -12,7 +12,7 @@ This skill provides a specialized protocol for using WebSearch to discover and e
 
 ### Trigger Conditions
 Use WebSearch for stack research when:
-1. **Project Initialization**: Scout detects incomplete or undocumented tech stack
+1. **Project Initialization**: Pathfinder detects incomplete or undocumented tech stack
 2. **Technology Decision**: Choosing between multiple libraries/frameworks
 3. **Migration Planning**: Evaluating alternatives to legacy tech
 4. **Feature Implementation**: Unknown how to implement new requirements
@@ -20,7 +20,7 @@ Use WebSearch for stack research when:
 
 ### Planning Phase Integration
 ```
-Scout Phase:
+Pathfinder Phase:
 → Discover existing tech stack
 → WebSearch: Missing documentation, migration guides
 
@@ -170,16 +170,16 @@ Acceptable for most projects:
 
 ## Workflow Integration
 
-### Scout → WebSearch Workflow
+### Pathfinder → WebSearch Workflow
 ```
-1. SCOUT: Analyze existing codebase
+1. PATHFINDER: Analyze existing codebase
    → Detected: Next.js 13, React 18, unknown state management
 
 2. WEBSEARCH: Identify missing pieces
    Query: "Next.js 13 state management detection patterns"
    → Learn: Look for Redux, Zustand, Jotai imports
 
-3. SCOUT: Re-scan with new patterns
+3. PATHFINDER: Re-scan with new patterns
    → Detected: Zustand in use
 
 4. WEBSEARCH: Document Zustand usage

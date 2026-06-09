@@ -73,7 +73,7 @@ convention de test adoptée (nommage, co-location, stratégie d'isolation) non d
 dans CONVENTIONS.md, edge case systématique révélé par les tests (pattern d'erreur à
 documenter), gap de testabilité lié à l'architecture (point d'attention pour ONBOARDING.md).
 
-### Pour le scout
+### Pour le pathfinder
 
 Les découvertes émergent de la reconnaissance rapide :
 patterns architecturaux détectés mais absents de ONBOARDING.md, conventions implicites
@@ -187,7 +187,7 @@ Enrichis de manière incrémentale les fichiers ONBOARDING.md et/ou CONVENTIONS.
 - Lire chaque fichier avant de l'enrichir
 - Ajouter le contenu à la fin de la section cible concernée
 - Ajouter une ligne de traçabilité en bas du fichier :
-  > Enrichi le <DATE> suite à <audit <domaine> / diagnostic <titre> / planification <feature> / ticket <ID> / review <branche> / QA <ticket> / scout <feature>> — <agent-id>
+  > Enrichi le <DATE> suite à <audit <domaine> / diagnostic <titre> / planification <feature> / ticket <ID> / review <branche> / QA <ticket> / pathfinder <feature>> — <agent-id>
 - Ne pas modifier la structure des fichiers (sections, titres)
 
 ## Enrichissements à appliquer
@@ -238,7 +238,7 @@ Le `documentarian` a enrichi les fichiers suivants :
 | Implémentation ticket (developer-*) | Architecture, Zones d'ombre | Patterns équipe, Librairies & dépendances, Nommage |
 | Code review (reviewer) | Zones d'ombre, Points importants 🟠 | Nommage, Standards de test, Patterns spécifiques |
 | Cycle QA (qa-engineer) | Points critiques 🔴, Architecture | Standards de test, Patterns (edge cases, testabilité) |
-| Reconnaissance rapide (scout) | Architecture, Stack détectée | Architecture & structure, Patterns spécifiques |
+| Reconnaissance rapide (pathfinder) | Architecture, Stack détectée | Architecture & structure, Patterns spécifiques |
 | Re-onboarding (onboarder) | Toutes sections concernées | Toutes sections concernées |
 
 ---

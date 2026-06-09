@@ -214,7 +214,7 @@ opencode-hub integrates with Figma to enrich planning workflows with design cont
 
 ### Features
 
-- **Automatic maquette detection**: Scout, Planner, and Onboarder search Figma files by feature or project name
+- **Automatic maquette detection**: Pathfinder, Planner, and Onboarder search Figma files by feature or project name
 - **UX/UI signal detection**: Automatic detection of multi-step flows and visual components
 - **Design tokens extraction**: Extract colors, typography, spacing, and effects from Figma Variables
 - **Design system detection**: Automatically identify DSFR, Material Design, or custom design systems
@@ -238,11 +238,11 @@ opencode-hub integrates with Figma to enrich planning workflows with design cont
 
 ### Usage
 
-The Scout, Planner, and Onboarder agents automatically query Figma when analyzing UI features or exploring projects:
+The Pathfinder, Planner, and Onboarder agents automatically query Figma when analyzing UI features or exploring projects:
 
 ```bash
-# Scout with Figma enrichment
-> Scout cette feature: dashboard utilisateur
+# Pathfinder with Figma enrichment
+> Pathfinder cette feature: dashboard utilisateur
 
 # Planner with Figma context (Phase 1.3)
 > Planifie cette feature: processus inscription

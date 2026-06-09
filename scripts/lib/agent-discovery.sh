@@ -112,7 +112,7 @@ resolve_agent_similarity() {
 
   # ── Niveau 1 : match exact avec un ID hub canonique ─────────────────────
   local hub_ids=(
-    "orchestrator" "orchestrator-dev" "planner" "scout" "onboarder"
+    "orchestrator" "orchestrator-dev" "planner" "pathfinder" "onboarder"
     "developer-frontend" "developer-backend" "developer-api" "developer-fullstack"
     "developer-devops" "developer-platform" "developer-mobile" "developer-data"
     "developer-security" "developer-refactor" "developer-migrator"

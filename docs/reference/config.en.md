@@ -37,7 +37,7 @@ Global hub configuration. Created by `oc install` and editable manually.
 | `default_provider.base_url` | string | `""` | Custom base URL (optional for litellm and others) |
 | `default_provider.model` | string | `""` | Default AI model for this provider (if empty: fallback to `opencode.model`) |
 | `opencode.model` | string | — | AI model injected into `opencode.json` of deployed projects (if `default_provider.model` is empty) |
-| `opencode.disabled_native_agents` | array | `[]` | Native OpenCode agents disabled by default (`build`, `plan`, `general`, `explore`, `scout`) — overridable per project via `- Disable agents:` in `projects.md` |
+| `opencode.disabled_native_agents` | array | `[]` | Native OpenCode agents disabled by default (`build`, `plan`, `general`, `explore`, `pathfinder`) — overridable per project via `- Disable agents:` in `projects.md` |
 
 ### Minimal example (OpenCode only)
 
@@ -141,7 +141,7 @@ their own. Automatically created from `projects/projects.example.md` on the firs
 - `Language`: optional — free value (e.g. `english`, `spanish`) — if absent, agents respond in French
 - `Agents`: optional — `all` or CSV of agent identifiers — filtered at deployment
 - `Modes`: optional — CSV of `agent-id:mode` pairs — overrides agent frontmatter. Modes: `primary`, `subagent`. Leave empty to revert to frontmatter values.
-- `Disable agents`: optional — CSV of native OpenCode agents to disable (`build`, `plan`, `general`, `explore`, `scout`) — overrides `opencode.disabled_native_agents` in `hub.json`. Empty = use hub default.
+- `Disable agents`: optional — CSV of native OpenCode agents to disable (`build`, `plan`, `general`, `explore`, `pathfinder`) — overrides `opencode.disabled_native_agents` in `hub.json`. Empty = use hub default.
 - This file is **local** — never commit it
 
 ---
@@ -343,7 +343,7 @@ For each field, the current value is shown. Press **Enter** to keep it unchanged
 | `Tracker` | `none` \| `jira` \| `gitlab` | External issue tracker |
 | `Labels` | CSV | Beads labels (e.g. `feature,fix,front,back`) |
 | `Language` | free text | Agent language (`english`, `spanish` — absent = French) |
-| `Disable agents` | CSV | Native OpenCode agents to disable (`build`, `plan`, `general`, `explore`, `scout`) — use `none` to clear |
+| `Disable agents` | CSV | Native OpenCode agents to disable (`build`, `plan`, `general`, `explore`, `pathfinder`) — use `none` to clear |
 | `MCP` | `all` \| `none` \| CSV | MCP servers to enable |
 | `Worktree` | `enabled` \| `disabled` | Enable git worktrees for parallel work |
 | `Worktree auto cleanup` | `true` \| `false` | Auto-remove merged worktrees *(only shown if Worktree is enabled)* |

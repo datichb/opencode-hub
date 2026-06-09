@@ -15,11 +15,11 @@
   - `scripts/lib/mcp-deploy.sh` : Fonctions de déploiement MCP (appelées automatiquement par `oc deploy`)
 
 - ✅ **Skills d'intégration**
-  - `skills/adapters/figma-scout-protocol.md` : Enrichissement Scout
+  - `skills/adapters/figma-pathfinder-protocol.md` : Enrichissement Pathfinder
   - `skills/adapters/figma-planner-protocol.md` : Enrichissement Planner
 
 - ✅ **Agents modifiés**
-  - `agents/planning/scout.md` : Référence skill + MCP server
+  - `agents/planning/pathfinder.md` : Référence skill + MCP server
   - `agents/planning/planner.md` : Référence skill + MCP server
 
 - ✅ **Documentation**
@@ -167,10 +167,10 @@ cd ~/workspace/my-test-project
 # Lancer OpenCode
 opencode
 
-# Invoquer le scout avec une feature UI
-> Scout cette feature : tableau de bord utilisateur
+# Invoquer le pathfinder avec une feature UI
+> Pathfinder cette feature : tableau de bord utilisateur
 
-# Le scout devrait :
+# Le pathfinder devrait :
 # 1. Explorer la codebase (normal)
 # 2. Chercher dans Figma (nouveau)
 # 3. Inclure les données Figma dans son rapport
@@ -203,7 +203,7 @@ opencode
 - [ ] Dev Resources ajoutés (liens vers tickets si existants)
 
 ### Test end-to-end
-- [ ] Scout invoqué sur une feature UI
+- [ ] Pathfinder invoqué sur une feature UI
 - [ ] Recherche Figma effectuée
 - [ ] Données Figma incluses dans le rapport
 - [ ] Signaux UX/UI détectés automatiquement
@@ -330,12 +330,12 @@ oc figma deploy --project MY-PROJECT
 - Complexité estimée (L ou XL)
 - Recommandations d'escalade au planner
 
-### Test 3 : Enrichissement Scout
+### Test 3 : Enrichissement Pathfinder
 
 **Feature :** "Page de paramètres"
 
 **Attendu :**
-- Scout cherche dans Figma automatiquement
+- Pathfinder cherche dans Figma automatiquement
 - Rapport contient section "🎨 Contexte Figma"
 - Composants listés
 - Estimation ajustée selon composants détectés

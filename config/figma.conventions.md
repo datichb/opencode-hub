@@ -1,6 +1,6 @@
 # Conventions Figma pour opencode-hub
 
-Ce document définit les conventions d'organisation des fichiers Figma pour faciliter l'intégration avec les agents Scout et Planner.
+Ce document définit les conventions d'organisation des fichiers Figma pour faciliter l'intégration avec les agents Pathfinder et Planner.
 
 ## Nommage des fichiers
 
@@ -113,7 +113,7 @@ Utiliser les commentaires pour :
 
 **Format recommandé :**
 ```
-[Scout] Détection automatique :
+[Pathfinder] Détection automatique :
 - 5 composants identifiés
 - Complexité estimée : M
 - Signaux: UX ⚠️, UI ⚠️
@@ -239,7 +239,7 @@ Utiliser les variantes Figma pour les états :
 
 ## Configuration pour les agents
 
-Les agents Scout et Planner utilisent ces conventions pour :
+Les agents Pathfinder et Planner utilisent ces conventions pour :
 - **Rechercher** les fichiers par nom de feature
 - **Analyser** la structure des frames
 - **Détecter** les signaux UX/UI automatiquement

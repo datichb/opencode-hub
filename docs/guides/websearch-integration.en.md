@@ -32,7 +32,7 @@ opencode-hub/
 │   │   ├── auditor-security.md    ← websearch permission enabled
 │   │   └── auditor-performance.md ← websearch permission enabled
 │   ├── planning/
-│   │   ├── scout.md               ← websearch permission enabled
+│   │   ├── pathfinder.md               ← websearch permission enabled
 │   │   ├── onboarder.md           ← websearch permission enabled
 │   │   └── planner.md             ← websearch permission enabled
 │   ├── design/
@@ -132,7 +132,7 @@ cd /path/to/my-project
 oc start auditor security
 
 # Planning with stack research
-oc start scout
+oc start pathfinder
 
 # Design with pattern research
 oc start ux-designer
@@ -190,7 +190,7 @@ WebSearch Status
 | | `auditor-observability` | Observability patterns, SLO examples |
 | | `auditor-privacy` | GDPR updates, privacy best practices |
 | **Planning** (3) | | |
-| | `scout` | Quick stack research, library comparison |
+| | `pathfinder` | Quick stack research, library comparison |
 | | `onboarder` | Tech stack documentation, setup guides |
 | | `planner` | Library comparison, architecture patterns, integration guides |
 | **Design** (2) | | |

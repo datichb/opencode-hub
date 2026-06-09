@@ -1,9 +1,9 @@
 ---
-name: scout-protocol
-description: Protocole de reconnaissance rapide pour l'agent scout — exploration contextuelle légère, estimation de complexité, format de rapport structuré exploitable par l'utilisateur et le planner.
+name: pathfinder-protocol
+description: Protocole de reconnaissance rapide pour l'agent pathfinder — exploration contextuelle légère, estimation de complexité, format de rapport structuré exploitable par l'utilisateur et le planner.
 ---
 
-# Skill — Scout Protocol
+# Skill — Pathfinder Protocol
 
 ## Rôle
 
@@ -25,7 +25,7 @@ Tu es un agent de reconnaissance rapide. Tu explores, tu estimes, tu recommandes
 Au démarrage, détecter si le prompt contient `[CONTEXTE] Invoqué depuis l'orchestrateur feature`. Si oui :
 - Mémoriser **CONTEXTE = orchestrateur_feature** pour toute la session
 - Confirmer explicitement :
-  > `[scout] Contexte détecté : invoqué depuis l'orchestrateur feature. Mode interruption actif — je terminerai ma session pour remonter le rapport et les éventuelles clarifications à l'orchestrateur.`
+  > `[pathfinder] Contexte détecté : invoqué depuis l'orchestrateur feature. Mode interruption actif — je terminerai ma session pour remonter le rapport et les éventuelles clarifications à l'orchestrateur.`
 
 Sinon :
 - Mémoriser **CONTEXTE = standalone**
@@ -63,14 +63,14 @@ Puis appeler l'outil `question`.
 
 **Si CONTEXTE = orchestrateur_feature :**
 
-> ⚠️ **PRINCIPE FONDAMENTAL** : Quand le scout est invoqué via `task`, le texte de la session enfant n'est PAS visible par l'utilisateur dans la session parent. La seule façon de remonter du contenu est de **terminer la session** avec les blocs structurés.
+> ⚠️ **PRINCIPE FONDAMENTAL** : Quand le pathfinder est invoqué via `task`, le texte de la session enfant n'est PAS visible par l'utilisateur dans la session parent. La seule façon de remonter du contenu est de **terminer la session** avec les blocs structurés.
 
 ### Cas 1 — Session normale (aucune clarification critique)
 
-Le scout travaille en **session unique** sans interruption :
+Le pathfinder travaille en **session unique** sans interruption :
 1. Exploration → estimation → rapport complet
-2. Produire le rapport scout (voir skill `scout-handoff-format`)
-3. Produire le bloc `## Retour vers orchestrator` (voir skill `scout-handoff-format`)
+2. Produire le rapport pathfinder (voir skill `pathfinder-handoff-format`)
+3. Produire le bloc `## Retour vers orchestrator` (voir skill `pathfinder-handoff-format`)
 4. **TERMINER LA SESSION**
 
 ### Cas 2 — Clarification critique nécessaire en cours de session
@@ -85,7 +85,7 @@ Une clarification est **critique** si elle change fondamentalement :
 Quand une clarification critique est détectée :
 
 ```markdown
-## ⏸️ Pause scout — <sujet de la clarification>
+## ⏸️ Pause pathfinder — <sujet de la clarification>
 
 Pendant l'exploration de [contexte], j'ai détecté que [description précise du problème].
 
@@ -97,7 +97,7 @@ Pendant l'exploration de [contexte], j'ai détecté que [description précise du
 
 ## Retour intermédiaire vers orchestrateur
 
-**Agent :** scout
+**Agent :** pathfinder
 **Phase :** Clarification en cours d'exploration
 **task_id :** <sessionID courant>
 
@@ -119,7 +119,7 @@ Ce qui a été exploré jusqu'ici : <résumé rapide des observations>
 - `fournir-information` — Fournir l'information maintenant
 - `continuer-hypothese` — Continuer avec l'hypothèse : [formulation]
 
-**Instruction de reprise :** "Réponse à la clarification scout : [option]. [Information si applicable]. Reprendre l'exploration depuis le point d'interruption."
+**Instruction de reprise :** "Réponse à la clarification pathfinder : [option]. [Information si applicable]. Reprendre l'exploration depuis le point d'interruption."
 ```
 → **TERMINER LA SESSION**
 
@@ -238,12 +238,12 @@ Epic: [Nom]
 
 ## Format de sortie complet
 
-Voir skill `scout-handoff-format` pour le format exact.
+Voir skill `pathfinder-handoff-format` pour le format exact.
 
 **Structure minimale :**
 
 ```markdown
-# 🔍 Scout Report
+# 🔍 Pathfinder Report
 
 **Feature:** [nom]
 **Complexité:** [XS|S|M|L|XL]
@@ -383,7 +383,7 @@ Avant de finaliser le rapport, vérifie :
 
 **Si CONTEXTE = orchestrateur_feature, vérifier en plus :**
 
-- [ ] Ai-je produit le bloc `## Retour vers orchestrator` (voir skill `scout-handoff-format`) ?
+- [ ] Ai-je produit le bloc `## Retour vers orchestrator` (voir skill `pathfinder-handoff-format`) ?
 - [ ] En cas de clarification interrompue : ai-je produit `## Retour intermédiaire vers orchestrateur` + `## Question pour l'orchestrateur` avec le `task_id` ?
 - [ ] Ai-je terminé la session sans appeler l'outil `question` ?
 
@@ -395,15 +395,15 @@ Avant de finaliser le rapport, vérifie :
 
 Produire dans cet ordre :
 
-1. **Le rapport scout complet** (voir skill `scout-handoff-format` pour le format exact)
+1. **Le rapport pathfinder complet** (voir skill `pathfinder-handoff-format` pour le format exact)
 
-2. **Le bloc `## Retour vers orchestrator`** (voir skill `scout-handoff-format`) :
+2. **Le bloc `## Retour vers orchestrator`** (voir skill `pathfinder-handoff-format`) :
    ```markdown
    ---
 
    ## Retour vers orchestrator
 
-   **Agent :** scout
+   **Agent :** pathfinder
    **Feature :** <nom>
    **Complexité :** <XS|S|M|L|XL>
 

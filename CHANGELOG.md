@@ -11,7 +11,7 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 
 ### Fixed
 
-- **`oc deploy` bloqué si `jq` absent — les agents natifs OpenCode n'étaient pas désactivés** — sur une installation fraîche où `jq` était refusé lors de l'install, `get_hub_disabled_native_agents()` retournait silencieusement `""` (guard `return 0`), et `adapter_deploy_config()` ne générait aucune entrée `{"disable": true}` dans `opencode.json`. Les agents natifs OpenCode (`build`, `plan`, `general`, `explore`, `scout`) restaient actifs alors qu'ils devaient être masqués :
+- **`oc deploy` bloqué si `jq` absent — les agents natifs OpenCode n'étaient pas désactivés** — sur une installation fraîche où `jq` était refusé lors de l'install, `get_hub_disabled_native_agents()` retournait silencieusement `""` (guard `return 0`), et `adapter_deploy_config()` ne générait aucune entrée `{"disable": true}` dans `opencode.json`. Les agents natifs OpenCode (`build`, `plan`, `general`, `explore`, `pathfinder`) restaient actifs alors qu'ils devaient être masqués :
   - `scripts/adapters/opencode.adapter.sh` — `adapter_validate()` : `jq` est désormais vérifié au même titre qu'`opencode` ; deploy bloqué avec message d'erreur si `jq` absent
   - `scripts/lib/project.sh` — `get_hub_disabled_native_agents()` : fallback bash (grep/sed) implémenté pour parser `disabled_native_agents` depuis `hub.json` sans `jq` ; la désactivation des agents natifs fonctionne même si `jq` est temporairement absent
   - `scripts/adapters/opencode.adapter.sh` — `adapter_deploy_config()` : warning explicite si `disabled_csv` est vide alors que la clé `disabled_native_agents` est absente de `hub.json`
@@ -22,7 +22,7 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 
 ### Changed
 
-- **Agent natif `scout` désactivé par défaut** — OpenCode v1.16.0 introduit un agent natif `scout` (subagent read-only pour la recherche de documentation et dépendances externes) dont l'ID entre en collision avec l'agent hub `planning/scout`. Il est maintenant masqué au même titre que `build`, `plan`, `general` et `explore` :
+- **Agent natif `scout` désactivé par défaut** — OpenCode v1.16.0 introduit un agent natif `scout` (subagent read-only pour la recherche de documentation et dépendances externes) dont l'ID entre en collision avec l'agent hub `planning/pathfinder`. Il est maintenant masqué au même titre que `build`, `plan`, `general` et `explore` :
   - `config/hub.json` : `scout` ajouté dans `opencode.disabled_native_agents`
   - `config/hub.json.example` : idem pour les nouvelles installations
   - `scripts/lib/agent-picker.sh` : `scout` ajouté dans `_pick_native_agents()` (TUI `oc init`) avec description "Recherche de documentation et dépendances externes" — `_pick_total` passe de 4 à 5
@@ -32,9 +32,9 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 ### Added
 
 - **Enrichissement continu des documents vivants — extension à tous les agents** — le mécanisme d'amélioration continue de `ONBOARDING.md` et `CONVENTIONS.md` est étendu de 3 agents (auditor, planner, debugger) à l'ensemble du hub. Chaque agent propose désormais systématiquement la capitalisation de ses découvertes après son travail, toujours avec confirmation explicite de l'utilisateur et délégation au `documentarian` :
-  - `skills/auditor/living-docs-enrichment.md` → déplacé vers `skills/shared/living-docs-enrichment.md` (nouveau path) + enrichi avec les nouvelles sources de découvertes (developer-*, reviewer, qa-engineer, scout, onboarder en mode re-onboarding)
+  - `skills/auditor/living-docs-enrichment.md` → déplacé vers `skills/shared/living-docs-enrichment.md` (nouveau path) + enrichi avec les nouvelles sources de découvertes (developer-*, reviewer, qa-engineer, pathfinder, onboarder en mode re-onboarding)
   - `agents/planning/onboarder.md` : ajout du skill `shared/living-docs-enrichment` + comportement Phase 5 adapté — si `ONBOARDING.md`/`CONVENTIONS.md` existent déjà, propose enrichissement incrémental (via `documentarian`) plutôt que réécriture silencieuse ; réécriture complète reste disponible avec avertissement explicite sur la perte des enrichissements accumulés
-  - `agents/planning/scout.md` : ajout du skill `shared/living-docs-enrichment` — propose la capitalisation des patterns architecturaux détectés en fin de rapport
+  - `agents/planning/pathfinder.md` : ajout du skill `shared/living-docs-enrichment` — propose la capitalisation des patterns architecturaux détectés en fin de rapport
   - `agents/quality/reviewer.md` : ajout du skill `shared/living-docs-enrichment` + permission `task.documentarian: allow` — propose la capitalisation des conventions observées dans le diff après le rapport de review
   - `agents/quality/qa-engineer.md` : ajout du skill `shared/living-docs-enrichment` + permission `task.documentarian: allow` — propose la capitalisation des conventions de test et edge cases systématiques révélés après le rapport de couverture
   - `agents/developer/*.md` (11 agents) : ajout du skill `shared/living-docs-enrichment` + permission `task.documentarian: allow` dans tous les agents developer-*
@@ -44,8 +44,8 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
   - Agents existants (auditor, planner, debugger) : référence `auditor/living-docs-enrichment` → `shared/living-docs-enrichment` dans leur frontmatter
 
 - **Documentation mise à jour** :
-  - `docs/architecture/skills.en.md` + `.fr.md` : entrée `living-docs-enrichment` déplacée du domaine `auditor/` vers un nouveau bloc `shared/` ; agents mis à jour (onboarder, scout, reviewer, qa-engineer, developer-* ajoutés) ; matrice de dépendances mise à jour pour tous les agents concernés
-  - `docs/architecture/agents.en.md` + `.fr.md` : paths `auditor/living-docs-enrichment` → `shared/living-docs-enrichment` ; paragraphes "living docs enrichment" ajoutés pour onboarder, scout, reviewer, qa-engineer et developer-* ; règles communes mises à jour
+  - `docs/architecture/skills.en.md` + `.fr.md` : entrée `living-docs-enrichment` déplacée du domaine `auditor/` vers un nouveau bloc `shared/` ; agents mis à jour (onboarder, pathfinder, reviewer, qa-engineer, developer-* ajoutés) ; matrice de dépendances mise à jour pour tous les agents concernés
+  - `docs/architecture/agents.en.md` + `.fr.md` : paths `auditor/living-docs-enrichment` → `shared/living-docs-enrichment` ; paragraphes "living docs enrichment" ajoutés pour onboarder, pathfinder, reviewer, qa-engineer et developer-* ; règles communes mises à jour
   - `docs/architecture/overview.en.md` + `.fr.md` : Principe 5 étendu — liste tous les agents participants à la boucle d'enrichissement continu
   - `docs/architecture/adr/010-hybrid-skills-architecture.en.md` + `.fr.md` : path `shared/living-docs-enrichment` mis à jour
   - `docs/guides/workflows.en.md` + `.fr.md` : Scénarios 4 (implémentation feature → docs vivants) et 5 (code review → docs vivants) ajoutés ; scénarios existants renumérotés (4-7 → 6-9)
@@ -112,8 +112,8 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
   - Client `GitLabClient` avec axios, retry/backoff exponentiel (429/503/504 + erreurs réseau) et `classifyGitlabError()`
   - Support instances self-hosted via `GITLAB_BASE_URL`
   - SDK `@modelcontextprotocol/sdk` upgradé vers `^1.11.0` (figma-mcp + gitlab-mcp — 27 tests existants passent)
-  - 4 skills adapters : `adapters/gitlab-orchestrator-protocol`, `gitlab-scout-protocol`, `gitlab-planner-protocol`, `gitlab-onboarder-protocol`
-  - Agents mis à jour : `orchestrator`, `scout`, `planner`, `onboarder` — `mcpServers: [gitlab]` + skill adapters ajoutés
+  - 4 skills adapters : `adapters/gitlab-orchestrator-protocol`, `gitlab-pathfinder-protocol`, `gitlab-planner-protocol`, `gitlab-onboarder-protocol`
+  - Agents mis à jour : `orchestrator`, `pathfinder`, `planner`, `onboarder` — `mcpServers: [gitlab]` + skill adapters ajoutés
   - Déploiement automatique via `scripts/lib/mcp-deploy.sh` (case `gitlab-mcp` ajouté)
   - Configuration via `oc service setup gitlab` / `oc gitlab setup`
   - Documentation : `docs/guides/gitlab-integration.fr.md` + `docs/guides/gitlab-integration.en.md`
@@ -216,11 +216,11 @@ Versioning : [Semantic Versioning](https://semver.org/lang/fr/)
 - **MCP Server Figma** (`servers/figma-mcp/`) :
   - Client Figma : méthode `getDesignTokens()` ajoutée pour interroger l'API Figma Variables
   - Index : tool `extract_design_tokens` ajouté à la liste des tools disponibles
-  - README : fonctionnalités et architecture mises à jour, mention des 3 agents utilisateurs (scout, planner, onboarder)
+  - README : fonctionnalités et architecture mises à jour, mention des 3 agents utilisateurs (pathfinder, planner, onboarder)
 - **Documentation** :
   - `README.md` / `README.fr.md` : description onboarder enrichie, section "Figma Integration" mise à jour (3 agents au lieu de 2, nouvelles capacités)
   - `docs/architecture/agents.fr.md` : section onboarder enrichie avec détail des 3 nouvelles phases, mention MCP Server figma
-  - `docs/architecture/skills.fr.md` : nouvelle section "Domaine — `adapters/`" avec 3 skills Figma (scout, planner, onboarder), matrice de dépendances mise à jour
+  - `docs/architecture/skills.fr.md` : nouvelle section "Domaine — `adapters/`" avec 3 skills Figma (pathfinder, planner, onboarder), matrice de dépendances mise à jour
 - **Agent `auditor`** (`agents/auditor/auditor.md`) : skill `auditor/living-docs-enrichment` ajouté ; Phase 4 enrichie — consolidation des sections `### Découvertes à documenter` et proposition d'enrichissement après la synthèse exécutive ; permission `task.documentarian = allow` ajoutée
 - **Agent `planner`** (`agents/planning/planner.md`) : skill `auditor/living-docs-enrichment` ajouté ; Phase 6 enrichie — identification des patterns et conventions observés, proposition d'enrichissement après validation du plan ; permission `task.documentarian = allow` ajoutée
 - **Agent `debugger`** (`agents/quality/debugger.md`) : skill `auditor/living-docs-enrichment` ajouté ; Phase 5 enrichie — identification des zones d'ombre levées et patterns d'erreur, proposition d'enrichissement après le rapport ; permission `task.documentarian = allow` ajoutée

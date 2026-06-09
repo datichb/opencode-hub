@@ -214,7 +214,7 @@ opencode-hub s'intègre avec Figma pour enrichir les workflows de planification 
 
 ### Fonctionnalités
 
-- **Détection automatique de maquettes** : Scout, Planner et Onboarder recherchent les fichiers Figma par nom de feature ou projet
+- **Détection automatique de maquettes** : Pathfinder, Planner et Onboarder recherchent les fichiers Figma par nom de feature ou projet
 - **Détection de signaux UX/UI** : Détection automatique des flows multi-étapes et composants visuels
 - **Extraction des design tokens** : Extraction des couleurs, typographie, espacements et effets depuis Figma Variables
 - **Détection du design system** : Identification automatique de DSFR, Material Design ou design system custom
@@ -238,11 +238,11 @@ opencode-hub s'intègre avec Figma pour enrichir les workflows de planification 
 
 ### Utilisation
 
-Les agents Scout, Planner et Onboarder interrogent automatiquement Figma lors de l'analyse de features UI ou de l'exploration de projets :
+Les agents Pathfinder, Planner et Onboarder interrogent automatiquement Figma lors de l'analyse de features UI ou de l'exploration de projets :
 
 ```bash
-# Scout avec enrichissement Figma
-> Scout cette feature: dashboard utilisateur
+# Pathfinder avec enrichissement Figma
+> Pathfinder cette feature: dashboard utilisateur
 
 # Planner avec contexte Figma (Phase 1.3)
 > Planifie cette feature: processus inscription

@@ -35,7 +35,7 @@ Configuration globale du hub. Créé par `oc install` et modifiable manuellement
 | `default_provider.base_url` | string | `""` | URL de base customisée (optionnel pour litellm et autres) |
 | `default_provider.model` | string | `""` | Modèle IA par défaut pour ce provider (si vide : fallback à `opencode.model`) |
 | `opencode.model` | string | — | Modèle IA injecté dans `opencode.json` des projets déployés (si `default_provider.model` est vide) |
-| `opencode.disabled_native_agents` | array | `[]` | Agents natifs OpenCode désactivés par défaut (`build`, `plan`, `general`, `explore`, `scout`) — surchargeables par projet via `- Disable agents :` dans `projects.md` |
+| `opencode.disabled_native_agents` | array | `[]` | Agents natifs OpenCode désactivés par défaut (`build`, `plan`, `general`, `explore`, `pathfinder`) — surchargeables par projet via `- Disable agents :` dans `projects.md` |
 
 ### Exemple minimal (OpenCode uniquement)
 
@@ -139,7 +139,7 @@ le sien. Créé automatiquement depuis `projects/projects.example.md` au premier
 - `Langue` : optionnel — valeur libre (ex: `english`, `spanish`) — si absent, les agents s'expriment en français
 - `Agents` : optionnel — `all` ou CSV d'identifiants d'agents — filtré au déploiement
 - `Modes` : optionnel — CSV de paires `agent-id:mode` — surcharge le frontmatter des agents. Modes : `primary`, `subagent`. Laisser vide pour revenir aux valeurs frontmatter.
-- `Disable agents` : optionnel — CSV d'agents natifs OpenCode à désactiver (`build`, `plan`, `general`, `explore`, `scout`) — surcharge `opencode.disabled_native_agents` de `hub.json`. Vide = utiliser le défaut hub.
+- `Disable agents` : optionnel — CSV d'agents natifs OpenCode à désactiver (`build`, `plan`, `general`, `explore`, `pathfinder`) — surcharge `opencode.disabled_native_agents` de `hub.json`. Vide = utiliser le défaut hub.
 - Ce fichier est **local** — ne jamais le committer
 
 ---
@@ -341,7 +341,7 @@ Pour chaque champ, la valeur actuelle est affichée. Appuyer sur **Entrée** pou
 | `Tracker` | `none` \| `jira` \| `gitlab` | Tracker externe |
 | `Labels` | CSV | Labels Beads (ex: `feature,fix,front,back`) |
 | `Langue` | texte libre | Langue des agents (`english`, `spanish` — absent = français) |
-| `Disable agents` | CSV | Agents natifs OpenCode à désactiver (`build`, `plan`, `general`, `explore`, `scout`) — `none` pour vider |
+| `Disable agents` | CSV | Agents natifs OpenCode à désactiver (`build`, `plan`, `general`, `explore`, `pathfinder`) — `none` pour vider |
 | `MCP` | `all` \| `none` \| CSV | Serveurs MCP à activer |
 | `Worktree` | `enabled` \| `disabled` | Activer les git worktrees pour le travail en parallèle |
 | `Worktree auto cleanup` | `true` \| `false` | Supprimer automatiquement les worktrees mergés *(affiché uniquement si Worktree est activé)* |

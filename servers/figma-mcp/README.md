@@ -62,6 +62,6 @@ src/
 
 Ce MCP est automatiquement déployé avec les agents via `oc deploy opencode MY-APP`.
 
-Les agents `scout`, `planner` et `onboarder` l'utilisent pour enrichir leur analyse contextuelle avec les données Figma :
-- **scout** et **planner** : détection de signaux UX/UI pour features
+Les agents `pathfinder`, `planner` et `onboarder` l'utilisent pour enrichir leur analyse contextuelle avec les données Figma :
+- **pathfinder** et **planner** : détection de signaux UX/UI pour features
 - **onboarder** : exploration des maquettes projet et extraction des design tokens

@@ -206,7 +206,7 @@ only by delegating to the `documentarian` after explicit user confirmation
 
 This continuous enrichment loop covers all agents: `auditor` coordinator (Phase 4),
 `planner` (Phase 6), `debugger` (Phase 5), `developer-*` (after each ticket), `reviewer`
-(post-report), `qa-engineer` (post-report), `scout` (post-report), and `onboarder`
+(post-report), `qa-engineer` (post-report), `pathfinder` (post-report), and `onboarder`
 (incremental mode when files already exist).
 
 ---

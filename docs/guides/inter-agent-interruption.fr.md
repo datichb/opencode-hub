@@ -31,7 +31,7 @@ L'orchestrateur parent :
 |-------|-------------|---------------------|
 | **orchestrator-dev** | CPs à enjeu fort (CP-2, blocage, ticket bloqué) + CPs intermédiaires (CP-1, CP-QA, CP-3, branche) | Systématique et ad hoc |
 | **planner** | Fin de chaque phase (0 à 5) + pauses ad hoc | Systématique |
-| **scout** | Clarification critique détectée | Ad hoc uniquement |
+| **pathfinder** | Clarification critique détectée | Ad hoc uniquement |
 | **onboarder** | Fin de chaque phase (0 à 4) + pauses ad hoc | Systématique |
 | **auditor** (coordinateur) | Fin de chaque phase (0 à 3) + pauses ad hoc | Systématique |
 | **debugger** | Fin de chaque phase + confirmations d'actions irréversibles | Systématique |
@@ -174,7 +174,7 @@ question({...})  [inchangé]
 
 ### 4. Ajouter dans le fichier agent
 
-Dans `agents/<famille>/<agent>.md`, ajouter une section "Contexte d'invocation" (voir `agents/planning/scout.md` pour exemple).
+Dans `agents/<famille>/<agent>.md`, ajouter une section "Contexte d'invocation" (voir `agents/planning/pathfinder.md` pour exemple).
 
 ### 5. Mettre à jour orchestrator-protocol.md
 

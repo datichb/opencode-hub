@@ -165,12 +165,12 @@ Les gains mesurés **en isolation** (hors contexte deploy réel) :
 
 ```bash
 # Test 1 : _get_agent_family
-for i in {1..30}; do _get_agent_family "agents/planning/scout.md"; done
+for i in {1..30}; do _get_agent_family "agents/planning/pathfinder.md"; done
 # Avant : 2s (dirname + basename)
 # Après : 0s (bash pur)
 
 # Test 2 : extract_permission_json
-for i in {1..30}; do extract_permission_json "agents/planning/scout.md"; done
+for i in {1..30}; do extract_permission_json "agents/planning/pathfinder.md"; done
 # Avant : 2s (sed × 30)
 # Après : 0s (avec _fm_raw pré-lu)
 

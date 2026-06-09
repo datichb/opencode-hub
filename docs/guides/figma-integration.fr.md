@@ -4,14 +4,14 @@
 
 ## Vue d'ensemble
 
-L'intégration Figma enrichit les workflows de planification (Scout et Planner) avec le contexte design en interrogeant automatiquement l'API Figma pour détecter les maquettes, composants et signaux UX/UI.
+L'intégration Figma enrichit les workflows de planification (Pathfinder et Planner) avec le contexte design en interrogeant automatiquement l'API Figma pour détecter les maquettes, composants et signaux UX/UI.
 
 ### Fonctionnalités
 
 - **Recherche automatique** de fichiers Figma par nom de feature
 - **Détection de signaux UX/UI** : flows multi-étapes, composants visuels, états
 - **Ajustement d'estimation** basé sur le nombre de composants détectés
-- **Enrichissement automatique** des rapports Scout et plans Planner
+- **Enrichissement automatique** des rapports Pathfinder et plans Planner
 
 ---
 
@@ -104,13 +104,13 @@ oc figma deploy
 
 ## Utilisation
 
-### Avec Scout
+### Avec Pathfinder
 
 ```bash
-> Scout cette feature: tableau de bord utilisateur
+> Pathfinder cette feature: tableau de bord utilisateur
 ```
 
-Le Scout va :
+Le Pathfinder va :
 1. Explorer la codebase (workflow normal)
 2. Chercher dans Figma : `search_figma_files("tableau de bord")`
 3. Analyser les fichiers trouvés : `detect_ui_signals(fileId)`
@@ -196,7 +196,7 @@ opencode-hub/
 │   │   └── tools/            ← 3 tools MCP
 │   └── dist/                 ← Compilé
 ├── skills/adapters/
-│   ├── figma-scout-protocol.md
+│   ├── figma-pathfinder-protocol.md
 │   └── figma-planner-protocol.md
 └── scripts/
     ├── build-mcp.sh          ← Build MCP
@@ -208,11 +208,11 @@ opencode-hub/
 
 ## Tests
 
-### Test 1 : Scout simple
+### Test 1 : Pathfinder simple
 
 ```bash
 # Dans un projet avec maquettes Figma
-> Scout cette feature: page paramètres
+> Pathfinder cette feature: page paramètres
 
 # Vérifier dans le rapport :
 - Section "🎨 Contexte Figma" présente

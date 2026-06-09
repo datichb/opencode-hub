@@ -21,10 +21,11 @@
     "orchestrator-dev": ["orchestrator-dev"],
     "dev-orchestrator": ["orchestrator-dev"],
 
-    "scout":            ["scout"],
-    "explorer":         ["scout"],
-    "reconnaissance":   ["scout"],
-    "investigator":     ["scout"],
+    "pathfinder":       ["pathfinder"],
+    "scout":            ["pathfinder"],
+    "explorer":         ["pathfinder"],
+    "reconnaissance":   ["pathfinder"],
+    "investigator":     ["pathfinder"],
 
     "onboarder":        ["onboarder"],
     "onboarding":       ["onboarder"],

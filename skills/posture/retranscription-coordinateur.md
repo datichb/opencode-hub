@@ -77,7 +77,7 @@ Utiliser ce template après chaque réception de retour final :
 **[Fin de retranscription]**
 ```
 
-### Template pour une question montante (planner / scout / onboarder / auditor / debugger / designers)
+### Template pour une question montante (planner / pathfinder / onboarder / auditor / debugger / designers)
 
 Quand un sous-agent termine sa session avec `## Question pour l'orchestrateur` (ou `## Question pour l'orchestrator` pour orchestrator-dev) :
 
@@ -141,8 +141,8 @@ Avant d'appeler `question`, vérifier :
 |--------------|---------------|----------------------|-------------------------------|
 | **planner** (final) | `## Retour vers orchestrator` | Récapitulatif de planification + blocs intermédiaires si présents | `### Hypothèses et ambiguïtés`, `### Risques identifiés`, `### Ordre de traitement` |
 | **planner** (question montante) | `## Question pour l'orchestrateur` | `## Retour intermédiaire vers orchestrateur` | Contenu de la phase, contexte de la question, `task_id` |
-| **scout** (final) | `## Retour vers orchestrator` | Rapport scout complet + blocs intermédiaires si présents | `## Recommandation`, `## Signaux détectés`, `## Handoff vers planner` si escalade |
-| **scout** (question montante) | `## Question pour l'orchestrateur` | `## Retour intermédiaire vers orchestrateur` | Ce qui a été exploré, problème détecté, `task_id` |
+| **pathfinder** (final) | `## Retour vers orchestrator` | Rapport pathfinder complet + blocs intermédiaires si présents | `## Recommandation`, `## Signaux détectés`, `## Handoff vers planner` si escalade |
+| **pathfinder** (question montante) | `## Question pour l'orchestrateur` | `## Retour intermédiaire vers orchestrateur` | Ce qui a été exploré, problème détecté, `task_id` |
 | **onboarder** (final) | `## Retour vers orchestrator` | Rapport d'onboarding complet + blocs intermédiaires si présents | `### Zones d'incertitude`, `### Dette technique détectée` |
 | **onboarder** (question montante) | `## Question pour l'orchestrateur` | `## Retour intermédiaire vers orchestrateur` | Contenu de la phase explorée, `task_id` |
 | **auditor** coordinateur (final) | `## Retour vers orchestrator` | Synthèse exécutive multi-domaines + blocs intermédiaires si présents | `### Synthèse des problèmes identifiés`, `### Risque résiduel si non corrigé` |

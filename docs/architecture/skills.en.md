@@ -247,8 +247,8 @@ Skills marked **(A)** are Bucket A — inline. Skills marked **(B)** are Bucket 
 | `planning/onboarder-workflow.md` | **A** | onboarder | **Unified onboarder workflow** — 6 phases (0 prerequisites → 1 adaptive exploration 7 profiles → 2 questions → 3 context report: stack/architecture/patterns/attention points/prioritized agent map → 4 edge cases: inconsistencies, CVE, hidden debt, hybrid architecture → 5 ONBOARDING.md + CONVENTIONS.md + optional projects.md + handoff) — merges previous `project-discovery.md` and `project-conventions.md` |
 | `planning/planner-handoff-format.md` | **A** | planner, orchestrator | **Handoff contract** — structured `## Return to orchestrator` block: complete tickets table with planned agent and dependencies, hypotheses and ambiguities, global estimate, identified risks, status (`complete-planning` / `partial-planning` / `blocked`) |
 | `planning/onboarder-handoff-format.md` | **A** | onboarder, orchestrator | **Handoff contract** — structured `## Return to orchestrator` block: detected tech stack (languages, frameworks, DB, infra, tools, key versions), identified conventions, technical debt (🔴/🟠/🟡), uncertainty zones, context files produced (`ONBOARDING.md`, `CONVENTIONS.md`), status (`context-established` / `partial-context` / `blocked`) |
-| `planning/websearch-stack-research.md` | **B** | planner, scout, onboarder | Stack and library research protocol via websearch — how to find current best practices, changelogs, and library comparisons |
-| `planning/scout-handoff-format.md` | **A** | scout, orchestrator | **Handoff contract** — structured `## Return to orchestrator` block |
+| `planning/websearch-stack-research.md` | **B** | planner, pathfinder, onboarder | Stack and library research protocol via websearch — how to find current best practices, changelogs, and library comparisons |
+| `planning/pathfinder-handoff-format.md` | **A** | pathfinder, orchestrator | **Handoff contract** — structured `## Return to orchestrator` block |
 
 ---
 
@@ -290,7 +290,7 @@ Cross-cutting skills shared across multiple agent families. Skills marked **(A)*
 
 | File | Bucket | Agents using it | Content |
 |------|--------|----------------|---------|
-| `shared/living-docs-enrichment.md` | **A** | auditor, planner, debugger, onboarder, scout, reviewer, qa-engineer, developer-* (all 11) | **Shared skill** — incremental enrichment of ONBOARDING.md and CONVENTIONS.md from any agent's work (audit, planning, debug, implementation, review, QA, reconnaissance, re-onboarding); delegates writing to documentarian after explicit user confirmation |
+| `shared/living-docs-enrichment.md` | **A** | auditor, planner, debugger, onboarder, pathfinder, reviewer, qa-engineer, developer-* (all 11) | **Shared skill** — incremental enrichment of ONBOARDING.md and CONVENTIONS.md from any agent's work (audit, planning, debug, implementation, review, QA, reconnaissance, re-onboarding); delegates writing to documentarian after explicit user confirmation |
 
 ---
 
@@ -334,8 +334,8 @@ planner               → (A) developer/beads-plan, planning/planner-workflow,
                              shared/living-docs-enrichment,
                              planning/planner-handoff-format †
                         (B) planning/websearch-stack-research
-scout                 → (A) shared/living-docs-enrichment,
-                             planning/scout-handoff-format †
+pathfinder                 → (A) shared/living-docs-enrichment,
+                             planning/pathfinder-handoff-format †
                         (B) planning/websearch-stack-research
 reviewer              → (A) dev-standards-universal, reviewer/review-protocol,
                              posture/tool-question,

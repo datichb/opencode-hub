@@ -372,7 +372,7 @@ Les agents suivants implémentent le mécanisme d'interruption de session quand 
 |-------|------------------------------|---------------------|
 | **orchestrator-dev** | CPs à enjeu fort (CP-2, blocage, ticket bloqué) + CPs intermédiaires (CP-1, CP-QA, CP-3, branche) en mode `manuel` | Systématique à chaque CP |
 | **planner** | Fin de chaque phase (0 à 5) + pauses ad hoc | Systématique |
-| **scout** | Clarification critique détectée | Ad hoc uniquement |
+| **pathfinder** | Clarification critique détectée | Ad hoc uniquement |
 | **onboarder** | Fin de chaque phase (0 à 4) + pauses ad hoc | Systématique |
 | **auditor** (coordinateur) | Fin de chaque phase (0 à 3) + pauses ad hoc | Systématique |
 | **debugger** | Fin de chaque phase + confirmations d'action irréversible | Systématique |
@@ -426,7 +426,7 @@ Deux noms de blocs coexistent selon l'agent producteur — ils sont sémantiquem
 
 | Bloc | Producteurs | Détection |
 |------|-------------|-----------|
-| `## Question pour l'orchestrateur` (avec accent) | planner, scout, onboarder, auditor, debugger, ux-designer, ui-designer | Contient `task_id` pour reprise |
+| `## Question pour l'orchestrateur` (avec accent) | planner, pathfinder, onboarder, auditor, debugger, ux-designer, ui-designer | Contient `task_id` pour reprise |
 | `## Question pour l'orchestrator` (sans accent) | orchestrator-dev | Contient `task_id` pour reprise |
 
 Les deux déclenchent le même comportement côté orchestrateur : afficher le récap intermédiaire, relayer la question via `question`, ré-invoquer avec `task_id`.

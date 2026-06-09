@@ -1,13 +1,13 @@
 ---
-name: figma-scout-protocol
-description: Protocole d'intégration Figma pour l'agent Scout — enrichissement contextuel avec maquettes et détection automatique de signaux UX/UI
+name: figma-pathfinder-protocol
+description: Protocole d'intégration Figma pour l'agent Pathfinder — enrichissement contextuel avec maquettes et détection automatique de signaux UX/UI
 ---
 
-# Skill — Figma Scout Protocol (v1)
+# Skill — Figma Pathfinder Protocol (v1)
 
 ## Rôle
 
-Ce skill enrichit le workflow du Scout avec les données Figma pour améliorer la précision des estimations et la détection des signaux design.
+Ce skill enrichit le workflow du Pathfinder avec les données Figma pour améliorer la précision des estimations et la détection des signaux design.
 
 ## Workflow enrichi
 
@@ -63,7 +63,7 @@ Utiliser les données Figma pour ajuster la complexité :
 
 ### Format de sortie enrichi
 
-Ajouter cette section dans le rapport Scout si maquettes trouvées :
+Ajouter cette section dans le rapport Pathfinder si maquettes trouvées :
 
 ```markdown
 ## 🎨 Contexte Figma détecté

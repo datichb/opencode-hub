@@ -207,7 +207,7 @@ uniquement via délégation au `documentarian` après confirmation explicite de 
 
 Cette boucle d'enrichissement continu couvre tous les agents : `auditor` coordinateur (Phase 4),
 `planner` (Phase 6), `debugger` (Phase 5), `developer-*` (après chaque ticket), `reviewer`
-(post-rapport), `qa-engineer` (post-rapport), `scout` (post-rapport), et `onboarder`
+(post-rapport), `qa-engineer` (post-rapport), `pathfinder` (post-rapport), et `onboarder`
 (mode enrichissement incrémental lorsque les fichiers existent déjà).
 
 ---

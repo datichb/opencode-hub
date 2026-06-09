@@ -1,18 +1,18 @@
-# Agent Scout — Guide utilisateur
+# Agent Pathfinder — Guide utilisateur
 
-## 🎯 Qu'est-ce que l'agent Scout ?
+## 🎯 Qu'est-ce que l'agent Pathfinder ?
 
-L'agent **Scout** est un agent de reconnaissance rapide et flexible qui explore une feature en 2-5 minutes et produit un rapport structuré exploitable.
+L'agent **Pathfinder** est un agent de reconnaissance rapide et flexible qui explore une feature en 2-5 minutes et produit un rapport structuré exploitable.
 
-Le scout comble le gap entre exploration légère et planification complète :
+Le pathfinder comble le gap entre exploration légère et planification complète :
 
 ```
-Simple ← Scout → Planner → Complexe
+Simple ← Pathfinder → Planner → Complexe
 ```
 
-## 🚀 Quand utiliser Scout ?
+## 🚀 Quand utiliser Pathfinder ?
 
-### ✅ Utilisez Scout pour :
+### ✅ Utilisez Pathfinder pour :
 
 - **Features simples** : "Ajouter un champ email au profil"
 - **Phase exploratoire** : "Voir si on peut intégrer Stripe rapidement"
@@ -28,9 +28,9 @@ Simple ← Scout → Planner → Complexe
 - **Multi-agents** : Feature nécessitant designers, auditors, architectes
 - **Planification détaillée** : Besoin de tickets Beads enrichis complets
 
-## 📊 Comment fonctionne Scout ?
+## 📊 Comment fonctionne Pathfinder ?
 
-### Workflow Scout (2-5 min)
+### Workflow Pathfinder (2-5 min)
 
 ```
 1. Comprendre la demande (30 sec)
@@ -56,7 +56,7 @@ Simple ← Scout → Planner → Complexe
 
 ### Échelle de complexité
 
-| Taille | Tickets estimés | Durée totale | Exemples | Recommandation Scout |
+| Taille | Tickets estimés | Durée totale | Exemples | Recommandation Pathfinder |
 |--------|-----------------|--------------|----------|----------------------|
 | **XS** | 1 task | < 1h | Ajouter un champ, changer une couleur | ✅ Direct |
 | **S** | 1-2 tickets | 1-3h | Formulaire simple, endpoint CRUD | ✅ Direct |
@@ -80,7 +80,7 @@ Simple ← Scout → Planner → Complexe
 "J'aimerais ajouter un champ téléphone au profil utilisateur"
 ```
 
-**Résultat Scout (1 min) :**
+**Résultat Pathfinder (1 min) :**
 - **Complexité :** S (2 tickets, ~1h15)
 - **Structure :**
   1. Migration BDD + modèle User (~30min)
@@ -88,7 +88,7 @@ Simple ← Scout → Planner → Complexe
 - **Recommandation :** ✅ **Direct** - Feature simple, traitement immédiat
 
 **Prochaine étape :**
-→ Scout → orchestrator-dev → Implémentation directe
+→ Pathfinder → orchestrator-dev → Implémentation directe
 
 ---
 
@@ -99,7 +99,7 @@ Simple ← Scout → Planner → Complexe
 "J'aimerais implémenter un système de notifications temps réel"
 ```
 
-**Résultat Scout (3 min) :**
+**Résultat Pathfinder (3 min) :**
 - **Complexité :** L (6 tickets, ~14h)
 - **Signaux détectés :**
   - ✅ Architecture (nouveau système, choix WebSocket vs SSE)
@@ -108,7 +108,7 @@ Simple ← Scout → Planner → Complexe
 - **Recommandation :** 🎯 **Escalade** - Complexité élevée + signaux forts
 
 **Prochaine étape :**
-→ Scout → Planner (avec handoff complet) → Planification 7 phases
+→ Pathfinder → Planner (avec handoff complet) → Planification 7 phases
 
 ---
 
@@ -119,7 +119,7 @@ Simple ← Scout → Planner → Complexe
 "Voir si on peut intégrer un système de paiement Stripe"
 ```
 
-**Résultat Scout (2 min) :**
+**Résultat Pathfinder (2 min) :**
 - **Complexité :** M (4-5 tickets, ~6-8h)
 - **Signaux détectés :**
   - ⚠️ Sécurité (paiements sensibles, PCI-DSS)
@@ -131,12 +131,12 @@ Simple ← Scout → Planner → Complexe
 **Prochaine étape :**
 → Utilisateur décide selon le contexte (POC vs Production)
 
-## 🎨 Format du rapport Scout
+## 🎨 Format du rapport Pathfinder
 
-Le scout produit un rapport structuré en markdown :
+Le pathfinder produit un rapport structuré en markdown :
 
 ```markdown
-# 🔍 Scout Report
+# 🔍 Pathfinder Report
 
 **Feature:** [Nom]
 **Complexité:** [XS|S|M|L|XL]
@@ -175,7 +175,7 @@ Le scout produit un rapport structuré en markdown :
 - 🤖 **orchestrator-dev** (contexte pour implémentation directe)
 - 🤖 **planner** (handoff complet si escalade)
 
-## 🔄 Workflow complet avec Scout
+## 🔄 Workflow complet avec Pathfinder
 
 ### Cas 1 : Feature simple
 
@@ -184,7 +184,7 @@ User: "Ajoute un champ email au profil"
       ↓
 Orchestrator (heuristique: simplicité détectée)
       ↓
-Scout (2 min)
+Pathfinder (2 min)
       ↓
 Report: ✅ Direct (S, 2 tickets, ~1h)
       ↓
@@ -200,13 +200,13 @@ User: "Système de notifications temps réel"
       ↓
 Orchestrator (heuristique: pas de signal clair)
       ↓
-Scout (3 min)
+Pathfinder (3 min)
       ↓
 Report: 🎯 Escalade (L, signaux archi/UX/perf)
       ↓
 User: "OK, escalade au planner"
       ↓
-Planner (workflow 7 phases avec handoff scout)
+Planner (workflow 7 phases avec handoff pathfinder)
       ↓
 Tickets Beads enrichis + routing
 ```
@@ -218,18 +218,18 @@ User: "Refonte complète du système d'authentification avec OAuth + 2FA"
       ↓
 Orchestrator (heuristique: mot-clé "refonte" détecté)
       ↓
-Planner direct (pas besoin de scout)
+Planner direct (pas besoin de pathfinder)
       ↓
 Tickets Beads enrichis
 ```
 
 ## 🎛️ Heuristique de routage Orchestrator
 
-L'orchestrator choisit automatiquement entre Scout et Planner selon des critères :
+L'orchestrator choisit automatiquement entre Pathfinder et Planner selon des critères :
 
-### → Scout (rapide)
+### → Pathfinder (rapide)
 
-- **Mots-clés** : "simple", "rapide", "ajouter", "modifier", "quick scan", "scout"
+- **Mots-clés** : "simple", "rapide", "ajouter", "modifier", "quick scan", "pathfinder"
 - **Exploration** : "explorer", "voir si", "POC", "prototype"
 - **Par défaut** si pas de signal clair
 
@@ -244,9 +244,9 @@ L'orchestrator choisit automatiquement entre Scout et Planner selon des critère
 - **Doute** : critères mixtes
 - **Ambiguïté** sur la complexité
 
-## 📚 Différences clés : Scout vs Planner
+## 📚 Différences clés : Pathfinder vs Planner
 
-| Aspect | Scout | Planner |
+| Aspect | Pathfinder | Planner |
 |--------|-------|---------|
 | **Durée** | 2-5 min | 10-20 min |
 | **Workflow** | Libre et flexible | 7 phases rigides |
@@ -261,22 +261,22 @@ L'orchestrator choisit automatiquement entre Scout et Planner selon des critère
 
 ### ✅ Faire
 
-1. **Utilisez Scout en premier** si vous ne savez pas la complexité
+1. **Utilisez Pathfinder en premier** si vous ne savez pas la complexité
 2. **Lisez le rapport complet** avant de décider
-3. **Suivez la recommandation** du scout (mais vous décidez)
+3. **Suivez la recommandation** du pathfinder (mais vous décidez)
 4. **Posez des questions** si le rapport manque d'info
 5. **Escaladez au planner** si la complexité augmente en cours de route
 
 ### ❌ Éviter
 
-1. **Ne sautez pas le scout** pour des features inconnues (gain de temps si simple)
-2. **N'ignorez pas les signaux** détectés par le scout
-3. **Ne forcez pas le traitement direct** si scout recommande escalade
+1. **Ne sautez pas le pathfinder** pour des features inconnues (gain de temps si simple)
+2. **N'ignorez pas les signaux** détectés par le pathfinder
+3. **Ne forcez pas le traitement direct** si pathfinder recommande escalade
 4. **N'utilisez pas le planner** pour des features évidemment simples (perte de temps)
 
 ## 🔧 Configuration
 
-Le scout est configuré dans `config/hub.json` :
+Le pathfinder est configuré dans `config/hub.json` :
 
 ```json
 {
@@ -285,13 +285,13 @@ Le scout est configuré dans `config/hub.json` :
       "planning": "claude-opus-4"
     },
     "agents": {
-      "scout": "claude-sonnet-4-6"
+      "pathfinder": "claude-sonnet-4-6"
     }
   }
 }
 ```
 
-**Le scout utilise Claude Sonnet 4.6 pour :**
+**Le pathfinder utilise Claude Sonnet 4.6 pour :**
 - Rapidité d'exécution (2-5 min)
 - Extended + Adaptive thinking
 - Context window 1M tokens
@@ -300,28 +300,28 @@ Le scout est configuré dans `config/hub.json` :
 
 ## 🆘 FAQ
 
-### Q: Puis-je invoquer Scout directement ?
+### Q: Puis-je invoquer Pathfinder directement ?
 
 **R:** Oui ! Vous pouvez demander explicitement :
-- "Scout cette feature pour moi"
+- "Pathfinder cette feature pour moi"
 - "Fais un quick scan de cette idée"
 - "Estime la complexité rapidement"
 
-L'orchestrator invoquera automatiquement le scout.
+L'orchestrator invoquera automatiquement le pathfinder.
 
-### Q: Scout peut-il créer des tickets Beads ?
+### Q: Pathfinder peut-il créer des tickets Beads ?
 
-**R:** Oui, mais il demande confirmation avant (permissions `ask`). Généralement, scout recommande plutôt que l'orchestrator-dev ou le planner le fasse.
+**R:** Oui, mais il demande confirmation avant (permissions `ask`). Généralement, pathfinder recommande plutôt que l'orchestrator-dev ou le planner le fasse.
 
 ### Q: Que se passe-t-il si je refuse l'escalade ?
 
-**R:** Vous êtes libre de refuser. Scout aura fourni le contexte suffisant pour que orchestrator-dev puisse implémenter, même si la complexité est moyenne.
+**R:** Vous êtes libre de refuser. Pathfinder aura fourni le contexte suffisant pour que orchestrator-dev puisse implémenter, même si la complexité est moyenne.
 
-### Q: Scout peut-il consulter les designers/auditors ?
+### Q: Pathfinder peut-il consulter les designers/auditors ?
 
 **R:** Non, seul le planner peut déléguer aux agents spécialisés (ux-designer, auditor-*, etc.). C'est une raison d'escalader si ces signaux sont forts.
 
-### Q: Comment forcer le planner sans passer par scout ?
+### Q: Comment forcer le planner sans passer par pathfinder ?
 
 **R:** Demandez explicitement :
 - "Planifie complètement cette feature"
@@ -330,28 +330,28 @@ L'orchestrator invoquera automatiquement le scout.
 
 L'orchestrator comprendra et invoquera directement le planner.
 
-### Q: Scout remplace-t-il le planner ?
+### Q: Pathfinder remplace-t-il le planner ?
 
 **R:** Non, ils sont complémentaires :
-- **Scout** = reconnaissance rapide, estimation, triage
+- **Pathfinder** = reconnaissance rapide, estimation, triage
 - **Planner** = analyse complète, enrichissement, coordination multi-agents
 
-Scout peut **escalader** vers planner, mais ne le remplace pas.
+Pathfinder peut **escalader** vers planner, mais ne le remplace pas.
 
 ## 📖 Ressources
 
-- **Agent Scout** : `/agents/planning/scout.md`
-- **Protocole Scout** : `/skills/planning/scout-protocol.md`
-- **Format Handoff** : `/skills/planning/scout-handoff-format.md`
+- **Agent Pathfinder** : `/agents/planning/pathfinder.md`
+- **Protocole Pathfinder** : `/skills/planning/pathfinder-protocol.md`
+- **Format Handoff** : `/skills/planning/pathfinder-handoff-format.md`
 - **Agent Planner** : `/agents/planning/planner.md`
 - **Orchestrator** : `/agents/planning/orchestrator.md`
 
 ## 🎯 Résumé
 
-Le **Scout** est votre allié pour :
+Le **Pathfinder** est votre allié pour :
 - ⚡ Gagner du temps sur les features simples
 - 🔍 Explorer rapidement une idée
 - 📊 Estimer la complexité avant de s'engager
 - 🎯 Décider en connaissance de cause (direct ou planner complet)
 
-**Règle d'or :** *"En cas de doute, commencez par Scout — il vous dira s'il faut escalader."*
+**Règle d'or :** *"En cas de doute, commencez par Pathfinder — il vous dira s'il faut escalader."*

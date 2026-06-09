@@ -4,7 +4,7 @@
 
 ## Vue d'ensemble
 
-L'intégration GitLab enrichit les workflows de planification (Orchestrator, Scout, Planner et Onboarder) avec le contexte projet en interrogeant automatiquement l'API GitLab pour lire les tickets, merge requests, labels et milestones.
+L'intégration GitLab enrichit les workflows de planification (Orchestrator, Pathfinder, Planner et Onboarder) avec le contexte projet en interrogeant automatiquement l'API GitLab pour lire les tickets, merge requests, labels et milestones.
 
 ### Fonctionnalités
 
@@ -94,18 +94,18 @@ L'Orchestrator peut lire un ticket pour router au bon agent :
 "Travaille sur la MR !15"
 ```
 
-Il utilise le skill `gitlab-orchestrator-protocol` pour lire le ticket et déterminer quel agent invoquer (planner, scout, debugger…) sans jamais analyser le contenu lui-même.
+Il utilise le skill `gitlab-orchestrator-protocol` pour lire le ticket et déterminer quel agent invoquer (planner, pathfinder, debugger…) sans jamais analyser le contenu lui-même.
 
-### Avec le Scout
+### Avec le Pathfinder
 
-Le Scout enrichit son estimation avec le contexte GitLab :
+Le Pathfinder enrichit son estimation avec le contexte GitLab :
 
 ```
-"Scout le ticket #42"
+"Pathfinder le ticket #42"
 "Estime la complexité de l'issue #42 du projet mon-groupe/mon-projet"
 ```
 
-Le skill `gitlab-scout-protocol` ajuste l'estimation selon :
+Le skill `gitlab-pathfinder-protocol` ajuste l'estimation selon :
 - La richesse de la description et des critères d'acceptation
 - Les labels de type et priorité
 - Le milestone et son échéance
@@ -149,9 +149,9 @@ Et dans `CONVENTIONS.md` :
 
 | Tool | Description | Utilisé par |
 |---|---|---|
-| `get_gitlab_issue` | Lit un ticket complet (titre, description, labels, milestone, commentaires) | Orchestrator, Scout, Planner |
-| `list_gitlab_issues` | Liste les tickets avec filtres (état, labels, recherche) | Planner, Scout, Onboarder |
-| `get_gitlab_merge_request` | Lit une MR (titre, branches, état, changements) | Orchestrator, Scout |
+| `get_gitlab_issue` | Lit un ticket complet (titre, description, labels, milestone, commentaires) | Orchestrator, Pathfinder, Planner |
+| `list_gitlab_issues` | Liste les tickets avec filtres (état, labels, recherche) | Planner, Pathfinder, Onboarder |
+| `get_gitlab_merge_request` | Lit une MR (titre, branches, état, changements) | Orchestrator, Pathfinder |
 | `list_gitlab_labels` | Liste tous les labels du projet | Onboarder, Planner |
 | `list_gitlab_milestones` | Liste les milestones actifs/fermés | Onboarder, Planner |
 
@@ -176,7 +176,7 @@ servers/gitlab-mcp/
 
 skills/adapters/
 ├── gitlab-planner-protocol.md
-├── gitlab-scout-protocol.md
+├── gitlab-pathfinder-protocol.md
 ├── gitlab-onboarder-protocol.md
 └── gitlab-orchestrator-protocol.md
 ```

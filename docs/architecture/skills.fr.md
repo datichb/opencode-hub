@@ -273,11 +273,11 @@ Skills d'intégration avec des outils externes (Figma, GitLab, etc.). Ces skills
 
 | Fichier | Agents qui l'utilisent | MCP Server | Contenu |
 |---------|----------------------|------------|---------|
-| `adapters/figma-scout-protocol.md` | scout | `figma` | Protocole d'enrichissement Figma pour Scout — recherche automatique de maquettes par nom de feature, détection de signaux UX/UI (flow multi-étapes, composants, états visuels), ajustement d'estimation (+1 ticket UI / +1 niveau complexité), recommandation d'escalade au planner si complexité L/XL + signaux design forts |
+| `adapters/figma-pathfinder-protocol.md` | pathfinder | `figma` | Protocole d'enrichissement Figma pour Pathfinder — recherche automatique de maquettes par nom de feature, détection de signaux UX/UI (flow multi-étapes, composants, états visuels), ajustement d'estimation (+1 ticket UI / +1 niveau complexité), recommandation d'escalade au planner si complexité L/XL + signaux design forts |
 | `adapters/figma-planner-protocol.md` | planner | `figma` | Protocole d'enrichissement Figma pour Planner — Phase 1.3 optionnelle (exploration Figma), recherche de maquettes par nom de feature, analyse de structure + signaux UX/UI, enrichissement récap Phase 1 avec URLs Figma et composants identifiés, déclenchement Phase 1.5 (délégation design) si signaux détectés, pré-remplissage champ `--design` des tickets avec données Figma |
 | `adapters/figma-onboarder-protocol.md` | onboarder | `figma` | Protocole d'enrichissement Figma pour Onboarder — Phase 1.5 optionnelle (si frontend détecté), recherche de maquettes par nom de projet, analyse de 3 fichiers max, détection automatique du design system (DSFR, Material, Ant Design, Custom), extraction des design tokens depuis Figma Variables (couleurs, typographie, espacements, effets), intégration dans ONBOARDING.md et CONVENTIONS.md (section Design tokens) |
 | `adapters/gitlab-orchestrator-protocol.md` | orchestrator | `gitlab` | Protocole d'intégration GitLab pour l'Orchestrator — lecture d'un ticket (`get_gitlab_issue`) ou d'une MR (`get_gitlab_merge_request`) pour router au bon agent, transmission du contexte GitLab complet sans analyse ni résumé, aide à la sélection via `list_gitlab_issues` si aucun ticket précis fourni |
-| `adapters/gitlab-scout-protocol.md` | scout | `gitlab` | Protocole d'enrichissement GitLab pour le Scout — lecture d'un ticket pour affiner l'estimation de complexité (ACs détaillés, labels priorité, milestone, blockers dans les commentaires), détection de MR existantes sur le même périmètre, ajustement selon les contraintes temporelles du milestone |
+| `adapters/gitlab-pathfinder-protocol.md` | pathfinder | `gitlab` | Protocole d'enrichissement GitLab pour le Pathfinder — lecture d'un ticket pour affiner l'estimation de complexité (ACs détaillés, labels priorité, milestone, blockers dans les commentaires), détection de MR existantes sur le même périmètre, ajustement selon les contraintes temporelles du milestone |
 | `adapters/gitlab-planner-protocol.md` | planner | `gitlab` | Protocole d'enrichissement GitLab pour le Planner — Phase 1.2bis optionnelle, lecture du ticket source comme cahier des charges, extraction des critères d'acceptation, exploitation des labels/milestone pour calibrer la priorité, détection des tickets liés pour identifier les dépendances, enrichissement du récap Phase 1 avec contexte GitLab |
 | `adapters/gitlab-onboarder-protocol.md` | onboarder | `gitlab` | Protocole d'intégration GitLab pour l'Onboarder — Phase 1.4bis optionnelle (si projet GitLab détecté), cartographie des labels par catégorie (types, priorités, domaines, workflow), milestones actifs pour comprendre la cadence de livraison, aperçu du backlog, enrichissement de ONBOARDING.md (section Gestion de projet) et CONVENTIONS.md (conventions de labelling) |
 
@@ -300,7 +300,7 @@ Skills transverses partagés entre plusieurs familles d'agents. Les skills marqu
 
 | Fichier | Bucket | Agents qui l'utilisent | Contenu |
 |---------|--------|----------------------|---------|
-| `shared/living-docs-enrichment.md` | **A** | auditor, planner, debugger, onboarder, scout, reviewer, qa-engineer, developer-* (tous les 11) | **Skill partagé** — enrichissement incrémental de ONBOARDING.md et CONVENTIONS.md depuis les travaux de tout agent (audit, planification, debug, implémentation, review, QA, reconnaissance, re-onboarding) ; délègue l'écriture au documentarian après confirmation explicite de l'utilisateur |
+| `shared/living-docs-enrichment.md` | **A** | auditor, planner, debugger, onboarder, pathfinder, reviewer, qa-engineer, developer-* (tous les 11) | **Skill partagé** — enrichissement incrémental de ONBOARDING.md et CONVENTIONS.md depuis les travaux de tout agent (audit, planification, debug, implémentation, review, QA, reconnaissance, re-onboarding) ; délègue l'écriture au documentarian après confirmation explicite de l'utilisateur |
 
 ---
 
@@ -342,8 +342,8 @@ planner               → (A) developer/beads-plan, planning/planner-workflow,
                              posture/expert-posture, posture/tool-question,
                              shared/living-docs-enrichment,
                              planning/planner-handoff-format †
-scout                 → (A) shared/living-docs-enrichment,
-                             planning/scout-handoff-format †
+pathfinder                 → (A) shared/living-docs-enrichment,
+                             planning/pathfinder-handoff-format †
                         (B) planning/websearch-stack-research
 reviewer              → (A) dev-standards-universal, reviewer/review-protocol,
                              posture/tool-question,

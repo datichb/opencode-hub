@@ -1,13 +1,13 @@
 ---
-name: gitlab-scout-protocol
-description: Protocole d'intégration GitLab pour l'agent Scout — lecture d'un ticket pour affiner l'estimation de complexité, détection de MR existantes sur le même périmètre
+name: gitlab-pathfinder-protocol
+description: Protocole d'intégration GitLab pour l'agent Pathfinder — lecture d'un ticket pour affiner l'estimation de complexité, détection de MR existantes sur le même périmètre
 ---
 
-# Skill — GitLab Scout Protocol (v1)
+# Skill — GitLab Pathfinder Protocol (v1)
 
 ## Rôle
 
-Ce skill enrichit le workflow du Scout avec les données GitLab pour améliorer la précision des estimations et détecter les travaux déjà en cours sur le même périmètre.
+Ce skill enrichit le workflow du Pathfinder avec les données GitLab pour améliorer la précision des estimations et détecter les travaux déjà en cours sur le même périmètre.
 
 ## Étape 3bis — Vérification GitLab (optionnelle, après exploration codebase)
 
@@ -62,12 +62,12 @@ Arguments : project_path, state: "opened", search: <mots-clés>
 ```
 
 **Si ticket similaire trouvé :**
-- Mentionner dans le rapport Scout : "Ticket similaire détecté : #N"
+- Mentionner dans le rapport Pathfinder : "Ticket similaire détecté : #N"
 - Recommander au planner de vérifier si c'est un doublon
 
 ### Format de sortie enrichi
 
-Ajouter cette section dans le rapport Scout si données GitLab disponibles :
+Ajouter cette section dans le rapport Pathfinder si données GitLab disponibles :
 
 ```markdown
 ## 🦊 Contexte GitLab

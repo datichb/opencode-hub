@@ -1,18 +1,18 @@
 ---
-name: scout-handoff-format
-description: Format de rapport scout et format d'escalade vers le planner — structure exploitable par l'utilisateur, orchestrator-dev et planner.
+name: pathfinder-handoff-format
+description: Format de rapport pathfinder et format d'escalade vers le planner — structure exploitable par l'utilisateur, orchestrator-dev et planner.
 ---
 
-# Skill — Scout Handoff Format
+# Skill — Pathfinder Handoff Format
 
 ## Rôle
 
-Ce skill définit le format exact du rapport scout et de son handoff vers le planner.
+Ce skill définit le format exact du rapport pathfinder et de son handoff vers le planner.
 
-## Format complet du rapport scout
+## Format complet du rapport pathfinder
 
 ```markdown
-# 🔍 Scout Report
+# 🔍 Pathfinder Report
 
 **Feature:** [Nom court de la feature]
 **Complexité:** [XS|S|M|L|XL] 
@@ -144,7 +144,7 @@ Cette feature présente une complexité ou des signaux nécessitant une planific
 
 [CETTE SECTION N'EST PRÉSENTE QUE SI ESCALADE RECOMMANDÉE]
 
-**Agent source:** scout  
+**Agent source:** pathfinder  
 **Feature:** [nom complet]  
 **Complexité estimée:** [L/XL]  
 
@@ -179,9 +179,9 @@ Cette feature présente une complexité ou des signaux nécessitant une planific
 
 [Copie de la section risques avec détails complets]
 
-### Recommandation scout
+### Recommandation pathfinder
 
-Le scout recommande l'escalade pour les raisons suivantes :
+Le pathfinder recommande l'escalade pour les raisons suivantes :
 [Justification complète reprise de la section Recommandation]
 
 Le planner doit :
@@ -233,10 +233,10 @@ Le planner doit :
 
 ## Exemples
 
-### Exemple 1 : Rapport scout avec traitement direct (S)
+### Exemple 1 : Rapport pathfinder avec traitement direct (S)
 
 ```markdown
-# 🔍 Scout Report
+# 🔍 Pathfinder Report
 
 **Feature:** Ajouter champ téléphone au profil utilisateur  
 **Complexité:** S  
@@ -330,10 +330,10 @@ Cette feature est suffisamment simple et bien définie pour être traitée direc
 
 ---
 
-### Exemple 2 : Rapport scout avec escalade (M→L)
+### Exemple 2 : Rapport pathfinder avec escalade (M→L)
 
 ```markdown
-# 🔍 Scout Report
+# 🔍 Pathfinder Report
 
 **Feature:** Système de notifications temps réel  
 **Complexité:** L  
@@ -452,7 +452,7 @@ Cette feature présente une complexité et des signaux nécessitant une planific
 
 ## 📦 Handoff vers planner
 
-**Agent source:** scout  
+**Agent source:** pathfinder  
 **Feature:** Système de notifications temps réel  
 **Complexité estimée:** L  
 
@@ -537,9 +537,9 @@ Cette feature présente une complexité et des signaux nécessitant une planific
 
 - **Niveau: Élevé** - Décision architecture (WS vs SSE) impacte tout le système et est difficilement réversible. Solution : Phase 1.5 du planner doit absolument trancher cette question avant implémentation.
 
-### Recommandation scout
+### Recommandation pathfinder
 
-Le scout recommande fortement l'escalade au planner complet pour les raisons suivantes :
+Le pathfinder recommande fortement l'escalade au planner complet pour les raisons suivantes :
 
 1. **Complexité L** - 6 tickets, ~14h de travail, nécessite planification détaillée et validation du plan
 2. **Signal architecture CRITIQUE** - Choix technologique structurant (WebSocket vs SSE) nécessite analyse approfondie et décision validée
@@ -577,14 +577,14 @@ Le planner doit :
 
 ## Bloc `## Retour vers orchestrator` (si invoqué depuis l'orchestrateur)
 
-Ce bloc est produit **uniquement** quand le scout est invoqué via `task` par l'orchestrateur (CONTEXTE = orchestrateur_feature). Il vient **après** le rapport scout complet.
+Ce bloc est produit **uniquement** quand le pathfinder est invoqué via `task` par l'orchestrateur (CONTEXTE = orchestrateur_feature). Il vient **après** le rapport pathfinder complet.
 
 ```markdown
 ---
 
 ## Retour vers orchestrator
 
-**Agent :** scout
+**Agent :** pathfinder
 **Feature :** <nom complet de la feature>
 **Complexité :** <XS|S|M|L|XL>
 
@@ -612,14 +612,14 @@ Ce bloc est produit **uniquement** quand le scout est invoqué via `task` par l'
 
 ## Bloc `## Retour intermédiaire vers orchestrateur` (clarification en cours de session)
 
-Produit quand le scout détecte une **clarification critique** en cours d'exploration et doit interrompre sa session (CONTEXTE = orchestrateur_feature uniquement).
+Produit quand le pathfinder détecte une **clarification critique** en cours d'exploration et doit interrompre sa session (CONTEXTE = orchestrateur_feature uniquement).
 
 Ce bloc précède toujours un `## Question pour l'orchestrateur`.
 
 ```markdown
 ## Retour intermédiaire vers orchestrateur
 
-**Agent :** scout
+**Agent :** pathfinder
 **Phase :** Clarification en cours d'exploration
 **task_id :** <sessionID courant>
 
@@ -642,7 +642,7 @@ Ce bloc précède toujours un `## Question pour l'orchestrateur`.
 
 ## Bloc `## Question pour l'orchestrateur` (clarification en cours de session)
 
-Accompagne toujours un `## Retour intermédiaire vers orchestrateur`. Permet à l'orchestrateur de relayer la question à l'utilisateur puis de re-invoquer le scout avec `task_id` + la réponse.
+Accompagne toujours un `## Retour intermédiaire vers orchestrateur`. Permet à l'orchestrateur de relayer la question à l'utilisateur puis de re-invoquer le pathfinder avec `task_id` + la réponse.
 
 ```markdown
 ## Question pour l'orchestrateur
@@ -658,13 +658,13 @@ Accompagne toujours un `## Retour intermédiaire vers orchestrateur`. Permet à 
 - `fournir-information` — <Description de l'option : l'utilisateur fournit l'info>
 - `continuer-hypothese` — <Description : continuer avec l'hypothèse [formulation]>
 
-**Instruction de reprise :** "Réponse à la clarification scout : [option]. [Information fournie si applicable]. Reprendre l'exploration depuis le point d'interruption et finaliser le rapport."
+**Instruction de reprise :** "Réponse à la clarification pathfinder : [option]. [Information fournie si applicable]. Reprendre l'exploration depuis le point d'interruption et finaliser le rapport."
 ```
 
 **Règles :**
 - ✅ Toujours inclure le `task_id` (sessionID courant)
 - ✅ Le contexte doit être compréhensible sans avoir vu la session enfant
-- ✅ L'instruction de reprise doit permettre au scout de reprendre exactement où il s'était arrêté
+- ✅ L'instruction de reprise doit permettre au pathfinder de reprendre exactement où il s'était arrêté
 - ❌ Ne jamais interrompre pour un détail non critique — utiliser une hypothèse documentée à la place
 
 ---
@@ -673,7 +673,7 @@ Accompagne toujours un `## Retour intermédiaire vers orchestrateur`. Permet à 
 
 | Bloc | Quand le produire | Contexte |
 |------|-------------------|----------|
-| Rapport scout complet | Toujours | standalone + orchestrateur_feature |
+| Rapport pathfinder complet | Toujours | standalone + orchestrateur_feature |
 | `## 📦 Handoff vers planner` | Si escalade recommandée | standalone + orchestrateur_feature |
 | `## Retour vers orchestrator` | Fin de session | orchestrateur_feature uniquement |
 | `## Retour intermédiaire vers orchestrateur` | Clarification critique détectée | orchestrateur_feature uniquement |

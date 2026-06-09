@@ -53,7 +53,7 @@ Arguments : project_path, merge_request_iid
 | Contenu du ticket | Agent recommandé |
 |---|---|
 | Feature nouvelle, scope large | `planner` |
-| Feature simple, estimation rapide demandée | `scout` |
+| Feature simple, estimation rapide demandée | `pathfinder` |
 | Bug, régression, erreur | `debugger` |
 | Revue de code, MR à reviewer | `reviewer` |
 | Projet inconnu, premier accès | `onboarder` d'abord, puis `planner` |
@@ -90,7 +90,7 @@ Présenter avec `question()` pour laisser l'utilisateur sélectionner le ticket 
 ### Règles absolues
 
 - **Ne jamais décomposer** un ticket en sous-tâches (c'est le rôle du planner)
-- **Ne jamais estimer** la complexité (c'est le rôle du scout)
+- **Ne jamais estimer** la complexité (c'est le rôle du pathfinder)
 - **Ne jamais coder** ni analyser le code lié au ticket
 - **Toujours transmettre** la description originale sans la reformuler
 

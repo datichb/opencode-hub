@@ -405,25 +405,25 @@ délègue l'écriture au `documentarian` via `task` (skill `living-docs-enrichme
 
 ---
 
-### `scout`
+### `pathfinder`
 
 | | |
 |--|--|
-| **Label** | Scout |
-| **Fichier** | `agents/planning/scout.md` |
-| **Skills** | `developer/beads-plan`, `planning/scout-protocol`, `planning/scout-handoff-format`, `posture/tool-question`, `adapters/figma-scout-protocol`, `adapters/gitlab-scout-protocol`, `shared/living-docs-enrichment` |
+| **Label** | Pathfinder |
+| **Fichier** | `agents/planning/pathfinder.md` |
+| **Skills** | `developer/beads-plan`, `planning/pathfinder-protocol`, `planning/pathfinder-handoff-format`, `posture/tool-question`, `adapters/figma-pathfinder-protocol`, `adapters/gitlab-pathfinder-protocol`, `shared/living-docs-enrichment` |
 | **MCP Servers** | `figma`, `gitlab` |
-| **Invocation** | `"Scout la feature [X]"` / `"Estime la complexité de [feature]"` / `"Scout le ticket #42"` |
+| **Invocation** | `"Pathfinder la feature [X]"` / `"Estime la complexité de [feature]"` / `"Pathfinder le ticket #42"` |
 
 Agent de reconnaissance rapide. Explore le contexte d'une feature et produit une estimation
 de complexité (XS/S/M/L/XL) avec un rapport structuré exploitable par le planner ou l'orchestrator.
 Workflow libre — pas de phases rigides. Suggère l'escalade vers le planner si la feature dépasse M.
 
 **Enrichissement GitLab (optionnel) :** si un ticket ou une MR GitLab est fourni, utilise
-`gitlab-scout-protocol` pour ajuster l'estimation selon les critères d'acceptation, labels et milestone.
+`gitlab-pathfinder-protocol` pour ajuster l'estimation selon les critères d'acceptation, labels et milestone.
 
 **Enrichissement Figma (optionnel) :** si la feature touche une interface utilisateur, utilise
-`figma-scout-protocol` pour détecter les composants Figma et ajuster la complexité.
+`figma-pathfinder-protocol` pour détecter les composants Figma et ajuster la complexité.
 
 **Post-rapport — Enrichissement des documents vivants :** après la production du rapport, identifie les patterns architecturaux et conventions observés lors de la reconnaissance qui sont absents de `ONBOARDING.md`/`CONVENTIONS.md`, et propose à l'utilisateur de les capitaliser. Si accepté, délègue l'écriture au `documentarian` via `task` (skill `living-docs-enrichment`).
 

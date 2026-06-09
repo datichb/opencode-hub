@@ -85,7 +85,7 @@ Avec WebSearch :
 
 ### Contexte
 
-Choix de solution de state management pour une application React. Le planning agent `scout` doit comparer les options et recommander la meilleure pour le contexte projet (application de taille moyenne, équipe de 5 dev).
+Choix de solution de state management pour une application React. Le planning agent `pathfinder` doit comparer les options et recommander la meilleure pour le contexte projet (application de taille moyenne, équipe de 5 dev).
 
 ### Conversation (extrait)
 
