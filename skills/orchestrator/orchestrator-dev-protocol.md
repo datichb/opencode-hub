@@ -714,9 +714,11 @@ Invoquer `qa-engineer` en fournissant :
      - `non-testable` → noter dans le compte rendu d'étape (étape 6) comme point d'attention technique
    - **Absent** → demander explicitement au qa-engineer de produire le bloc avant de continuer.
 
+> ⚠️ Limite : après 3 demandes sans rapport QA valide complet, ne pas re-invoquer le qa-engineer. Signaler le blocage via l'outil `question` et demander si la review peut continuer avec couverture partielle ou si une intervention manuelle est nécessaire.
+
 Le format attendu et les définitions des statuts sont définis dans le skill `qa/qa-handoff-format` — s'y référer comme source de vérité.
 
-> ❌ Ne jamais passer à l'étape 3.5 sans avoir reçu à la fois le rapport QA ET le bloc `## Retour vers orchestrator-dev`.
+> ❌ Ne jamais passer à l'étape 3.5 sans avoir reçu à la fois le rapport QA ET le bloc `## Retour vers orchestrator-dev` — sauf après 3 cycles infructueux (escalade utilisateur obligatoire, voir limite ci-dessus).
 
 ---
 

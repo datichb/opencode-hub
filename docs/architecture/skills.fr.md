@@ -54,7 +54,7 @@ Les skills marqués **(A)** sont Bucket A — toujours inline. Les skills marqu�
 | `developer/dev-standards-backend.md` | **B** | developer-backend, developer-fullstack, developer-api, reviewer | Architecture en couches, DTOs, services, repositories, sécurité API |
 | `developer/dev-standards-frontend.md` | **B** | developer-frontend, developer-fullstack, reviewer | Séparation logique/présentation, performance, bundle, lazy loading |
 | `developer/dev-standards-frontend-a11y.md` | **B** | developer-frontend, developer-fullstack, reviewer | WCAG 2.1 A/AA, sémantique HTML, ARIA, contrastes |
-| `developer/dev-standards-testing.md` | **B** | developer-frontend, developer-backend, developer-fullstack, developer-api, developer-data, qa-engineer | Stratégie de tests, pyramide, coverage, TDD — **agnostique des outils** |
+| `developer/dev-standards-testing.md` | **B** | developer-frontend, developer-backend, developer-fullstack, developer-api, developer-data | Stratégie de tests, pyramide, coverage, TDD — **agnostique des outils** |
 | `developer/dev-standards-git.md` | **B** | Tous les developer-*, reviewer | Conventional Commits, branches, PR, messages de commit |
 | `developer/dev-standards-devops.md` | **B** | developer-devops | Scripts shell, gestion des secrets, registries d'images, observabilité, principes IaC — **agnostique des outils** |
 | `developer/dev-standards-api.md` | **B** | developer-api | Versioning d'API, pagination, format de réponse uniforme, codes HTTP, idempotence, contrat schema-first, breaking changes, webhooks, rate limiting |
@@ -356,7 +356,7 @@ qa-engineer           → (A) dev-standards-universal, posture/expert-posture,
                              posture/tool-question, qa/qa-protocol,
                              shared/living-docs-enrichment,
                              qa/qa-handoff-format †
-                        (B) dev-standards-testing, dev-standards-git
+                        (B) dev-standards-git
 debugger              → (A) quality/debugger-workflow, posture/tool-question,
                              posture/expert-posture,
                              shared/living-docs-enrichment,

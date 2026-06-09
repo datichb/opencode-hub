@@ -320,7 +320,7 @@ de fichiers.
 |--|--|
 | **Label** | QAEngineer |
 | **Fichier** | `agents/quality/qa-engineer.md` |
-| **Skills** | `dev-standards-universal`, `dev-standards-testing`, `dev-standards-git`, `posture/expert-posture`, `posture/tool-question`, `qa/qa-protocol`, `qa/qa-handoff-format`, `shared/living-docs-enrichment` |
+| **Skills** | `dev-standards-universal`, `dev-standards-git`, `posture/expert-posture`, `posture/tool-question`, `qa/qa-protocol`, `qa/qa-handoff-format`, `shared/living-docs-enrichment` |
 | **Invocation** | `"Écris les tests pour la branche [X]"` / `"QA sur le ticket [ID]"` |
 
 Écrit les tests manquants (unit / integration / E2E) à partir d'un diff ou d'un

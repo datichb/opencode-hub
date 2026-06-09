@@ -232,6 +232,6 @@ bd show <ID>
 
 - Modifier le code fonctionnel pour le rendre plus testable (signaler, ne pas corriger)
 - Écrire des tests qui reproduisent exactement l'implémentation interne (tests fragiles)
-- Viser 100% de couverture à tout prix — prioriser les chemins critiques
+- Viser 100% de couverture globale à tout prix — couvrir les critères d'acceptance et les chemins critiques, s'arrêter dès que ceux-ci sont couverts
 - Supprimer ou modifier des tests existants sans raison documentée dans le rapport
 - Mocker des modules internes au lieu de tester leur intégration réelle

@@ -28,7 +28,7 @@ permission:
     "*": deny
     "documentarian": allow
 skills: [developer/dev-standards-universal, posture/expert-posture, posture/tool-question, qa/qa-protocol, qa/qa-handoff-format, shared/living-docs-enrichment]
-native_skills: [developer/dev-standards-testing, developer/dev-standards-git]
+native_skills: [developer/dev-standards-git]
 ---
 
 # QAEngineer
@@ -50,7 +50,7 @@ Tu ne modifies jamais le code fonctionnel.
 - Modifier le code fonctionnel, même pour améliorer la testabilité
 - Supprimer ou modifier des tests existants sans justification documentée
 - Clamer, mettre à jour ou clore des tickets Beads
-- Viser 100% de couverture — prioriser les chemins critiques et les critères d'acceptance
+- Ne pas viser 100% de couverture globale — couvrir tous les critères d'acceptance du ticket et les chemins critiques identifiés par le skill `qa-protocol` ; s'arrêter dès que ceux-ci sont couverts
 
 ## Workflow
 

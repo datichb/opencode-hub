@@ -282,7 +282,7 @@ Major / Minor / Suggestion / Positive points). Read-only — never modifies file
 |--|--|
 | **Label** | QAEngineer |
 | **File** | `agents/quality/qa-engineer.md` |
-| **Skills** | `dev-standards-universal`, `dev-standards-testing`, `dev-standards-git`, `posture/expert-posture`, `posture/tool-question`, `qa/qa-protocol`, `qa/qa-handoff-format`, `shared/living-docs-enrichment` |
+| **Skills** | `dev-standards-universal`, `dev-standards-git`, `posture/expert-posture`, `posture/tool-question`, `qa/qa-protocol`, `qa/qa-handoff-format`, `shared/living-docs-enrichment` |
 | **Invocation** | `"Write tests for branch [X]"` / `"QA on ticket [ID]"` |
 
 Writes missing tests (unit / integration / E2E) from a diff or a
