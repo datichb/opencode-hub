@@ -50,7 +50,7 @@ Si vous préférez configurer manuellement, créez `~/.config/opencode/config.js
 **Personal Access Token :**
 1. Aller sur https://www.figma.com/developers/api#authentication
 2. Section "Personal access tokens"
-3. Créer un token avec scopes : `file:read`, `projects:read`
+3. Créer un token avec les scopes : `current_user:read`, `file_content:read`, `file_metadata:read`, `projects:read`, `library_assets:read`
 
 **Team ID :**
 1. Ouvrir votre team Figma
@@ -244,7 +244,7 @@ opencode-hub/
 **Solutions :**
 - Vérifier que le Team ID est correct
 - Renommer fichiers Figma selon conventions (`[Projet] - [Feature] - [Type]`)
-- Vérifier scopes du token : `file:read`, `projects:read`
+- Vérifier scopes du token : `current_user:read`, `file_content:read`, `file_metadata:read`, `projects:read`, `library_assets:read`
 
 ### Token non reconnu
 

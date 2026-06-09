@@ -20,7 +20,7 @@ Variables d'environnement requises (gérées dans `~/.config/opencode/config.jso
 
 1. Aller sur https://www.figma.com/developers/api#authentication
 2. Section "Personal access tokens"
-3. Générer un nouveau token avec scopes : `file:read`, `projects:read`
+3. Générer un nouveau token avec les scopes : `current_user:read`, `file_content:read`, `file_metadata:read`, `projects:read`, `library_assets:read`
 
 ### Trouver votre Team ID
 

@@ -82,7 +82,6 @@ EOF
    - `current_user:read` — requis pour valider le token via `/v1/me`
    - `file_content:read` — lire le contenu des fichiers Figma
    - `file_metadata:read` — lire les métadonnées des fichiers
-   - `project_metadata:read` — lire les métadonnées des projets
    - `projects:read` — lister les projets et fichiers d'une team
    - `library_assets:read` — lire les composants et styles publiés
    - `file_variables:read` _(optionnel, Enterprise uniquement)_ — lire les variables/design tokens
@@ -190,7 +189,7 @@ opencode
 - [ ] Token Figma obtenu
 - [ ] Team ID récupéré
 - [ ] `~/.config/opencode/config.json` créé avec les bonnes valeurs
-- [ ] Permissions token Figma : `current_user:read`, `file_content:read`, `file_metadata:read`, `project_metadata:read`, `projects:read`, `library_assets:read`
+- [ ] Permissions token Figma : `current_user:read`, `file_content:read`, `file_metadata:read`, `projects:read`, `library_assets:read`
 
 ### Déploiement
 - [ ] Projet test enregistré dans le hub (`./oc.sh init TEST-PROJECT`)
@@ -227,7 +226,6 @@ opencode
 | `current_user:read` | Validation du token (endpoint `/v1/me`) |
 | `file_content:read` | Lecture du contenu des fichiers Figma |
 | `file_metadata:read` | Lecture des métadonnées de fichiers |
-| `project_metadata:read` | Lecture des métadonnées de projets |
 | `projects:read` | Listage des projets et fichiers d'une team |
 | `library_assets:read` | Lecture des composants et styles publiés |
 | `file_variables:read` | _(Optionnel, Enterprise uniquement)_ Design tokens |
@@ -261,7 +259,7 @@ oc service setup figma
 **Solution :**
 - Vérifier le Team ID dans l'URL Figma
 - Renommer les fichiers selon les conventions
-- Vérifier les scopes du token : `current_user:read`, `file_content:read`, `file_metadata:read`, `project_metadata:read`, `projects:read`, `library_assets:read`
+- Vérifier les scopes du token : `current_user:read`, `file_content:read`, `file_metadata:read`, `projects:read`, `library_assets:read`
 
 ### Erreur lors du build TypeScript
 
