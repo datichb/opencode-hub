@@ -355,6 +355,9 @@ if [ "$PARALLEL_MODE" = true ]; then
 
   # Lancer dans le worktree si créé correctement
   if [ "$_wt_path" != "$PROJECT_PATH" ] && [ -d "$_wt_path" ]; then
+    # Déployer la configuration hub (agents, skills, opencode.json) dans le worktree
+    log_info "Déploiement de la configuration hub dans le worktree…"
+    adapter_deploy "$_wt_path" "$PROJECT_ID" "$PROVIDER_OVERRIDE"
     _outro "$(t start.press_enter) opencode…"
     _prompt _ ""
     adapter_start "$_wt_path" "$PROMPT" "$PROJECT_ID" "${AGENT_NAME:-}" "$PROVIDER_OVERRIDE"
@@ -399,6 +402,10 @@ if [ "$WORKTREE_MODE" = true ]; then
   log_info "Mode --worktree  branche: ${WORKTREE_BRANCH}  worktree: ${_wt_path}"
   echo -e "${DIM}│${RESET}  ${DIM}Session libre — pas de lien Beads obligatoire${RESET}"
   echo -e "${DIM}│${RESET}  ${DIM}Supprimer plus tard : oc worktree remove ${WORKTREE_BRANCH} ${PROJECT_ID}${RESET}"
+
+  # Déployer la configuration hub (agents, skills, opencode.json) dans le worktree
+  log_info "Déploiement de la configuration hub dans le worktree…"
+  adapter_deploy "$_wt_path" "$PROJECT_ID" "$PROVIDER_OVERRIDE"
 
   _outro "$(t start.press_enter) opencode…"
   _prompt _ ""
