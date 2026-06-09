@@ -245,3 +245,45 @@ teardown() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"enabled"* ]]
 }
+
+# ── Clés review.git_* ─────────────────────────────────────────────────────────
+
+@test "t : clés review.git_* FR — fetching, sync_continue, aborted" {
+  export OC_LANG=fr
+
+  run t "review.git_fetching"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"fetch"* ]]
+
+  run t "review.git_fetch_done"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"terminé"* ]]
+
+  run t "review.git_sync_continue"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"malgré"* ]]
+
+  run t "review.git_sync_aborted"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"annulée"* ]]
+}
+
+@test "t : clés review.git_* EN — fetching, sync_continue, aborted" {
+  export OC_LANG=en
+
+  run t "review.git_fetching"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"fetch"* ]]
+
+  run t "review.git_fetch_done"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"complete"* ]]
+
+  run t "review.git_sync_continue"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"despite"* ]]
+
+  run t "review.git_sync_aborted"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"cancelled"* ]]
+}

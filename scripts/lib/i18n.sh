@@ -611,6 +611,14 @@ t() {
       review.deploy_later)        printf '%s' "Déployer plus tard : ./oc.sh deploy " ;;
       review.main_agent)          printf '%s' "Agent : " ;;
       review.launching)           printf '%s' "Lancement de la review " ;;
+      review.git_fetching)        printf '%s' "Synchronisation du dépôt (git fetch)…" ;;
+      review.git_fetch_done)      printf '%s' "Fetch terminé" ;;
+      review.git_fetch_failed)    printf '%s' "Fetch échoué (réseau ou auth) — le diff peut être incomplet" ;;
+      review.git_pulling)         printf '%s' "Mise à jour de " ;;
+      review.git_pull_done)       printf '%s' "Pull terminé : " ;;
+      review.git_pull_failed)     printf '%s' "Pull échoué (branche divergée ?) — " ;;
+      review.git_sync_continue)   printf '%s' "Continuer la review malgré l'échec de synchronisation ? [Y/n] : " ;;
+      review.git_sync_aborted)    printf '%s' "Review annulée — synchroniser manuellement puis relancer : oc review" ;;
 
       # ── cmd-debug.sh ──────────────────────────────────────────────────────
       debug.no_projects)         printf '%s' "Aucun projet enregistré → ./oc.sh init" ;;
@@ -1274,6 +1282,14 @@ t_en() {
     review.deploy_later)        printf '%s' "Deploy later: ./oc.sh deploy " ;;
     review.main_agent)          printf '%s' "Agent: " ;;
     review.launching)           printf '%s' "Launching review on " ;;
+    review.git_fetching)        printf '%s' "Syncing repository (git fetch)…" ;;
+    review.git_fetch_done)      printf '%s' "Fetch complete" ;;
+    review.git_fetch_failed)    printf '%s' "Fetch failed (network or auth) — diff may be incomplete" ;;
+    review.git_pulling)         printf '%s' "Updating " ;;
+    review.git_pull_done)       printf '%s' "Pull complete: " ;;
+    review.git_pull_failed)     printf '%s' "Pull failed (branch diverged?) — " ;;
+    review.git_sync_continue)   printf '%s' "Continue review despite sync failure? [Y/n]: " ;;
+    review.git_sync_aborted)    printf '%s' "Review cancelled — sync manually then re-run: oc review" ;;
 
     # ── cmd-debug.sh ────────────────────────────────────────────────────────
     debug.no_projects)         printf '%s' "No registered projects → ./oc.sh init" ;;

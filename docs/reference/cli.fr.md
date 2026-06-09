@@ -268,11 +268,13 @@ oc review [PROJECT_ID] [--branch <branche>]
 **Comportement :**
 
 1. **Résolution de la branche** — si `--branch` non fourni, détecte la branche courante via `git branch --show-current` dans le répertoire du projet
-2. **Vérification projects.md** — si le projet a une sélection d'agents restrictive (pas `all`), vérifie que `reviewer` est inclus :
+2. **Git fetch** — exécute `git fetch` pour mettre à jour les refs distantes ; si échoue (pas de réseau, auth), demande confirmation avant de continuer
+3. **Pull de la branche de base** — exécute `git pull --ff-only origin <base>` où `<base>` est lu depuis `- Worktree base branch :` dans `projects.md` (défaut : `main`) ; si échoue (branche divergée), demande confirmation
+4. **Vérification projects.md** — si le projet a une sélection d'agents restrictive (pas `all`), vérifie que `reviewer` est inclus :
    - Si manquant → propose de l'ajouter + redéployer
-3. **Vérification déploiement physique** — si le dossier agents est absent ou si `reviewer.md` manque, propose `oc deploy`
-4. **Génération du diff** — exécute `git diff main...<branche>` et injecte le résultat complet dans le prompt de bootstrap
-5. **Lancement** — ouvre l'outil avec `--agent reviewer` et le prompt contenant le diff
+5. **Vérification déploiement physique** — si le dossier agents est absent ou si `reviewer.md` manque, propose `oc deploy`
+6. **Génération du diff** — exécute `git diff <base>...<branche>` et injecte le résultat complet dans le prompt de bootstrap
+7. **Lancement** — ouvre l'outil avec `--agent reviewer` et le prompt contenant le diff
 
 **Exemples :**
 
@@ -308,7 +310,8 @@ Workflow :
 ```
 
 > L'agent `reviewer` ne modifie aucun fichier — il produit uniquement un rapport d'analyse.
-> Pour un diff vide (branche à jour avec `main`), le prompt l'indique explicitement.
+> Pour un diff vide (branche à jour avec la branche de base), le prompt l'indique explicitement.
+> La branche de base utilisée pour le diff est lue depuis `- Worktree base branch :` dans `projects.md` (défaut : `main`).
 
 ---
 

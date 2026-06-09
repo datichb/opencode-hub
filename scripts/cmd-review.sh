@@ -65,6 +65,37 @@ if [ -z "$BRANCH" ]; then
   fi
 fi
 
+# ── Synchronisation git ───────────────────────────────────────────────────────
+BASE_BRANCH=$(get_project_worktree_base_branch "$PROJECT_ID")
+GIT_SYNC_OK=1
+
+echo -e "${DIM}│${RESET}"
+log_info "$(t review.git_fetching)"
+if git -C "$PROJECT_PATH" fetch --quiet 2>/dev/null; then
+  log_success "$(t review.git_fetch_done)"
+
+  log_info "$(t review.git_pulling)${BASE_BRANCH}…"
+  if git -C "$PROJECT_PATH" pull --ff-only origin "$BASE_BRANCH" --quiet 2>/dev/null; then
+    log_success "$(t review.git_pull_done)${BASE_BRANCH}"
+  else
+    GIT_SYNC_OK=0
+    log_warn "$(t review.git_pull_failed)${BASE_BRANCH}"
+  fi
+else
+  GIT_SYNC_OK=0
+  log_warn "$(t review.git_fetch_failed)"
+fi
+
+if [ "$GIT_SYNC_OK" = "0" ]; then
+  echo -e "${DIM}│${RESET}"
+  _prompt _continue_anyway "$(t review.git_sync_continue)"
+  # En mode non-interactif (_prompt retourne ""), on continue par défaut (Y)
+  if [[ "${_continue_anyway}" = "n" ]] || [[ "${_continue_anyway}" = "N" ]]; then
+    log_info "$(t review.git_sync_aborted)"
+    exit 0
+  fi
+fi
+
 # ── Agent requis ─────────────────────────────────────────────────────────────
 REQUIRED_AGENT="reviewer"
 

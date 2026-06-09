@@ -39,6 +39,17 @@ PROJEOF
 - Agents : orchestrator,planner
 PROJEOF
 
+  # Projet avec branche de base "develop"
+  cat >> "$PROJECTS_FILE" <<'PROJEOF'
+
+## TEST-DEVELOP-BASE
+- Nom : Projet Develop Base
+- Stack : Node.js
+- Tracker : none
+- Agents : all
+- Worktree base branch : develop
+PROJEOF
+
   mkdir -p "$TEST_DIR/fake-project"
   mkdir -p "$TEST_DIR/fake-project/.opencode/agents"
   # Créer un reviewer.md factice pour éviter le prompt de déploiement
@@ -46,9 +57,14 @@ PROJEOF
   mkdir -p "$TEST_DIR/fake-project-restricted"
   mkdir -p "$TEST_DIR/fake-project-restricted/.opencode/agents"
   touch "$TEST_DIR/fake-project-restricted/.opencode/agents/reviewer.md"
+  # Projet avec branche de base "develop" (pour tester la lecture de projects.md)
+  mkdir -p "$TEST_DIR/fake-project-develop"
+  mkdir -p "$TEST_DIR/fake-project-develop/.opencode/agents"
+  touch "$TEST_DIR/fake-project-develop/.opencode/agents/reviewer.md"
   cat > "$PATHS_FILE" <<EOF
 TEST-PROJ=$TEST_DIR/fake-project
 TEST-RESTRICTED=$TEST_DIR/fake-project-restricted
+TEST-DEVELOP-BASE=$TEST_DIR/fake-project-develop
 EOF
 
   : > "$API_KEYS_FILE"
@@ -70,7 +86,15 @@ if [ "${1:-}" = "-C" ] && [ "${3:-}" = "branch" ] && [ "${4:-}" = "--show-curren
   echo "feature/my-branch"
   exit 0
 fi
-# Simuler "diff main...feature/my-branch" → diff vide
+# Simuler "fetch" → succès par défaut
+if [ "${1:-}" = "-C" ] && [ "${3:-}" = "fetch" ]; then
+  exit 0
+fi
+# Simuler "pull" → succès par défaut
+if [ "${1:-}" = "-C" ] && [ "${3:-}" = "pull" ]; then
+  exit 0
+fi
+# Simuler "diff main...feature/my-branch" → diff non vide
 if [ "${1:-}" = "-C" ] && [ "${3:-}" = "diff" ]; then
   echo "+ added line"
   exit 0
@@ -190,4 +214,86 @@ teardown() {
   ' _ "$CMD_REVIEW"
   [ "$status" -eq 0 ]
   grep -q "\-\-prompt" "$OPENCODE_LOG"
+}
+
+# ── Synchronisation git (fetch + pull) ────────────────────────────────────────
+
+@test "cmd-review : exécute git fetch avant le diff" {
+  run bash -c '
+    printf "\n" | bash "$1" TEST-PROJ --branch feat/test
+  ' _ "$CMD_REVIEW"
+  [ "$status" -eq 0 ]
+  grep -q "fetch" "$GIT_CALLS_LOG"
+}
+
+@test "cmd-review : exécute git pull --ff-only origin main (branche de base par défaut)" {
+  run bash -c '
+    printf "\n" | bash "$1" TEST-PROJ --branch feat/test
+  ' _ "$CMD_REVIEW"
+  [ "$status" -eq 0 ]
+  grep -q "pull --ff-only origin main" "$GIT_CALLS_LOG"
+}
+
+@test "cmd-review : utilise la branche de base depuis projects.md (develop)" {
+  run bash -c '
+    printf "\n" | bash "$1" TEST-DEVELOP-BASE --branch feat/test
+  ' _ "$CMD_REVIEW"
+  [ "$status" -eq 0 ]
+  grep -q "pull --ff-only origin develop" "$GIT_CALLS_LOG"
+}
+
+@test "cmd-review : propose confirmation si fetch échoue" {
+  # Remplacer le mock git par un qui fait échouer fetch
+  cat > "$TEST_DIR/bin/git" <<'GITEOF'
+#!/bin/bash
+echo "git $*" >> "$GIT_CALLS_LOG"
+if [ "${1:-}" = "-C" ] && [ "${3:-}" = "branch" ] && [ "${4:-}" = "--show-current" ]; then
+  echo "feature/my-branch"; exit 0
+fi
+if [ "${1:-}" = "-C" ] && [ "${3:-}" = "fetch" ]; then
+  exit 1
+fi
+if [ "${1:-}" = "-C" ] && [ "${3:-}" = "diff" ]; then
+  echo "+ added line"; exit 0
+fi
+exec "$REAL_GIT" "$@"
+GITEOF
+  chmod +x "$TEST_DIR/bin/git"
+
+  # Répondre Y au prompt de confirmation, puis Enter pour le gate de lancement
+  run bash -c '
+    printf "Y\n\n" | bash "$1" TEST-PROJ --branch feat/test
+  ' _ "$CMD_REVIEW"
+  [ "$status" -eq 0 ]
+  # L'avertissement de fetch échoué doit apparaître
+  [[ "$output" == *"Fetch"* ]]
+  # opencode doit quand même avoir été lancé (Y = continuer)
+  [ -s "$OPENCODE_LOG" ]
+}
+
+@test "cmd-review : annule si sync échoue et utilisateur refuse" {
+  # Mock git avec fetch qui échoue
+  cat > "$TEST_DIR/bin/git" <<'GITEOF'
+#!/bin/bash
+echo "git $*" >> "$GIT_CALLS_LOG"
+if [ "${1:-}" = "-C" ] && [ "${3:-}" = "branch" ] && [ "${4:-}" = "--show-current" ]; then
+  echo "feature/my-branch"; exit 0
+fi
+if [ "${1:-}" = "-C" ] && [ "${3:-}" = "fetch" ]; then
+  exit 1
+fi
+if [ "${1:-}" = "-C" ] && [ "${3:-}" = "diff" ]; then
+  echo "+ added line"; exit 0
+fi
+exec "$REAL_GIT" "$@"
+GITEOF
+  chmod +x "$TEST_DIR/bin/git"
+
+  # Répondre n au prompt → annulation
+  run bash -c '
+    printf "n\n" | bash "$1" TEST-PROJ --branch feat/test
+  ' _ "$CMD_REVIEW"
+  [ "$status" -eq 0 ]
+  # opencode NE doit PAS avoir été appelé
+  [ ! -s "$OPENCODE_LOG" ]
 }

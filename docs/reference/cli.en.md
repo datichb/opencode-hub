@@ -269,11 +269,13 @@ oc review [PROJECT_ID] [--branch <branch>]
 **Behaviour:**
 
 1. **Branch resolution** — if `--branch` is not provided, detects the current branch via `git branch --show-current` in the project directory
-2. **projects.md check** — if the project has a restrictive agent selection (not `all`), verifies that `reviewer` is included:
+2. **Git fetch** — runs `git fetch` to update remote refs; if it fails (no network, auth), prompts for confirmation before continuing
+3. **Pull base branch** — runs `git pull --ff-only origin <base>` where `<base>` is read from `- Worktree base branch :` in `projects.md` (default: `main`); if it fails (diverged branch), prompts for confirmation
+4. **projects.md check** — if the project has a restrictive agent selection (not `all`), verifies that `reviewer` is included:
    - If missing → offers to add it + redeploy
-3. **Physical deployment check** — if the agents folder is absent or `reviewer.md` is missing, offers `oc deploy`
-4. **Diff generation** — runs `git diff main...<branch>` and injects the full result into the bootstrap prompt
-5. **Launch** — opens the tool with `--agent reviewer` and the prompt containing the diff
+5. **Physical deployment check** — if the agents folder is absent or `reviewer.md` is missing, offers `oc deploy`
+6. **Diff generation** — runs `git diff <base>...<branch>` and injects the full result into the bootstrap prompt
+7. **Launch** — opens the tool with `--agent reviewer` and the prompt containing the diff
 
 **Examples:**
 
@@ -309,7 +311,8 @@ Workflow:
 ```
 
 > The `reviewer` agent does not modify any files — it only produces an analysis report.
-> For an empty diff (branch up to date with `main`), the prompt indicates this explicitly.
+> For an empty diff (branch up to date with the base branch), the prompt indicates this explicitly.
+> The base branch used for the diff is read from `- Worktree base branch :` in `projects.md` (default: `main`).
 
 ---
 
