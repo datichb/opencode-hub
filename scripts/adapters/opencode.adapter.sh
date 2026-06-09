@@ -190,7 +190,25 @@ _build_provider_block() {
 # Utilise .git/info/exclude plutôt que .gitignore pour ne pas polluer le dépôt partagé
 _gitignore_opencode_json() {
   local deploy_dir="$1"
-  local git_dir="$deploy_dir/.git"
+  local git_entry="$deploy_dir/.git"
+  local git_dir
+
+  # Dans un worktree, .git est un fichier "gitdir: <chemin>" pointant vers le vrai gitdir.
+  # Dans un repo classique, .git est un répertoire — comportement inchangé.
+  if [ -f "$git_entry" ]; then
+    local _gitdir_line
+    _gitdir_line=$(grep '^gitdir:' "$git_entry" | head -1)
+    git_dir="${_gitdir_line#gitdir: }"
+    # Résoudre le chemin relatif par rapport au deploy_dir
+    if [[ "$git_dir" != /* ]]; then
+      git_dir="$(cd "$deploy_dir" && cd "$git_dir" 2>/dev/null && pwd)" || return 0
+    fi
+  elif [ -d "$git_entry" ]; then
+    git_dir="$git_entry"
+  else
+    return 0  # pas de .git — skip silencieux
+  fi
+
   local exclude_file="$git_dir/info/exclude"
   local _added=false
 
