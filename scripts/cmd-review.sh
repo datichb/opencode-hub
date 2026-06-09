@@ -164,7 +164,7 @@ elif [ -n "$agents_dir" ] && [ -d "$agents_dir" ] && [ ! -f "$agents_dir/${REQUI
 fi
 
 # ── Construire le prompt ──────────────────────────────────────────────────────
-PROMPT=$(build_review_bootstrap_prompt "$PROJECT_PATH" "$PROJECT_ID" "$BRANCH")
+PROMPT=$(build_review_bootstrap_prompt "$PROJECT_PATH" "$PROJECT_ID" "$BRANCH" "$BASE_BRANCH")
 
 echo -e "${DIM}│${RESET}"
 log_info "$(t review.main_agent)${REQUIRED_AGENT}"

@@ -274,8 +274,8 @@ oc review [PROJECT_ID] [--branch <branch>]
 4. **projects.md check** — if the project has a restrictive agent selection (not `all`), verifies that `reviewer` is included:
    - If missing → offers to add it + redeploy
 5. **Physical deployment check** — if the agents folder is absent or `reviewer.md` is missing, offers `oc deploy`
-6. **Diff generation** — runs `git diff <base>...<branch>` and injects the full result into the bootstrap prompt
-7. **Launch** — opens the tool with `--agent reviewer` and the prompt containing the diff
+6. **Diff instruction** — injects the exact `git diff <base>...<branch>` command into the prompt; the agent executes it itself and analyses the result progressively, avoiding context window overflow on large branches
+7. **Launch** — opens the tool with `--agent reviewer` and the prompt containing the diff instruction
 
 **Examples:**
 
@@ -293,25 +293,23 @@ Perform a code review of branch `feat/login`.
 Project: MY-APP
 Path: /Users/alice/workspace/my-app
 Branch reviewed: feat/login
-Diff command used: git diff main...feat/login
+Base branch:     main
 
 → Read CONVENTIONS.md at the project root before reviewing   ← if the file exists
 
---- DIFF ---
-
-diff --git a/src/auth/login.ts b/src/auth/login.ts
-...
-
---- END OF DIFF ---
+To get the diff, run:
+  git diff main...feat/login
 
 Workflow:
 1. If CONVENTIONS.md exists at the root → read it to apply real project conventions
-2. Analyse the diff above according to the systematic checklist in the review-protocol skill
-3. Produce the structured report by severity: Critical → Major → Minor → Suggestion → Positive points
+2. Run `git diff main...feat/login` to get the changes
+3. Analyse the diff according to the systematic checklist in the review-protocol skill
+4. Produce the structured report by severity: Critical → Major → Minor → Suggestion → Positive points
 ```
 
 > The `reviewer` agent does not modify any files — it only produces an analysis report.
-> For an empty diff (branch up to date with the base branch), the prompt indicates this explicitly.
+> The agent fetches the diff itself via `git diff` — this avoids context window overflow on large branches.
+> For an empty diff (branch up to date with the base branch), the agent detects and reports this.
 > The base branch used for the diff is read from `- Worktree base branch :` in `projects.md` (default: `main`).
 
 ---

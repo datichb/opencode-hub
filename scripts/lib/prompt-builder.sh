@@ -1038,6 +1038,7 @@ build_review_bootstrap_prompt() {
   local project_path="$1"
   local project_id="${2:-}"
   local branch="${3:-}"
+  local base_branch="${4:-main}"
 
   local project_info=""
   if [ -n "$project_id" ]; then
@@ -1045,19 +1046,6 @@ build_review_bootstrap_prompt() {
 Chemin : ${project_path}"
   else
     project_info="Chemin : ${project_path}"
-  fi
-
-  # Générer le diff git main...<branch>
-  local diff_content=""
-  local diff_cmd="git diff main...${branch}"
-  if diff_content=$(git -C "$project_path" diff "main...${branch}" 2>/dev/null); then
-    if [ -z "$diff_content" ]; then
-      diff_content="(aucune différence détectée entre main et ${branch})"
-    fi
-  else
-    # Fallback : essayer sans les trois points (branche sans ancêtre commun avec main)
-    diff_content=$(git -C "$project_path" diff "main..${branch}" 2>/dev/null || echo "(impossible de générer le diff — vérifier que la branche '${branch}' et 'main' existent)")
-    diff_cmd="git diff main..${branch}"
   fi
 
   # Vérifier l'existence de CONVENTIONS.md et ONBOARDING.md
@@ -1078,19 +1066,17 @@ Effectue une code review de la branche \`${branch}\`.
 
 ${project_info}
 Branche reviewée : ${branch}
-Commande diff utilisée : ${diff_cmd}
+Branche de base  : ${base_branch}
 ${conventions_hint}${onboarding_hint}
 
---- DIFF ---
-
-${diff_content}
-
---- FIN DU DIFF ---
+Pour obtenir le diff, exécute :
+  git diff ${base_branch}...${branch}
 
 Workflow :
 1. Si CONVENTIONS.md existe à la racine → le lire pour appliquer les conventions réelles du projet
-2. Analyser le diff ci-dessus selon la checklist systématique du skill review-protocol
-3. Produire le rapport structuré par sévérité : Critique → Majeur → Mineur → Suggestion → Points positifs
+2. Exécuter \`git diff ${base_branch}...${branch}\` pour obtenir les changements
+3. Analyser le diff selon la checklist systématique du skill review-protocol
+4. Produire le rapport structuré par sévérité : Critique → Majeur → Mineur → Suggestion → Points positifs
 
 Rappel :
 - Tu fournis un avis de review, tu ne modifies pas de fichiers

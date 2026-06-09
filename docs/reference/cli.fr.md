@@ -273,8 +273,8 @@ oc review [PROJECT_ID] [--branch <branche>]
 4. **Vérification projects.md** — si le projet a une sélection d'agents restrictive (pas `all`), vérifie que `reviewer` est inclus :
    - Si manquant → propose de l'ajouter + redéployer
 5. **Vérification déploiement physique** — si le dossier agents est absent ou si `reviewer.md` manque, propose `oc deploy`
-6. **Génération du diff** — exécute `git diff <base>...<branche>` et injecte le résultat complet dans le prompt de bootstrap
-7. **Lancement** — ouvre l'outil avec `--agent reviewer` et le prompt contenant le diff
+6. **Instruction diff** — injecte la commande exacte `git diff <base>...<branche>` dans le prompt ; l'agent l'exécute lui-même et analyse le résultat progressivement, évitant le débordement de la fenêtre de contexte sur les grosses branches
+7. **Lancement** — ouvre l'outil avec `--agent reviewer` et le prompt contenant l'instruction diff
 
 **Exemples :**
 
@@ -292,25 +292,23 @@ Effectue une code review de la branche `feat/login`.
 Projet : MON-APP
 Chemin : /Users/alice/workspace/mon-app
 Branche reviewée : feat/login
-Commande diff utilisée : git diff main...feat/login
+Branche de base  : main
 
 → Lire CONVENTIONS.md à la racine du projet avant la review   ← si le fichier existe
 
---- DIFF ---
-
-diff --git a/src/auth/login.ts b/src/auth/login.ts
-...
-
---- FIN DU DIFF ---
+Pour obtenir le diff, exécute :
+  git diff main...feat/login
 
 Workflow :
 1. Si CONVENTIONS.md existe à la racine → le lire pour appliquer les conventions réelles du projet
-2. Analyser le diff ci-dessus selon la checklist systématique du skill review-protocol
-3. Produire le rapport structuré par sévérité : Critique → Majeur → Mineur → Suggestion → Points positifs
+2. Exécuter `git diff main...feat/login` pour obtenir les changements
+3. Analyser le diff selon la checklist systématique du skill review-protocol
+4. Produire le rapport structuré par sévérité : Critique → Majeur → Mineur → Suggestion → Points positifs
 ```
 
 > L'agent `reviewer` ne modifie aucun fichier — il produit uniquement un rapport d'analyse.
-> Pour un diff vide (branche à jour avec la branche de base), le prompt l'indique explicitement.
+> L'agent récupère lui-même le diff via `git diff` — cela évite le débordement de la fenêtre de contexte sur les grosses branches.
+> Pour un diff vide (branche à jour avec la branche de base), l'agent le détecte et le signale.
 > La branche de base utilisée pour le diff est lue depuis `- Worktree base branch :` dans `projects.md` (défaut : `main`).
 
 ---

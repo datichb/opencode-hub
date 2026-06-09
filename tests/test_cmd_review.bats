@@ -208,12 +208,28 @@ teardown() {
   [[ "$output" == *"release/v2.0"* ]]
 }
 
-@test "cmd-review : passe --prompt à opencode avec le contenu du diff" {
+@test "cmd-review : passe --prompt à opencode avec les instructions de review" {
   run bash -c '
     printf "\n" | bash "$1" TEST-PROJ --branch feat/test
   ' _ "$CMD_REVIEW"
   [ "$status" -eq 0 ]
   grep -q "\-\-prompt" "$OPENCODE_LOG"
+}
+
+@test "cmd-review : le prompt contient la commande git diff exacte" {
+  run bash -c '
+    printf "\n" | bash "$1" TEST-PROJ --branch feat/test
+  ' _ "$CMD_REVIEW"
+  [ "$status" -eq 0 ]
+  grep -q "git diff main...feat/test" "$OPENCODE_LOG"
+}
+
+@test "cmd-review : le prompt utilise la branche de base du projet (develop)" {
+  run bash -c '
+    printf "\n" | bash "$1" TEST-DEVELOP-BASE --branch feat/test
+  ' _ "$CMD_REVIEW"
+  [ "$status" -eq 0 ]
+  grep -q "git diff develop...feat/test" "$OPENCODE_LOG"
 }
 
 # ── Synchronisation git (fetch + pull) ────────────────────────────────────────
