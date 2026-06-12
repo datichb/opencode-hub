@@ -77,7 +77,24 @@ Formalize **all** inter-agent communication contracts as dedicated skills, follo
 
 **Impact:** the orchestrator's discussion thread now shows the complete implementation summary (without duplication) before every [CP-feature], giving the user full visibility into what was done across all dev tickets before being asked any question.
 
-### Negative / trade-offs
+---
+
+## Amendment — Deduplication of consumer rules in handoff-formats
+
+**Context:** each `*-handoff-format` skill contained a "Consumer rules" section of 30-40 lines reproducing the mandatory display sequence (display report → display structured block → call `question`) already defined in `posture/retranscription-coordinateur`. This duplication represented ~1,200 tokens injected in Bucket A for information already present in a dedicated skill injected into the same agents. The `orchestrator-protocol` skill also contained 5 nearly identical retranscription templates (planner, onboarder, debugger, design, audit) reproducing the same generic structure as `retranscription-coordinateur`.
+
+**Decision:** reduce the 5 consumer sections in handoff-formats (planner, onboarder, auditor, debugger, design) to their **content specific to that return type** — mandatory fields to verify, status conditions, specific routing actions — accompanied by an explicit reference to `posture/retranscription-coordinateur` for the common protocol. Simultaneously, the 5 generic templates in `orchestrator-protocol` are replaced by a reference line + a compact contextual block listing only the specificities (critical sections, priority actions).
+
+**Impact:** ~1,400 tokens removed from the Bucket A of orchestrator and orchestrator-dev agents without information loss — the complete retranscription protocol remains in `posture/retranscription-coordinateur` which is injected in Bucket A in both agents.
+
+| Modified file | Reduction |
+|---------------|-----------|
+| `skills/planning/planner-handoff-format.md` | Consumer section: 41 lines → 8 lines |
+| `skills/planning/onboarder-handoff-format.md` | Consumer section: 39 lines → 7 lines |
+| `skills/auditor/audit-handoff-format.md` | Consumer section: 33 lines → 6 lines |
+| `skills/quality/debugger-handoff-format.md` | Consumer section: 37 lines → 7 lines |
+| `skills/design/design-handoff-format.md` | Consumer section: 32 lines → 6 lines |
+| `skills/orchestrator/orchestrator-protocol.md` | 5 templates → 5 compact contextual blocks (~8 lines each) |
 
 - **More skills injected:** agents now receive more skills, increasing the size of assembled agent files at deploy time. This is acceptable given that the skills are injected once at deploy and not at inference time.
 - **Strict contract:** sub-agents that do not produce the expected block trigger a retry request from the consumer. This is an intentional behavior — an incomplete result must be explicitly signaled rather than silently ignored.

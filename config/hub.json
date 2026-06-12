@@ -1,0 +1,33 @@
+{
+  "version": "1.5.0",
+  "opencode": {
+    "model": "claude-sonnet-4-6",
+    "disabled_native_agents": [
+      "build",
+      "plan",
+      "general",
+      "explore",
+      "scout"
+    ]
+  },
+  "cli": {
+    "language": "fr"
+  },
+  "token_optimization": {
+    "output_verbosity": "lite",
+    "plugins": {
+      "rtk": {
+        "requires_binary": true,
+        "binary": "rtk",
+        "min_version": "0.42.0",
+        "description": "Réduit les outputs bash (60-90%). Couvre : git diff, git log, find, cat, npm install, etc."
+      },
+      "context-mode": {
+        "requires_npm": true,
+        "package": "context-mode",
+        "min_node": "22.5.0",
+        "description": "Réduit les outputs read/webfetch/MCP (80-98%). Session continuity après compaction. Complémentaire à RTK."
+      }
+    }
+  }
+}

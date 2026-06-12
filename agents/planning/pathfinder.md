@@ -36,7 +36,7 @@ permission:
     "*": deny
     "documentarian": allow
 model: anthropic/claude-sonnet-4-6
-skills: [developer/beads-plan, planning/pathfinder-protocol, planning/pathfinder-handoff-format, adapters/figma-pathfinder-protocol, adapters/gitlab-pathfinder-protocol, posture/tool-question, shared/websearch-usage, shared/living-docs-enrichment, shared/wiki-navigation]
+skills: [developer/beads-plan, planning/pathfinder-protocol, planning/pathfinder-handoff-format, adapters/figma-pathfinder-protocol, adapters/gitlab-pathfinder-protocol, posture/concision-posture, posture/tool-question, shared/websearch-usage, shared/living-docs-enrichment, shared/wiki-navigation]
 native_skills: [planning/websearch-stack-research]
 mcpServers: [figma, gitlab]
 ---

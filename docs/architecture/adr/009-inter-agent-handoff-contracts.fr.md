@@ -77,7 +77,24 @@ Formaliser **tous** les contrats de communication inter-agents comme skills déd
 
 **Impact :** le fil de discussion de l'orchestrateur affiche désormais le récap d'implémentation complet (sans duplication) avant chaque [CP-feature], donnant à l'utilisateur une visibilité totale sur ce qui a été réalisé sur tous les tickets dev avant de lui poser une question.
 
-### Négatives / compromis
+---
+
+## Amendement — Déduplication des règles consommateur dans les handoff-formats
+
+**Contexte :** chaque skill `*-handoff-format` contenait une section "Règles pour le consommateur" de 30-40 lignes reproduisant la séquence obligatoire d'affichage (afficher rapport → afficher bloc structuré → appeler `question`) déjà définie dans `posture/retranscription-coordinateur`. Cette duplication représentait ~1 200 tokens injectés en Bucket A pour une information déjà présente dans un skill dédié injecté dans les mêmes agents. Le skill `orchestrator-protocol` contenait également 5 templates de retranscription quasi-identiques (planner, onboarder, debugger, design, audit) qui reproduisaient la même structure générique que `retranscription-coordinateur`.
+
+**Décision :** réduire les 5 sections consommateur dans les handoff-formats (planner, onboarder, auditor, debugger, design) à leur contenu **spécifique à ce type de retour** — champs obligatoires à vérifier, conditions de statut, actions de routing particulières — accompagné d'une référence explicite vers `posture/retranscription-coordinateur` pour le protocole commun. Simultanément, les 5 templates génériques dans `orchestrator-protocol` sont remplacés par une ligne de référence + un bloc contextuel compact listant uniquement les spécificités (sections critiques, actions prioritaires).
+
+**Impact :** ~1 400 tokens retirés du Bucket A des agents orchestrator et orchestrator-dev sans perte d'information — le protocole de retranscription complet reste dans `posture/retranscription-coordinateur` qui est injecté en Bucket A dans les deux agents.
+
+| Fichier modifié | Réduction |
+|----------------|-----------|
+| `skills/planning/planner-handoff-format.md` | Section consommateur : 41 lignes → 8 lignes |
+| `skills/planning/onboarder-handoff-format.md` | Section consommateur : 39 lignes → 7 lignes |
+| `skills/auditor/audit-handoff-format.md` | Section consommateur : 33 lignes → 6 lignes |
+| `skills/quality/debugger-handoff-format.md` | Section consommateur : 37 lignes → 7 lignes |
+| `skills/design/design-handoff-format.md` | Section consommateur : 32 lignes → 6 lignes |
+| `skills/orchestrator/orchestrator-protocol.md` | 5 templates → 5 blocs contextuels compacts (~8 lignes chacun) |
 
 - **Plus de skills injectés :** les agents reçoivent désormais davantage de skills, augmentant la taille des fichiers agents assemblés au déploiement. Ce surcoût est acceptable étant donné que les skills sont injectés une seule fois au déploiement et non à l'inférence.
 - **Contrat strict :** les sous-agents qui ne produisent pas le bloc attendu déclenchent une demande de relance depuis le consommateur. C'est un comportement intentionnel — un résultat incomplet doit être signalé explicitement plutôt qu'ignoré silencieusement.

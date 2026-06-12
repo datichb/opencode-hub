@@ -62,6 +62,48 @@ if [ "$PLUGIN_NAME" = "rtk" ]; then
   fi
 fi
 
+# 4. Vérifications spécifiques au plugin context-mode
+if [ "$PLUGIN_NAME" = "context-mode" ]; then
+  # Vérifier Node >= 22.5 (prérequis context-mode)
+  if ! command -v node &> /dev/null; then
+    log_error "Node.js introuvable — requis pour context-mode"
+    log_info "Installer Node.js >= 22.5 :"
+    echo "  brew install node"
+    exit 1
+  fi
+
+  NODE_VERSION=$(node --version 2>/dev/null | sed 's/v//' || echo "0.0.0")
+  REQUIRED_NODE="22.5.0"
+
+  if [ "$(printf '%s\n' "$REQUIRED_NODE" "$NODE_VERSION" | sort -V | head -n1)" != "$REQUIRED_NODE" ]; then
+    log_error "Node.js $NODE_VERSION < $REQUIRED_NODE requis pour context-mode"
+    log_info "Mettre à jour Node.js :"
+    echo "  brew upgrade node"
+    exit 1
+  else
+    log_success "Node.js OK : $NODE_VERSION"
+  fi
+
+  # Installer le package npm si absent
+  if ! node -e "require('context-mode')" &>/dev/null 2>&1; then
+    log_info "Installation du package npm 'context-mode'..."
+    if npm install -g context-mode; then
+      log_success "Package context-mode installé"
+    else
+      log_warning "Installation npm globale échouée — le plugin tentera via npx au runtime"
+      echo ""
+      read -p "Continuer l'installation du plugin quand même ? [y/N] " -n 1 -r
+      echo
+      if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+      fi
+    fi
+  else
+    CM_VERSION=$(node -e "console.log(require('context-mode/package.json').version)" 2>/dev/null || echo "inconnu")
+    log_success "Package context-mode déjà installé : $CM_VERSION"
+  fi
+fi
+
 # ── Installation ──────────────────────────────────────────────────────────────
 
 # Créer le dossier de destination si nécessaire
@@ -111,6 +153,9 @@ echo ""
 echo "$(t plugin.step3):"
 if [ "$PLUGIN_NAME" = "rtk" ]; then
   echo "  $(t plugin.rtk_test_command)"
+elif [ "$PLUGIN_NAME" = "context-mode" ]; then
+  echo "  Dans OpenCode, ouvrir un fichier volumineux : le plugin loggue 'context-mode-plugin initialized'"
+  echo "  tail -f ~/.cache/opencode/logs/opencode.log | grep context-mode-plugin"
 fi
 
 # Proposer d'afficher la documentation

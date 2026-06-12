@@ -39,7 +39,7 @@ permission:
     "*": deny
     "documentarian": allow
 model: anthropic/claude-opus-4
-skills: [developer/beads-plan, planning/planner-workflow, planning/planner-handoff-format, design/design-planner-format, adapters/figma-planner-protocol, adapters/gitlab-planner-protocol, posture/expert-posture, posture/tool-question, shared/living-docs-enrichment, shared/websearch-usage]
+skills: [developer/beads-plan, planning/planner-workflow, planning/planner-handoff-format, design/design-planner-format, adapters/figma-planner-protocol, adapters/gitlab-planner-protocol, posture/expert-posture, posture/concision-posture, posture/tool-question, shared/living-docs-enrichment, shared/websearch-usage]
 native_skills: [planning/websearch-stack-research]
 mcpServers: [figma, gitlab]
 ---
@@ -99,15 +99,9 @@ Phase 6 — Vérification finale + Enrichissement des documents vivants
 
 ## Principes essentiels
 
-### Format de retour — RÈGLE ABSOLUE
+### Format de retour
 
-**À CHAQUE fin de phase :**
-
-1. **TOUJOURS produire le récap en texte clair AVANT d'appeler l'outil `question`**
-2. **PUIS appeler l'outil `question` pour la validation**
-
-> ❌ **JAMAIS** : appeler `question` comme première action
-> ✅ **TOUJOURS** : afficher le récap en texte → puis appeler `question`
+Produire le récap en texte clair **avant** d'appeler l'outil `question` — règle absolue définie dans le skill `posture/retranscription-coordinateur`.
 
 ### Contexte d'invocation
 
@@ -170,7 +164,7 @@ Sinon (standalone) :
 ✅ **Toujours chercher** si une logique similaire existe déjà dans le codebase avant de planifier
 ✅ **Toujours vérifier** les comportements des librairies externes concernées par websearch ciblée — ne jamais supposer (Phase 1.2bis)
 ✅ **Toujours cartographier** les consommateurs des fichiers partagés modifiés avant de planifier les tickets (Phase 1.2ter)
-✅ **Toujours produire le récap en texte avant d'appeler `question`** — autocontrôle systématique
+✅ **Toujours produire le récap en texte avant d'appeler `question`** — voir skill `posture/retranscription-coordinateur`
 ✅ **Proposer l'enrichissement des documents vivants** en Phase 6 via le skill `living-docs-enrichment`
 
 ---

@@ -42,7 +42,7 @@ permission:
     "qa-engineer": allow
     "documentarian": allow
 model: anthropic/claude-opus-4
-skills: [posture/coordination-only, posture/retranscription-coordinateur, orchestrator/orchestrator-workflow-modes, orchestrator/orchestrator-handoff-format, orchestrator/orchestrator-dev-protocol, posture/tool-question, developer/developer-handoff-format, reviewer/reviewer-handoff-format, qa/qa-handoff-format, documentarian/documentarian-handoff-format]
+skills: [posture/coordination-only, posture/concision-posture, posture/retranscription-coordinateur, orchestrator/orchestrator-workflow-modes, orchestrator/orchestrator-handoff-format, orchestrator/orchestrator-dev-protocol, posture/tool-question, developer/developer-handoff-format, reviewer/reviewer-handoff-format, qa/qa-handoff-format, documentarian/documentarian-handoff-format]
 ---
 
 # OrchestratorDev

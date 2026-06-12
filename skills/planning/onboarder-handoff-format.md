@@ -115,40 +115,11 @@ En standalone (invocation directe), le rapport d'onboarding précède également
 
 ## Règles pour le consommateur (orchestrator)
 
-### À la réception du bloc `## Retour vers orchestrator` de l'onboarder
+> Protocole de retranscription complet (séquence obligatoire, templates, checklist, exemples) → skill `posture/retranscription-coordinateur`.
 
-⚠️ **RAPPEL IMPÉRATIF** : Le rapport et le bloc doivent être affichés EN TEXTE dans la discussion AVANT d'appeler `question`.
+**Spécificités onboarder à vérifier :**
 
-> Ce protocole est défini dans le skill `posture/retranscription-coordinateur` (injecté dans orchestrator) — s'y référer pour le template exact de retranscription.
-
-**Séquence obligatoire (ne jamais inverser) :**
-
-1. **Afficher le rapport d'onboarding complet dans le texte de la discussion** (ne pas inclure dans l'outil `question`) — ne jamais résumer. Ce rapport contient le contexte de découverte du projet : comment les éléments ont été trouvés, observations notables, zones d'incertitude avec leur contexte — informations uniques qui ne se trouvent pas dans le bloc structuré.
-
-2. **Afficher l'intégralité du bloc `## Retour vers orchestrator` dans le texte de la discussion** (ne pas inclure dans l'outil `question`) — vérifier que tous les champs obligatoires sont présents.
-
-3. **Vérifier la présence de tous les champs obligatoires** : `Stack technique`, `Contexte métier`, `Design et maquettes`, `Stratégie de test`, `Conventions identifiées`, `Dette technique détectée`, `Zones d'incertitude`, `Fichiers de contexte produits`, `Statut`.
-   - `Fichiers de contexte produits` doit mentionner ONBOARDING.md, CONVENTIONS.md, docs/context/technical.md et docs/context/business/.
-   - Si l'un de ces champs est absent → demander explicitement à l'onboarder de compléter avant de continuer.
-
-4. **Si le rapport d'onboarding complet est absent** (le bloc handoff est présent sans rapport préalable) → demander explicitement à l'onboarder de produire le rapport complet avant de continuer.
-
-5. **Présenter les `### Zones d'incertitude`** à l'utilisateur au CP-onboard pour décision avant de démarrer la feature.
-
-6. **Signaler la `### Dette technique détectée`** au CP-onboard — notamment les éléments 🔴 qui pourraient impacter la feature.
-
-7. **Utiliser le `### Statut`** pour conditionner la suite :
-   - `contexte-établi` → continuer vers CP-onboard puis Mode A ou B normalement
-   - `contexte-partiel` → signaler les incertitudes à l'utilisateur, laisser décider
-   - `bloqué` → ne pas démarrer la feature — demander à l'utilisateur comment débloquer
-
-8. **Intégrer la `### Stack technique`** dans le prompt de délégation à `orchestrator-dev` — elle aide à choisir les bons agents et à formuler les instructions d'implémentation.
-
-> ❌ Ne jamais construire le CP-onboard sans avoir d'abord affiché le rapport ET le bloc en texte
-> ❌ Ne jamais résumer le rapport — l'afficher intégralement
-> ❌ Ne jamais accepter un bloc handoff sans rapport d'onboarding préalable — les deux sont obligatoires
-> ❌ Ne jamais appeler `question` avant d'avoir affiché le contenu
-> ❌ Ne jamais ignorer la dette technique — la signaler même si elle ne bloque pas la feature
-
-**Exemple de retranscription correcte :** Voir skill `posture/retranscription-coordinateur` section "Exemples".
-> ❌ Ne jamais accepter un bloc handoff sans rapport d'onboarding préalable — les deux sont obligatoires.
+- **Champs obligatoires** : `Stack technique`, `Contexte métier`, `Design et maquettes`, `Stratégie de test`, `Conventions identifiées`, `Dette technique détectée`, `Zones d'incertitude`, `Fichiers de contexte produits`, `Statut`. Le champ `Fichiers de contexte produits` doit mentionner ONBOARDING.md, CONVENTIONS.md, docs/context/technical.md et docs/context/business/. Si l'un est absent → demander à l'onboarder de compléter.
+- **CP-onboard** : présenter `### Zones d'incertitude` à l'utilisateur pour décision, signaler les éléments 🔴 de `### Dette technique détectée`.
+- **Délégation** : intégrer `### Stack technique` dans le prompt de délégation à `orchestrator-dev`.
+- **Statut** : `contexte-établi` → CP-onboard normal · `contexte-partiel` → signaler les incertitudes · `bloqué` → ne pas démarrer la feature.

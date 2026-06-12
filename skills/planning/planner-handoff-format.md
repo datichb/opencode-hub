@@ -100,43 +100,13 @@ En standalone, le récapitulatif de planification précède également ce bloc.
 
 ## Règles pour le consommateur (orchestrator)
 
-### À la réception du bloc `## Retour vers orchestrator` du planner
+> Protocole de retranscription complet (séquence obligatoire, templates, checklist, exemples) → skill `posture/retranscription-coordinateur`.
 
-⚠️ **RAPPEL IMPÉRATIF** : Le récapitulatif et le bloc doivent être affichés EN TEXTE dans la discussion AVANT d'appeler `question`.
+**Spécificités planner à vérifier :**
 
-> Ce protocole est défini dans le skill `posture/retranscription-coordinateur` (injecté dans orchestrator) — s'y référer pour le template exact de retranscription.
-
-**Séquence obligatoire (ne jamais inverser) :**
-
-1. **Afficher le récapitulatif de planification complet dans le texte de la discussion** (ne pas inclure dans l'outil `question`) — ne jamais résumer ni omettre. Ce récap contient le contexte et le raisonnement derrière les décisions de planification (pourquoi ces tickets, pourquoi cet ordre, quelles hypothèses faites, quels risques identifiés).
-
-2. **Afficher l'intégralité du bloc `## Retour vers orchestrator` dans le texte de la discussion** (ne pas inclure dans l'outil `question`) — vérifier que tous les champs obligatoires sont présents.
-
-3. **Vérifier la présence de tous les champs obligatoires** : `Tickets créés`, `Dépendances`, `Ordre de traitement`, `Hypothèses et ambiguïtés`, `Risques identifiés`, `Statut`.
-   - Si l'un de ces champs est absent → demander explicitement au planner de compléter avant de continuer.
-
-4. **Si le récapitulatif de planification complet est absent** (le bloc handoff est présent sans récapitulatif préalable) → demander explicitement au planner de produire le récapitulatif complet avant de continuer.
-
-5. **Utiliser le tableau `### Tickets créés`** comme source de vérité pour le CP-0 — ne pas relire les tickets un par un avec `bd show` si le tableau est complet.
-
-6. **Utiliser `### Ordre de traitement` comme instruction directe de séquençage** — ne pas recalculer l'ordre depuis les dépendances, suivre la séquence fournie sans interprétation.
-
-7. **Utiliser la colonne `Agent prévu` pour router directement** — ne pas analyser les labels, le titre ou la description du ticket pour deviner l'agent approprié.
-
-8. **Présenter les `### Hypothèses et ambiguïtés`** à l'utilisateur au CP-0 pour validation, si elles existent.
-
-9. **Signaler les `### Risques identifiés`** dans le CP-0 pour que l'utilisateur en ait connaissance avant de démarrer.
-
-10. **Utiliser le `### Statut`** pour conditionner la suite :
-    - `planification-complète` → continuer vers CP-0 normalement
-    - `planification-partielle` → signaler les points incomplets à l'utilisateur au CP-0
-    - `bloqué` → ne pas continuer — demander à l'utilisateur comment débloquer
-
-> ❌ Ne jamais construire le CP-0 sans avoir d'abord affiché le récapitulatif ET le bloc en texte
-> ❌ Ne jamais résumer le récapitulatif — l'afficher intégralement
-> ❌ Ne jamais accepter un bloc handoff sans récapitulatif préalable — les deux sont obligatoires
-> ❌ Ne jamais appeler `question` avant d'avoir affiché le contenu
-> ❌ Ne jamais recalculer l'ordre de traitement — utiliser `### Ordre de traitement` tel quel
-> ❌ Ne jamais deviner l'agent — utiliser la colonne `Agent prévu` du tableau
-
-**Exemple de retranscription correcte :** Voir skill `posture/retranscription-coordinateur` section "Exemples".
+- **Champs obligatoires** : `Tickets créés`, `Dépendances`, `Ordre de traitement`, `Hypothèses et ambiguïtés`, `Risques identifiés`, `Statut`. Si l'un est absent → demander au planner de compléter avant de continuer.
+- **Routing** : utiliser la colonne `Agent prévu` du tableau comme source de vérité — ne jamais analyser les labels ou le contenu du ticket pour deviner l'agent.
+- **Séquençage** : suivre `### Ordre de traitement` tel quel — ne jamais recalculer depuis les dépendances.
+- **CP-0** : présenter `### Hypothèses et ambiguïtés` à l'utilisateur pour validation, signaler `### Risques identifiés`.
+- **Statut** : `planification-complète` → CP-0 normal · `planification-partielle` → signaler les incomplétudes · `bloqué` → ne pas continuer.
+- **Optimisation** : ne pas relire les tickets un par un avec `bd show` si le tableau `### Tickets créés` est complet.
